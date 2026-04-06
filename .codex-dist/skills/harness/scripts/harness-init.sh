@@ -37,6 +37,7 @@ create_file_if_missing() {
 
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 
+create_dir ".codex"
 create_dir ".codex/skills"
 create_dir ".codex/skills/domain-analyst"
 create_dir ".codex/skills/harness-architect"
@@ -50,6 +51,7 @@ create_dir ".harness"
 create_dir ".harness/reports"
 create_dir ".harness/scenarios"
 create_dir ".harness/templates"
+create_dir ".harness/logs"
 
 create_file_if_missing ".codex/skills/domain-analyst/SKILL.md" \
 "---
@@ -99,6 +101,7 @@ description: 저장소의 목적, 기술 스택, 핵심 디렉토리, 주요 흐
 - 분석이 불충분하면 architect가 설계를 강하게 진행할 수 없다는 점을 항상 의식한다.
 - 핵심 흐름이 불명확하면 \"무엇이 아직 불명확한지\"를 명시한다.
 - validator나 QA가 분석 약점을 지적하면, 요약만 고치지 말고 분석의 기준 자체를 다시 본다.
+- 역할이 호출되면 \`.harness/logs/session-log.md\`에 시작 요청, 호출 역할, 출력 파일, 다음 권장 역할을 남긴다.
 "
 
 create_file_if_missing ".codex/skills/harness-architect/SKILL.md" \
@@ -144,8 +147,9 @@ description: 저장소에 맞는 프로젝트 로컬 실행 하네스 구조와 
 ## 운영 규칙
 
 - 분석 결과가 약하면 설계를 단정하지 말고, 어떤 판단이 보류 상태인지 남긴다.
-- 기본 6역할을 기계적으로 강제하지 말고 프로젝트 규모에 맞게 조정한다.
+- 기본 역할 구성을 기계적으로 강제하지 말고 프로젝트 규모에 맞게 조정한다.
 - validator가 과한 분리나 약한 구조를 지적하면 역할 수와 경계를 다시 검토한다.
+- 역할이 호출되면 \`.harness/logs/session-log.md\`에 호출 이유, 입력 파일, 출력 파일, 남은 약점을 남긴다.
 "
 
 create_file_if_missing ".codex/skills/skill-scaffolder/SKILL.md" \
@@ -194,6 +198,7 @@ description: 실행 하네스 구조를 바탕으로 프로젝트 로컬 역할 
 - 설명만 있는 얇은 스킬을 만들지 않는다.
 - 각 스킬이 실제로 팀 멤버처럼 읽히는지 항상 확인한다.
 - validator가 약한 설명이나 연결 부족을 지적하면, 텍스트만 덧붙이지 말고 구조를 다시 정돈한다.
+- 역할이 호출되면 \`.harness/logs/session-log.md\`에 생성/보완한 파일과 다음 권장 역할을 남긴다.
 "
 
 create_file_if_missing ".codex/skills/qa-designer/SKILL.md" \
@@ -242,6 +247,7 @@ description: 프로젝트 실행 하네스에서 필요한 품질 기준, 검토
 - 추상적인 좋은 말보다 실제 반복 검토 가능한 질문을 우선한다.
 - 프로젝트 목적과 무관한 품질 기준을 과하게 추가하지 않는다.
 - validator 피드백이 반복되면 QA 질문이 충분히 구체적인지 다시 점검한다.
+- 역할이 호출되면 \`.harness/logs/session-log.md\`에 추가/보강한 QA 질문과 후속 권장 역할을 남긴다.
 "
 
 create_file_if_missing ".codex/skills/orchestrator/SKILL.md" \
@@ -295,6 +301,7 @@ description: 프로젝트 로컬 실행 하네스의 중심 역할입니다. 도
 - 흐름이 복잡해지면 병렬화보다 단순화가 가능한지 먼저 본다.
 - QA와 validator의 피드백이 반복되면 흐름 자체를 다시 설계할 수 있어야 한다.
 - 리포트가 본체처럼 커지고 역할 팀이 약해지는 징후를 경계한다.
+- 역할이 호출되면 \`.harness/logs/session-log.md\`에 흐름 변경, 연결 변경, 다음 권장 역할을 남긴다.
 "
 
 create_file_if_missing ".codex/skills/validator/SKILL.md" \
@@ -344,6 +351,7 @@ description: 생성된 프로젝트 로컬 실행 하네스가 최소 요건을 
 - 구조적 약점이 반복되면 어느 역할에서 문제가 시작됐는지 함께 본다.
 - 보완 제안은 실행 가능한 수준으로 남긴다.
 - QA와 유사해 보일 때도, validator는 최소 구조 요건과 연결성에 더 집중한다.
+- 역할이 호출되면 \`.harness/logs/session-log.md\`에 지적 사항, 영향 받은 파일, 다음 권장 역할을 남긴다.
 "
 
 create_file_if_missing ".codex/skills/run-harness/SKILL.md" \
@@ -396,7 +404,9 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 새 프로젝트라면 domain-analyst → harness-architect → qa-designer → orchestrator → validator 순서를 기본으로 본다.
 - 이미 구조가 있는 프로젝트라면 부족한 역할만 다시 호출하는 쪽을 우선한다.
 - 리포트보다 실제 역할 팀 구조와 설명 품질을 더 중요하게 본다.
+- 이 역할이 호출되면 \`.harness/logs/session-log.md\`에 새로운 세션 시작 기록을 남긴다.
 "
+
 create_file_if_missing ".harness/reports/domain-analysis.md" \
 "# 도메인 분석
 
@@ -497,12 +507,84 @@ create_file_if_missing ".harness/reports/team-playbook.md" \
 - 리포트는 팀이 공유하는 보조 기준으로 사용합니다.
 - validator 피드백이 나오면 architect / scaffolder / orchestrator가 다시 보강합니다.
 - QA 질문이 약하면 qa-designer를 다시 호출해 보강합니다.
+- 중요한 역할 호출이나 흐름 변경은 session-log에 남깁니다.
 
 ## 운영 메모
 
 - 작은 프로젝트는 역할을 줄일 수 있습니다.
 - 복잡한 프로젝트는 orchestrator 중심 운영이 중요합니다.
 - 이후 프로젝트 특화 실행 하네스로 확장할 수 있습니다.
+"
+
+create_file_if_missing ".harness/logs/logging-policy.md" \
+"# 로그 정책
+
+## 목적
+
+이 문서는 실행 하네스 팀을 실제로 운용할 때 어떤 로그를 남겨야 하는지 정의합니다.
+
+## 로그를 남겨야 하는 상황
+
+- run-harness로 팀을 시작했을 때
+- 특정 역할을 직접 호출했을 때
+- validator 피드백이 나왔을 때
+- QA 질문이 보강되었을 때
+- orchestrator가 흐름을 변경했을 때
+- 역할 팀 구조가 변경되었을 때
+
+## 최소 로그 항목
+
+- 시각
+- 시작 요청 요약
+- 진입점 역할
+- 호출된 역할
+- 입력으로 본 파일
+- 출력/갱신된 파일
+- 다음 권장 역할
+- 남은 약점 또는 미해결 항목
+
+## 원칙
+
+- 로그는 짧지만 구조적으로 남깁니다.
+- 사람이 읽을 수 있어야 합니다.
+- 역할 흐름과 피드백 루프가 보이도록 남깁니다.
+- 각 역할은 자신이 수행한 주요 변경과 다음 권장 단계를 남길 책임이 있습니다.
+"
+
+create_file_if_missing ".harness/logs/session-log.md" \
+"# 실행 하네스 세션 로그
+
+## 기록 원칙
+
+각 세션마다 아래 형식으로 기록합니다.
+
+---
+
+### 세션
+
+- 시각:
+- 시작 요청:
+- 진입점:
+- 호출 역할:
+- 입력 파일:
+- 출력 파일:
+- 다음 권장 역할:
+- 남은 약점:
+
+---
+
+## 예시
+
+### 세션
+
+- 시각: YYYY-MM-DD HH:MM
+- 시작 요청: 현재 프로젝트에 하네스 팀을 한 번 돌려줘
+- 진입점: run-harness
+- 호출 역할: domain-analyst, harness-architect, orchestrator
+- 입력 파일: 없음
+- 출력 파일: .harness/reports/domain-analysis.md, .harness/reports/harness-architecture.md
+- 다음 권장 역할: qa-designer
+- 남은 약점: QA 질문이 아직 추상적임
 "
 
 log "프로젝트 로컬 실행 하네스 초기화 완료"

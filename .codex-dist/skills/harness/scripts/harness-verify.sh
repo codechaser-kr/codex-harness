@@ -3,6 +3,9 @@ set -euo pipefail
 
 FAILURES=0
 WARNINGS=0
+DEFAULT_LOCAL_SKILLS_DIR=".codex/skills"
+LEGACY_LOCAL_SKILLS_DIR=".agents/skills"
+LOCAL_SKILLS_DIR="$DEFAULT_LOCAL_SKILLS_DIR"
 
 log() {
   printf '[harness][verify] %s\n' "$1"
@@ -86,17 +89,34 @@ check_contains_hint() {
   fi
 }
 
+resolve_local_skills_dir() {
+  if [ -d "$DEFAULT_LOCAL_SKILLS_DIR" ] && [ -d "$LEGACY_LOCAL_SKILLS_DIR" ]; then
+    warn "로컬 스킬 경로가 둘 다 존재함, $DEFAULT_LOCAL_SKILLS_DIR 우선 사용"
+    LOCAL_SKILLS_DIR="$DEFAULT_LOCAL_SKILLS_DIR"
+  elif [ -d "$DEFAULT_LOCAL_SKILLS_DIR" ]; then
+    LOCAL_SKILLS_DIR="$DEFAULT_LOCAL_SKILLS_DIR"
+  elif [ -d "$LEGACY_LOCAL_SKILLS_DIR" ]; then
+    LOCAL_SKILLS_DIR="$LEGACY_LOCAL_SKILLS_DIR"
+    warn "legacy 로컬 스킬 경로 사용: $LOCAL_SKILLS_DIR"
+  else
+    LOCAL_SKILLS_DIR="$DEFAULT_LOCAL_SKILLS_DIR"
+  fi
+
+  log "로컬 스킬 경로 기준: $LOCAL_SKILLS_DIR"
+}
+
 log "실행 하네스 팀 구조 검증 시작"
+resolve_local_skills_dir
 
 # 필수 디렉토리
-check_dir ".agents/skills"
-check_dir ".agents/skills/domain-analyst"
-check_dir ".agents/skills/harness-architect"
-check_dir ".agents/skills/skill-scaffolder"
-check_dir ".agents/skills/qa-designer"
-check_dir ".agents/skills/orchestrator"
-check_dir ".agents/skills/validator"
-check_dir ".agents/skills/run-harness"
+check_dir "$LOCAL_SKILLS_DIR"
+check_dir "$LOCAL_SKILLS_DIR/domain-analyst"
+check_dir "$LOCAL_SKILLS_DIR/harness-architect"
+check_dir "$LOCAL_SKILLS_DIR/skill-scaffolder"
+check_dir "$LOCAL_SKILLS_DIR/qa-designer"
+check_dir "$LOCAL_SKILLS_DIR/orchestrator"
+check_dir "$LOCAL_SKILLS_DIR/validator"
+check_dir "$LOCAL_SKILLS_DIR/run-harness"
 
 check_dir ".harness"
 check_dir ".harness/reports"
@@ -112,13 +132,13 @@ check_file ".codex-dist/skills/harness/references/team-examples.md"
 
 # 필수 로컬 역할 스킬
 SKILL_FILES=(
-  ".agents/skills/domain-analyst/SKILL.md"
-  ".agents/skills/harness-architect/SKILL.md"
-  ".agents/skills/skill-scaffolder/SKILL.md"
-  ".agents/skills/qa-designer/SKILL.md"
-  ".agents/skills/orchestrator/SKILL.md"
-  ".agents/skills/validator/SKILL.md"
-  ".agents/skills/run-harness/SKILL.md"
+  "$LOCAL_SKILLS_DIR/domain-analyst/SKILL.md"
+  "$LOCAL_SKILLS_DIR/harness-architect/SKILL.md"
+  "$LOCAL_SKILLS_DIR/skill-scaffolder/SKILL.md"
+  "$LOCAL_SKILLS_DIR/qa-designer/SKILL.md"
+  "$LOCAL_SKILLS_DIR/orchestrator/SKILL.md"
+  "$LOCAL_SKILLS_DIR/validator/SKILL.md"
+  "$LOCAL_SKILLS_DIR/run-harness/SKILL.md"
 )
 
 for file in "${SKILL_FILES[@]}"; do
@@ -156,19 +176,19 @@ for file in "${REPORT_FILES[@]}"; do
 done
 
 # 본체/보조 위계와 실행 팀 성격 힌트 확인
-if [ -f ".agents/skills/orchestrator/SKILL.md" ]; then
-  check_contains_hint ".agents/skills/orchestrator/SKILL.md" "중심 역할" "중심 역할 표현"
-  check_contains_hint ".agents/skills/orchestrator/SKILL.md" "흐름" "흐름 설명"
-  check_contains_hint ".agents/skills/orchestrator/SKILL.md" "연결" "연결 설명"
+if [ -f "$LOCAL_SKILLS_DIR/orchestrator/SKILL.md" ]; then
+  check_contains_hint "$LOCAL_SKILLS_DIR/orchestrator/SKILL.md" "중심 역할" "중심 역할 표현"
+  check_contains_hint "$LOCAL_SKILLS_DIR/orchestrator/SKILL.md" "흐름" "흐름 설명"
+  check_contains_hint "$LOCAL_SKILLS_DIR/orchestrator/SKILL.md" "연결" "연결 설명"
 fi
 
-if [ -f ".agents/skills/validator/SKILL.md" ]; then
-  check_contains_hint ".agents/skills/validator/SKILL.md" "피드백" "피드백 루프 설명"
+if [ -f "$LOCAL_SKILLS_DIR/validator/SKILL.md" ]; then
+  check_contains_hint "$LOCAL_SKILLS_DIR/validator/SKILL.md" "피드백" "피드백 루프 설명"
 fi
 
-if [ -f ".agents/skills/run-harness/SKILL.md" ]; then
-  check_contains_hint ".agents/skills/run-harness/SKILL.md" "기동" "기동 엔트리포인트 설명"
-  check_contains_hint ".agents/skills/run-harness/SKILL.md" "현재 상태" "현재 상태 기반 판단"
+if [ -f "$LOCAL_SKILLS_DIR/run-harness/SKILL.md" ]; then
+  check_contains_hint "$LOCAL_SKILLS_DIR/run-harness/SKILL.md" "기동" "기동 엔트리포인트 설명"
+  check_contains_hint "$LOCAL_SKILLS_DIR/run-harness/SKILL.md" "현재 상태" "현재 상태 기반 판단"
 fi
 
 if [ -f ".harness/reports/team-structure.md" ]; then

@@ -48,13 +48,13 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 이 스킬은 현재 저장소 안에 다음을 생성하거나 보완한다.
 
 ### 프로젝트 로컬 역할 스킬
-- `.agents/skills/domain-analyst/SKILL.md`
-- `.agents/skills/harness-architect/SKILL.md`
-- `.agents/skills/skill-scaffolder/SKILL.md`
-- `.agents/skills/qa-designer/SKILL.md`
-- `.agents/skills/orchestrator/SKILL.md`
-- `.agents/skills/validator/SKILL.md`
-- `.agents/skills/run-harness/SKILL.md`
+- `.codex/skills/domain-analyst/SKILL.md`
+- `.codex/skills/harness-architect/SKILL.md`
+- `.codex/skills/skill-scaffolder/SKILL.md`
+- `.codex/skills/qa-designer/SKILL.md`
+- `.codex/skills/orchestrator/SKILL.md`
+- `.codex/skills/validator/SKILL.md`
+- `.codex/skills/run-harness/SKILL.md`
 
 ### 보조 산출물
 - `.harness/reports/domain-analysis.md`

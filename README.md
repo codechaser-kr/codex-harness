@@ -24,7 +24,7 @@
 
 전역 설치 후 다음 경로에 스킬이 설치됩니다.
 
-    $HOME/.agents/skills/harness
+    $HOME/.codex/skills/harness
 
 이 스킬은 어떤 프로젝트에서든 재사용 가능한  
 **메타 하네스 생성기**입니다.
@@ -35,7 +35,7 @@
 다음과 같은 구조가 생성됩니다.
 
     repo/
-    ├── .agents/
+    ├── .codex/
     │   └── skills/
     │       ├── domain-analyst/
     │       ├── harness-architect/
@@ -54,7 +54,7 @@
             ├── team-structure.md
             └── team-playbook.md
 
-핵심은 `.agents/skills/*` 아래의 **로컬 역할 팀**입니다.  
+핵심은 `.codex/skills/*` 아래의 **로컬 역할 팀**입니다.  
 `.harness/reports/*` 는 사람이 읽고 수정할 수 있게 돕는 **보조 산출물**입니다.
 
 ---
@@ -73,12 +73,13 @@
 
 설치 후 전역에 다음이 추가됩니다.
 
-    $HOME/.agents/skills/harness
+    $HOME/.codex/skills/harness
 
 중요:
 
 - 전역 AGENTS.md는 수정하지 않습니다.
 - 사용자의 기존 전역 설정을 덮어쓰지 않습니다.
+- 프로젝트 내부에 생성되는 로컬 역할 팀 경로는 `.codex/skills/*` 를 사용합니다.
 
 ---
 

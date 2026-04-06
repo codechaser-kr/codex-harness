@@ -4,8 +4,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DIST_DIR="$ROOT_DIR/.codex-dist"
 LOCAL_SOURCE_DIR="$DIST_DIR/skills/harness"
-TARGET_BASE="$HOME/.agents/skills"
+CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+TARGET_BASE="$CODEX_HOME/skills"
 TARGET_DIR="$TARGET_BASE/harness"
+LEGACY_TARGET_DIR="$HOME/.agents/skills/harness"
 BOOTSTRAP_REPO="${HARNESS_INSTALL_REPO:-codechaser-kr/codex-harness}"
 BOOTSTRAP_REF="${HARNESS_INSTALL_REF:-main}"
 BOOTSTRAP_URL="${HARNESS_INSTALL_ARCHIVE_URL:-https://github.com/${BOOTSTRAP_REPO}/archive/refs/heads/${BOOTSTRAP_REF}.tar.gz}"
@@ -94,6 +96,11 @@ mkdir -p "$TARGET_BASE"
 if [ -e "$TARGET_DIR" ]; then
   log "removing existing installation: $TARGET_DIR"
   rm -rf "$TARGET_DIR"
+fi
+
+if [ -e "$LEGACY_TARGET_DIR" ]; then
+  log "removing legacy installation: $LEGACY_TARGET_DIR"
+  rm -rf "$LEGACY_TARGET_DIR"
 fi
 
 log "copying skill files"

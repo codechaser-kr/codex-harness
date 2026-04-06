@@ -433,7 +433,7 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 이미 구조가 있는 프로젝트라면 부족한 역할만 다시 호출하는 쪽을 우선한다.
 - 리포트보다 실제 역할 팀 구조와 설명 품질을 더 중요하게 본다.
 - \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
-- 로그 운영 기준은 \`.harness/logs/logging-policy.md\`를 먼저 확인한다.
+- 로그 운영 기준은 \`.harness/logging-policy.md\`를 먼저 확인한다.
 - 이 역할이 호출되면 \`.harness/logs/session-log.md\`에 새로운 세션 시작 기록을 남긴다.
 "
 
@@ -541,7 +541,7 @@ create_file_if_missing ".harness/reports/team-playbook.md" \
 
 ## 로그 운영
 
-- 로그 정책은 \`.harness/logs/logging-policy.md\`에서 확인합니다.
+- 로그 정책은 \`.harness/logging-policy.md\`에서 확인합니다.
 - 역할별 누적 기록은 \`.harness/logs/session-log.md\`에 남깁니다.
 - 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
 - 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
@@ -555,7 +555,7 @@ create_file_if_missing ".harness/reports/team-playbook.md" \
 - 이후 프로젝트 특화 실행 하네스로 확장할 수 있습니다.
 "
 
-create_file_if_missing ".harness/logs/logging-policy.md" \
+create_file_if_missing ".harness/logging-policy.md" \
 "# 로그 정책
 
 ## 목적

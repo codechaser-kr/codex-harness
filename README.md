@@ -135,7 +135,7 @@
 
 타겟 프로젝트에서 로그 지침은 보통 다음 파일에서 확인합니다.
 
-- `.harness/logs/logging-policy.md`
+- `.harness/logging-policy.md`
 - `.harness/logs/session-log.md`
 - `.harness/logs/latest-session-summary.md`
 - `.harness/logs/role-frequency.md`

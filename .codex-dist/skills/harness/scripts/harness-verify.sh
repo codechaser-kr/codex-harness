@@ -225,10 +225,8 @@ if [ -f ".harness/logs/session-log.md" ]; then
   check_contains_hint ".harness/logs/session-log.md" "다음 권장 역할" "다음 권장 역할 로그"
 fi
 
-if [ -f ".harness/logs/session-events.tsv" ]; then
-  check_contains_hint ".harness/logs/session-events.tsv" "session_id" "세션 이벤트 헤더"
-  check_contains_hint ".harness/logs/session-events.tsv" "status" "이벤트 상태 헤더"
-fi
+check_contains_hint ".harness/logs/session-events.tsv" "session_id" "세션 이벤트 헤더"
+check_contains_hint ".harness/logs/session-events.tsv" "status" "이벤트 상태 헤더"
 
 if [ -f ".harness/logs/latest-session-summary.md" ]; then
   check_contains_hint ".harness/logs/latest-session-summary.md" "세션 요약" "최신 세션 요약"

@@ -564,10 +564,10 @@ create_file_if_missing ".harness/logging-policy.md" \
 
 ## 자동화 도구
 
-- 전역 설치된 \`~/.codex/skills/harness/scripts/harness-log.sh\`는 역할 호출 시 세션 로그에 자동 append 합니다.
-- 전역 설치된 \`~/.codex/skills/harness/scripts/harness-session-close.sh\`는 세션 종료 시 최신 세션 요약과 역할 호출 빈도 통계를 자동 갱신합니다.
-- 전역 설치된 \`~/.codex/skills/harness/scripts/harness-role-stats.sh\`는 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
-- 전역 설치된 \`~/.codex/skills/harness/scripts/harness-template-candidates.sh\`는 누적 로그를 분석해 반복 업무 템플릿 후보를 \`.harness/reports/template-candidates.md\`로 정리합니다.
+- 전역 설치된 \`harness-log.sh\`는 역할 호출 시 세션 로그에 자동 append 합니다.
+- 전역 설치된 \`harness-session-close.sh\`는 세션 종료 시 최신 세션 요약과 역할 호출 빈도 통계를 자동 갱신합니다.
+- 전역 설치된 \`harness-role-stats.sh\`는 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
+- 전역 설치된 \`harness-template-candidates.sh\`는 누적 로그를 분석해 반복 업무 템플릿 후보를 \`.harness/reports/template-candidates.md\`로 정리합니다.
 
 ## 로그를 남겨야 하는 상황
 

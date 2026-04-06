@@ -52,8 +52,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 이 스킬이 트리거되었다고 해서 임의 방식으로 파일을 만들면 안 된다.
 
 아래 `scripts/...` 경로는 현재 `harness` 스킬 디렉토리 기준 상대 경로다.
-전역 설치 후 기본 위치는 `$HOME/.codex/skills/harness/scripts/*.sh`이며,
-저장소 작업본에서는 `.codex-dist/skills/harness/scripts/*.sh`에 해당한다.
+전역 설치 후 기본 위치는 `$HOME/.codex/skills/harness/scripts/*.sh`이다.
 
 - 최초 하네스 구성 요청이면 반드시 `bash scripts/harness-init.sh`를 먼저 실행한다.
 - 하네스 구성이 끝났다고 판단하기 전에 반드시 `bash scripts/harness-verify.sh`를 실행한다.

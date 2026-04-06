@@ -107,27 +107,27 @@
 
 전역 `harness` 스킬은 다음 원칙으로 동작해야 합니다.
 
-- 최초 구성 요청이면 `.codex-dist/skills/harness/scripts/harness-init.sh`를 먼저 실행합니다.
-- 리포트만 다시 정리할 때만 `.codex-dist/skills/harness/scripts/harness-plan.sh`를 사용합니다.
-- 하네스 구성이 끝났다고 말하기 전에 `.codex-dist/skills/harness/scripts/harness-verify.sh`를 반드시 실행합니다.
+- 최초 구성 요청이면 `$HOME/.codex/skills/harness/scripts/harness-init.sh`를 먼저 실행합니다.
+- 리포트만 다시 정리할 때만 `$HOME/.codex/skills/harness/scripts/harness-plan.sh`를 사용합니다.
+- 하네스 구성이 끝났다고 말하기 전에 `$HOME/.codex/skills/harness/scripts/harness-verify.sh`를 반드시 실행합니다.
 - `harness-verify.sh`가 실패하면 구성이 완료된 것으로 보지 않습니다.
 
 로그 운영을 보강하려면 다음 스크립트를 함께 사용할 수 있습니다.
 
-- `.codex-dist/skills/harness/scripts/harness-log.sh`
-- `.codex-dist/skills/harness/scripts/harness-session-close.sh`
-- `.codex-dist/skills/harness/scripts/harness-role-stats.sh`
+- `$HOME/.codex/skills/harness/scripts/harness-log.sh`
+- `$HOME/.codex/skills/harness/scripts/harness-session-close.sh`
+- `$HOME/.codex/skills/harness/scripts/harness-role-stats.sh`
 
 예시:
 
-    bash .codex-dist/skills/harness/scripts/harness-log.sh \
+    bash "$HOME/.codex/skills/harness/scripts/harness-log.sh" \
       --new-session \
       --request "현재 프로젝트에 하네스 팀을 구성해줘" \
       --entry-point run-harness \
       --role run-harness \
       --next-role domain-analyst
 
-    bash .codex-dist/skills/harness/scripts/harness-session-close.sh
+    bash "$HOME/.codex/skills/harness/scripts/harness-session-close.sh"
 
 타겟 프로젝트에서 로그 지침은 보통 다음 파일에서 확인합니다.
 

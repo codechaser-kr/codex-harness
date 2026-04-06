@@ -271,7 +271,6 @@ case "$MIN_ROLES" in
 esac
 
 ensure_harness_log_scaffold
-[ -f "$EVENTS_FILE" ] || fail "missing event log: $EVENTS_FILE"
 mkdir -p "$REPORT_DIR"
 
 CANDIDATE_ROWS="$(

@@ -81,8 +81,6 @@ done
 
 ensure_harness_log_scaffold
 
-[ -f "$EVENTS_FILE" ] || fail "missing event log: $EVENTS_FILE"
-
 if [ -z "$SESSION_ID" ]; then
   [ -f "$CURRENT_SESSION_FILE" ] || fail "no active session"
   SESSION_ID="$(trim_text "$(cat "$CURRENT_SESSION_FILE")")"

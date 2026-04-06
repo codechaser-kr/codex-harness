@@ -17,11 +17,7 @@ fail() {
   exit 1
 }
 
-mkdir -p "$LOG_DIR"
-
-if [ ! -f "$EVENTS_FILE" ]; then
-  fail "missing event log: $EVENTS_FILE"
-fi
+ensure_harness_log_scaffold
 
 ROLE_ROWS="$(
   awk -F '\t' '

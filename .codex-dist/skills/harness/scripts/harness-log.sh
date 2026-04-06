@@ -96,20 +96,6 @@ join_list() {
   printf '%s' "$joined"
 }
 
-ensure_log_files() {
-  mkdir -p "$LOG_DIR"
-
-  if [ ! -f "$SESSION_LOG" ]; then
-    cat > "$SESSION_LOG" <<'EOF'
-# 실행 하네스 세션 로그
-EOF
-  fi
-
-  if [ ! -f "$EVENTS_FILE" ]; then
-    printf 'timestamp\tsession_id\tstatus\trequest\tentry_point\troles\tinputs\toutputs\tnext_role\tweaknesses\tnote\n' > "$EVENTS_FILE"
-  fi
-}
-
 format_markdown_value() {
   if [ -n "$1" ]; then
     printf '%s' "$1"
@@ -199,7 +185,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-ensure_log_files
+ensure_harness_log_scaffold
 
 if [ -z "$SESSION_ID" ]; then
   if [ "$NEW_SESSION" -eq 0 ] && [ -f "$CURRENT_SESSION_FILE" ]; then

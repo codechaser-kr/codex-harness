@@ -429,11 +429,11 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 
 ## 운영 규칙
 
-- 새 프로젝트라면 domain-analyst → harness-architect → qa-designer → orchestrator → validator 순서를 기본으로 본다.
+- 새 프로젝트라면 domain-analyst → harness-architect → skill-scaffolder → qa-designer → orchestrator → validator 순서를 기본으로 본다.
 - 이미 구조가 있는 프로젝트라면 부족한 역할만 다시 호출하는 쪽을 우선한다.
 - 리포트보다 실제 역할 팀 구조와 설명 품질을 더 중요하게 본다.
 - \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
-- 로그 운영 기준은 \`.harness/logs/logging-policy.md\`를 먼저 확인한다.
+- 로그 운영 기준은 \`.harness/logging-policy.md\`를 먼저 확인한다.
 - 이 역할이 호출되면 \`.harness/logs/session-log.md\`에 새로운 세션 시작 기록을 남긴다.
 "
 
@@ -541,11 +541,12 @@ create_file_if_missing ".harness/reports/team-playbook.md" \
 
 ## 로그 운영
 
-- 로그 정책은 \`.harness/logs/logging-policy.md\`에서 확인합니다.
+- 로그 정책은 \`.harness/logging-policy.md\`에서 확인합니다.
 - 역할별 누적 기록은 \`.harness/logs/session-log.md\`에 남깁니다.
 - 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
 - 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
 - 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다.
+- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다.
 
 ## 운영 메모
 
@@ -554,7 +555,7 @@ create_file_if_missing ".harness/reports/team-playbook.md" \
 - 이후 프로젝트 특화 실행 하네스로 확장할 수 있습니다.
 "
 
-create_file_if_missing ".harness/logs/logging-policy.md" \
+create_file_if_missing ".harness/logging-policy.md" \
 "# 로그 정책
 
 ## 목적
@@ -563,9 +564,10 @@ create_file_if_missing ".harness/logs/logging-policy.md" \
 
 ## 자동화 도구
 
-- 전역 설치된 \`~/.codex/skills/harness/scripts/harness-log.sh\`는 역할 호출 시 세션 로그에 자동 append 합니다.
-- 전역 설치된 \`~/.codex/skills/harness/scripts/harness-session-close.sh\`는 세션 종료 시 최신 세션 요약과 역할 호출 빈도 통계를 자동 갱신합니다.
-- 전역 설치된 \`~/.codex/skills/harness/scripts/harness-role-stats.sh\`는 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
+- 전역 설치된 \`harness-log.sh\`는 역할 호출 시 세션 로그에 자동 append 합니다.
+- 전역 설치된 \`harness-session-close.sh\`는 세션 종료 시 최신 세션 요약과 역할 호출 빈도 통계를 자동 갱신합니다.
+- 전역 설치된 \`harness-role-stats.sh\`는 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
+- 전역 설치된 \`harness-template-candidates.sh\`는 누적 로그를 분석해 반복 업무 템플릿 후보를 \`.harness/reports/template-candidates.md\`로 정리합니다.
 
 ## 로그를 남겨야 하는 상황
 

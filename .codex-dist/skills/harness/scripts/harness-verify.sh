@@ -126,6 +126,7 @@ DIST_SCRIPT_FILES=(
   "$HARNESS_SCRIPT_DIR/harness-log.sh"
   "$HARNESS_SCRIPT_DIR/harness-session-close.sh"
   "$HARNESS_SCRIPT_DIR/harness-role-stats.sh"
+  "$HARNESS_SCRIPT_DIR/harness-template-candidates.sh"
 )
 
 for file in "${DIST_SCRIPT_FILES[@]}"; do
@@ -179,7 +180,6 @@ done
 
 # 로그 구조
 LOG_FILES=(
-  ".harness/logs/logging-policy.md"
   ".harness/logs/session-log.md"
   ".harness/logs/session-events.tsv"
   ".harness/logs/latest-session-summary.md"
@@ -189,6 +189,8 @@ LOG_FILES=(
 for file in "${LOG_FILES[@]}"; do
   check_file "$file"
 done
+
+check_file ".harness/logging-policy.md"
 
 # 본체/보조 위계와 실행 팀 성격 힌트 확인
 if [ -f ".codex/skills/orchestrator/SKILL.md" ]; then
@@ -215,12 +217,12 @@ if [ -f ".harness/reports/team-playbook.md" ]; then
   check_contains_hint ".harness/reports/team-playbook.md" "운영 원칙" "운영 원칙"
 fi
 
-if [ -f ".harness/logs/logging-policy.md" ]; then
-  check_contains_hint ".harness/logs/logging-policy.md" "최소 로그 항목" "최소 로그 항목"
-  check_contains_hint ".harness/logs/logging-policy.md" "호출" "역할 호출 로그 기준"
-  check_contains_hint ".harness/logs/logging-policy.md" "harness-log.sh" "자동 append 도구"
-  check_contains_hint ".harness/logs/logging-policy.md" "세션 종료" "세션 종료 자동 집계"
-  check_contains_hint ".harness/logs/logging-policy.md" "호출 빈도" "역할 호출 빈도 통계"
+if [ -f ".harness/logging-policy.md" ]; then
+  check_contains_hint ".harness/logging-policy.md" "최소 로그 항목" "최소 로그 항목"
+  check_contains_hint ".harness/logging-policy.md" "호출" "역할 호출 로그 기준"
+  check_contains_hint ".harness/logging-policy.md" "harness-log.sh" "자동 append 도구"
+  check_contains_hint ".harness/logging-policy.md" "세션 종료" "세션 종료 자동 집계"
+  check_contains_hint ".harness/logging-policy.md" "호출 빈도" "역할 호출 빈도 통계"
 fi
 
 if [ -f ".harness/logs/session-log.md" ]; then

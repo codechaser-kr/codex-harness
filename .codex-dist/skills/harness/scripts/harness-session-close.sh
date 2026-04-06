@@ -79,7 +79,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-[ -f "$EVENTS_FILE" ] || fail "missing event log: $EVENTS_FILE"
+ensure_harness_log_scaffold
 
 if [ -z "$SESSION_ID" ]; then
   [ -f "$CURRENT_SESSION_FILE" ] || fail "no active session"

@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HARNESS_HOME="$(cd "$SCRIPT_DIR/.." && pwd)"
+HARNESS_REFERENCE_DIR="$HARNESS_HOME/references"
+HARNESS_SCRIPT_DIR="$HARNESS_HOME/scripts"
+
 FAILURES=0
 WARNINGS=0
 
@@ -87,6 +92,7 @@ check_contains_hint() {
 }
 
 log "실행 하네스 팀 구조 검증 시작"
+log "harness 기준 경로: $HARNESS_HOME"
 
 # 필수 디렉토리
 check_dir ".codex/skills"
@@ -102,24 +108,24 @@ check_dir ".harness"
 check_dir ".harness/reports"
 check_dir ".harness/logs"
 
-# 전역 references 확인
-check_dir ".codex-dist/skills/harness/references"
-check_file ".codex-dist/skills/harness/references/agent-design-patterns.md"
-check_file ".codex-dist/skills/harness/references/orchestrator-template.md"
-check_file ".codex-dist/skills/harness/references/skill-writing-guide.md"
-check_file ".codex-dist/skills/harness/references/skill-testing-guide.md"
-check_file ".codex-dist/skills/harness/references/qa-agent-guide.md"
-check_file ".codex-dist/skills/harness/references/team-examples.md"
+# harness references 확인
+check_dir "$HARNESS_REFERENCE_DIR"
+check_file "$HARNESS_REFERENCE_DIR/agent-design-patterns.md"
+check_file "$HARNESS_REFERENCE_DIR/orchestrator-template.md"
+check_file "$HARNESS_REFERENCE_DIR/skill-writing-guide.md"
+check_file "$HARNESS_REFERENCE_DIR/skill-testing-guide.md"
+check_file "$HARNESS_REFERENCE_DIR/qa-agent-guide.md"
+check_file "$HARNESS_REFERENCE_DIR/team-examples.md"
 
-# 전역 자동화 스크립트 확인
+# harness 자동화 스크립트 확인
 DIST_SCRIPT_FILES=(
-  ".codex-dist/skills/harness/scripts/harness-lib.sh"
-  ".codex-dist/skills/harness/scripts/harness-init.sh"
-  ".codex-dist/skills/harness/scripts/harness-plan.sh"
-  ".codex-dist/skills/harness/scripts/harness-verify.sh"
-  ".codex-dist/skills/harness/scripts/harness-log.sh"
-  ".codex-dist/skills/harness/scripts/harness-session-close.sh"
-  ".codex-dist/skills/harness/scripts/harness-role-stats.sh"
+  "$HARNESS_SCRIPT_DIR/harness-lib.sh"
+  "$HARNESS_SCRIPT_DIR/harness-init.sh"
+  "$HARNESS_SCRIPT_DIR/harness-plan.sh"
+  "$HARNESS_SCRIPT_DIR/harness-verify.sh"
+  "$HARNESS_SCRIPT_DIR/harness-log.sh"
+  "$HARNESS_SCRIPT_DIR/harness-session-close.sh"
+  "$HARNESS_SCRIPT_DIR/harness-role-stats.sh"
 )
 
 for file in "${DIST_SCRIPT_FILES[@]}"; do

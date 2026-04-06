@@ -35,6 +35,21 @@ create_file_if_missing() {
   fi
 }
 
+ensure_gitignore_entry() {
+  local entry="$1"
+  local gitignore_file=".gitignore"
+
+  touch "$gitignore_file"
+
+  if grep -Fxq "$entry" "$gitignore_file"; then
+    log "gitignore 유지: $entry"
+    return
+  fi
+
+  printf '%s\n' "$entry" >> "$gitignore_file"
+  log "gitignore 추가: $entry"
+}
+
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 
 create_dir ".codex"
@@ -52,6 +67,13 @@ create_dir ".harness/reports"
 create_dir ".harness/scenarios"
 create_dir ".harness/templates"
 create_dir ".harness/logs"
+
+ensure_gitignore_entry ".harness/logs/.current-session"
+ensure_gitignore_entry ".harness/logs/session-log.md"
+ensure_gitignore_entry ".harness/logs/session-events.tsv"
+ensure_gitignore_entry ".harness/logs/latest-session-summary.md"
+ensure_gitignore_entry ".harness/logs/role-frequency.md"
+ensure_gitignore_entry ".harness/logs/session-summary-*.md"
 
 create_file_if_missing ".codex/skills/domain-analyst/SKILL.md" \
 "---
@@ -101,6 +123,7 @@ description: 저장소의 목적, 기술 스택, 핵심 디렉토리, 주요 흐
 - 분석이 불충분하면 architect가 설계를 강하게 진행할 수 없다는 점을 항상 의식한다.
 - 핵심 흐름이 불명확하면 \"무엇이 아직 불명확한지\"를 명시한다.
 - validator나 QA가 분석 약점을 지적하면, 요약만 고치지 말고 분석의 기준 자체를 다시 본다.
+- \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
 - 역할이 호출되면 \`.harness/logs/session-log.md\`에 시작 요청, 호출 역할, 출력 파일, 다음 권장 역할을 남긴다.
 "
 
@@ -149,6 +172,7 @@ description: 저장소에 맞는 프로젝트 로컬 실행 하네스 구조와 
 - 분석 결과가 약하면 설계를 단정하지 말고, 어떤 판단이 보류 상태인지 남긴다.
 - 기본 역할 구성을 기계적으로 강제하지 말고 프로젝트 규모에 맞게 조정한다.
 - validator가 과한 분리나 약한 구조를 지적하면 역할 수와 경계를 다시 검토한다.
+- \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
 - 역할이 호출되면 \`.harness/logs/session-log.md\`에 호출 이유, 입력 파일, 출력 파일, 남은 약점을 남긴다.
 "
 
@@ -198,6 +222,7 @@ description: 실행 하네스 구조를 바탕으로 프로젝트 로컬 역할 
 - 설명만 있는 얇은 스킬을 만들지 않는다.
 - 각 스킬이 실제로 팀 멤버처럼 읽히는지 항상 확인한다.
 - validator가 약한 설명이나 연결 부족을 지적하면, 텍스트만 덧붙이지 말고 구조를 다시 정돈한다.
+- \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
 - 역할이 호출되면 \`.harness/logs/session-log.md\`에 생성/보완한 파일과 다음 권장 역할을 남긴다.
 "
 
@@ -247,6 +272,7 @@ description: 프로젝트 실행 하네스에서 필요한 품질 기준, 검토
 - 추상적인 좋은 말보다 실제 반복 검토 가능한 질문을 우선한다.
 - 프로젝트 목적과 무관한 품질 기준을 과하게 추가하지 않는다.
 - validator 피드백이 반복되면 QA 질문이 충분히 구체적인지 다시 점검한다.
+- \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
 - 역할이 호출되면 \`.harness/logs/session-log.md\`에 추가/보강한 QA 질문과 후속 권장 역할을 남긴다.
 "
 
@@ -301,6 +327,7 @@ description: 프로젝트 로컬 실행 하네스의 중심 역할입니다. 도
 - 흐름이 복잡해지면 병렬화보다 단순화가 가능한지 먼저 본다.
 - QA와 validator의 피드백이 반복되면 흐름 자체를 다시 설계할 수 있어야 한다.
 - 리포트가 본체처럼 커지고 역할 팀이 약해지는 징후를 경계한다.
+- \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
 - 역할이 호출되면 \`.harness/logs/session-log.md\`에 흐름 변경, 연결 변경, 다음 권장 역할을 남긴다.
 "
 
@@ -351,6 +378,7 @@ description: 생성된 프로젝트 로컬 실행 하네스가 최소 요건을 
 - 구조적 약점이 반복되면 어느 역할에서 문제가 시작됐는지 함께 본다.
 - 보완 제안은 실행 가능한 수준으로 남긴다.
 - QA와 유사해 보일 때도, validator는 최소 구조 요건과 연결성에 더 집중한다.
+- \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
 - 역할이 호출되면 \`.harness/logs/session-log.md\`에 지적 사항, 영향 받은 파일, 다음 권장 역할을 남긴다.
 "
 
@@ -404,6 +432,8 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 새 프로젝트라면 domain-analyst → harness-architect → qa-designer → orchestrator → validator 순서를 기본으로 본다.
 - 이미 구조가 있는 프로젝트라면 부족한 역할만 다시 호출하는 쪽을 우선한다.
 - 리포트보다 실제 역할 팀 구조와 설명 품질을 더 중요하게 본다.
+- \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
+- 로그 운영 기준은 \`.harness/logs/logging-policy.md\`를 먼저 확인한다.
 - 이 역할이 호출되면 \`.harness/logs/session-log.md\`에 새로운 세션 시작 기록을 남긴다.
 "
 
@@ -509,6 +539,14 @@ create_file_if_missing ".harness/reports/team-playbook.md" \
 - QA 질문이 약하면 qa-designer를 다시 호출해 보강합니다.
 - 중요한 역할 호출이나 흐름 변경은 session-log에 남깁니다.
 
+## 로그 운영
+
+- 로그 정책은 \`.harness/logs/logging-policy.md\`에서 확인합니다.
+- 역할별 누적 기록은 \`.harness/logs/session-log.md\`에 남깁니다.
+- 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
+- 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
+- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다.
+
 ## 운영 메모
 
 - 작은 프로젝트는 역할을 줄일 수 있습니다.
@@ -525,9 +563,9 @@ create_file_if_missing ".harness/logs/logging-policy.md" \
 
 ## 자동화 도구
 
-- \`.codex-dist/skills/harness/scripts/harness-log.sh\`는 역할 호출 시 세션 로그에 자동 append 합니다.
-- \`.codex-dist/skills/harness/scripts/harness-session-close.sh\`는 세션 종료 시 최신 세션 요약과 역할 호출 빈도 통계를 자동 갱신합니다.
-- \`.codex-dist/skills/harness/scripts/harness-role-stats.sh\`는 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
+- 전역 설치된 \`~/.codex/skills/harness/scripts/harness-log.sh\`는 역할 호출 시 세션 로그에 자동 append 합니다.
+- 전역 설치된 \`~/.codex/skills/harness/scripts/harness-session-close.sh\`는 세션 종료 시 최신 세션 요약과 역할 호출 빈도 통계를 자동 갱신합니다.
+- 전역 설치된 \`~/.codex/skills/harness/scripts/harness-role-stats.sh\`는 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
 
 ## 로그를 남겨야 하는 상황
 

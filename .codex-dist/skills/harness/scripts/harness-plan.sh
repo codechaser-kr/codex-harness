@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# harness-plan.sh
+# 보조 리포트 파일을 프로젝트 유형 감지 기반으로 덮어써서 생성합니다.
+# harness-init.sh와 차이:
+#   - harness-init.sh: 디렉토리/스킬/리포트를 최초 1회 생성 (기존 파일 유지)
+#   - harness-plan.sh: 리포트만 다시 생성 (항상 덮어씀, 스킬은 건드리지 않음)
+# 사용 시점: 이미 init된 저장소에서 리포트를 초기화하거나 재생성할 때
 set -euo pipefail
 
 REPORT_DIR=".harness/reports"
@@ -53,17 +59,8 @@ detect_stack_hint() {
     return
   fi
 
-  local joined=""
-  local i
-  for i in "${!hints[@]}"; do
-    if [ "$i" -eq 0 ]; then
-      joined="${hints[$i]}"
-    else
-      joined="$joined, ${hints[$i]}"
-    fi
-  done
-
-  echo "$joined"
+  local IFS=", "
+  echo "${hints[*]}"
 }
 
 PROJECT_TYPE="$(detect_project_type)"

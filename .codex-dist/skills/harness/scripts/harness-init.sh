@@ -523,6 +523,12 @@ create_file_if_missing ".harness/logs/logging-policy.md" \
 
 이 문서는 실행 하네스 팀을 실제로 운용할 때 어떤 로그를 남겨야 하는지 정의합니다.
 
+## 자동화 도구
+
+- \`.codex-dist/skills/harness/scripts/harness-log.sh\`는 역할 호출 시 세션 로그에 자동 append 합니다.
+- \`.codex-dist/skills/harness/scripts/harness-session-close.sh\`는 세션 종료 시 최신 세션 요약과 역할 호출 빈도 통계를 자동 갱신합니다.
+- \`.codex-dist/skills/harness/scripts/harness-role-stats.sh\`는 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
+
 ## 로그를 남겨야 하는 상황
 
 - run-harness로 팀을 시작했을 때
@@ -549,6 +555,7 @@ create_file_if_missing ".harness/logs/logging-policy.md" \
 - 사람이 읽을 수 있어야 합니다.
 - 역할 흐름과 피드백 루프가 보이도록 남깁니다.
 - 각 역할은 자신이 수행한 주요 변경과 다음 권장 단계를 남길 책임이 있습니다.
+- 가능하면 수동 편집보다 자동 append 스크립트를 우선 사용합니다.
 "
 
 create_file_if_missing ".harness/logs/session-log.md" \
@@ -563,6 +570,8 @@ create_file_if_missing ".harness/logs/session-log.md" \
 ### 세션
 
 - 시각:
+- 세션 ID:
+- 상태:
 - 시작 요청:
 - 진입점:
 - 호출 역할:
@@ -578,6 +587,8 @@ create_file_if_missing ".harness/logs/session-log.md" \
 ### 세션
 
 - 시각: YYYY-MM-DD HH:MM
+- 세션 ID: session-YYYYMMDD-HHMMSS
+- 상태: started
 - 시작 요청: 현재 프로젝트에 하네스 팀을 한 번 돌려줘
 - 진입점: run-harness
 - 호출 역할: domain-analyst, harness-architect, orchestrator
@@ -585,6 +596,21 @@ create_file_if_missing ".harness/logs/session-log.md" \
 - 출력 파일: .harness/reports/domain-analysis.md, .harness/reports/harness-architecture.md
 - 다음 권장 역할: qa-designer
 - 남은 약점: QA 질문이 아직 추상적임
+"
+
+create_file_if_missing ".harness/logs/session-events.tsv" \
+"timestamp	session_id	status	request	entry_point	roles	inputs	outputs	next_role	weaknesses	note"
+
+create_file_if_missing ".harness/logs/latest-session-summary.md" \
+"# 최신 세션 요약
+
+아직 종료된 세션 집계가 없습니다.
+"
+
+create_file_if_missing ".harness/logs/role-frequency.md" \
+"# 역할 호출 빈도
+
+아직 집계된 역할 호출 통계가 없습니다.
 "
 
 log "프로젝트 로컬 실행 하네스 초기화 완료"

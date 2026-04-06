@@ -111,6 +111,20 @@ check_file ".codex-dist/skills/harness/references/skill-testing-guide.md"
 check_file ".codex-dist/skills/harness/references/qa-agent-guide.md"
 check_file ".codex-dist/skills/harness/references/team-examples.md"
 
+# 전역 자동화 스크립트 확인
+DIST_SCRIPT_FILES=(
+  ".codex-dist/skills/harness/scripts/harness-init.sh"
+  ".codex-dist/skills/harness/scripts/harness-plan.sh"
+  ".codex-dist/skills/harness/scripts/harness-verify.sh"
+  ".codex-dist/skills/harness/scripts/harness-log.sh"
+  ".codex-dist/skills/harness/scripts/harness-session-close.sh"
+  ".codex-dist/skills/harness/scripts/harness-role-stats.sh"
+)
+
+for file in "${DIST_SCRIPT_FILES[@]}"; do
+  check_file "$file"
+done
+
 # 필수 로컬 역할 스킬
 SKILL_FILES=(
   ".codex/skills/domain-analyst/SKILL.md"
@@ -160,6 +174,9 @@ done
 LOG_FILES=(
   ".harness/logs/logging-policy.md"
   ".harness/logs/session-log.md"
+  ".harness/logs/session-events.tsv"
+  ".harness/logs/latest-session-summary.md"
+  ".harness/logs/role-frequency.md"
 )
 
 for file in "${LOG_FILES[@]}"; do
@@ -194,12 +211,30 @@ fi
 if [ -f ".harness/logs/logging-policy.md" ]; then
   check_contains_hint ".harness/logs/logging-policy.md" "최소 로그 항목" "최소 로그 항목"
   check_contains_hint ".harness/logs/logging-policy.md" "호출" "역할 호출 로그 기준"
+  check_contains_hint ".harness/logs/logging-policy.md" "harness-log.sh" "자동 append 도구"
+  check_contains_hint ".harness/logs/logging-policy.md" "세션 종료" "세션 종료 자동 집계"
+  check_contains_hint ".harness/logs/logging-policy.md" "호출 빈도" "역할 호출 빈도 통계"
 fi
 
 if [ -f ".harness/logs/session-log.md" ]; then
+  check_contains_hint ".harness/logs/session-log.md" "세션 ID" "세션 ID 로그"
+  check_contains_hint ".harness/logs/session-log.md" "상태" "세션 상태 로그"
   check_contains_hint ".harness/logs/session-log.md" "시작 요청" "시작 요청 로그"
   check_contains_hint ".harness/logs/session-log.md" "진입점" "진입점 로그"
   check_contains_hint ".harness/logs/session-log.md" "다음 권장 역할" "다음 권장 역할 로그"
+fi
+
+if [ -f ".harness/logs/session-events.tsv" ]; then
+  check_contains_hint ".harness/logs/session-events.tsv" "session_id" "세션 이벤트 헤더"
+  check_contains_hint ".harness/logs/session-events.tsv" "status" "이벤트 상태 헤더"
+fi
+
+if [ -f ".harness/logs/latest-session-summary.md" ]; then
+  check_contains_hint ".harness/logs/latest-session-summary.md" "세션 요약" "최신 세션 요약"
+fi
+
+if [ -f ".harness/logs/role-frequency.md" ]; then
+  check_contains_hint ".harness/logs/role-frequency.md" "역할 호출 빈도" "역할 빈도 보고서"
 fi
 
 if [ "$FAILURES" -eq 0 ]; then

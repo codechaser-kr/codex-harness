@@ -103,64 +103,113 @@ START_REQUEST=""
 LAST_NEXT_ROLE=""
 LAST_WEAKNESSES=""
 
-while IFS= read -r raw_line; do
-  IFS=$'\034' read -r timestamp session_id status request entry_point roles inputs outputs next_role weaknesses note <<< "${raw_line//$'\t'/$'\034'}"
+while IFS=$'\t' read -r kind value1 value2; do
+  case "$kind" in
+    META)
+      case "$value1" in
+        found)
+          FOUND="$value2"
+          ;;
+        already_closed)
+          ALREADY_CLOSED="$value2"
+          ;;
+        entry_count)
+          ENTRY_COUNT="$value2"
+          ;;
+        started_at)
+          STARTED_AT="$value2"
+          ;;
+        entry_point)
+          ENTRY_POINT="$value2"
+          ;;
+        start_request)
+          START_REQUEST="$value2"
+          ;;
+        last_next_role)
+          LAST_NEXT_ROLE="$value2"
+          ;;
+        last_weaknesses)
+          LAST_WEAKNESSES="$value2"
+          ;;
+      esac
+      ;;
+    ROLE)
+      ROLE_COUNTS["$value2"]="$value1"
+      ;;
+    OUTPUT)
+      OUTPUT_COUNTS["$value1"]=1
+      ;;
+  esac
+done < <(
+  awk -F '\t' -v target_session="$SESSION_ID" '
+    NR == 1 { next }
+    $2 != target_session { next }
+    {
+      found = 1
 
-  if [ "$timestamp" = "timestamp" ]; then
-    continue
-  fi
+      if (started_at == "") {
+        started_at = $1
+      }
 
-  if [ "$session_id" != "$SESSION_ID" ]; then
-    continue
-  fi
+      if ($3 == "closed") {
+        already_closed = 1
+        next
+      }
 
-  FOUND=1
+      entry_count++
 
-  if [ -z "$STARTED_AT" ]; then
-    STARTED_AT="$timestamp"
-  fi
+      if (start_request == "" && $4 != "") {
+        start_request = $4
+      }
 
-  if [ "$status" = "closed" ]; then
-    ALREADY_CLOSED=1
-    continue
-  fi
+      if (entry_point == "" && $5 != "") {
+        entry_point = $5
+      }
 
-  ENTRY_COUNT=$((ENTRY_COUNT + 1))
+      if ($9 != "") {
+        last_next_role = $9
+      }
 
-  if [ -z "$START_REQUEST" ] && [ -n "$request" ]; then
-    START_REQUEST="$request"
-  fi
+      if ($10 != "") {
+        last_weaknesses = $10
+      }
 
-  if [ -z "$ENTRY_POINT" ] && [ -n "$entry_point" ]; then
-    ENTRY_POINT="$entry_point"
-  fi
+      split($6, roles, ",")
+      for (i in roles) {
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", roles[i])
+        if (roles[i] != "") {
+          role_counts[roles[i]]++
+        }
+      }
 
-  if [ -n "$next_role" ]; then
-    LAST_NEXT_ROLE="$next_role"
-  fi
+      split($8, outputs, ",")
+      for (i in outputs) {
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", outputs[i])
+        if (outputs[i] != "") {
+          output_paths[outputs[i]] = 1
+        }
+      }
+    }
+    END {
+      printf "META\tfound\t%d\n", found + 0
+      printf "META\talready_closed\t%d\n", already_closed + 0
+      printf "META\tentry_count\t%d\n", entry_count + 0
+      printf "META\tstarted_at\t%s\n", started_at
+      printf "META\tentry_point\t%s\n", entry_point
+      printf "META\tstart_request\t%s\n", start_request
+      printf "META\tlast_next_role\t%s\n", last_next_role
+      printf "META\tlast_weaknesses\t%s\n", last_weaknesses
 
-  if [ -n "$weaknesses" ]; then
-    LAST_WEAKNESSES="$weaknesses"
-  fi
+      for (role in role_counts) {
+        printf "ROLE\t%d\t%s\n", role_counts[role], role
+      }
 
-  if [ -n "$roles" ]; then
-    IFS=',' read -r -a ROLE_PARTS <<< "$roles"
-    for role in "${ROLE_PARTS[@]}"; do
-      role="$(trim_text "$role")"
-      [ -n "$role" ] || continue
-      ROLE_COUNTS["$role"]=$(( ${ROLE_COUNTS["$role"]:-0} + 1 ))
-    done
-  fi
-
-  if [ -n "$outputs" ]; then
-    IFS=',' read -r -a OUTPUT_PARTS <<< "$outputs"
-    for output in "${OUTPUT_PARTS[@]}"; do
-      output="$(trim_text "$output")"
-      [ -n "$output" ] || continue
-      OUTPUT_COUNTS["$output"]=$(( ${OUTPUT_COUNTS["$output"]:-0} + 1 ))
-    done
-  fi
-done < "$EVENTS_FILE"
+      for (output in output_paths) {
+        printf "OUTPUT\t%s\n", output
+      }
+    }
+  ' "$EVENTS_FILE"
+)
 
 [ "$FOUND" -eq 1 ] || fail "session not found: $SESSION_ID"
 [ "$ALREADY_CLOSED" -eq 0 ] || fail "session already closed: $SESSION_ID"

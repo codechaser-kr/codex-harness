@@ -73,7 +73,7 @@ candidate_name() {
       printf '%s' "분석 후 구조 설계"
       ;;
     *)
-      printf '%s' "반복 작업 후보"
+      printf '%s' "반복 업무 후보"
       ;;
   esac
 }
@@ -122,14 +122,14 @@ candidate_slug() {
 render_report() {
   local rows="$1"
 
-  printf '# 템플릿 후보 분석\n\n'
+  printf '# 반복 업무 템플릿 후보 분석\n\n'
   printf -- '- 분석 시각: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %z')"
   printf -- '- 최소 반복 횟수: %s\n' "$MIN_COUNT"
   printf -- '- 최소 역할 수: %s\n' "$MIN_ROLES"
   printf '\n'
 
   if [ -z "$rows" ]; then
-    printf '반복 작업 후보가 없습니다.\n'
+    printf '아직 분석된 반복 업무 후보가 없습니다.\n'
     return
   fi
 

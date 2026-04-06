@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$SCRIPT_DIR/harness-lib.sh"
+
 LOG_DIR=".harness/logs"
 EVENTS_FILE="$LOG_DIR/session-events.tsv"
 ROLE_STATS_FILE="$LOG_DIR/role-frequency.md"
@@ -12,14 +15,6 @@ log() {
 fail() {
   printf '[harness][role-stats][error] %s\n' "$1" >&2
   exit 1
-}
-
-trim_text() {
-  local value="$1"
-  value="${value//$'\t'/ }"
-  value="${value//$'\n'/ }"
-  value="${value//$'\r'/ }"
-  printf '%s' "$value" | sed 's/[[:space:]]\+/ /g; s/^ //; s/ $//'
 }
 
 mkdir -p "$LOG_DIR"

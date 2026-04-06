@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$SCRIPT_DIR/harness-lib.sh"
+
 LOG_DIR=".harness/logs"
 EVENTS_FILE="$LOG_DIR/session-events.tsv"
 CURRENT_SESSION_FILE="$LOG_DIR/.current-session"
 LATEST_SUMMARY_FILE="$LOG_DIR/latest-session-summary.md"
 
-SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HARNESS_LOG_SCRIPT="$SELF_DIR/harness-log.sh"
-ROLE_STATS_SCRIPT="$SELF_DIR/harness-role-stats.sh"
+HARNESS_LOG_SCRIPT="$SCRIPT_DIR/harness-log.sh"
+ROLE_STATS_SCRIPT="$SCRIPT_DIR/harness-role-stats.sh"
 
 SESSION_ID=""
 SUMMARY_NOTE="세션 종료 및 자동 집계 완료"
@@ -35,14 +37,6 @@ Options:
   --note <text>
   --help
 EOF
-}
-
-trim_text() {
-  local value="$1"
-  value="${value//$'\t'/ }"
-  value="${value//$'\n'/ }"
-  value="${value//$'\r'/ }"
-  printf '%s' "$value" | sed 's/[[:space:]]\+/ /g; s/^ //; s/ $//'
 }
 
 join_keys() {

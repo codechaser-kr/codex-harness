@@ -113,6 +113,7 @@ check_file ".codex-dist/skills/harness/references/team-examples.md"
 
 # 전역 자동화 스크립트 확인
 DIST_SCRIPT_FILES=(
+  ".codex-dist/skills/harness/scripts/harness-lib.sh"
   ".codex-dist/skills/harness/scripts/harness-init.sh"
   ".codex-dist/skills/harness/scripts/harness-plan.sh"
   ".codex-dist/skills/harness/scripts/harness-verify.sh"

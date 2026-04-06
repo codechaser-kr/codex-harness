@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$SCRIPT_DIR/harness-lib.sh"
+
 LOG_DIR=".harness/logs"
 SESSION_LOG="$LOG_DIR/session-log.md"
 EVENTS_FILE="$LOG_DIR/session-events.tsv"
@@ -50,14 +53,6 @@ Options:
   --note <text>
   --help
 EOF
-}
-
-trim_text() {
-  local value="$1"
-  value="${value//$'\t'/ }"
-  value="${value//$'\n'/ }"
-  value="${value//$'\r'/ }"
-  printf '%s' "$value" | sed 's/[[:space:]]\+/ /g; s/^ //; s/ $//'
 }
 
 append_value() {

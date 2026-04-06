@@ -1,0 +1,502 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(pwd)"
+
+log() {
+  printf '[harness][init] %s\n' "$1"
+}
+
+create_dir() {
+  local dir="$1"
+  if [ ! -d "$dir" ]; then
+    mkdir -p "$dir"
+    log "디렉토리 생성: $dir"
+  else
+    log "이미 존재함: $dir"
+  fi
+}
+
+create_file_if_missing() {
+  local file="$1"
+  local content="$2"
+
+  if [ ! -f "$file" ]; then
+    printf "%s\n" "$content" > "$file"
+    log "파일 생성: $file"
+  else
+    log "기존 파일 유지: $file"
+  fi
+}
+
+log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
+
+create_dir ".agents/skills"
+create_dir ".agents/skills/domain-analyst"
+create_dir ".agents/skills/harness-architect"
+create_dir ".agents/skills/skill-scaffolder"
+create_dir ".agents/skills/qa-designer"
+create_dir ".agents/skills/orchestrator"
+create_dir ".agents/skills/validator"
+create_dir ".agents/skills/run-harness"
+
+create_dir ".harness"
+create_dir ".harness/reports"
+create_dir ".harness/scenarios"
+create_dir ".harness/templates"
+
+create_file_if_missing ".agents/skills/domain-analyst/SKILL.md" \
+"---
+name: domain-analyst
+description: 저장소의 목적, 기술 스택, 핵심 디렉토리, 주요 흐름, 하네스 관점의 핵심 관심사를 분석합니다. 프로젝트 구조 분석, 저장소 이해, 기술 스택 식별, 핵심 흐름 정리, 하네스 출발점 정의가 필요할 때 적극적으로 사용합니다.
+---
+
+# domain-analyst
+
+이 스킬은 프로젝트 실행 하네스 팀의 출발점이 되는 분석 역할을 맡는다.
+
+## 목적
+
+현재 저장소가 무엇을 하는 프로젝트인지 파악하고, 이후 역할 팀이 공통으로 참조할 수 있는 분석 결과를 만든다.
+
+## 주요 작업
+
+1. 저장소의 목적과 범위를 추정한다.
+2. 기술 스택과 핵심 디렉토리를 확인한다.
+3. 주요 흐름을 식별한다.
+4. 하네스 관점에서 중요한 영역을 정리한다.
+5. 결과를 `.harness/reports/domain-analysis.md`에 반영한다.
+
+## 입력
+
+- 저장소 루트 구조
+- 주요 설정 파일
+- 핵심 소스 디렉토리
+
+## 출력
+
+- `.harness/reports/domain-analysis.md`
+
+## 역할 팀 내 위치
+
+- 실행 하네스의 첫 단계
+- harness-architect, qa-designer, orchestrator의 입력을 만든다
+
+## 협업 원칙
+
+- 이후 역할이 사용할 수 있도록 구조적이고 요약된 결과를 남긴다.
+- 추정과 사실을 구분한다.
+- 구현 세부보다 역할 팀이 참고해야 할 핵심 흐름에 집중한다.
+
+## 운영 규칙
+
+- 분석이 불충분하면 architect가 설계를 강하게 진행할 수 없다는 점을 항상 의식한다.
+- 핵심 흐름이 불명확하면 \"무엇이 아직 불명확한지\"를 명시한다.
+- validator나 QA가 분석 약점을 지적하면, 요약만 고치지 말고 분석의 기준 자체를 다시 본다.
+"
+
+create_file_if_missing ".agents/skills/harness-architect/SKILL.md" \
+"---
+name: harness-architect
+description: 저장소에 맞는 프로젝트 로컬 실행 하네스 구조와 역할 경계를 설계합니다. 하네스 구조 설계, 역할 분리, 팀 구조 정리, 확장 가능한 하네스 설계가 필요할 때 적극적으로 사용합니다.
+---
+
+# harness-architect
+
+이 스킬은 프로젝트에 맞는 실행 하네스 구조를 설계한다.
+
+## 목적
+
+분석 결과를 바탕으로, 이 프로젝트에 어떤 역할 팀과 산출물 구조가 필요한지 정의한다.
+
+## 주요 작업
+
+1. domain-analysis를 읽는다.
+2. 필요한 역할 구성을 정한다.
+3. 어떤 역할은 유지하고 어떤 역할은 줄일지 판단한다.
+4. 실행 하네스 구조를 `.harness/reports/harness-architecture.md`에 정리한다.
+
+## 입력
+
+- `.harness/reports/domain-analysis.md`
+
+## 출력
+
+- `.harness/reports/harness-architecture.md`
+
+## 역할 팀 내 위치
+
+- 구조 설계 담당
+- skill-scaffolder와 orchestrator의 기준점 역할
+
+## 협업 원칙
+
+- domain-analyst의 결과를 단순 요약하지 말고, 역할 팀 구조로 번역한다.
+- skill-scaffolder가 바로 반영할 수 있는 수준으로 구조를 구체화한다.
+- 역할을 과도하게 늘리지 않는다.
+
+## 운영 규칙
+
+- 분석 결과가 약하면 설계를 단정하지 말고, 어떤 판단이 보류 상태인지 남긴다.
+- 기본 6역할을 기계적으로 강제하지 말고 프로젝트 규모에 맞게 조정한다.
+- validator가 과한 분리나 약한 구조를 지적하면 역할 수와 경계를 다시 검토한다.
+"
+
+create_file_if_missing ".agents/skills/skill-scaffolder/SKILL.md" \
+"---
+name: skill-scaffolder
+description: 실행 하네스 구조를 바탕으로 프로젝트 로컬 역할 스킬과 기본 파일을 생성하거나 보완합니다. 로컬 스킬 생성, 역할 파일 정리, 하네스 구조 반영이 필요할 때 적극적으로 사용합니다.
+---
+
+# skill-scaffolder
+
+이 스킬은 설계된 실행 하네스 구조를 실제 파일로 옮긴다.
+
+## 목적
+
+실행 하네스가 문서 수준에 머물지 않고, 프로젝트 안에서 실제로 사용할 수 있는 역할 스킬 구조로 정착되게 한다.
+
+## 주요 작업
+
+1. harness-architecture를 읽는다.
+2. 로컬 역할 스킬 파일을 생성하거나 보완한다.
+3. 역할별 설명과 책임 범위를 정리한다.
+4. 결과 구조를 validator가 점검할 수 있게 유지한다.
+
+## 입력
+
+- `.harness/reports/harness-architecture.md`
+
+## 출력
+
+- `.agents/skills/*`
+- `.harness/templates/*`
+
+## 역할 팀 내 위치
+
+- 구조를 실제 파일로 만드는 역할
+- architect의 설계를 구현으로 옮긴다
+
+## 협업 원칙
+
+- 생성 결과는 validator가 점검하기 쉬운 구조여야 한다.
+- 설명이 지나치게 약한 스킬을 만들지 않는다.
+- orchestrator가 흐름을 연결할 수 있게 입력/출력 구조를 유지한다.
+
+## 운영 규칙
+
+- 설명만 있는 얇은 스킬을 만들지 않는다.
+- 각 스킬이 실제로 팀 멤버처럼 읽히는지 항상 확인한다.
+- validator가 약한 설명이나 연결 부족을 지적하면, 텍스트만 덧붙이지 말고 구조를 다시 정돈한다.
+"
+
+create_file_if_missing ".agents/skills/qa-designer/SKILL.md" \
+"---
+name: qa-designer
+description: 프로젝트 실행 하네스에서 필요한 품질 기준, 검토 질문, 경계면 점검 포인트를 설계합니다. QA 전략 수립, 품질 기준 정의, 구조 정합성 검토가 필요할 때 적극적으로 사용합니다.
+---
+
+# qa-designer
+
+이 스킬은 실행 하네스가 어떤 품질 관점으로 프로젝트를 볼지 정의한다.
+
+## 목적
+
+이 프로젝트에서 무엇을 반복적으로 검토해야 하는지 정하고, 역할 팀이 공유할 QA 관점을 만든다.
+
+## 주요 작업
+
+1. domain-analysis와 harness-architecture를 함께 읽는다.
+2. 품질 실패 유형을 정리한다.
+3. 반복 검토 질문을 정의한다.
+4. 결과를 `.harness/reports/qa-strategy.md`에 반영한다.
+
+## 입력
+
+- `.harness/reports/domain-analysis.md`
+- `.harness/reports/harness-architecture.md`
+
+## 출력
+
+- `.harness/reports/qa-strategy.md`
+
+## 역할 팀 내 위치
+
+- 역할 팀의 QA 기준 제공
+- validator와 orchestrator가 참고하는 품질 기준점
+
+## 협업 원칙
+
+- 존재 여부보다 정합성과 연결성을 본다.
+- validator가 실제 피드백을 줄 수 있게 검토 질문을 구체화한다.
+- orchestrator가 흐름에 포함할 수 있는 품질 기준을 만든다.
+
+## 운영 규칙
+
+- 추상적인 좋은 말보다 실제 반복 검토 가능한 질문을 우선한다.
+- 프로젝트 목적과 무관한 품질 기준을 과하게 추가하지 않는다.
+- validator 피드백이 반복되면 QA 질문이 충분히 구체적인지 다시 점검한다.
+"
+
+create_file_if_missing ".agents/skills/orchestrator/SKILL.md" \
+"---
+name: orchestrator
+description: 프로젝트 로컬 실행 하네스의 중심 역할입니다. 도메인 분석, 구조 설계, 스킬 생성, QA, 검증 역할을 실제 작업 순서와 연결 구조로 정리하고, 역할 팀이 어떻게 협업해야 하는지 정의할 때 적극적으로 사용합니다.
+---
+
+# orchestrator
+
+이 스킬은 프로젝트 실행 하네스 팀의 중심 역할이다.
+
+## 목적
+
+여러 역할이 따로 존재하는 데 그치지 않고, 실제로 하나의 역할 팀처럼 동작하도록 흐름과 연결 구조를 정리한다.
+
+## 주요 작업
+
+1. domain-analysis, harness-architecture, qa-strategy를 읽는다.
+2. 어떤 역할이 먼저 수행되어야 하는지 정한다.
+3. 어떤 산출물이 다음 단계의 입력이 되는지 연결한다.
+4. 프로젝트 로컬 실행 하네스 구조를 `.harness/reports/orchestration-plan.md`에 정리한다.
+5. 이후 프로젝트 특화 실행 하네스로 확장 가능한 포인트를 남긴다.
+
+## 입력
+
+- `.harness/reports/domain-analysis.md`
+- `.harness/reports/harness-architecture.md`
+- `.harness/reports/qa-strategy.md`
+
+## 출력
+
+- `.harness/reports/orchestration-plan.md`
+
+## 역할 팀 내 위치
+
+- 실행 하네스의 조율 중심
+- 각 역할을 하나의 팀 흐름으로 묶는다
+- 프로젝트별 실행 하네스의 운영 기준점이 된다
+
+## 협업 원칙
+
+- 모든 일을 직접 대신하지 않는다.
+- 각 역할의 입력과 출력을 연결하는 데 집중한다.
+- 역할 간 중복을 줄이고 흐름을 단순하게 유지한다.
+- validator의 피드백이 다시 구조 보완으로 이어질 수 있게 루프를 만든다.
+
+## 운영 규칙
+
+- 중심 역할이지만, 모든 산출물을 직접 작성하려고 하지 않는다.
+- 흐름이 복잡해지면 병렬화보다 단순화가 가능한지 먼저 본다.
+- QA와 validator의 피드백이 반복되면 흐름 자체를 다시 설계할 수 있어야 한다.
+- 리포트가 본체처럼 커지고 역할 팀이 약해지는 징후를 경계한다.
+"
+
+create_file_if_missing ".agents/skills/validator/SKILL.md" \
+"---
+name: validator
+description: 생성된 프로젝트 로컬 실행 하네스가 최소 요건을 만족하는지 점검하고, 누락·충돌·약한 설명을 식별합니다. 구조 검증, 역할 점검, 연결성 점검이 필요할 때 적극적으로 사용합니다.
+---
+
+# validator
+
+이 스킬은 생성된 실행 하네스가 실제로 쓸 만한 출발점인지 점검한다.
+
+## 목적
+
+프로젝트 로컬 실행 하네스가 최소한의 구조, 설명, 연결성을 갖추었는지 확인한다.
+
+## 주요 작업
+
+1. 필수 디렉토리와 파일을 점검한다.
+2. 각 역할 스킬의 설명이 약하지 않은지 본다.
+3. 리포트와 역할 구조가 연결되는지 확인한다.
+4. 필요하면 보완 항목을 제안한다.
+
+## 입력
+
+- `.agents/skills/*`
+- `.harness/reports/*`
+
+## 출력
+
+- 검증 로그 또는 보완 제안
+
+## 역할 팀 내 위치
+
+- 실행 하네스의 품질 점검 역할
+- 생성 이후 최소 품질 보장을 담당
+
+## 협업 원칙
+
+- 단순 존재 확인에 그치지 않는다.
+- 부족한 설명, 약한 연결, 과한 역할 분리를 적극적으로 지적한다.
+- 피드백은 다시 architect / scaffolder / orchestrator가 반영할 수 있게 구체적으로 남긴다.
+
+## 운영 규칙
+
+- 체크리스트만 읽고 끝내지 않는다.
+- 구조적 약점이 반복되면 어느 역할에서 문제가 시작됐는지 함께 본다.
+- 보완 제안은 실행 가능한 수준으로 남긴다.
+- QA와 유사해 보일 때도, validator는 최소 구조 요건과 연결성에 더 집중한다.
+"
+
+create_file_if_missing ".agents/skills/run-harness/SKILL.md" \
+"---
+name: run-harness
+description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 진입점입니다. 현재 저장소 상태를 보고 어떤 역할을 먼저 사용해야 할지 판단하고, 분석·설계·QA·오케스트레이션·검증 흐름을 시작하거나 보강할 때 적극적으로 사용합니다.
+---
+
+# run-harness
+
+이 스킬은 프로젝트 실행 하네스 팀의 운영 진입점이다.
+
+## 목적
+
+현재 저장소 상태를 보고, 실행 하네스 팀이 어떤 순서로 움직여야 할지 결정하고 시작한다.
+
+## 주요 작업
+
+1. 현재 `.harness/reports/*`와 `.agents/skills/*` 상태를 본다.
+2. domain-analysis가 비어 있거나 약하면 domain-analyst부터 시작한다.
+3. 구조 설계가 부족하면 harness-architect를 우선한다.
+4. QA 기준이 약하면 qa-designer를 다시 호출할 수 있다.
+5. 흐름 연결이 약하면 orchestrator를 중심으로 재정리한다.
+6. 마지막에 validator 관점으로 최소 구조를 점검한다.
+
+## 입력
+
+- 현재 저장소 상태
+- `.agents/skills/*`
+- `.harness/reports/*`
+
+## 출력
+
+- 현재 시점에 필요한 실행 하네스 팀 진행 순서
+- 보강이 필요한 역할 제안
+
+## 역할 팀 내 위치
+
+- 실행 하네스 팀의 기동 엔트리포인트
+- 팀 전체를 실제로 움직이기 시작하게 만드는 역할
+
+## 협업 원칙
+
+- 항상 모든 역할을 다 호출하려 하지 않는다.
+- 현재 상태에서 가장 약한 지점을 먼저 보강한다.
+- orchestrator와 validator를 흐름의 중심 축으로 삼는다.
+
+## 운영 규칙
+
+- 새 프로젝트라면 domain-analyst → harness-architect → qa-designer → orchestrator → validator 순서를 기본으로 본다.
+- 이미 구조가 있는 프로젝트라면 부족한 역할만 다시 호출하는 쪽을 우선한다.
+- 리포트보다 실제 역할 팀 구조와 설명 품질을 더 중요하게 본다.
+"
+create_file_if_missing ".harness/reports/domain-analysis.md" \
+"# 도메인 분석
+
+## 저장소 요약
+
+- 프로젝트 유형: 미정
+- 주요 기술 스택: 미정
+- 핵심 흐름: 미정
+
+## 초기 관찰 내용
+
+- 저장소를 분석한 뒤 이 내용을 구체화하세요.
+"
+
+create_file_if_missing ".harness/reports/harness-architecture.md" \
+"# 실행 하네스 아키텍처
+
+## 목적
+
+이 저장소에 어떤 프로젝트 로컬 실행 하네스 구조가 적절한지 정의합니다.
+
+## 제안 역할
+
+- domain-analyst
+- harness-architect
+- skill-scaffolder
+- qa-designer
+- orchestrator
+- validator
+- run-harness
+"
+
+create_file_if_missing ".harness/reports/qa-strategy.md" \
+"# QA 전략
+
+## 목표
+
+이 저장소에서 중요하게 볼 품질 기준과 검토 지점을 정리합니다.
+"
+
+create_file_if_missing ".harness/reports/orchestration-plan.md" \
+"# 실행 하네스 오케스트레이션 계획
+
+## 작업 흐름 개요
+
+여러 역할이 어떤 순서로 협력해야 하는지 정리합니다.
+
+## 예시 흐름
+
+1. domain-analyst가 저장소를 분석한다.
+2. harness-architect가 구조를 설계한다.
+3. skill-scaffolder가 로컬 역할 스킬을 정리한다.
+4. qa-designer가 품질 기준을 정리한다.
+5. orchestrator가 전체 실행 하네스 흐름을 정리한다.
+6. validator가 전체 구성을 점검한다.
+"
+
+create_file_if_missing ".harness/reports/team-structure.md" \
+"# 역할 팀 구조
+
+## 목적
+
+이 문서는 현재 프로젝트의 로컬 실행 하네스를 역할 팀 관점에서 설명합니다.
+
+## 팀 구성
+
+- domain-analyst
+- harness-architect
+- skill-scaffolder
+- qa-designer
+- orchestrator
+- validator
+- run-harness
+
+## 설명
+
+이 역할들은 각각 독립적인 판단 단위를 가지며,
+함께 프로젝트 실행 하네스를 구성합니다.
+"
+
+create_file_if_missing ".harness/reports/team-playbook.md" \
+"# 팀 운영 플레이북
+
+## 목적
+
+이 문서는 프로젝트 로컬 실행 하네스 팀을 실제로 어떻게 시작하고 운용할지 요약합니다.
+
+## 시작 순서
+
+1. 기본적으로는 run-harness를 실행 하네스 팀의 진입점으로 사용합니다.
+2. run-harness가 현재 상태를 보고 필요한 역할을 우선순위로 정합니다.
+3. 새 프로젝트라면 domain-analyst부터 시작하는 흐름을 우선합니다.
+4. 구조가 이미 있다면 orchestrator / validator 중심의 보강 루프를 우선합니다.
+
+## 기본 운영 원칙
+
+- 문서보다 역할 팀을 본체로 봅니다.
+- 리포트는 팀이 공유하는 보조 기준으로 사용합니다.
+- validator 피드백이 나오면 architect / scaffolder / orchestrator가 다시 보강합니다.
+- QA 질문이 약하면 qa-designer를 다시 호출해 보강합니다.
+
+## 운영 메모
+
+- 작은 프로젝트는 역할을 줄일 수 있습니다.
+- 복잡한 프로젝트는 orchestrator 중심 운영이 중요합니다.
+- 이후 프로젝트 특화 실행 하네스로 확장할 수 있습니다.
+"
+
+log "프로젝트 로컬 실행 하네스 초기화 완료"

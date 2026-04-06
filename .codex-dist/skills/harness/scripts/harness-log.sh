@@ -238,9 +238,9 @@ if [ "$STATUS" != "closed" ]; then
 fi
 
 TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S %z')"
-ROLES_TEXT="$(join_list ', ' "${ROLES[@]}")"
-INPUTS_TEXT="$(join_list ', ' "${INPUTS[@]}")"
-OUTPUTS_TEXT="$(join_list ', ' "${OUTPUTS[@]}")"
+ROLES_TEXT="$(join_list ', ' "${ROLES[@]:-}")"
+INPUTS_TEXT="$(join_list ', ' "${INPUTS[@]:-}")"
+OUTPUTS_TEXT="$(join_list ', ' "${OUTPUTS[@]:-}")"
 
 printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
   "$TIMESTAMP" \

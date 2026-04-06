@@ -3,9 +3,14 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DIST_DIR="$ROOT_DIR/.codex-dist"
-SOURCE_DIR="$DIST_DIR/skills/harness"
+LOCAL_SOURCE_DIR="$DIST_DIR/skills/harness"
 TARGET_BASE="$HOME/.agents/skills"
 TARGET_DIR="$TARGET_BASE/harness"
+BOOTSTRAP_REPO="${HARNESS_INSTALL_REPO:-codechaser-kr/codex-harness}"
+BOOTSTRAP_REF="${HARNESS_INSTALL_REF:-main}"
+BOOTSTRAP_URL="${HARNESS_INSTALL_ARCHIVE_URL:-https://github.com/${BOOTSTRAP_REPO}/archive/refs/heads/${BOOTSTRAP_REF}.tar.gz}"
+BOOTSTRAP_TMPDIR=""
+SOURCE_DIR=""
 
 log() {
   printf '[harness][install] %s\n' "$1"
@@ -16,10 +21,73 @@ fail() {
   exit 1
 }
 
-log "starting installation"
+cleanup() {
+  if [ -n "$BOOTSTRAP_TMPDIR" ] && [ -d "$BOOTSTRAP_TMPDIR" ]; then
+    rm -rf "$BOOTSTRAP_TMPDIR"
+  fi
+}
 
-[ -d "$DIST_DIR" ] || fail "missing distribution directory: $DIST_DIR"
-[ -d "$SOURCE_DIR" ] || fail "missing skill source directory: $SOURCE_DIR"
+has_command() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+download_to() {
+  local url="$1"
+  local output_path="$2"
+
+  if has_command curl; then
+    curl -fsSL "$url" -o "$output_path"
+    return
+  fi
+
+  if has_command wget; then
+    wget -qO "$output_path" "$url"
+    return
+  fi
+
+  fail "curl or wget is required for bootstrap installation"
+}
+
+bootstrap_source_dir() {
+  local archive_path
+  local extract_dir
+  local repository_root
+
+  has_command tar || fail "tar is required for bootstrap installation"
+  has_command mktemp || fail "mktemp is required for bootstrap installation"
+
+  BOOTSTRAP_TMPDIR="$(mktemp -d)"
+  archive_path="$BOOTSTRAP_TMPDIR/codex-harness.tar.gz"
+  extract_dir="$BOOTSTRAP_TMPDIR/extracted"
+
+  log "local distribution not found; downloading ${BOOTSTRAP_REPO}@${BOOTSTRAP_REF}"
+  download_to "$BOOTSTRAP_URL" "$archive_path"
+
+  mkdir -p "$extract_dir"
+  tar -xzf "$archive_path" -C "$extract_dir"
+
+  repository_root="$(find "$extract_dir" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+  [ -n "$repository_root" ] || fail "failed to locate extracted repository contents"
+
+  SOURCE_DIR="$repository_root/.codex-dist/skills/harness"
+  [ -d "$SOURCE_DIR" ] || fail "remote distribution is missing .codex-dist/skills/harness"
+}
+
+resolve_source_dir() {
+  if [ -d "$LOCAL_SOURCE_DIR" ]; then
+    SOURCE_DIR="$LOCAL_SOURCE_DIR"
+    log "using local distribution: $SOURCE_DIR"
+    return
+  fi
+
+  bootstrap_source_dir
+  log "using downloaded distribution: $SOURCE_DIR"
+}
+
+trap cleanup EXIT
+
+log "starting installation"
+resolve_source_dir
 
 mkdir -p "$TARGET_BASE"
 

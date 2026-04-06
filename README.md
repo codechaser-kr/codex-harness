@@ -63,8 +63,12 @@
 
 다음과 같이 설치합니다.
 
-    git clone https://github.com/codechaser-kr/harness.git
-    cd harness
+    curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/install.sh | bash
+
+클론 후 로컬에서 설치해도 됩니다.
+
+    git clone https://github.com/codechaser-kr/codex-harness.git
+    cd codex-harness
     ./install.sh
 
 설치 후 전역에 다음이 추가됩니다.
@@ -122,36 +126,43 @@
 이 시스템은 기본적으로 다음 역할을 생성합니다.
 
 ### domain-analyst
+
 - 저장소 분석
 - 기술 스택 파악
 - 핵심 흐름 식별
 - 실행 하네스의 출발점 정의
 
 ### harness-architect
+
 - 로컬 실행 하네스 구조 설계
 - 역할 경계 정의
 - 확장 가능한 팀 구조 설계
 
 ### skill-scaffolder
+
 - 로컬 역할 스킬 생성
 - 하네스 구조를 실제 파일로 정착
 
 ### qa-designer
+
 - 품질 기준 정의
 - 반복 검토 질문 설계
 - 경계면 정합성 관점 정리
 
 ### orchestrator
+
 - 역할 간 흐름 설계
 - 입력/출력 연결
 - 프로젝트 실행 하네스 팀의 중심 조율 역할
 
 ### validator
+
 - 구조 검증
 - 누락 탐지
 - 약한 설명/연결성 보완 포인트 제안
 
 ### run-harness
+
 - 실행 하네스 팀의 기동 엔트리포인트
 - 현재 상태를 보고 어떤 역할부터 움직여야 할지 결정
 
@@ -284,4 +295,3 @@
 👉 **프로젝트별 실행 하네스 팀을 만들어내고 기동할 수 있게 하는 도구**
 
 입니다.
-

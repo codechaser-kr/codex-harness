@@ -284,7 +284,6 @@ CANDIDATE_ROWS="$(
     }
 
     function normalize_roles(raw,    count, i, item, out) {
-      role_count = 0
       out = ""
       count = split(raw, parts, ",")
       for (i = 1; i <= count; i++) {
@@ -292,7 +291,6 @@ CANDIDATE_ROWS="$(
         if (item == "") {
           continue
         }
-        role_count++
         if (out == "") {
           out = item
         } else {
@@ -300,6 +298,19 @@ CANDIDATE_ROWS="$(
         }
       }
       return out
+    }
+
+    function count_roles(raw,    count, i, item, total) {
+      total = 0
+      count = split(raw, parts, ",")
+      for (i = 1; i <= count; i++) {
+        item = trim(parts[i])
+        if (item == "") {
+          continue
+        }
+        total++
+      }
+      return total
     }
 
     function classify_output(path,    value) {
@@ -350,6 +361,7 @@ CANDIDATE_ROWS="$(
       request = trim($4)
       entry = trim($5)
       roles = normalize_roles($6)
+      role_count = count_roles($6)
       outputs = normalize_outputs($8)
       next_role = trim($9)
 

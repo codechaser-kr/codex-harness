@@ -41,6 +41,28 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 7. 리포트와 보조 문서는 사람이 구조를 이해하고 수정할 수 있게 돕는 **보조 레이어**로만 다룬다.
 8. 역할 수는 많을수록 좋은 것이 아니라, 실제 프로젝트에 맞는 운영 가능한 팀 크기가 중요하다.
 
+## 작성 언어 원칙
+
+- 프로젝트 내부 `.harness/*` 문서와 로그 본문은 특별한 요청이 없으면 한글로 작성한다.
+- 보고서 파일명은 `domain-analysis.md` 같은 기존 영문 파일명을 유지하되, 본문과 항목명은 한글을 기본으로 한다.
+- 프로젝트에 이미 명시된 문서 언어 규칙이 있다면 그 규칙을 우선하되, 별도 규칙이 없으면 한글 작성이 기본이다.
+
+## 실행 계약
+
+이 스킬이 트리거되었다고 해서 임의 방식으로 파일을 만들면 안 된다.
+
+- 최초 하네스 구성 요청이면 반드시 `bash scripts/harness-init.sh`를 먼저 실행한다.
+- 하네스 구성이 끝났다고 판단하기 전에 반드시 `bash scripts/harness-verify.sh`를 실행한다.
+- `scripts/harness-plan.sh`는 이미 하네스 구조가 있는 프로젝트에서 `.harness/reports/*`만 재생성하거나 보강할 때만 사용한다.
+- `scripts/harness-init.sh` 대신 `.codex/skills/*`, `.harness/*`를 수동으로 직접 생성하는 방식은 사용하지 않는다.
+- `scripts/harness-verify.sh`가 실패하면 완료로 간주하지 말고, 누락된 구조를 먼저 보강한다.
+
+## 기본 실행 순서
+
+- 새 프로젝트 하네스 구성: `bash scripts/harness-init.sh` → 필요 시 역할 보강 → `bash scripts/harness-verify.sh`
+- 기존 프로젝트의 리포트만 재정렬: `bash scripts/harness-plan.sh` → `bash scripts/harness-verify.sh`
+- 기존 프로젝트의 구조 누락 보강: `bash scripts/harness-init.sh` → 필요 시 `bash scripts/harness-plan.sh` → `bash scripts/harness-verify.sh`
+
 ---
 
 ## 생성 대상

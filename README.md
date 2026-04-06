@@ -56,6 +56,7 @@
 
 핵심은 `.codex/skills/*` 아래의 **로컬 역할 팀**입니다.  
 `.harness/reports/*` 는 사람이 읽고 수정할 수 있게 돕는 **보조 산출물**입니다.
+기본적으로 `.harness/*` 문서와 로그 본문은 한글로 작성되며, 파일명만 영문 규칙을 유지합니다.
 
 ---
 
@@ -80,6 +81,7 @@
 - 전역 AGENTS.md는 수정하지 않습니다.
 - 사용자의 기존 전역 설정을 덮어쓰지 않습니다.
 - 프로젝트 내부에 생성되는 로컬 역할 팀 경로는 `.codex/skills/*` 를 사용합니다.
+- 프로젝트 내부 `.harness/*` 문서와 로그 본문은 특별한 요청이 없으면 한글로 작성합니다.
 
 ---
 
@@ -103,6 +105,13 @@
 하네스 구성 이후에는 프로젝트 내부에서  
 `run-harness`를 실행 하네스 팀의 진입점으로 사용할 수 있습니다.
 
+전역 `harness` 스킬은 다음 원칙으로 동작해야 합니다.
+
+- 최초 구성 요청이면 `.codex-dist/skills/harness/scripts/harness-init.sh`를 먼저 실행합니다.
+- 리포트만 다시 정리할 때만 `.codex-dist/skills/harness/scripts/harness-plan.sh`를 사용합니다.
+- 하네스 구성이 끝났다고 말하기 전에 `.codex-dist/skills/harness/scripts/harness-verify.sh`를 반드시 실행합니다.
+- `harness-verify.sh`가 실패하면 구성이 완료된 것으로 보지 않습니다.
+
 로그 운영을 보강하려면 다음 스크립트를 함께 사용할 수 있습니다.
 
 - `.codex-dist/skills/harness/scripts/harness-log.sh`
@@ -119,6 +128,13 @@
       --next-role domain-analyst
 
     bash .codex-dist/skills/harness/scripts/harness-session-close.sh
+
+타겟 프로젝트에서 로그 지침은 보통 다음 파일에서 확인합니다.
+
+- `.harness/logs/logging-policy.md`
+- `.harness/logs/session-log.md`
+- `.harness/logs/latest-session-summary.md`
+- `.harness/logs/role-frequency.md`
 
 ---
 
@@ -289,9 +305,26 @@
 
 ## 제거 방법
 
-다음으로 제거할 수 있습니다.
+전역 메타 하네스 생성기는 다음 경로에 설치됩니다.
+
+    $HOME/.codex/skills/harness
+
+클론한 저장소가 있다면 다음으로 제거할 수 있습니다.
 
     ./uninstall.sh
+
+저장소를 클론하지 않고 설치했다면 다음으로 제거할 수 있습니다.
+
+    curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/uninstall.sh | bash
+
+직접 제거해도 됩니다.
+
+    rm -rf "$HOME/.codex/skills/harness"
+
+주의:
+
+- 이 제거는 전역 메타 하네스 생성기만 삭제합니다.
+- 이미 각 프로젝트 내부에 생성된 `.codex/skills/*`, `.harness/*` 는 자동으로 삭제하지 않습니다.
 
 ---
 

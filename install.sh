@@ -105,7 +105,7 @@ if [ -d "$TARGET_DIR/scripts" ]; then
   find "$TARGET_DIR/scripts" -type f -name "*.sh" -exec chmod +x {} \;
 fi
 
-log "installation completed"
+log "설치 완료"
 printf '\n'
-printf 'Installed to: %s\n' "$TARGET_DIR"
-printf 'No AGENTS.md files were created or modified.\n'
+printf '설치 경로: %s\n' "$TARGET_DIR"
+printf 'AGENTS.md 파일은 생성하거나 수정하지 않습니다.\n'

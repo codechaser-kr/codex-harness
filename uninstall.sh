@@ -17,7 +17,7 @@ else
   log "nothing to remove: $TARGET_DIR"
 fi
 
-log "uninstall completed"
+log "제거 완료"
 printf '\n'
-printf 'Removed: %s\n' "$TARGET_DIR"
-printf 'No AGENTS.md files were created or modified.\n'
+printf '제거 경로: %s\n' "$TARGET_DIR"
+printf 'AGENTS.md 파일은 생성하거나 수정하지 않습니다.\n'

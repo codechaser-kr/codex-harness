@@ -415,6 +415,7 @@ CANDIDATE_ROWS="$(
 
 if [ "$DRY_RUN" -eq 1 ]; then
   render_report "$CANDIDATE_ROWS"
+  log "dry-run 모드이므로 후보 보고서를 stdout으로 출력했습니다"
 else
   render_report "$CANDIDATE_ROWS" > "$REPORT_FILE"
   log "후보 보고서 생성: $REPORT_FILE"
@@ -423,7 +424,9 @@ fi
 if [ "$WRITE_TEMPLATES" -eq 1 ]; then
   if [ "$DRY_RUN" -eq 1 ]; then
     log "dry-run 모드이므로 템플릿 파일은 생성하지 않습니다"
-    exit 0
+  else
+    write_templates "$CANDIDATE_ROWS"
   fi
-  write_templates "$CANDIDATE_ROWS"
 fi
+
+log "템플릿 후보 분석 완료"

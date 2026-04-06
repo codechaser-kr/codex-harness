@@ -26,6 +26,8 @@ fi
 ROLE_ROWS="$(
   awk -F '\t' '
     NR == 1 { next }
+    # closed 이벤트는 세션 종료 메모/집계 트리거용 레코드다.
+    # 역할 호출 통계는 started/progress 단계의 실제 역할 실행만 집계한다.
     $3 == "closed" { next }
     {
       split($6, roles, ",")
@@ -47,6 +49,7 @@ ROLE_ROWS="$(
 TOTAL_EVENT_COUNT="$(
   awk -F '\t' '
     NR == 1 { next }
+    # 종료 이벤트는 역할 호출 건수가 아니라 세션 마감 레코드이므로 제외한다.
     $3 == "closed" { next }
     { count++ }
     END { print count + 0 }

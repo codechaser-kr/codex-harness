@@ -67,7 +67,7 @@ bootstrap_source_dir() {
   mkdir -p "$extract_dir"
   tar -xzf "$archive_path" -C "$extract_dir"
 
-  repository_root="$(find "$extract_dir" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+  repository_root="$(find "$extract_dir" -mindepth 1 -maxdepth 1 -type d -print -quit)"
   [ -n "$repository_root" ] || fail "failed to locate extracted repository contents"
 
   SOURCE_DIR="$repository_root/.codex-dist/skills/harness"

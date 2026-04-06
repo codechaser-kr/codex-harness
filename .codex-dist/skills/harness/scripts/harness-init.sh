@@ -35,6 +35,21 @@ create_file_if_missing() {
   fi
 }
 
+ensure_gitignore_entry() {
+  local entry="$1"
+  local gitignore_file=".gitignore"
+
+  touch "$gitignore_file"
+
+  if grep -Fxq "$entry" "$gitignore_file"; then
+    log "gitignore 유지: $entry"
+    return
+  fi
+
+  printf '%s\n' "$entry" >> "$gitignore_file"
+  log "gitignore 추가: $entry"
+}
+
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 
 create_dir ".codex"
@@ -52,6 +67,13 @@ create_dir ".harness/reports"
 create_dir ".harness/scenarios"
 create_dir ".harness/templates"
 create_dir ".harness/logs"
+
+ensure_gitignore_entry ".harness/logs/.current-session"
+ensure_gitignore_entry ".harness/logs/session-log.md"
+ensure_gitignore_entry ".harness/logs/session-events.tsv"
+ensure_gitignore_entry ".harness/logs/latest-session-summary.md"
+ensure_gitignore_entry ".harness/logs/role-frequency.md"
+ensure_gitignore_entry ".harness/logs/session-summary-*.md"
 
 create_file_if_missing ".codex/skills/domain-analyst/SKILL.md" \
 "---

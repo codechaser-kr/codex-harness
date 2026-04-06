@@ -117,6 +117,7 @@
 - `$HOME/.codex/skills/harness/scripts/harness-log.sh`
 - `$HOME/.codex/skills/harness/scripts/harness-session-close.sh`
 - `$HOME/.codex/skills/harness/scripts/harness-role-stats.sh`
+- `$HOME/.codex/skills/harness/scripts/harness-template-candidates.sh`
 
 예시:
 
@@ -129,12 +130,16 @@
 
     bash "$HOME/.codex/skills/harness/scripts/harness-session-close.sh"
 
+    bash "$HOME/.codex/skills/harness/scripts/harness-template-candidates.sh" \
+      --min-count 3
+
 타겟 프로젝트에서 로그 지침은 보통 다음 파일에서 확인합니다.
 
 - `.harness/logs/logging-policy.md`
 - `.harness/logs/session-log.md`
 - `.harness/logs/latest-session-summary.md`
 - `.harness/logs/role-frequency.md`
+- `.harness/reports/template-candidates.md`
 
 ---
 

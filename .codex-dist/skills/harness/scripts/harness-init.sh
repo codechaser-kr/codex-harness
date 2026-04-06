@@ -546,6 +546,7 @@ create_file_if_missing ".harness/reports/team-playbook.md" \
 - 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
 - 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
 - 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다.
+- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다.
 
 ## 운영 메모
 
@@ -566,6 +567,7 @@ create_file_if_missing ".harness/logs/logging-policy.md" \
 - 전역 설치된 \`~/.codex/skills/harness/scripts/harness-log.sh\`는 역할 호출 시 세션 로그에 자동 append 합니다.
 - 전역 설치된 \`~/.codex/skills/harness/scripts/harness-session-close.sh\`는 세션 종료 시 최신 세션 요약과 역할 호출 빈도 통계를 자동 갱신합니다.
 - 전역 설치된 \`~/.codex/skills/harness/scripts/harness-role-stats.sh\`는 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
+- 전역 설치된 \`~/.codex/skills/harness/scripts/harness-template-candidates.sh\`는 누적 로그를 분석해 반복 업무 템플릿 후보를 \`.harness/reports/template-candidates.md\`로 정리합니다.
 
 ## 로그를 남겨야 하는 상황
 

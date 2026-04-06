@@ -126,6 +126,7 @@ DIST_SCRIPT_FILES=(
   "$HARNESS_SCRIPT_DIR/harness-log.sh"
   "$HARNESS_SCRIPT_DIR/harness-session-close.sh"
   "$HARNESS_SCRIPT_DIR/harness-role-stats.sh"
+  "$HARNESS_SCRIPT_DIR/harness-template-candidates.sh"
 )
 
 for file in "${DIST_SCRIPT_FILES[@]}"; do

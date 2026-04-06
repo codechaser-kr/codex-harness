@@ -3,9 +3,7 @@ set -euo pipefail
 
 FAILURES=0
 WARNINGS=0
-DEFAULT_LOCAL_SKILLS_DIR=".codex/skills"
-LEGACY_LOCAL_SKILLS_DIR=".agents/skills"
-LOCAL_SKILLS_DIR="$DEFAULT_LOCAL_SKILLS_DIR"
+LOCAL_SKILLS_DIR=".codex/skills"
 
 log() {
   printf '[harness][verify] %s\n' "$1"
@@ -89,24 +87,7 @@ check_contains_hint() {
   fi
 }
 
-resolve_local_skills_dir() {
-  if [ -d "$DEFAULT_LOCAL_SKILLS_DIR" ] && [ -d "$LEGACY_LOCAL_SKILLS_DIR" ]; then
-    warn "로컬 스킬 경로가 둘 다 존재함, $DEFAULT_LOCAL_SKILLS_DIR 우선 사용"
-    LOCAL_SKILLS_DIR="$DEFAULT_LOCAL_SKILLS_DIR"
-  elif [ -d "$DEFAULT_LOCAL_SKILLS_DIR" ]; then
-    LOCAL_SKILLS_DIR="$DEFAULT_LOCAL_SKILLS_DIR"
-  elif [ -d "$LEGACY_LOCAL_SKILLS_DIR" ]; then
-    LOCAL_SKILLS_DIR="$LEGACY_LOCAL_SKILLS_DIR"
-    warn "legacy 로컬 스킬 경로 사용: $LOCAL_SKILLS_DIR"
-  else
-    LOCAL_SKILLS_DIR="$DEFAULT_LOCAL_SKILLS_DIR"
-  fi
-
-  log "로컬 스킬 경로 기준: $LOCAL_SKILLS_DIR"
-}
-
 log "실행 하네스 팀 구조 검증 시작"
-resolve_local_skills_dir
 
 # 필수 디렉토리
 check_dir "$LOCAL_SKILLS_DIR"

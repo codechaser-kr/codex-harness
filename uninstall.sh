@@ -8,13 +8,13 @@ log() {
   printf '[harness][uninstall] %s\n' "$1"
 }
 
-log "starting uninstall"
+log "제거 시작"
 
 if [ -e "$TARGET_DIR" ]; then
-  log "removing: $TARGET_DIR"
+  log "제거 중: $TARGET_DIR"
   rm -rf "$TARGET_DIR"
 else
-  log "nothing to remove: $TARGET_DIR"
+  log "제거 대상 없음: $TARGET_DIR"
 fi
 
 log "제거 완료"

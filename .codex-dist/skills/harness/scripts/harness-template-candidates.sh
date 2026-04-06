@@ -201,7 +201,6 @@ write_templates() {
       step=0
       IFS=',' read -r -a role_parts <<< "$roles"
       for role in "${role_parts[@]}"; do
-        role="$(trim_text "$role")"
         [ -n "$role" ] || continue
         step=$((step + 1))
         printf '%s. %s\n' "$step" "$role"
@@ -210,7 +209,6 @@ write_templates() {
       printf '## 주요 산출물 유형\n\n'
       IFS=',' read -r -a output_parts <<< "$outputs"
       for output in "${output_parts[@]}"; do
-        output="$(trim_text "$output")"
         [ -n "$output" ] || continue
         printf -- '- %s\n' "$output"
       done

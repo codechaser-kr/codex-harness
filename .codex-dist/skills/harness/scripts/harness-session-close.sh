@@ -79,6 +79,8 @@ while [ $# -gt 0 ]; do
   shift
 done
 
+ensure_harness_log_scaffold
+
 [ -f "$EVENTS_FILE" ] || fail "missing event log: $EVENTS_FILE"
 
 if [ -z "$SESSION_ID" ]; then

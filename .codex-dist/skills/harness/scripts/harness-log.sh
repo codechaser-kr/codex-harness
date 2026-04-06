@@ -26,6 +26,10 @@ log() {
   printf '[harness][log] %s\n' "$1"
 }
 
+warn() {
+  printf '[harness][log][warn] %s\n' "$1" >&2
+}
+
 fail() {
   printf '[harness][log][error] %s\n' "$1" >&2
   exit 1
@@ -202,6 +206,9 @@ if [ -z "$SESSION_ID" ]; then
     SESSION_ID="$(trim_text "$(cat "$CURRENT_SESSION_FILE")")"
   else
     SESSION_ID="$(date '+session-%Y%m%d-%H%M%S')"
+    if [ "$NEW_SESSION" -eq 0 ]; then
+      warn "current session이 없어 새 세션을 암묵적으로 시작합니다. 필요하면 --new-session을 명시하세요."
+    fi
     if [ -z "$STATUS" ]; then
       STATUS="started"
     fi

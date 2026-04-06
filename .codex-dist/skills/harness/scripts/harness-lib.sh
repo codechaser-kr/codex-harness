@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# 이 파일은 소싱 전용입니다. 직접 실행하지 마세요.
 
 trim_text() {
   local value="$1"

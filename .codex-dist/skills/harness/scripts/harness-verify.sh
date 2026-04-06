@@ -246,7 +246,7 @@ if [ "$FAILURES" -eq 0 ]; then
   exit 0
 fi
 
-fail "검증 실패: $FAILURES 개 문제 발견"
+printf '[harness][verify][error] 검증 실패: %s 개 문제 발견\n' "$FAILURES"
 if [ "$WARNINGS" -gt 0 ]; then
   warn "경고 수: $WARNINGS"
 fi

@@ -3,7 +3,6 @@ set -euo pipefail
 
 FAILURES=0
 WARNINGS=0
-LOCAL_SKILLS_DIR=".codex/skills"
 
 log() {
   printf '[harness][verify] %s\n' "$1"
@@ -66,7 +65,7 @@ check_description_length() {
   fi
 
   local content
-  content="$(echo "$line" | sed 's/^description:[[:space:]]*//')"
+  content="$(printf '%s\n' "$line" | sed 's/^description:[[:space:]]*//')"
 
   if [ "${#content}" -lt 20 ]; then
     warn "description이 너무 짧을 수 있음: $file"
@@ -90,17 +89,18 @@ check_contains_hint() {
 log "실행 하네스 팀 구조 검증 시작"
 
 # 필수 디렉토리
-check_dir "$LOCAL_SKILLS_DIR"
-check_dir "$LOCAL_SKILLS_DIR/domain-analyst"
-check_dir "$LOCAL_SKILLS_DIR/harness-architect"
-check_dir "$LOCAL_SKILLS_DIR/skill-scaffolder"
-check_dir "$LOCAL_SKILLS_DIR/qa-designer"
-check_dir "$LOCAL_SKILLS_DIR/orchestrator"
-check_dir "$LOCAL_SKILLS_DIR/validator"
-check_dir "$LOCAL_SKILLS_DIR/run-harness"
+check_dir ".codex/skills"
+check_dir ".codex/skills/domain-analyst"
+check_dir ".codex/skills/harness-architect"
+check_dir ".codex/skills/skill-scaffolder"
+check_dir ".codex/skills/qa-designer"
+check_dir ".codex/skills/orchestrator"
+check_dir ".codex/skills/validator"
+check_dir ".codex/skills/run-harness"
 
 check_dir ".harness"
 check_dir ".harness/reports"
+check_dir ".harness/logs"
 
 # 전역 references 확인
 check_dir ".codex-dist/skills/harness/references"
@@ -111,15 +111,30 @@ check_file ".codex-dist/skills/harness/references/skill-testing-guide.md"
 check_file ".codex-dist/skills/harness/references/qa-agent-guide.md"
 check_file ".codex-dist/skills/harness/references/team-examples.md"
 
+# 전역 자동화 스크립트 확인
+DIST_SCRIPT_FILES=(
+  ".codex-dist/skills/harness/scripts/harness-lib.sh"
+  ".codex-dist/skills/harness/scripts/harness-init.sh"
+  ".codex-dist/skills/harness/scripts/harness-plan.sh"
+  ".codex-dist/skills/harness/scripts/harness-verify.sh"
+  ".codex-dist/skills/harness/scripts/harness-log.sh"
+  ".codex-dist/skills/harness/scripts/harness-session-close.sh"
+  ".codex-dist/skills/harness/scripts/harness-role-stats.sh"
+)
+
+for file in "${DIST_SCRIPT_FILES[@]}"; do
+  check_file "$file"
+done
+
 # 필수 로컬 역할 스킬
 SKILL_FILES=(
-  "$LOCAL_SKILLS_DIR/domain-analyst/SKILL.md"
-  "$LOCAL_SKILLS_DIR/harness-architect/SKILL.md"
-  "$LOCAL_SKILLS_DIR/skill-scaffolder/SKILL.md"
-  "$LOCAL_SKILLS_DIR/qa-designer/SKILL.md"
-  "$LOCAL_SKILLS_DIR/orchestrator/SKILL.md"
-  "$LOCAL_SKILLS_DIR/validator/SKILL.md"
-  "$LOCAL_SKILLS_DIR/run-harness/SKILL.md"
+  ".codex/skills/domain-analyst/SKILL.md"
+  ".codex/skills/harness-architect/SKILL.md"
+  ".codex/skills/skill-scaffolder/SKILL.md"
+  ".codex/skills/qa-designer/SKILL.md"
+  ".codex/skills/orchestrator/SKILL.md"
+  ".codex/skills/validator/SKILL.md"
+  ".codex/skills/run-harness/SKILL.md"
 )
 
 for file in "${SKILL_FILES[@]}"; do
@@ -156,20 +171,33 @@ for file in "${REPORT_FILES[@]}"; do
   check_file "$file"
 done
 
+# 로그 구조
+LOG_FILES=(
+  ".harness/logs/logging-policy.md"
+  ".harness/logs/session-log.md"
+  ".harness/logs/session-events.tsv"
+  ".harness/logs/latest-session-summary.md"
+  ".harness/logs/role-frequency.md"
+)
+
+for file in "${LOG_FILES[@]}"; do
+  check_file "$file"
+done
+
 # 본체/보조 위계와 실행 팀 성격 힌트 확인
-if [ -f "$LOCAL_SKILLS_DIR/orchestrator/SKILL.md" ]; then
-  check_contains_hint "$LOCAL_SKILLS_DIR/orchestrator/SKILL.md" "중심 역할" "중심 역할 표현"
-  check_contains_hint "$LOCAL_SKILLS_DIR/orchestrator/SKILL.md" "흐름" "흐름 설명"
-  check_contains_hint "$LOCAL_SKILLS_DIR/orchestrator/SKILL.md" "연결" "연결 설명"
+if [ -f ".codex/skills/orchestrator/SKILL.md" ]; then
+  check_contains_hint ".codex/skills/orchestrator/SKILL.md" "중심 역할" "중심 역할 표현"
+  check_contains_hint ".codex/skills/orchestrator/SKILL.md" "흐름" "흐름 설명"
+  check_contains_hint ".codex/skills/orchestrator/SKILL.md" "연결" "연결 설명"
 fi
 
-if [ -f "$LOCAL_SKILLS_DIR/validator/SKILL.md" ]; then
-  check_contains_hint "$LOCAL_SKILLS_DIR/validator/SKILL.md" "피드백" "피드백 루프 설명"
+if [ -f ".codex/skills/validator/SKILL.md" ]; then
+  check_contains_hint ".codex/skills/validator/SKILL.md" "피드백" "피드백 루프 설명"
 fi
 
-if [ -f "$LOCAL_SKILLS_DIR/run-harness/SKILL.md" ]; then
-  check_contains_hint "$LOCAL_SKILLS_DIR/run-harness/SKILL.md" "기동" "기동 엔트리포인트 설명"
-  check_contains_hint "$LOCAL_SKILLS_DIR/run-harness/SKILL.md" "현재 상태" "현재 상태 기반 판단"
+if [ -f ".codex/skills/run-harness/SKILL.md" ]; then
+  check_contains_hint ".codex/skills/run-harness/SKILL.md" "기동" "기동 엔트리포인트 설명"
+  check_contains_hint ".codex/skills/run-harness/SKILL.md" "현재 상태" "현재 상태 기반 판단"
 fi
 
 if [ -f ".harness/reports/team-structure.md" ]; then
@@ -181,6 +209,33 @@ if [ -f ".harness/reports/team-playbook.md" ]; then
   check_contains_hint ".harness/reports/team-playbook.md" "운영 원칙" "운영 원칙"
 fi
 
+if [ -f ".harness/logs/logging-policy.md" ]; then
+  check_contains_hint ".harness/logs/logging-policy.md" "최소 로그 항목" "최소 로그 항목"
+  check_contains_hint ".harness/logs/logging-policy.md" "호출" "역할 호출 로그 기준"
+  check_contains_hint ".harness/logs/logging-policy.md" "harness-log.sh" "자동 append 도구"
+  check_contains_hint ".harness/logs/logging-policy.md" "세션 종료" "세션 종료 자동 집계"
+  check_contains_hint ".harness/logs/logging-policy.md" "호출 빈도" "역할 호출 빈도 통계"
+fi
+
+if [ -f ".harness/logs/session-log.md" ]; then
+  check_contains_hint ".harness/logs/session-log.md" "세션 ID" "세션 ID 로그"
+  check_contains_hint ".harness/logs/session-log.md" "상태" "세션 상태 로그"
+  check_contains_hint ".harness/logs/session-log.md" "시작 요청" "시작 요청 로그"
+  check_contains_hint ".harness/logs/session-log.md" "진입점" "진입점 로그"
+  check_contains_hint ".harness/logs/session-log.md" "다음 권장 역할" "다음 권장 역할 로그"
+fi
+
+check_contains_hint ".harness/logs/session-events.tsv" "session_id" "세션 이벤트 헤더"
+check_contains_hint ".harness/logs/session-events.tsv" "status" "이벤트 상태 헤더"
+
+if [ -f ".harness/logs/latest-session-summary.md" ]; then
+  check_contains_hint ".harness/logs/latest-session-summary.md" "세션 요약" "최신 세션 요약"
+fi
+
+if [ -f ".harness/logs/role-frequency.md" ]; then
+  check_contains_hint ".harness/logs/role-frequency.md" "역할 호출 빈도" "역할 빈도 보고서"
+fi
+
 if [ "$FAILURES" -eq 0 ]; then
   log "검증 통과: 실행 하네스 팀 구조가 최소 요건을 만족합니다"
   if [ "$WARNINGS" -gt 0 ]; then
@@ -189,7 +244,7 @@ if [ "$FAILURES" -eq 0 ]; then
   exit 0
 fi
 
-printf '[harness][verify][error] 검증 실패: %d 개 문제 발견\n' "$FAILURES"
+printf '[harness][verify][error] 검증 실패: %s 개 문제 발견\n' "$FAILURES"
 if [ "$WARNINGS" -gt 0 ]; then
   warn "경고 수: $WARNINGS"
 fi

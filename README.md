@@ -103,6 +103,23 @@
 하네스 구성 이후에는 프로젝트 내부에서  
 `run-harness`를 실행 하네스 팀의 진입점으로 사용할 수 있습니다.
 
+로그 운영을 보강하려면 다음 스크립트를 함께 사용할 수 있습니다.
+
+- `.codex-dist/skills/harness/scripts/harness-log.sh`
+- `.codex-dist/skills/harness/scripts/harness-session-close.sh`
+- `.codex-dist/skills/harness/scripts/harness-role-stats.sh`
+
+예시:
+
+    bash .codex-dist/skills/harness/scripts/harness-log.sh \
+      --new-session \
+      --request "현재 프로젝트에 하네스 팀을 구성해줘" \
+      --entry-point run-harness \
+      --role run-harness \
+      --next-role domain-analyst
+
+    bash .codex-dist/skills/harness/scripts/harness-session-close.sh
+
 ---
 
 ## 이 시스템이 실제로 하는 일

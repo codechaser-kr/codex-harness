@@ -66,7 +66,7 @@ check_description_length() {
   fi
 
   local content
-  content="${line#description: }"
+  content="$(echo "$line" | sed 's/^description:[[:space:]]*//')"
 
   if [ "${#content}" -lt 20 ]; then
     warn "description이 너무 짧을 수 있음: $file"

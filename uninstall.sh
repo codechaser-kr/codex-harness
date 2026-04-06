@@ -1,22 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TARGET_DIR="$HOME/.agents/skills/harness"
+CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+TARGET_DIR="$CODEX_HOME/skills/harness"
 
 log() {
   printf '[harness][uninstall] %s\n' "$1"
 }
 
-log "starting uninstall"
+log "제거 시작"
 
 if [ -e "$TARGET_DIR" ]; then
-  log "removing: $TARGET_DIR"
+  log "제거 중: $TARGET_DIR"
   rm -rf "$TARGET_DIR"
 else
-  log "nothing to remove: $TARGET_DIR"
+  log "제거 대상 없음: $TARGET_DIR"
 fi
 
-log "uninstall completed"
+log "제거 완료"
 printf '\n'
-printf 'Removed: %s\n' "$TARGET_DIR"
-printf 'No AGENTS.md files were created or modified.\n'
+printf '제거 경로: %s\n' "$TARGET_DIR"
+printf 'AGENTS.md 파일은 생성하거나 수정하지 않습니다.\n'

@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# harness-init.sh
+# 디렉토리, 로컬 역할 스킬, 보조 리포트를 최초 1회 생성합니다.
+# harness-plan.sh와 차이:
+#   - harness-init.sh: 디렉토리/스킬/리포트 모두 생성 (기존 파일 유지)
+#   - harness-plan.sh: 리포트만 다시 생성 (항상 덮어씀, 스킬은 건드리지 않음)
+# 사용 시점: 프로젝트에 처음 하네스를 구성할 때
 set -euo pipefail
 
 ROOT_DIR="$(pwd)"
@@ -31,21 +37,21 @@ create_file_if_missing() {
 
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 
-create_dir ".agents/skills"
-create_dir ".agents/skills/domain-analyst"
-create_dir ".agents/skills/harness-architect"
-create_dir ".agents/skills/skill-scaffolder"
-create_dir ".agents/skills/qa-designer"
-create_dir ".agents/skills/orchestrator"
-create_dir ".agents/skills/validator"
-create_dir ".agents/skills/run-harness"
+create_dir ".codex/skills"
+create_dir ".codex/skills/domain-analyst"
+create_dir ".codex/skills/harness-architect"
+create_dir ".codex/skills/skill-scaffolder"
+create_dir ".codex/skills/qa-designer"
+create_dir ".codex/skills/orchestrator"
+create_dir ".codex/skills/validator"
+create_dir ".codex/skills/run-harness"
 
 create_dir ".harness"
 create_dir ".harness/reports"
 create_dir ".harness/scenarios"
 create_dir ".harness/templates"
 
-create_file_if_missing ".agents/skills/domain-analyst/SKILL.md" \
+create_file_if_missing ".codex/skills/domain-analyst/SKILL.md" \
 "---
 name: domain-analyst
 description: 저장소의 목적, 기술 스택, 핵심 디렉토리, 주요 흐름, 하네스 관점의 핵심 관심사를 분석합니다. 프로젝트 구조 분석, 저장소 이해, 기술 스택 식별, 핵심 흐름 정리, 하네스 출발점 정의가 필요할 때 적극적으로 사용합니다.
@@ -65,7 +71,7 @@ description: 저장소의 목적, 기술 스택, 핵심 디렉토리, 주요 흐
 2. 기술 스택과 핵심 디렉토리를 확인한다.
 3. 주요 흐름을 식별한다.
 4. 하네스 관점에서 중요한 영역을 정리한다.
-5. 결과를 `.harness/reports/domain-analysis.md`에 반영한다.
+5. 결과를 \`.harness/reports/domain-analysis.md\`에 반영한다.
 
 ## 입력
 
@@ -75,7 +81,7 @@ description: 저장소의 목적, 기술 스택, 핵심 디렉토리, 주요 흐
 
 ## 출력
 
-- `.harness/reports/domain-analysis.md`
+- \`.harness/reports/domain-analysis.md\`
 
 ## 역할 팀 내 위치
 
@@ -95,7 +101,7 @@ description: 저장소의 목적, 기술 스택, 핵심 디렉토리, 주요 흐
 - validator나 QA가 분석 약점을 지적하면, 요약만 고치지 말고 분석의 기준 자체를 다시 본다.
 "
 
-create_file_if_missing ".agents/skills/harness-architect/SKILL.md" \
+create_file_if_missing ".codex/skills/harness-architect/SKILL.md" \
 "---
 name: harness-architect
 description: 저장소에 맞는 프로젝트 로컬 실행 하네스 구조와 역할 경계를 설계합니다. 하네스 구조 설계, 역할 분리, 팀 구조 정리, 확장 가능한 하네스 설계가 필요할 때 적극적으로 사용합니다.
@@ -114,15 +120,15 @@ description: 저장소에 맞는 프로젝트 로컬 실행 하네스 구조와 
 1. domain-analysis를 읽는다.
 2. 필요한 역할 구성을 정한다.
 3. 어떤 역할은 유지하고 어떤 역할은 줄일지 판단한다.
-4. 실행 하네스 구조를 `.harness/reports/harness-architecture.md`에 정리한다.
+4. 실행 하네스 구조를 \`.harness/reports/harness-architecture.md\`에 정리한다.
 
 ## 입력
 
-- `.harness/reports/domain-analysis.md`
+- \`.harness/reports/domain-analysis.md\`
 
 ## 출력
 
-- `.harness/reports/harness-architecture.md`
+- \`.harness/reports/harness-architecture.md\`
 
 ## 역할 팀 내 위치
 
@@ -142,7 +148,7 @@ description: 저장소에 맞는 프로젝트 로컬 실행 하네스 구조와 
 - validator가 과한 분리나 약한 구조를 지적하면 역할 수와 경계를 다시 검토한다.
 "
 
-create_file_if_missing ".agents/skills/skill-scaffolder/SKILL.md" \
+create_file_if_missing ".codex/skills/skill-scaffolder/SKILL.md" \
 "---
 name: skill-scaffolder
 description: 실행 하네스 구조를 바탕으로 프로젝트 로컬 역할 스킬과 기본 파일을 생성하거나 보완합니다. 로컬 스킬 생성, 역할 파일 정리, 하네스 구조 반영이 필요할 때 적극적으로 사용합니다.
@@ -165,12 +171,12 @@ description: 실행 하네스 구조를 바탕으로 프로젝트 로컬 역할 
 
 ## 입력
 
-- `.harness/reports/harness-architecture.md`
+- \`.harness/reports/harness-architecture.md\`
 
 ## 출력
 
-- `.agents/skills/*`
-- `.harness/templates/*`
+- \`.codex/skills/*\`
+- \`.harness/templates/*\`
 
 ## 역할 팀 내 위치
 
@@ -190,7 +196,7 @@ description: 실행 하네스 구조를 바탕으로 프로젝트 로컬 역할 
 - validator가 약한 설명이나 연결 부족을 지적하면, 텍스트만 덧붙이지 말고 구조를 다시 정돈한다.
 "
 
-create_file_if_missing ".agents/skills/qa-designer/SKILL.md" \
+create_file_if_missing ".codex/skills/qa-designer/SKILL.md" \
 "---
 name: qa-designer
 description: 프로젝트 실행 하네스에서 필요한 품질 기준, 검토 질문, 경계면 점검 포인트를 설계합니다. QA 전략 수립, 품질 기준 정의, 구조 정합성 검토가 필요할 때 적극적으로 사용합니다.
@@ -209,16 +215,16 @@ description: 프로젝트 실행 하네스에서 필요한 품질 기준, 검토
 1. domain-analysis와 harness-architecture를 함께 읽는다.
 2. 품질 실패 유형을 정리한다.
 3. 반복 검토 질문을 정의한다.
-4. 결과를 `.harness/reports/qa-strategy.md`에 반영한다.
+4. 결과를 \`.harness/reports/qa-strategy.md\`에 반영한다.
 
 ## 입력
 
-- `.harness/reports/domain-analysis.md`
-- `.harness/reports/harness-architecture.md`
+- \`.harness/reports/domain-analysis.md\`
+- \`.harness/reports/harness-architecture.md\`
 
 ## 출력
 
-- `.harness/reports/qa-strategy.md`
+- \`.harness/reports/qa-strategy.md\`
 
 ## 역할 팀 내 위치
 
@@ -238,7 +244,7 @@ description: 프로젝트 실행 하네스에서 필요한 품질 기준, 검토
 - validator 피드백이 반복되면 QA 질문이 충분히 구체적인지 다시 점검한다.
 "
 
-create_file_if_missing ".agents/skills/orchestrator/SKILL.md" \
+create_file_if_missing ".codex/skills/orchestrator/SKILL.md" \
 "---
 name: orchestrator
 description: 프로젝트 로컬 실행 하네스의 중심 역할입니다. 도메인 분석, 구조 설계, 스킬 생성, QA, 검증 역할을 실제 작업 순서와 연결 구조로 정리하고, 역할 팀이 어떻게 협업해야 하는지 정의할 때 적극적으로 사용합니다.
@@ -257,18 +263,18 @@ description: 프로젝트 로컬 실행 하네스의 중심 역할입니다. 도
 1. domain-analysis, harness-architecture, qa-strategy를 읽는다.
 2. 어떤 역할이 먼저 수행되어야 하는지 정한다.
 3. 어떤 산출물이 다음 단계의 입력이 되는지 연결한다.
-4. 프로젝트 로컬 실행 하네스 구조를 `.harness/reports/orchestration-plan.md`에 정리한다.
+4. 프로젝트 로컬 실행 하네스 구조를 \`.harness/reports/orchestration-plan.md\`에 정리한다.
 5. 이후 프로젝트 특화 실행 하네스로 확장 가능한 포인트를 남긴다.
 
 ## 입력
 
-- `.harness/reports/domain-analysis.md`
-- `.harness/reports/harness-architecture.md`
-- `.harness/reports/qa-strategy.md`
+- \`.harness/reports/domain-analysis.md\`
+- \`.harness/reports/harness-architecture.md\`
+- \`.harness/reports/qa-strategy.md\`
 
 ## 출력
 
-- `.harness/reports/orchestration-plan.md`
+- \`.harness/reports/orchestration-plan.md\`
 
 ## 역할 팀 내 위치
 
@@ -291,7 +297,7 @@ description: 프로젝트 로컬 실행 하네스의 중심 역할입니다. 도
 - 리포트가 본체처럼 커지고 역할 팀이 약해지는 징후를 경계한다.
 "
 
-create_file_if_missing ".agents/skills/validator/SKILL.md" \
+create_file_if_missing ".codex/skills/validator/SKILL.md" \
 "---
 name: validator
 description: 생성된 프로젝트 로컬 실행 하네스가 최소 요건을 만족하는지 점검하고, 누락·충돌·약한 설명을 식별합니다. 구조 검증, 역할 점검, 연결성 점검이 필요할 때 적극적으로 사용합니다.
@@ -314,8 +320,8 @@ description: 생성된 프로젝트 로컬 실행 하네스가 최소 요건을 
 
 ## 입력
 
-- `.agents/skills/*`
-- `.harness/reports/*`
+- \`.codex/skills/*\`
+- \`.harness/reports/*\`
 
 ## 출력
 
@@ -340,7 +346,7 @@ description: 생성된 프로젝트 로컬 실행 하네스가 최소 요건을 
 - QA와 유사해 보일 때도, validator는 최소 구조 요건과 연결성에 더 집중한다.
 "
 
-create_file_if_missing ".agents/skills/run-harness/SKILL.md" \
+create_file_if_missing ".codex/skills/run-harness/SKILL.md" \
 "---
 name: run-harness
 description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 진입점입니다. 현재 저장소 상태를 보고 어떤 역할을 먼저 사용해야 할지 판단하고, 분석·설계·QA·오케스트레이션·검증 흐름을 시작하거나 보강할 때 적극적으로 사용합니다.
@@ -356,7 +362,7 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 
 ## 주요 작업
 
-1. 현재 `.harness/reports/*`와 `.agents/skills/*` 상태를 본다.
+1. 현재 \`.harness/reports/*\`와 \`.codex/skills/*\` 상태를 본다.
 2. domain-analysis가 비어 있거나 약하면 domain-analyst부터 시작한다.
 3. 구조 설계가 부족하면 harness-architect를 우선한다.
 4. QA 기준이 약하면 qa-designer를 다시 호출할 수 있다.
@@ -366,8 +372,8 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 ## 입력
 
 - 현재 저장소 상태
-- `.agents/skills/*`
-- `.harness/reports/*`
+- \`.codex/skills/*\`
+- \`.harness/reports/*\`
 
 ## 출력
 

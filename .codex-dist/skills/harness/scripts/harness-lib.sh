@@ -1076,9 +1076,13 @@ EOF
 ### 대표 요청별 루프
 
 - 기능 또는 사용자 흐름 보강: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
+  - domain-analyst가 실제 코드 경로와 변경 경계를 먼저 확정해야 qa-designer가 올바른 검증 기준을 잡을 수 있습니다.
 - 구조 또는 문서 정비: run-harness -> skill-scaffolder -> orchestrator -> validator
+  - 역할 설명과 템플릿 반영이 중심이므로 domain 재분석 없이 scaffolder부터 시작해도 됩니다.
 - 경계 재정의가 필요한 변경: run-harness -> domain-analyst -> harness-architect -> qa-designer -> orchestrator -> validator
+  - 기존 경계 가정이 바뀌므로 구조 재설계(harness-architect)가 QA 기준 수립보다 앞에 와야 합니다.
 - 검증 비용이 큰 변경: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
+  - 경계가 비교적 명확하지만 회귀 비용이 높아 qa-designer를 domain-analyst 직후에 배치해 검증 기준을 일찍 고정합니다.
 
 ### 순서 조정 및 재진입 기준
 

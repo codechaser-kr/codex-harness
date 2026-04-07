@@ -56,15 +56,15 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 
 - 최초 하네스 구성 요청이면 반드시 `bash scripts/harness-init.sh`를 먼저 실행한다.
 - 하네스 구성이 끝났다고 판단하기 전에 반드시 `bash scripts/harness-verify.sh`를 실행한다.
-- `scripts/harness-plan.sh`는 이미 하네스 구조가 있는 프로젝트에서 `.harness/reports/*`만 재생성하거나 보강할 때만 사용한다.
+- `scripts/harness-refresh-reports.sh`는 이미 하네스 구조가 있는 프로젝트에서 `.harness/reports/*` 전체를 재생성하거나 보강할 때 사용한다.
 - `scripts/harness-init.sh` 대신 `.codex/skills/*`, `.harness/*`를 수동으로 직접 생성하는 방식은 사용하지 않는다.
 - `scripts/harness-verify.sh`가 실패하면 완료로 간주하지 말고, 누락된 구조를 먼저 보강한다.
 
 ## 기본 실행 순서
 
 - 새 프로젝트 하네스 구성: `bash scripts/harness-init.sh` → 필요 시 역할 보강 → `bash scripts/harness-verify.sh`
-- 기존 프로젝트의 리포트만 재정렬: `bash scripts/harness-plan.sh` → `bash scripts/harness-verify.sh`
-- 기존 프로젝트의 구조 누락 보강: `bash scripts/harness-init.sh` → 필요 시 `bash scripts/harness-plan.sh` → `bash scripts/harness-verify.sh`
+- 기존 프로젝트의 `.harness/reports` 문서 전체 재생성: `bash scripts/harness-refresh-reports.sh` → `bash scripts/harness-verify.sh`
+- 기존 프로젝트의 구조 누락 보강: `bash scripts/harness-init.sh` → 필요 시 `bash scripts/harness-refresh-reports.sh` → `bash scripts/harness-verify.sh`
 
 ---
 

@@ -121,15 +121,40 @@ candidate_slug() {
 
 render_report() {
   local rows="$1"
+  local event_count="$2"
+  local near_miss_count="$3"
 
   printf '# 반복 업무 템플릿 후보 분석\n\n'
   printf -- '- 분석 시각: %s\n' "$(date '+%Y-%m-%d %H:%M:%S %z')"
   printf -- '- 최소 반복 횟수: %s\n' "$MIN_COUNT"
   printf -- '- 최소 역할 수: %s\n' "$MIN_ROLES"
+  printf -- '- 분석 대상 세션 수: %s\n' "$event_count"
   printf '\n'
 
   if [ -z "$rows" ]; then
-    printf '아직 분석된 반복 업무 후보가 없습니다.\n'
+    printf '아직 분석된 반복 업무 후보가 없습니다.\n\n'
+    printf '## 빈 결과 해석\n\n'
+    if [ "$event_count" -eq 0 ]; then
+      printf -- '- 아직 누적된 세션 이벤트가 없어 반복 패턴을 계산할 수 없습니다.\n'
+      printf -- '- run-harness 또는 역할 호출 로그가 더 쌓인 뒤 다시 분석해야 합니다.\n'
+    else
+      printf -- '- 현재까지 분석된 세션 수로는 동일한 역할 흐름이 최소 반복 횟수(%s회)에 도달하지 않았습니다.\n' "$MIN_COUNT"
+      printf -- '- 최소 역할 수(%s개)를 만족하는 흐름은 있었지만 템플릿 후보로 고정될 만큼 충분히 반복되지 않았을 수 있습니다.\n' "$MIN_ROLES"
+    fi
+    printf '\n'
+    printf '## 다음에 후보가 되는 조건\n\n'
+    printf -- '- 같은 진입점, 역할 흐름, 산출물 유형 조합이 %s회 이상 반복되면 후보가 됩니다.\n' "$MIN_COUNT"
+    printf -- '- 한 번성 처리보다 재사용 가능한 handoff와 산출물 흐름이 누적될수록 후보가 잘 잡힙니다.\n'
+    printf -- '- report/skill/log 산출물 조합이 안정적으로 반복되면 템플릿화 가치가 높아집니다.\n'
+    printf '\n'
+    printf '## 현재 관찰 메모\n\n'
+    if [ "$near_miss_count" -gt 0 ]; then
+      printf -- '- 최소 반복 횟수 바로 아래 단계에 있는 근접 패턴이 %s개 있습니다.\n' "$near_miss_count"
+      printf -- '- 다음 몇 세션에서 같은 역할 흐름이 반복되면 템플릿 후보로 승격될 가능성이 큽니다.\n'
+    else
+      printf -- '- 아직 반복 임계치에 근접한 패턴이 많지 않습니다.\n'
+      printf -- '- 요청 분류, 다음 역할 기록, 산출물 기록이 더 일관되게 남으면 후보 탐지가 쉬워집니다.\n'
+    fi
     return
   fi
 
@@ -273,6 +298,135 @@ esac
 ensure_harness_log_scaffold
 mkdir -p "$REPORT_DIR"
 
+EVENT_COUNT="$(
+  awk -F '\t' '
+    NR == 1 { next }
+    $3 == "closed" { next }
+    { count++ }
+    END { print count + 0 }
+  ' "$EVENTS_FILE"
+)"
+
+NEAR_MISS_COUNT="$(
+  awk -F '\t' -v min_count="$MIN_COUNT" -v min_roles="$MIN_ROLES" '
+    function trim(value) {
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+      return value
+    }
+
+    function normalize_roles(raw,    count, i, item, out) {
+      out = ""
+      count = split(raw, parts, ",")
+      for (i = 1; i <= count; i++) {
+        item = trim(parts[i])
+        if (item == "") {
+          continue
+        }
+        if (out == "") {
+          out = item
+        } else {
+          out = out "," item
+        }
+      }
+      return out
+    }
+
+    function count_roles(raw,    count, i, item, total) {
+      total = 0
+      count = split(raw, parts, ",")
+      for (i = 1; i <= count; i++) {
+        item = trim(parts[i])
+        if (item == "") {
+          continue
+        }
+        total++
+      }
+      return total
+    }
+
+    function classify_output(path,    value) {
+      value = trim(path)
+      if (value ~ /^\.harness\/reports\/.*\.md$/) {
+        sub(/^\.harness\/reports\//, "", value)
+        sub(/\.md$/, "", value)
+        return "report:" value
+      }
+      if (value ~ /^\.codex\/skills\/[^\/]+\/SKILL\.md$/) {
+        sub(/^\.codex\/skills\//, "", value)
+        sub(/\/SKILL\.md$/, "", value)
+        return "skill:" value
+      }
+      if (value ~ /^\.harness\/logs\/.*$/) {
+        sub(/^\.harness\/logs\//, "", value)
+        sub(/\.md$/, "", value)
+        sub(/\.tsv$/, "", value)
+        return "log:" value
+      }
+      return "other"
+    }
+
+    function normalize_outputs(raw,    count, i, item, kind, out) {
+      out = ""
+      count = split(raw, parts, ",")
+      for (i = 1; i <= count; i++) {
+        item = trim(parts[i])
+        if (item == "") {
+          continue
+        }
+        kind = classify_output(item)
+        if (index("," out ",", "," kind ",") > 0) {
+          continue
+        }
+        if (out == "") {
+          out = kind
+        } else {
+          out = out "," kind
+        }
+      }
+      return out
+    }
+
+    NR == 1 { next }
+    $3 == "closed" { next }
+    {
+      roles = normalize_roles($6)
+      role_count = count_roles($6)
+      outputs = normalize_outputs($8)
+      entry = trim($5)
+      next_role = trim($9)
+
+      if (role_count < min_roles || roles == "") {
+        next
+      }
+
+      if (entry == "") {
+        entry = "-"
+      }
+
+      if (next_role == "") {
+        next_role = "-"
+      }
+
+      if (outputs == "") {
+        outputs = "-"
+      }
+
+      key = entry "|" roles "|" next_role "|" outputs
+      counts[key]++
+    }
+    END {
+      near = 0
+      target = min_count - 1
+      for (key in counts) {
+        if (target >= 1 && counts[key] == target) {
+          near++
+        }
+      }
+      print near + 0
+    }
+  ' "$EVENTS_FILE"
+)"
+
 CANDIDATE_ROWS="$(
   awk -F '\t' -v min_count="$MIN_COUNT" -v min_roles="$MIN_ROLES" '
     function trim(value) {
@@ -411,10 +565,10 @@ CANDIDATE_ROWS="$(
 )"
 
 if [ "$DRY_RUN" -eq 1 ]; then
-  render_report "$CANDIDATE_ROWS"
+  render_report "$CANDIDATE_ROWS" "$EVENT_COUNT" "$NEAR_MISS_COUNT"
   log "dry-run 모드이므로 후보 보고서를 stdout으로 출력했습니다"
 else
-  render_report "$CANDIDATE_ROWS" > "$REPORT_FILE"
+  render_report "$CANDIDATE_ROWS" "$EVENT_COUNT" "$NEAR_MISS_COUNT" > "$REPORT_FILE"
   log "후보 보고서 생성: $REPORT_FILE"
 fi
 

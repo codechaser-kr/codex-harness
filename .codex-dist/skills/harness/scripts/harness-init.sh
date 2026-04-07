@@ -104,6 +104,92 @@ else
   log "조건부 자산 생성 보류: .harness/templates"
 fi
 
+# 빈/약한 프로젝트: 사용자 입력 유도 파일 생성
+if [ "$PROJECT_SIGNAL_LEVEL" = "empty" ] || [ "$PROJECT_SIGNAL_LEVEL" = "low" ]; then
+  create_file_if_missing ".harness/project-setup.md" \
+"# 프로젝트 설정
+
+## 작성 안내
+
+저장소 단서가 부족해 자동 분석이 제한적입니다.
+이 파일을 채운 뒤 \`run-harness\`를 실행하면, domain-analyst가 답변을 시작 입력으로 사용해 더 정확한 분석을 시작합니다.
+
+---
+
+## 프로젝트 목표
+
+<!-- 이 프로젝트가 해결하려는 문제를 한 문장으로 적어주세요 -->
+
+## 프로젝트 유형
+
+<!-- 해당하는 항목에 x를 표시하거나 직접 입력하세요 -->
+
+- [ ] 웹 애플리케이션 (프론트엔드 + 백엔드)
+- [ ] REST / GraphQL API 서버
+- [ ] CLI 도구
+- [ ] 모바일 앱 (iOS / Android / Flutter)
+- [ ] 라이브러리 / SDK
+- [ ] 데이터 파이프라인 / ML 프로젝트
+- [ ] 인프라 / DevOps 도구
+- [ ] 기타: ___
+
+## 주요 사용자
+
+<!-- 누가 이 프로젝트를 사용하나요? (최종 사용자, 다른 개발자, 내부 팀 등) -->
+
+## 첫 번째 성공 시나리오
+
+<!-- 가장 먼저 동작해야 할 핵심 흐름 한 가지를 한 문장으로 적어주세요 -->
+
+## 예상 기술 스택
+
+<!-- 사용할 언어, 프레임워크, 데이터베이스 등이 정해져 있다면 적어주세요 -->
+
+## 실패 비용이 큰 영역
+
+<!-- 이 프로젝트에서 잘못되면 가장 큰 문제가 생기는 부분은 어디인가요? -->
+
+---
+
+## 프로젝트 유형별 추천 스택
+
+### 웹 애플리케이션
+- Frontend: React/Next.js, Vue/Nuxt, Svelte/SvelteKit, Angular
+- Backend: Node.js(Fastify/NestJS), Python(FastAPI/Django), Go, Java(Spring Boot), Rust(Axum)
+- DB: PostgreSQL, MySQL, MongoDB, Redis
+- 추천 초기 구조: \`apps/web\`, \`apps/api\`, \`packages/shared\`
+
+### REST / GraphQL API 서버
+- Node.js: Fastify, NestJS, Hono
+- Python: FastAPI, Django REST Framework
+- Go: gin, echo, fiber
+- Java/Kotlin: Spring Boot
+- Rust: Axum, Actix
+
+### CLI 도구
+- Rust: clap, indicatif
+- Go: cobra, urfave/cli
+- Python: click, typer
+- Node.js: commander, oclif
+
+### 모바일 앱
+- Cross-platform: Flutter(Dart), React Native(TypeScript)
+- Native iOS: Swift(SwiftUI)
+- Native Android: Kotlin(Jetpack Compose)
+
+### 라이브러리 / SDK
+- TypeScript: tsup/unbuild + JSR/npm 배포
+- Rust: lib crate + docs.rs
+- Python: pyproject.toml + PyPI
+- Go: 표준 모듈 구조
+
+### 데이터 파이프라인 / ML
+- Python: pandas, polars, scikit-learn, PyTorch, JAX
+- Rust: polars, candle
+- 파이프라인: Prefect, Airflow, dbt, Apache Beam
+"
+fi
+
 ensure_gitignore_entry ".harness/logs/.current-session"
 ensure_gitignore_entry ".harness/logs/session-log.md"
 ensure_gitignore_entry ".harness/logs/session-events.tsv"
@@ -485,7 +571,9 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 이미 구조가 있는 프로젝트라면 부족한 역할만 다시 호출하는 쪽을 우선한다.
 - 요청이 기능 구현, 구조 정리, 공통 모듈 보강, 빌드/검증 중 어디에 걸리는지 먼저 분류하고 그 결과를 orchestration-plan 판단의 입력으로 사용한다.
 - 영향 범위가 공통 계층이나 다중 모듈로 번지면 domain-analyst와 qa-designer를 더 이른 순서에 배치한다.
-- 빈 저장소이거나 기술 스택/핵심 흐름 단서가 약하면, 우선 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 확인한다.
+- 빈 저장소이거나 기술 스택/핵심 흐름 단서가 약하면, \`.harness/project-setup.md\`가 있는지 먼저 확인한다.
+- \`.harness/project-setup.md\`가 작성되어 있으면 그 내용을 domain-analyst의 시작 입력으로 연결한다.
+- 작성되어 있지 않으면 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인한 뒤 \`.harness/project-setup.md\`에 채우도록 안내한다.
 - 사용자 답변이 모이면 그 내용을 domain-analysis와 orchestration-plan의 입력으로 바로 연결한다.
 - 리포트보다 실제 역할 팀 구조와 설명 품질을 더 중요하게 본다.
 - \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
@@ -497,7 +585,8 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 요청: "새 API 엔드포인트 추가" → 판단: 기능 구현, 단일 경계 → 시작: domain-analyst → qa-designer → orchestrator
 - 요청: "공통 유틸 함수 리팩터" → 판단: 공통 계층 영향, 다중 소비자 → 시작: domain-analyst → qa-designer → orchestrator
 - 요청: "하네스 역할 구조 재설계" → 판단: 경계 재정의, 구조 변경 → 시작: harness-architect → qa-designer → orchestrator
-- 요청: 저장소 단서 없음 → 판단: 프로젝트 유형 불명 → 시작: 사용자에게 프로젝트 유형·핵심 사용자·첫 성공 시나리오 확인
+- 요청: 저장소 단서 없음, project-setup.md 미작성 → 판단: 프로젝트 유형 불명 → 시작: project-setup.md 작성 안내 후 대기
+- 요청: 저장소 단서 없음, project-setup.md 작성됨 → 판단: 목표·유형 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)
 "
 
 create_file_if_missing ".harness/reports/domain-analysis.md" \

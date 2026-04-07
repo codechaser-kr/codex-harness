@@ -1264,21 +1264,20 @@ EOF
 
 ## 운영 규칙
 
-### 세션 시작 절차
+### 세션 시작 체크
+
+- 직전 session-log와 latest-session-summary를 읽고 미해결 항목과 재진입 지점을 확인합니다.
+- domain-analysis, orchestration-plan, qa-strategy 중 이번 요청과 직접 연결되는 문서를 먼저 읽습니다.
+- 현재 요청 요약과 영향 범위를 session-log에 먼저 남깁니다.
+- 직전 세션의 남은 약점이 이번 요청과 이어지는지 확인합니다.
+- 먼저 읽을 문서와 나중에 볼 문서를 구분해 빠르게 시작합니다.
+
+### 역할 호출 순서
 
 1. run-harness가 요청을 받고 $key_axes_hint 중 어느 축을 건드리는지 먼저 분류합니다.
 2. 영향 범위가 넓거나 핵심 경계를 건드리면 domain-analyst와 qa-designer를 먼저 호출합니다.
 3. 구조 보강이 필요하면 harness-architect와 skill-scaffolder를 붙여 역할 설명과 템플릿을 맞춥니다.
 4. orchestrator가 작업 루프와 검증 루프를 묶고 validator가 최종 구조를 점검합니다.
-
-5. 직전 session-log와 latest-session-summary를 읽고 미해결 항목과 재진입 지점을 확인합니다.
-6. domain-analysis, orchestration-plan, qa-strategy 중 이번 요청과 직접 연결되는 문서를 먼저 읽습니다.
-
-### 세션 시작 체크
-
-- 현재 요청 요약과 영향 범위를 session-log에 먼저 남깁니다.
-- 직전 세션의 남은 약점이 이번 요청과 이어지는지 확인합니다.
-- 먼저 읽을 문서와 나중에 볼 문서를 구분해 빠르게 시작합니다.
 
 ### 기본 운영 원칙
 

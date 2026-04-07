@@ -112,7 +112,11 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "empty" ] || [ "$PROJECT_SIGNAL_LEVEL" = "low" ];
 ## 작성 안내
 
 저장소 단서가 부족해 자동 분석이 제한적입니다.
-이 파일을 채운 뒤 \`run-harness\`를 실행하면, domain-analyst가 답변을 시작 입력으로 사용해 더 정확한 분석을 시작합니다.
+아래 항목을 채운 뒤 AI에게 다음과 같이 요청하세요:
+
+> "project-setup.md 작성했어. 이걸 바탕으로 하네스 분석 시작해줘."
+
+그러면 domain-analyst가 이 파일의 답변을 시작 입력으로 사용해 분석을 시작합니다.
 
 ---
 

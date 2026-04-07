@@ -270,7 +270,6 @@ if [ -f ".harness/reports/team-structure.md" ]; then
 fi
 
 if [ -f ".harness/reports/domain-analysis.md" ]; then
-  check_contains_hint ".harness/reports/domain-analysis.md" "사용자 확인 질문" "사용자 확인 질문 섹션"
   check_placeholder_state ".harness/reports/domain-analysis.md" "프로젝트 유형: (미정|unknown)" "프로젝트 유형 구체화"
   check_placeholder_state ".harness/reports/domain-analysis.md" "주요 기술 스택( 추정)?: (미정|추정 불가)" "기술 스택 구체화"
   check_placeholder_state ".harness/reports/domain-analysis.md" "핵심 흐름: 미정" "핵심 흐름 구체화"
@@ -280,7 +279,6 @@ fi
 if [ -f ".harness/reports/team-playbook.md" ]; then
   check_contains_hint ".harness/reports/team-playbook.md" "시작 순서" "운영 시작 순서"
   check_contains_hint ".harness/reports/team-playbook.md" "운영 원칙" "운영 원칙"
-  check_contains_hint ".harness/reports/team-playbook.md" "사용자 확인 질문" "사용자 질문 우선 흐름"
 fi
 
 if [ -f ".harness/logging-policy.md" ]; then
@@ -325,10 +323,44 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "low" ]; then
   if [ -f ".harness/reports/domain-analysis.md" ]; then
     check_contains_hint ".harness/reports/domain-analysis.md" "사용자 확인 질문" "저신호 저장소용 질문 섹션"
   fi
+
+  if [ -f ".harness/reports/team-playbook.md" ]; then
+    check_contains_hint ".harness/reports/team-playbook.md" "사용자 확인 질문" "저신호 저장소용 사용자 질문 우선 흐름"
+  fi
 fi
 
 if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
   log "프로젝트 단서가 충분한 저장소로 판단됨: 프로젝트 특화 초안이 남아 있으면 실패로 처리합니다"
+
+  if [ -f ".harness/reports/domain-analysis.md" ]; then
+    check_contains_hint ".harness/reports/domain-analysis.md" "사실 기준 구조" "사실 기준 구조 섹션"
+    check_contains_hint ".harness/reports/domain-analysis.md" "핵심 실행 흐름" "핵심 실행 흐름 섹션"
+    check_contains_hint ".harness/reports/domain-analysis.md" "반복적으로 위험한 변경 유형" "위험 변경 유형 섹션"
+  fi
+
+  if [ -f ".harness/reports/harness-architecture.md" ]; then
+    check_contains_hint ".harness/reports/harness-architecture.md" "저장소 특성 요약" "아키텍처 저장소 특성 요약"
+    check_contains_hint ".harness/reports/harness-architecture.md" "역할별 초점" "아키텍처 역할별 초점"
+  fi
+
+  if [ -f ".harness/reports/qa-strategy.md" ]; then
+    check_contains_hint ".harness/reports/qa-strategy.md" "핵심 품질 축" "QA 핵심 품질 축"
+    check_contains_hint ".harness/reports/qa-strategy.md" "우선 검토 질문" "QA 우선 검토 질문"
+  fi
+
+  if [ -f ".harness/reports/orchestration-plan.md" ]; then
+    check_contains_hint ".harness/reports/orchestration-plan.md" "시작 분기" "오케스트레이션 시작 분기"
+    check_contains_hint ".harness/reports/orchestration-plan.md" "권장 흐름" "오케스트레이션 권장 흐름"
+  fi
+
+  if [ -f ".harness/reports/team-structure.md" ]; then
+    check_contains_hint ".harness/reports/team-structure.md" "역할 팀 해석" "팀 구조 해석"
+  fi
+
+  if [ -f ".harness/reports/team-playbook.md" ]; then
+    check_contains_hint ".harness/reports/team-playbook.md" "실제 변경 경계" "플레이북 실제 변경 경계 기준"
+    check_contains_hint ".harness/reports/team-playbook.md" "문서 재생성은 실제 저장소 분석" "플레이북 재생성 원칙"
+  fi
 fi
 
 if [ "$FAILURES" -eq 0 ]; then

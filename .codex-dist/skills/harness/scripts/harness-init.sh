@@ -56,9 +56,29 @@ PROJECT_TYPE="$(detect_project_type)"
 STACK_HINT="$(detect_stack_hint)"
 PROJECT_SIGNAL_LEVEL="$(detect_project_signal_level)"
 STRUCTURE_HINT="$(detect_structure_hint)"
+PROJECT_TYPE_LABEL="$(build_project_type_label "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE")"
+PACKAGE_MANAGER_HINT="$(detect_package_manager)"
+WORKSPACE_HINT="$(detect_workspace_packages)"
+CONFIG_HINT="$(detect_config_hints)"
+KEY_AXES_HINT="$(build_key_axes_hint "$PROJECT_SIGNAL_LEVEL" "$STRUCTURE_HINT")"
 CORE_FLOW_HINT="$(build_core_flow_hint "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT")"
-INITIAL_OBSERVATION_LINE="$(build_initial_observation "$PROJECT_SIGNAL_LEVEL" "$STRUCTURE_HINT")"
+DOMAIN_SUMMARY_BLOCK="$(build_domain_summary_block "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE_LABEL" "$STACK_HINT" "$STRUCTURE_HINT" "$CORE_FLOW_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT")"
+INITIAL_OBSERVATION_LINE="$(build_initial_observation "$PROJECT_SIGNAL_LEVEL" "$STRUCTURE_HINT" "$WORKSPACE_HINT" "$CONFIG_HINT")"
 NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$PROJECT_SIGNAL_LEVEL" "init")"
+DISCOVERY_GUIDANCE="저장소 단서와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
+
+if [ "$PROJECT_TYPE" = "unknown" ] && [ "$STACK_HINT" = "추정 불가" ]; then
+  DISCOVERY_GUIDANCE="현재 저장소 단서만으로는 방향 판단이 어렵습니다. run-harness는 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인해야 합니다."
+elif [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
+  DISCOVERY_GUIDANCE="현재 저장소는 $STRUCTURE_HINT 단서를 바탕으로 자동 재분석을 시작할 수 있습니다."
+fi
+
+DOMAIN_DETAIL_BLOCK="$(build_domain_report_detail_block "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT" "$DISCOVERY_GUIDANCE" "$INITIAL_OBSERVATION_LINE" "$NEXT_STEP_DETAIL_LINE")"
+ARCH_REPORT_BLOCK="$(build_architecture_report_block "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE_LABEL" "$KEY_AXES_HINT" "$WORKSPACE_HINT" "$CORE_FLOW_HINT")"
+QA_REPORT_BLOCK="$(build_qa_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT" "$WORKSPACE_HINT")"
+ORCH_REPORT_BLOCK="$(build_orchestration_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT" "$NEXT_STEP_DETAIL_LINE")"
+TEAM_STRUCTURE_REPORT_BLOCK="$(build_team_structure_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT")"
+TEAM_PLAYBOOK_REPORT_BLOCK="$(build_team_playbook_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT" "$NEXT_STEP_DETAIL_LINE")"
 
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 
@@ -457,129 +477,39 @@ create_file_if_missing ".harness/reports/domain-analysis.md" \
 
 ## 저장소 요약
 
-- 프로젝트 유형: $PROJECT_TYPE
-- 주요 기술 스택: $STACK_HINT
-- 핵심 흐름: $CORE_FLOW_HINT
+$DOMAIN_SUMMARY_BLOCK
 
-## 초기 관찰 내용
-
-$INITIAL_OBSERVATION_LINE
-
-## 사용자 확인 질문
-
-- 이 프로젝트는 애플리케이션, 라이브러리, 도구 중 무엇인가요?
-- 가장 먼저 성공해야 할 사용자 또는 개발자 흐름은 무엇인가요?
-- 선호하는 언어, 프레임워크, 런타임 제약이 있나요?
-
-## 다음 단계
-
-- 저장소 단서가 약하면 run-harness가 위 질문부터 사용자에게 먼저 확인합니다.
-$NEXT_STEP_DETAIL_LINE
+$DOMAIN_DETAIL_BLOCK
 "
 
 create_file_if_missing ".harness/reports/harness-architecture.md" \
 "# 실행 하네스 아키텍처
 
-## 목적
-
-이 저장소에 어떤 프로젝트 로컬 실행 하네스 구조가 적절한지 정의합니다.
-
-## 제안 역할
-
-- domain-analyst
-- harness-architect
-- skill-scaffolder
-- qa-designer
-- orchestrator
-- validator
-- run-harness
+$ARCH_REPORT_BLOCK
 "
 
 create_file_if_missing ".harness/reports/qa-strategy.md" \
 "# QA 전략
 
-## 목표
-
-이 저장소에서 중요하게 볼 품질 기준과 검토 지점을 정리합니다.
+$QA_REPORT_BLOCK
 "
 
 create_file_if_missing ".harness/reports/orchestration-plan.md" \
 "# 실행 하네스 오케스트레이션 계획
 
-## 작업 흐름 개요
-
-여러 역할이 어떤 순서로 협력해야 하는지 정리합니다.
-
-## 예시 흐름
-
-1. domain-analyst가 저장소를 분석한다.
-2. harness-architect가 구조를 설계한다.
-3. skill-scaffolder가 로컬 역할 스킬을 정리한다.
-4. qa-designer가 품질 기준을 정리한다.
-5. orchestrator가 전체 실행 하네스 흐름을 정리한다.
-6. validator가 전체 구성을 점검한다.
+$ORCH_REPORT_BLOCK
 "
 
 create_file_if_missing ".harness/reports/team-structure.md" \
 "# 역할 팀 구조
 
-## 목적
-
-이 문서는 현재 프로젝트의 로컬 실행 하네스를 역할 팀 관점에서 설명합니다.
-
-## 팀 구성
-
-- domain-analyst
-- harness-architect
-- skill-scaffolder
-- qa-designer
-- orchestrator
-- validator
-- run-harness
-
-## 설명
-
-이 역할들은 각각 독립적인 판단 단위를 가지며,
-함께 프로젝트 실행 하네스를 구성합니다.
+$TEAM_STRUCTURE_REPORT_BLOCK
 "
 
 create_file_if_missing ".harness/reports/team-playbook.md" \
 "# 팀 운영 플레이북
 
-## 목적
-
-이 문서는 프로젝트 로컬 실행 하네스 팀을 실제로 어떻게 시작하고 운용할지 요약합니다.
-
-## 시작 순서
-
-1. 기본적으로는 run-harness를 실행 하네스 팀의 진입점으로 사용합니다.
-2. run-harness가 현재 상태를 보고, 저장소 단서가 약하면 사용자 확인 질문부터 정리하고, 단서가 충분하면 필요한 역할을 우선순위로 정합니다.
-3. 새 프로젝트라면 domain-analyst부터 시작하는 흐름을 우선합니다.
-4. 구조가 이미 있다면 orchestrator / validator 중심의 보강 루프를 우선합니다.
-
-## 기본 운영 원칙
-
-- 문서보다 역할 팀을 본체로 봅니다.
-- 리포트는 팀이 공유하는 보조 기준으로 사용합니다.
-- 빈 저장소이거나 저장소 단서가 약하면 역할 호출보다 사용자 확인 질문을 먼저 남깁니다.
-- validator 피드백이 나오면 architect / scaffolder / orchestrator가 다시 보강합니다.
-- QA 질문이 약하면 qa-designer를 다시 호출해 보강합니다.
-- 중요한 역할 호출이나 흐름 변경은 session-log에 남깁니다.
-
-## 로그 운영
-
-- 로그 정책은 \`.harness/logging-policy.md\`에서 확인합니다.
-- 역할별 누적 기록은 \`.harness/logs/session-log.md\`에 남깁니다.
-- 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
-- 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
-- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다.
-- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다.
-
-## 운영 메모
-
-- 작은 프로젝트는 역할을 줄일 수 있습니다.
-- 복잡한 프로젝트는 orchestrator 중심 운영이 중요합니다.
-- 이후 프로젝트 특화 실행 하네스로 확장할 수 있습니다.
+$TEAM_PLAYBOOK_REPORT_BLOCK
 "
 
 create_file_if_missing ".harness/logging-policy.md" \

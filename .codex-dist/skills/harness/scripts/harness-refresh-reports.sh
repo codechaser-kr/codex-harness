@@ -16,7 +16,7 @@ TEAM_STRUCTURE_REPORT="$REPORT_DIR/team-structure.md"
 TEAM_PLAYBOOK_REPORT="$REPORT_DIR/team-playbook.md"
 
 log() {
-  printf '[harness][plan] %s\n' "$1"
+  printf '[harness][refresh] %s\n' "$1"
 }
 
 detect_project_type() {
@@ -68,7 +68,7 @@ detect_stack_hint() {
 PROJECT_TYPE="$(detect_project_type)"
 STACK_HINT="$(detect_stack_hint)"
 
-log "하네스 계획 리포트 생성 시작"
+log "하네스 리포트 새로고침 시작"
 mkdir -p "$REPORT_DIR"
 
 cat > "$DOMAIN_REPORT" <<EOF_DOMAIN
@@ -293,7 +293,7 @@ cat > "$TEAM_PLAYBOOK_REPORT" <<EOF_TEAM_PLAYBOOK
 - 이후 프로젝트 특화 실행 하네스로 확장할 수 있습니다.
 EOF_TEAM_PLAYBOOK
 
-log "하네스 계획 리포트 생성 완료"
+log "하네스 리포트 새로고침 완료"
 log "생성됨: $DOMAIN_REPORT"
 log "생성됨: $ARCH_REPORT"
 log "생성됨: $QA_REPORT"

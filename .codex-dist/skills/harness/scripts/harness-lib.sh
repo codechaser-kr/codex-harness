@@ -537,11 +537,26 @@ EOF
             *common*|*shared*|*ui*|*design*|*core*)
               printf '%s\n' "- \`$workspace_path\`: 공용 패키지 또는 공유 유틸리티 후보입니다."
               ;;
+            *lib*|*library*)
+              printf '%s\n' "- \`$workspace_path\`: 재사용 가능한 라이브러리 또는 모듈 후보입니다."
+              ;;
+            *domain*|*model*)
+              printf '%s\n' "- \`$workspace_path\`: 도메인 모델 또는 비즈니스 로직 레이어 후보입니다."
+              ;;
+            *infra*|*infrastructure*)
+              printf '%s\n' "- \`$workspace_path\`: 인프라 또는 외부 의존성 어댑터 레이어 후보입니다."
+              ;;
+            *cmd*|*cli*)
+              printf '%s\n' "- \`$workspace_path\`: CLI 진입점 또는 실행 커맨드 패키지 후보입니다."
+              ;;
             *desktop*|*electron*)
               printf '%s\n' "- \`$workspace_path\`: 별도 실행 환경 또는 배포 경계를 가진 패키지 후보입니다."
               ;;
             *web*|*front*|*client*|*site*)
               printf '%s\n' "- \`$workspace_path\`: 사용자 진입점을 담는 애플리케이션 패키지 후보입니다."
+              ;;
+            *app*|*application*)
+              printf '%s\n' "- \`$workspace_path\`: 애플리케이션 레이어 또는 실행 진입점 후보입니다."
               ;;
             *api*|*server*|*backend*|*service*)
               printf '%s\n' "- \`$workspace_path\`: 서비스 또는 백엔드 책임을 가진 패키지 후보입니다."
@@ -550,7 +565,7 @@ EOF
               printf '%s\n' "- \`$workspace_path\`: 테스트 또는 검증 보조 패키지 후보입니다."
               ;;
             *)
-              printf '%s\n' "- \`$workspace_path\`: 주요 워크스페이스 패키지 후보입니다."
+              printf '%s\n' "- \`$workspace_path\`: 주요 패키지 후보입니다."
               ;;
           esac
         done < <(list_workspace_packages)
@@ -558,6 +573,10 @@ EOF
 
       [ -d "src" ] && printf '%s\n' "- \`src/\`: 애플리케이션 핵심 소스 디렉토리 후보입니다."
       [ -d "app" ] && printf '%s\n' "- \`app/\`: 엔트리포인트 또는 라우팅 중심 디렉토리 후보입니다."
+      [ -d "lib" ] && printf '%s\n' "- \`lib/\`: 라이브러리 또는 공유 모듈 디렉토리 후보입니다."
+      [ -d "cmd" ] && printf '%s\n' "- \`cmd/\`: CLI 또는 실행 커맨드 진입점 디렉토리 후보입니다."
+      [ -d "internal" ] && printf '%s\n' "- \`internal/\`: 내부 전용 패키지 디렉토리 후보입니다."
+      [ -d "pkg" ] && printf '%s\n' "- \`pkg/\`: 외부 공개 패키지 디렉토리 후보입니다."
       [ -d "docs" ] && printf '%s\n' "- \`docs/\`: 운영 또는 설계 문서 단서가 모이는 디렉토리입니다."
       [ -d "tests" ] && printf '%s\n' "- \`tests/\`: 독립 테스트 시나리오 또는 검증 흐름 단서가 있습니다."
       [ -d "test" ] && printf '%s\n' "- \`test/\`: 테스트 보조 코드 또는 시나리오 단서가 있습니다."

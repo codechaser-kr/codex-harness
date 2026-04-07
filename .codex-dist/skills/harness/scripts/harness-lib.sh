@@ -481,9 +481,13 @@ build_domain_report_detail_block() {
 
 ## 사용자 확인 질문
 
-- 저장소 단서만으로 판단이 어렵다면, 이 프로젝트는 애플리케이션, 라이브러리, 도구 중 무엇인가
-- 가장 먼저 성공해야 할 사용자 또는 개발자 흐름은 무엇인가
-- 선호하는 언어, 프레임워크, 런타임 제약이 있는가
+저장소 단서가 부족합니다. 아래 질문에 답하면 domain-analyst가 구체적인 분석을 시작할 수 있습니다.
+
+1. 이 프로젝트는 무엇을 만들려고 하나요? (애플리케이션, 라이브러리, CLI 도구, 서비스 등)
+2. 주요 사용자 또는 소비자는 누구인가요? (최종 사용자, 다른 개발자, 내부 팀 등)
+3. 가장 먼저 동작해야 할 핵심 흐름 한 가지는 무엇인가요?
+4. 사용할 언어나 프레임워크가 정해져 있나요?
+5. 이 저장소에서 실패 비용이 가장 큰 영역은 어디라고 생각하나요?
 
 ## 질문 유도 메모
 
@@ -529,11 +533,12 @@ EOF
 ### 사실 기준 구조
 EOF
       if [ "$workspace_hint" != "추정 불가" ]; then
+        local _undetected_packages=()
         while IFS= read -r workspace_path; do
           [ -n "$workspace_path" ] || continue
           workspace_name="$(basename "$workspace_path")"
 
-          # 복수 신호를 수집해 폴리글랏 패키지를 지원하고, 단서 없으면 이름 기반 폴백
+          # 복수 신호를 수집해 폴리글랏 패키지를 지원하고, 단서 없으면 탐지 불가 명시
           workspace_roles=()
 
           # 1. JavaScript / TypeScript (package.json)
@@ -706,21 +711,9 @@ EOF
             fi
           fi
 
-          # 이름 기반 폴백 (파일 신호 없을 때)
+          # 파일 신호가 없으면 탐지 불가로 명시 (이름 기반 추측 금지)
           if [ "${#workspace_roles[@]}" -eq 0 ]; then
-            case "$workspace_name" in
-              *common*|*shared*|*ui*|*design*|*core*) workspace_roles+=("shared") ;;
-              *lib*|*library*)                         workspace_roles+=("library") ;;
-              *domain*|*model*)                        workspace_roles+=("domain") ;;
-              *infra*|*infrastructure*)                workspace_roles+=("infra") ;;
-              *cmd*|*cli*)                             workspace_roles+=("cli") ;;
-              *desktop*|*electron*)                    workspace_roles+=("desktop") ;;
-              *web*|*front*|*client*|*site*)           workspace_roles+=("frontend") ;;
-              *app*|*application*)                     workspace_roles+=("app") ;;
-              *api*|*server*|*backend*|*service*)      workspace_roles+=("backend") ;;
-              *test*|*qa*)                             workspace_roles+=("test") ;;
-              *)                                       workspace_roles+=("unknown") ;;
-            esac
+            workspace_roles+=("undetected")
           fi
 
           # 폴리글랏: 역할이 2개 이상이면 목록 나열
@@ -756,11 +749,28 @@ EOF
               crystal)  printf '%s\n' "- \`$workspace_path\`: Crystal 패키지 후보입니다." ;;
               julia)    printf '%s\n' "- \`$workspace_path\`: Julia 패키지 후보입니다." ;;
               ocaml)    printf '%s\n' "- \`$workspace_path\`: OCaml 패키지 후보입니다." ;;
-              erlang)   printf '%s\n' "- \`$workspace_path\`: Erlang 패키지 후보입니다." ;;
-              *)        printf '%s\n' "- \`$workspace_path\`: 주요 패키지 후보입니다." ;;
+              erlang)     printf '%s\n' "- \`$workspace_path\`: Erlang 패키지 후보입니다." ;;
+              undetected)
+                printf '%s\n' "- \`$workspace_path\`: 자동 탐지 단서 없음 — 이 패키지의 역할과 핵심 경계를 직접 명시해야 합니다."
+                _undetected_packages+=("$workspace_path")
+                ;;
+              *) printf '%s\n' "- \`$workspace_path\`: 주요 패키지 후보입니다." ;;
             esac
           fi
         done < <(list_workspace_packages)
+
+        if [ "${#_undetected_packages[@]}" -gt 0 ]; then
+          printf '\n### 미확인 패키지 — 직접 입력 필요\n\n'
+          printf '%s\n' "자동 탐지 단서가 없는 패키지가 ${#_undetected_packages[@]}개 있습니다. 아래 질문에 답해 이 문서를 직접 보강해 주세요."
+          printf '\n'
+          for _pkg in "${_undetected_packages[@]}"; do
+            printf '%s\n' "**\`$_pkg\`**"
+            printf '%s\n' "- 이 패키지의 주된 역할은 무엇인가? (예: 웹 프론트엔드, API 서버, 공용 유틸, CLI 도구 등)"
+            printf '%s\n' "- 핵심 진입점 파일이나 디렉토리는 무엇인가?"
+            printf '%s\n' "- 다른 패키지가 이 패키지를 소비하는가, 아니면 독립 실행인가?"
+            printf '\n'
+          done
+        fi
       fi
 
       [ -d "src" ] && printf '%s\n' "- \`src/\`: 애플리케이션 핵심 소스 디렉토리 후보입니다."

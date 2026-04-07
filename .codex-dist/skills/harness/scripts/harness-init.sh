@@ -73,7 +73,7 @@ elif [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
   DISCOVERY_GUIDANCE="현재 저장소는 $STRUCTURE_HINT 단서를 바탕으로 자동 재분석을 시작할 수 있습니다."
 fi
 
-DOMAIN_DETAIL_BLOCK="$(build_domain_report_detail_block "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT" "$DISCOVERY_GUIDANCE" "$INITIAL_OBSERVATION_LINE" "$NEXT_STEP_DETAIL_LINE")"
+DOMAIN_DETAIL_BLOCK="$(build_domain_report_detail_block "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT" "$CORE_FLOW_HINT" "$DISCOVERY_GUIDANCE" "$INITIAL_OBSERVATION_LINE" "$NEXT_STEP_DETAIL_LINE")"
 ARCH_REPORT_BLOCK="$(build_architecture_report_block "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE_LABEL" "$KEY_AXES_HINT" "$WORKSPACE_HINT" "$CORE_FLOW_HINT")"
 QA_REPORT_BLOCK="$(build_qa_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT" "$WORKSPACE_HINT")"
 ORCH_REPORT_BLOCK="$(build_orchestration_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT")"
@@ -94,9 +94,15 @@ create_dir ".codex/skills/run-harness"
 
 create_dir ".harness"
 create_dir ".harness/reports"
-create_dir ".harness/scenarios"
-create_dir ".harness/templates"
 create_dir ".harness/logs"
+
+if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
+  create_dir ".harness/scenarios"
+  create_dir ".harness/templates"
+else
+  log "조건부 자산 생성 보류: .harness/scenarios"
+  log "조건부 자산 생성 보류: .harness/templates"
+fi
 
 ensure_gitignore_entry ".harness/logs/.current-session"
 ensure_gitignore_entry ".harness/logs/session-log.md"
@@ -234,7 +240,8 @@ description: 실행 하네스 구조를 바탕으로 프로젝트 로컬 역할 
 ## 출력
 
 - \`.codex/skills/*\`
-- \`.harness/templates/*\`
+- 필요 시 \`.harness/templates/*\`
+- 필요 시 \`.harness/scenarios/*\`
 
 ## 역할 팀 내 위치
 
@@ -386,6 +393,8 @@ description: 생성된 프로젝트 로컬 실행 하네스가 최소 요건을 
 
 - \`.codex/skills/*\`
 - \`.harness/reports/*\`
+- 필요 시 \`.harness/templates/*\`
+- 필요 시 \`.harness/scenarios/*\`
 
 ## 출력
 
@@ -449,6 +458,14 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 현재 시점에 필요한 실행 하네스 팀 진행 순서
 - 보강이 필요한 역할 제안
 - 사용자에게 먼저 확인할 질문 세트
+
+## 출력 계약
+
+- 현재 시작 역할 1개를 먼저 제시한다.
+- 보강 필요 역할은 0~2개로 제한해 제안한다.
+- 추가 질문이 필요하면 0~2개만 남긴다.
+- 판단 근거는 1~3줄로 짧게 설명한다.
+- 세션을 시작했다면 session-log 반영 여부를 함께 남긴다.
 
 ## 역할 팀 내 위치
 
@@ -608,10 +625,12 @@ create_file_if_missing ".harness/logs/latest-session-summary.md" \
 아직 종료된 세션 집계가 없습니다.
 "
 
-create_file_if_missing ".harness/logs/role-frequency.md" \
+if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
+  create_file_if_missing ".harness/logs/role-frequency.md" \
 "# 역할 호출 빈도
 
 아직 집계된 역할 호출 통계가 없습니다.
 "
+fi
 
 log "프로젝트 로컬 실행 하네스 초기화 완료"

@@ -248,6 +248,15 @@ list_workspace_packages() {
   printf '%s\n' "${packages[@]:0:5}"
 }
 
+list_source_anchor_paths() {
+  find . \
+    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './node_modules' -o -path './.yarn' -o -path './dist' -o -path './build' -o -path './coverage' \) -prune \
+    -o \
+    -type f \
+    \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' -o -name '*.rs' -o -name '*.py' -o -name '*.go' -o -name '*.java' -o -name '*.kt' -o -name '*.swift' -o -name '*.php' -o -name '*.rb' -o -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.hpp' \) \
+    -print | sed 's#^\./##' | head -n 5
+}
+
 detect_config_hints() {
   local hints=()
 
@@ -431,13 +440,15 @@ build_domain_report_detail_block() {
   local workspace_hint="$5"
   local key_axes_hint="$6"
   local config_hint="$7"
-  local discovery_guidance="$8"
-  local initial_observation_line="$9"
-  local next_step_detail_line="${10}"
+  local core_flow_hint="$8"
+  local discovery_guidance="$9"
+  local initial_observation_line="${10}"
+  local next_step_detail_line="${11}"
   local workspace_path
   local workspace_name
   local found_exception_note=0
   local notes=()
+  local source_anchor_count=0
 
   case "$signal_level" in
     empty|low)
@@ -496,6 +507,22 @@ EOF
       printf '%s\n' "- 대표 사용자 흐름 또는 운영 흐름이 어디서 시작되고 어디서 끝나는지 먼저 고정합니다."
       printf '%s\n' "- \`$key_axes_hint\` 축 중 실제 업무 가치나 운영 비용이 크게 걸린 경계를 우선 식별합니다."
       printf '%s\n' "- 구조 변경이 기능 회귀보다 더 위험한지, 반대로 기능 흐름 단절이 더 위험한지 구분해 적습니다."
+
+      cat <<EOF
+
+## 저장소 고유 근거
+EOF
+      while IFS= read -r workspace_path; do
+        [ -n "$workspace_path" ] || continue
+        printf '%s\n' "- \`$workspace_path\`: 현재 해석의 근거로 먼저 확인한 대표 소스 앵커입니다."
+        source_anchor_count=$((source_anchor_count + 1))
+      done < <(list_source_anchor_paths)
+
+      if [ "$source_anchor_count" -eq 0 ]; then
+        printf '%s\n' "- 아직 자동으로 포착한 대표 소스 앵커가 충분하지 않습니다. 실제 프로젝트에서는 최소 3개 이상의 파일/경로 근거를 직접 보강해야 합니다."
+      elif [ "$source_anchor_count" -lt 3 ]; then
+        printf '%s\n' "- 자동으로 포착한 소스 앵커가 3개 미만입니다. 실제 프로젝트에서는 대표 파일/경로 근거를 더 보강해야 합니다."
+      fi
 
       cat <<EOF
 
@@ -867,6 +894,21 @@ EOF
       printf '%s\n' "- 공용 계층, 진입점 설정, 소비 경로 사이의 영향 전파"
       cat <<EOF
 
+## 저장소 고유 확인 단서
+EOF
+      source_anchor_count=0
+      while IFS= read -r workspace_path; do
+        [ -n "$workspace_path" ] || continue
+        printf '%s\n' "- \`$workspace_path\`: 이번 저장소에서 QA 질문을 구체화할 때 다시 확인할 대표 소스 앵커입니다."
+        source_anchor_count=$((source_anchor_count + 1))
+      done < <(list_source_anchor_paths)
+
+      if [ "$source_anchor_count" -eq 0 ]; then
+        printf '%s\n' "- 자동으로 포착한 소스 앵커가 부족하면, 테스트 유틸 위치나 대표 진입점 파일을 직접 찾아 QA 질문을 보강해야 합니다."
+      fi
+
+      cat <<EOF
+
 ## 우선 검토 질문
 
 - 이번 변경이 어떤 작업 축을 건드리는가
@@ -1064,6 +1106,12 @@ EOF
 - QA가 중요한 이유: \`$key_axes_hint\` 축이 동시에 흔들리면 문서 정합성보다 실제 운영 리스크가 먼저 커지기 때문입니다.
 - 경계 설명이 중요한 이유: 단일 수정처럼 보여도 실제로는 여러 소비 경계나 호출 경로로 전파될 수 있기 때문입니다.
 - orchestrator와 validator가 중요한 이유: handoff 순서와 회귀 점검이 흐트러지면 운영 비용이 빠르게 늘기 때문입니다.
+
+## 실전 분류 예시
+
+- 변경 중심이 사용자 진입점인지, 공용 계층인지, 별도 실행 환경인지 먼저 정합니다.
+- 단일 수정처럼 보여도 소비 경로나 공용 계층까지 번지면 domain-analyst와 qa-designer를 더 앞에 둡니다.
+- 문서 정비 요청이라도 handoff나 다음 진입점이 바뀌면 orchestrator와 validator를 함께 봅니다.
 EOF
       ;;
   esac
@@ -1086,6 +1134,12 @@ build_team_playbook_report_block() {
 2. run-harness가 현재 상태를 보고, 저장소 단서가 약하면 사용자 확인 질문부터 정리하고, 단서가 충분하면 필요한 역할을 우선순위로 정합니다.
 3. 새 프로젝트라면 domain-analyst부터 시작하는 흐름을 우선합니다.
 4. 구조가 이미 있다면 orchestrator / validator 중심의 보강 루프를 우선합니다.
+
+## 세션 시작 체크
+
+- 현재 요청 한 줄 요약과 영향 범위를 먼저 적습니다.
+- 직전 session-log를 읽고 미해결 항목이 이어지는지 확인합니다.
+- 이번 세션에서 먼저 읽을 문서를 1~2개로 좁힙니다.
 
 ## 기본 운영 원칙
 
@@ -1121,6 +1175,12 @@ EOF
 
 5. 직전 session-log와 latest-session-summary를 읽고 미해결 항목과 재진입 지점을 확인합니다.
 6. domain-analysis, orchestration-plan, qa-strategy 중 이번 요청과 직접 연결되는 문서를 먼저 읽습니다.
+
+## 세션 시작 체크
+
+- 현재 요청 요약과 영향 범위를 session-log에 먼저 남깁니다.
+- 직전 세션의 남은 약점이 이번 요청과 이어지는지 확인합니다.
+- 먼저 읽을 문서와 나중에 볼 문서를 구분해 빠르게 시작합니다.
 
 ## 기본 운영 원칙
 

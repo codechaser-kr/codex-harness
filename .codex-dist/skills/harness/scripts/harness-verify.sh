@@ -239,7 +239,6 @@ LOG_FILES=(
   ".harness/logs/session-log.md"
   ".harness/logs/session-events.tsv"
   ".harness/logs/latest-session-summary.md"
-  ".harness/logs/role-frequency.md"
 )
 
 for file in "${LOG_FILES[@]}"; do
@@ -265,6 +264,7 @@ if [ -f ".codex/skills/run-harness/SKILL.md" ]; then
   check_contains_hint ".codex/skills/run-harness/SKILL.md" "분류" "요청 유형 분류"
   check_contains_hint ".codex/skills/run-harness/SKILL.md" "영향 범위" "영향 범위 판단"
   check_contains_hint ".codex/skills/run-harness/SKILL.md" "질문" "사용자 질문 유도"
+  check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "출력 계약|현재 시작 역할|보강 필요 역할|추가 질문" "출력 계약"
 fi
 
 if [ -f ".harness/reports/team-structure.md" ]; then
@@ -308,6 +308,8 @@ fi
 
 if [ -f ".harness/logs/role-frequency.md" ]; then
   check_contains_hint ".harness/logs/role-frequency.md" "역할 호출 빈도" "역할 빈도 보고서"
+else
+  log "선택 자산 생략: .harness/logs/role-frequency.md"
 fi
 
 if [ "$PROJECT_SIGNAL_LEVEL" = "empty" ]; then

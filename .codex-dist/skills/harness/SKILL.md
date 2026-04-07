@@ -58,14 +58,16 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - 최초 하네스 구성 요청이면 반드시 `bash scripts/harness-init.sh`를 먼저 실행한다.
 - 하네스 구성이 끝났다고 판단하기 전에 반드시 `bash scripts/harness-verify.sh`를 실행한다.
 - `scripts/harness-refresh-reports.sh`는 이미 하네스 구조가 있는 프로젝트에서 `.harness/reports/*` 전체를 재생성하거나 보강할 때 사용한다.
+- `harness-init.sh` 또는 `harness-refresh-reports.sh`가 만든 문서는 시작 산출물로 보고, 완료 전에 반드시 저장소 사실과 운영 흐름에 맞게 역할 관점으로 다시 가공한다.
+- `.harness/reports/*` 문서 재가공 없이 스크립트 출력만으로 완료 처리하지 않는다.
 - `scripts/harness-init.sh` 대신 `.codex/skills/*`, `.harness/*`를 수동으로 직접 생성하는 방식은 사용하지 않는다.
 - `scripts/harness-verify.sh`가 실패하면 완료로 간주하지 말고, 누락된 구조를 먼저 보강한다.
 
 ## 기본 실행 순서
 
-- 새 프로젝트 하네스 구성: `bash scripts/harness-init.sh` → 필요 시 역할 보강 → `bash scripts/harness-verify.sh`
-- 기존 프로젝트의 `.harness/reports` 문서 전체 재생성: `bash scripts/harness-refresh-reports.sh` → `bash scripts/harness-verify.sh`
-- 기존 프로젝트의 구조 누락 보강: `bash scripts/harness-init.sh` → 필요 시 `bash scripts/harness-refresh-reports.sh` → `bash scripts/harness-verify.sh`
+- 새 프로젝트 하네스 구성: `bash scripts/harness-init.sh` → 역할 기반 `.harness/reports/*` 문서 가공 → 필요 시 역할 보강 → `bash scripts/harness-verify.sh`
+- 기존 프로젝트의 `.harness/reports` 문서 전체 재생성: `bash scripts/harness-refresh-reports.sh` → 역할 기반 `.harness/reports/*` 문서 가공 → `bash scripts/harness-verify.sh`
+- 기존 프로젝트의 구조 누락 보강: `bash scripts/harness-init.sh` → 필요 시 `bash scripts/harness-refresh-reports.sh` → 역할 기반 `.harness/reports/*` 문서 가공 → `bash scripts/harness-verify.sh`
 
 ---
 
@@ -74,6 +76,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 이 스킬은 현재 저장소 안에 다음을 생성하거나 보완한다.
 
 ### 프로젝트 로컬 역할 스킬
+
 - `.codex/skills/domain-analyst/SKILL.md`
 - `.codex/skills/harness-architect/SKILL.md`
 - `.codex/skills/skill-scaffolder/SKILL.md`
@@ -83,6 +86,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - `.codex/skills/run-harness/SKILL.md`
 
 ### 보조 산출물
+
 - `.harness/reports/domain-analysis.md`
 - `.harness/reports/harness-architecture.md`
 - `.harness/reports/qa-strategy.md`
@@ -98,6 +102,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 ## 전체 워크플로우
 
 ### Phase 1: 저장소 분석
+
 1. 현재 저장소의 목적과 기술 스택을 파악한다.
 2. 핵심 디렉토리, 주요 흐름, 하네스 관점의 핵심 관심사를 식별한다.
 3. 기존 로컬 하네스 구조가 있는지 확인해 충돌을 피한다.
@@ -107,6 +112,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 분석 기준은 `references/agent-design-patterns.md`를 참고한다.
 
 ### Phase 2: 실행 하네스 팀 설계
+
 1. 이 프로젝트에 필요한 역할 팀 구성을 결정한다.
 2. 기본 역할 구성을 유지할지, 축소/확장할지 판단한다.
 3. 어떤 역할이 중심이고, 어떤 역할이 보조인지 정리한다.
@@ -118,6 +124,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 흐름과 위임 기준은 `references/orchestrator-template.md`를 참고한다.
 
 ### Phase 3: 로컬 역할 스킬 생성
+
 1. 각 역할에 대한 로컬 SKILL.md를 생성한다.
 2. 각 역할은 명확한 입력/출력/책임 범위를 가져야 한다.
 3. description은 실제 요청에서 트리거될 수 있도록 구체적으로 작성한다.
@@ -127,6 +134,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 스킬 작성 기준은 `references/skill-writing-guide.md`를 참고한다.
 
 ### Phase 4: QA 및 검증 구조 포함
+
 1. QA 역할을 포함해 품질 관점을 정의한다.
 2. validator를 포함해 최소 검증 구조를 만든다.
 3. orchestrator가 각 역할의 입력/출력을 연결할 수 있게 한다.
@@ -134,7 +142,18 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 
 QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 
-### Phase 5: 실행 하네스 팀 검증
+### Phase 5: `.harness/reports/*` 문서 프로젝트 맞춤 가공
+
+1. `harness-init.sh` 또는 `harness-refresh-reports.sh`가 만든 `.harness/reports/*` 문서를 최종본으로 간주하지 않는다.
+2. domain-analyst가 저장소 사실, 대표 흐름, 예외를 기준으로 `domain-analysis.md`를 먼저 보정한다.
+3. harness-architect와 qa-designer가 역할 경계, handoff, 검증 기준을 현재 저장소 운영 방식에 맞게 다시 정렬한다.
+4. orchestrator가 시작 분기, 재진입 루프, 세션 운영 규칙을 실제 요청 유형 기준으로 다듬는다.
+5. validator는 문서가 스키마만 맞춘 일반론에 머물지 않고 저장소 특화 근거를 유지하는지 확인한다.
+
+이 단계의 목적은 스크립트 출력물을 그대로 유지하는 것이 아니라, 각 프로젝트의 구조와 운영 맥락에 맞는 문서로 가공하는 것이다.
+
+### Phase 6: 실행 하네스 팀 검증
+
 1. 필수 역할 스킬이 모두 존재하는지 확인한다.
 2. 각 역할이 충분히 구분되는지 확인한다.
 3. description이 실제로 트리거될 수 있는 수준인지 확인한다.
@@ -150,24 +169,31 @@ QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 ## 기본 역할 팀
 
 ### domain-analyst
+
 저장소 분석과 실행 하네스의 출발점 정의를 맡는다.
 
 ### harness-architect
+
 프로젝트 로컬 실행 하네스의 구조와 역할 경계를 설계한다.
 
 ### skill-scaffolder
+
 설계된 구조를 실제 로컬 스킬과 파일로 옮긴다.
 
 ### qa-designer
+
 품질 기준과 반복 검토 질문을 정의한다.
 
 ### orchestrator
+
 역할 팀의 중심으로서 흐름과 연결 구조를 정리한다.
 
 ### validator
+
 생성된 실행 하네스가 최소 요건을 만족하는지 점검한다.
 
 ### run-harness
+
 현재 상태를 보고 어떤 역할부터 기동할지 결정하는 실행 하네스 팀의 진입점이다.
 저장소 단서가 부족하면 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 사용자에게 묻는다.
 
@@ -183,6 +209,7 @@ QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 으로 본다.
 
 즉:
+
 - orchestrator = 중심 조율자
 - run-harness = 기동 엔트리포인트
 
@@ -195,15 +222,18 @@ QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 QA와 validator는 비슷해 보여도 다르다.
 
 ### qa-designer
+
 - 어떤 품질 질문을 반복 검토해야 하는지 정리한다
 - 어떤 연결이 중요한지, 어떤 실패가 위험한지 정의한다
 
 ### validator
+
 - 최소 구조 요건을 점검한다
 - 누락, 약한 설명, 흐름 끊김을 식별한다
 - 구체적 피드백을 남긴다
 
 즉:
+
 - QA는 품질 관점의 공급자
 - validator는 최소 품질 점검자
 
@@ -216,6 +246,7 @@ QA와 validator는 비슷해 보여도 다르다.
 리포트는 중요하지만 본체는 아니다.
 
 이 스킬에서 본체는:
+
 - 역할 팀
 - 로컬 스킬
 - run-harness 진입점
@@ -223,6 +254,7 @@ QA와 validator는 비슷해 보여도 다르다.
 - QA/검증 구조
 
 리포트는:
+
 - 사람이 팀 구조를 이해하게 하고
 - 역할 간 합의를 남기고
 - 이후 수정과 확장을 쉽게 하도록 돕는 보조 산출물이다
@@ -237,10 +269,12 @@ QA와 validator는 비슷해 보여도 다르다.
 이 스킬은 요구사항과 평가 기준을 완전 자동으로 확정하려 하지 않는다.
 
 대신:
+
 - AI는 역할 팀 초안, 구조 초안, QA 초안, 흐름 초안을 만든다
 - 사람은 무엇이 중요한지, 어떤 실패가 치명적인지, 어떤 기준을 유지할지 선택하고 수정한다
 
 이 사람 개입은 주로:
+
 - domain-analysis
 - harness-architecture
 - qa-strategy

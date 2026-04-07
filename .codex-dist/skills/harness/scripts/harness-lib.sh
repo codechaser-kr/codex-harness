@@ -25,22 +25,6 @@ join_by_comma() {
   printf '%s\n' "$result"
 }
 
-join_by_plus() {
-  local delimiter=" + "
-  local result=""
-  local item
-
-  for item in "$@"; do
-    if [ -z "$result" ]; then
-      result="$item"
-    else
-      result="$result$delimiter$item"
-    fi
-  done
-
-  printf '%s\n' "$result"
-}
-
 has_stack_manifest() {
   [ -f "package.json" ] \
     || [ -f "Cargo.toml" ] \
@@ -179,29 +163,24 @@ detect_structure_hint() {
   echo "${limited[*]}"
 }
 
-has_react_signal() {
-  grep -Rqs '"react"' . \
-    --include='package.json' \
-    --exclude-dir='.git' \
-    --exclude-dir='.codex' \
-    --exclude-dir='.harness' \
-    --exclude-dir='node_modules' \
-    --exclude-dir='.yarn'
-}
-
-has_electron_signal() {
-  grep -Rqs '"electron\(\\|-builder\)\?"' . \
-    --include='package.json' \
-    --exclude-dir='.git' \
-    --exclude-dir='.codex' \
-    --exclude-dir='.harness' \
-    --exclude-dir='node_modules' \
-    --exclude-dir='.yarn'
-}
-
 detect_package_manager() {
   if [ -f ".yarnrc.yml" ] || [ -f ".pnp.cjs" ] || [ -f ".pnp.loader.mjs" ]; then
-    echo "Yarn 4 PnP"
+    if [ -f ".yarnrc.yml" ] && grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*node-modules([[:space:]]|$)' ".yarnrc.yml"; then
+      echo "Yarn modern (node-modules linker)"
+      return
+    fi
+
+    if [ -f ".yarnrc.yml" ] && grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*pnp([[:space:]]|$)' ".yarnrc.yml"; then
+      echo "Yarn modern (PnP linker)"
+      return
+    fi
+
+    if [ -f ".pnp.cjs" ] || [ -f ".pnp.loader.mjs" ]; then
+      echo "Yarn modern (PnP linker)"
+      return
+    fi
+
+    echo "Yarn modern"
     return
   fi
 
@@ -314,23 +293,10 @@ build_project_type_label() {
 
   case "$project_type" in
     node)
-      local descriptors=()
-
-      has_react_signal && descriptors+=("React")
-      has_electron_signal && descriptors+=("Electron")
-
       if [ -d "packages" ] || [ -d "apps" ]; then
-        if [ "${#descriptors[@]}" -gt 0 ]; then
-          echo "$(join_by_plus "${descriptors[@]}") 기반 모노레포"
-        else
-          echo "Node 기반 모노레포"
-        fi
+        echo "Node 기반 모노레포"
       else
-        if [ "${#descriptors[@]}" -gt 0 ]; then
-          echo "$(join_by_plus "${descriptors[@]}") 기반 애플리케이션"
-        else
-          echo "Node 기반 애플리케이션"
-        fi
+        echo "Node 기반 애플리케이션"
       fi
       ;;
     rust)
@@ -379,11 +345,10 @@ build_key_axes_hint() {
     return
   fi
 
-  ([ -d "packages" ] || [ -d "apps" ]) && axes+=("워크스페이스 패키지")
-  has_react_signal && axes+=("웹 UI")
-  has_electron_signal && axes+=("데스크톱 셸")
-  ([ -d "packages/common" ] || [ -d "common" ]) && axes+=("공용 컴포넌트/유틸리티")
-  ([ -d "tests" ] || [ -d "test" ] || [ -f "vitest.config.ts" ] || [ -f "jest.config.js" ]) && axes+=("테스트/빌드")
+  ([ -d "packages" ] || [ -d "apps" ] || [ -d "libs" ] || [ -d "services" ]) && axes+=("워크스페이스 또는 모듈 경계")
+  ([ -d "common" ] || [ -d "shared" ] || [ -d "packages/common" ] || [ -d "packages/shared" ] || [ -d "libs/common" ] || [ -d "libs/shared" ]) && axes+=("공용 계층")
+  ([ -d "tests" ] || [ -d "test" ] || [ -d "__tests__" ]) && axes+=("검증 경로")
+  [ -f "package.json" ] || [ -f "Cargo.toml" ] || [ -f "pyproject.toml" ] || [ -f "go.mod" ] || [ -f "pom.xml" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ] && axes+=("실행 및 빌드 진입점")
 
   if [ "${#axes[@]}" -eq 0 ]; then
     echo "$structure_hint"
@@ -450,181 +415,9 @@ build_initial_observation() {
       ;;
     *)
       if [ "$workspace_hint" = "추정 불가" ]; then
-        echo "- 자동 재분석 결과: $structure_hint, $config_hint 단서를 기준으로 첫 분석 초안을 만들었습니다."
+        echo "- $structure_hint, $config_hint 단서를 우선 확인했습니다."
       else
-        echo "- 자동 재분석 결과: $workspace_hint, $config_hint 단서를 기준으로 첫 분석 초안을 만들었습니다."
-      fi
-      ;;
-  esac
-}
-
-classify_workspace_path() {
-  local path="$1"
-  local name
-  name="$(basename "$path")"
-
-  case "$name" in
-    *common*|*shared*|*ui*|*design*|*core*)
-      echo "공용 패키지 또는 공유 유틸리티 후보"
-      ;;
-    *desktop*|*electron*)
-      echo "데스크톱 셸 또는 배포 패키지 후보"
-      ;;
-    *web*|*front*|*client*|*site*)
-      echo "웹 애플리케이션 패키지 후보"
-      ;;
-    *api*|*server*|*backend*|*service*)
-      echo "백엔드 또는 서비스 패키지 후보"
-      ;;
-    *test*|*qa*)
-      echo "테스트 또는 검증 보조 패키지 후보"
-      ;;
-    *)
-      echo "주요 워크스페이스 패키지 후보"
-      ;;
-  esac
-}
-
-build_structure_fact_block() {
-  local signal_level="$1"
-  local structure_hint="$2"
-  local workspace_hint="$3"
-  local package_manager_hint="$4"
-  local config_hint="$5"
-  local workspace_path
-
-  case "$signal_level" in
-    empty|low)
-      return
-      ;;
-  esac
-
-  if [ "$workspace_hint" != "추정 불가" ]; then
-    while IFS= read -r workspace_path; do
-      [ -n "$workspace_path" ] || continue
-      printf '%s\n' "- \`$workspace_path\`: $(classify_workspace_path "$workspace_path")."
-    done < <(list_workspace_packages)
-  fi
-
-  [ -d "src" ] && printf '%s\n' "- \`src/\`: 애플리케이션 핵심 소스 디렉토리 후보입니다."
-  [ -d "app" ] && printf '%s\n' "- \`app/\`: 엔트리포인트 또는 라우팅 중심 디렉토리 후보입니다."
-  [ -d "docs" ] && printf '%s\n' "- \`docs/\`: 운영 또는 설계 문서 단서가 모이는 디렉토리입니다."
-  [ -d "tests" ] && printf '%s\n' "- \`tests/\`: 독립 테스트 시나리오 또는 검증 흐름 단서가 있습니다."
-  [ -d "test" ] && printf '%s\n' "- \`test/\`: 테스트 보조 코드 또는 시나리오 단서가 있습니다."
-  [ "$package_manager_hint" = "추정 불가" ] || printf '%s\n' "- 패키지 관리는 \`$package_manager_hint\` 단서가 확인됩니다."
-  [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- 주요 설정 단서: \`$config_hint\`."
-  printf '%s\n' "- 현재 자동 분석 기준의 주요 구조 단서는 \`$structure_hint\` 입니다."
-}
-
-build_execution_flow_block() {
-  local project_type="$1"
-  local structure_hint="$2"
-  local workspace_hint="$3"
-
-  case "$project_type" in
-    node)
-      printf '%s\n' "- \`package.json\` 기반으로 실행, 빌드, 테스트 스크립트가 첫 진입점이 될 가능성이 높습니다."
-      has_react_signal && printf '%s\n' "- React 단서가 있으므로 화면 진입점, 라우팅, 상태 관리 경계를 함께 읽어야 합니다."
-      has_electron_signal && printf '%s\n' "- Electron 단서가 있으므로 메인/프리로드/렌더러 또는 패키징 흐름을 별도 축으로 봐야 합니다."
-      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 패키지 간 의존 관계를 따라가며 변경 영향 범위를 먼저 정리해야 합니다."
-      ;;
-    rust)
-      printf '%s\n' "- \`Cargo.toml\`과 \`src/\` 기준으로 바이너리 또는 라이브러리 진입점을 먼저 확인해야 합니다."
-      printf '%s\n' "- 크레이트 경계와 feature 조합이 실제 실행 흐름을 바꿀 수 있으므로 이를 함께 기록해야 합니다."
-      ;;
-    python)
-      printf '%s\n' "- Python 설정 파일과 패키지 디렉토리 기준으로 엔트리포인트 스크립트와 핵심 모듈을 먼저 확인해야 합니다."
-      printf '%s\n' "- CLI, 서비스, 배치 중 어떤 실행 모델인지 먼저 구분해야 분석 품질이 올라갑니다."
-      ;;
-    go)
-      printf '%s\n' "- \`go.mod\`와 \`cmd/\`, \`internal/\`, \`pkg/\` 구조를 기준으로 바이너리 진입점과 내부 패키지 경계를 먼저 읽어야 합니다."
-      ;;
-    java)
-      printf '%s\n' "- \`pom.xml\`, \`build.gradle\`, \`build.gradle.kts\` 같은 빌드 설정 파일을 기준으로 모듈 경계와 실행 태스크를 먼저 확인해야 합니다."
-      printf '%s\n' "- \`src/main\`, \`src/test\`, 멀티모듈 구조 여부가 실제 변경 영향 범위를 크게 좌우합니다."
-      ;;
-    cpp)
-      printf '%s\n' "- \`Makefile\` 또는 \`CMakeLists.txt\` 기준으로 바이너리 타깃, 라이브러리 구성, 컴파일 흐름을 먼저 확인해야 합니다."
-      printf '%s\n' "- 헤더와 구현 파일 경계, 빌드 옵션, 플랫폼별 조건부 빌드가 핵심 위험 지점이 됩니다."
-      ;;
-    php)
-      printf '%s\n' "- \`composer.json\` 기준으로 의존성, 오토로딩, 프레임워크 진입점을 먼저 확인해야 합니다."
-      printf '%s\n' "- 웹 요청 진입점과 CLI 태스크가 함께 있으면 두 흐름을 분리해 기록해야 합니다."
-      ;;
-    ruby)
-      printf '%s\n' "- \`Gemfile\` 기준으로 런타임 의존성과 실행 태스크를 먼저 확인해야 합니다."
-      printf '%s\n' "- Rails, Rack, 순수 Ruby 스크립트 중 어떤 실행 모델인지 구분해야 분석 품질이 올라갑니다."
-      ;;
-    *)
-      printf '%s\n' "- \`$structure_hint\` 단서를 따라 핵심 사용자 흐름과 주요 변경 경계를 먼저 정리해야 합니다."
-      ;;
-  esac
-}
-
-build_harness_interest_block() {
-  local signal_level="$1"
-  local workspace_hint="$2"
-  local key_axes_hint="$3"
-
-  case "$signal_level" in
-    empty|low)
-      return
-      ;;
-  esac
-
-  [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 패키지 또는 애플리케이션 경계를 흐리지 않는 변경 분류"
-  printf '%s\n' "- \`$key_axes_hint\` 축에서 영향도가 큰 영역 식별"
-  has_react_signal && printf '%s\n' "- 화면 구조, 상태 관리, 공용 컴포넌트 변경의 결합도 파악"
-  has_electron_signal && printf '%s\n' "- 데스크톱 셸과 웹 코드 사이의 경계 및 배포 영향 범위 확인"
-  [ -d "tests" ] || [ -d "test" ] && printf '%s\n' "- 기존 테스트 경로와 실제 검증 비용을 같이 고려한 역할 분리"
-}
-
-build_risky_change_block() {
-  local signal_level="$1"
-  local workspace_hint="$2"
-
-  case "$signal_level" in
-    empty|low)
-      return
-      ;;
-  esac
-
-  printf '%s\n' "- 진입점 설정 파일과 빌드 설정 변경"
-  [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 패키지 export 경로 또는 의존 관계 변경"
-  has_react_signal && printf '%s\n' "- 라우팅, 전역 상태, 공용 UI 계층 변경"
-  has_electron_signal && printf '%s\n' "- Electron 패키징, 업데이트, 메인/렌더러 경계 변경"
-  [ -d "tests" ] || [ -d "test" ] && printf '%s\n' "- 테스트 픽스처 또는 공용 검증 유틸리티 변경"
-}
-
-build_open_question_block() {
-  local signal_level="$1"
-  local project_type="$2"
-  local workspace_hint="$3"
-
-  case "$signal_level" in
-    empty)
-      cat <<EOF
-- 프로젝트 유형과 첫 성공 흐름은 사용자 확인이 필요합니다.
-- 저장소 단서가 없으므로 기술 스택과 운영 제약도 아직 확정할 수 없습니다.
-EOF
-      ;;
-    low)
-      cat <<EOF
-- README와 디렉토리 이름만으로는 실제 사용자 흐름을 확정하기 어렵습니다.
-- 가장 먼저 분석해야 할 대표 진입점 파일을 사용자 또는 후속 역할이 지정해야 합니다.
-EOF
-      ;;
-    *)
-      if [ "$project_type" = "node" ] && [ "$workspace_hint" != "추정 불가" ]; then
-        cat <<EOF
-- 워크스페이스별 실제 책임 경계와 주력 패키지는 추가 확인이 필요합니다.
-- 빌드/배포/테스트 중 어디가 가장 비싼 검증 축인지 후속 분석이 필요합니다.
-EOF
-      else
-        cat <<EOF
-- 자동 분석만으로는 핵심 사용자 흐름과 실패 비용을 완전히 확정할 수 없습니다.
-- 대표 진입점 파일과 영향도가 큰 변경 경계는 후속 역할이 보강해야 합니다.
-EOF
+        echo "- $workspace_hint, $config_hint 단서를 우선 확인했습니다."
       fi
       ;;
   esac
@@ -641,6 +434,10 @@ build_domain_report_detail_block() {
   local discovery_guidance="$8"
   local initial_observation_line="$9"
   local next_step_detail_line="${10}"
+  local workspace_path
+  local workspace_name
+  local found_exception_note=0
+  local notes=()
 
   case "$signal_level" in
     empty|low)
@@ -687,28 +484,167 @@ EOF
     *)
       cat <<EOF
 ## 사실 기준 구조
+EOF
+      if [ "$workspace_hint" != "추정 불가" ]; then
+        while IFS= read -r workspace_path; do
+          [ -n "$workspace_path" ] || continue
+          workspace_name="$(basename "$workspace_path")"
 
-$(build_structure_fact_block "$signal_level" "$structure_hint" "$workspace_hint" "$package_manager_hint" "$config_hint")
+          case "$workspace_name" in
+            *common*|*shared*|*ui*|*design*|*core*)
+              printf '%s\n' "- \`$workspace_path\`: 공용 패키지 또는 공유 유틸리티 후보입니다."
+              ;;
+            *desktop*|*electron*)
+              printf '%s\n' "- \`$workspace_path\`: 별도 실행 환경 또는 배포 경계를 가진 패키지 후보입니다."
+              ;;
+            *web*|*front*|*client*|*site*)
+              printf '%s\n' "- \`$workspace_path\`: 사용자 진입점을 담는 애플리케이션 패키지 후보입니다."
+              ;;
+            *api*|*server*|*backend*|*service*)
+              printf '%s\n' "- \`$workspace_path\`: 서비스 또는 백엔드 책임을 가진 패키지 후보입니다."
+              ;;
+            *test*|*qa*)
+              printf '%s\n' "- \`$workspace_path\`: 테스트 또는 검증 보조 패키지 후보입니다."
+              ;;
+            *)
+              printf '%s\n' "- \`$workspace_path\`: 주요 워크스페이스 패키지 후보입니다."
+              ;;
+          esac
+        done < <(list_workspace_packages)
+      fi
+
+      [ -d "src" ] && printf '%s\n' "- \`src/\`: 애플리케이션 핵심 소스 디렉토리 후보입니다."
+      [ -d "app" ] && printf '%s\n' "- \`app/\`: 엔트리포인트 또는 라우팅 중심 디렉토리 후보입니다."
+      [ -d "docs" ] && printf '%s\n' "- \`docs/\`: 운영 또는 설계 문서 단서가 모이는 디렉토리입니다."
+      [ -d "tests" ] && printf '%s\n' "- \`tests/\`: 독립 테스트 시나리오 또는 검증 흐름 단서가 있습니다."
+      [ -d "test" ] && printf '%s\n' "- \`test/\`: 테스트 보조 코드 또는 시나리오 단서가 있습니다."
+      [ "$package_manager_hint" = "추정 불가" ] || printf '%s\n' "- 패키지 관리는 \`$package_manager_hint\` 단서가 확인됩니다."
+      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- 주요 설정 단서: \`$config_hint\`."
+      printf '%s\n' "- 현재 자동 분석 기준의 주요 구조 단서는 \`$structure_hint\` 입니다."
+
+      cat <<EOF
+
+## 예외 및 운영 메모
+EOF
+      while IFS= read -r workspace_path; do
+        [ -n "$workspace_path" ] || continue
+        notes=()
+
+        [ -f "$workspace_path/package-lock.json" ] && notes+=("package-lock.json")
+        [ -f "$workspace_path/pnpm-lock.yaml" ] && notes+=("pnpm-lock.yaml")
+        [ -f "$workspace_path/yarn.lock" ] && notes+=("yarn.lock")
+        [ -f "$workspace_path/bun.lockb" ] && notes+=("bun.lockb")
+        [ -f "$workspace_path/bun.lock" ] && notes+=("bun.lock")
+        [ -f "$workspace_path/.npmrc" ] && notes+=(".npmrc")
+        [ -f "$workspace_path/Cargo.toml" ] && notes+=("Cargo.toml")
+        [ -f "$workspace_path/pyproject.toml" ] && notes+=("pyproject.toml")
+        [ -f "$workspace_path/requirements.txt" ] && notes+=("requirements.txt")
+        [ -f "$workspace_path/go.mod" ] && notes+=("go.mod")
+        [ -f "$workspace_path/pom.xml" ] && notes+=("pom.xml")
+        [ -f "$workspace_path/build.gradle" ] && notes+=("build.gradle")
+        [ -f "$workspace_path/build.gradle.kts" ] && notes+=("build.gradle.kts")
+        [ -f "$workspace_path/Gemfile" ] && notes+=("Gemfile")
+        [ -f "$workspace_path/composer.json" ] && notes+=("composer.json")
+
+        if [ -f "$workspace_path/.yarnrc.yml" ]; then
+          if grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*node-modules([[:space:]]|$)' "$workspace_path/.yarnrc.yml"; then
+            notes+=(".yarnrc.yml(nodeLinker: node-modules)")
+          elif grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*pnp([[:space:]]|$)' "$workspace_path/.yarnrc.yml"; then
+            notes+=(".yarnrc.yml(nodeLinker: pnp)")
+          else
+            notes+=(".yarnrc.yml")
+          fi
+        fi
+
+        if find "$workspace_path" -maxdepth 2 -type d -name node_modules -print -quit | grep -q .; then
+          notes+=("node_modules 디렉토리")
+        fi
+
+        if find "$workspace_path" -maxdepth 2 -type d \( -name .venv -o -name vendor \) -print -quit | grep -q .; then
+          notes+=("로컬 의존성 디렉토리")
+        fi
+
+        if [ "${#notes[@]}" -gt 0 ]; then
+          printf '%s\n' "- \`$workspace_path\`: $(join_by_comma "${notes[@]}") 단서가 있어 루트 기본 흐름과 다른 설치/실행/검증 예외가 있는지 확인해야 합니다."
+          found_exception_note=1
+        fi
+      done < <(list_workspace_packages)
+
+      if [ "$found_exception_note" -eq 0 ]; then
+        printf '%s\n' "- 자동 탐지된 예외 단서는 제한적입니다. 루트 기본 흐름과 다른 설치/실행/검증 단계가 있으면 이 섹션에 직접 보강해야 합니다."
+      fi
+
+      cat <<EOF
 
 ## 핵심 실행 흐름
+EOF
+      case "$project_type" in
+        node)
+          printf '%s\n' "- \`package.json\` 기반으로 실행, 빌드, 테스트 스크립트가 첫 진입점이 될 가능성이 높습니다."
+          [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 패키지 간 의존 관계를 따라가며 변경 영향 범위를 먼저 정리해야 합니다."
+          ;;
+        rust)
+          printf '%s\n' "- \`Cargo.toml\`과 \`src/\` 기준으로 바이너리 또는 라이브러리 진입점을 먼저 확인해야 합니다."
+          printf '%s\n' "- 크레이트 경계와 feature 조합이 실제 실행 흐름을 바꿀 수 있으므로 이를 함께 기록해야 합니다."
+          ;;
+        python)
+          printf '%s\n' "- Python 설정 파일과 패키지 디렉토리 기준으로 엔트리포인트 스크립트와 핵심 모듈을 먼저 확인해야 합니다."
+          printf '%s\n' "- CLI, 서비스, 배치 중 어떤 실행 모델인지 먼저 구분해야 분석 품질이 올라갑니다."
+          ;;
+        go)
+          printf '%s\n' "- \`go.mod\`와 \`cmd/\`, \`internal/\`, \`pkg/\` 구조를 기준으로 바이너리 진입점과 내부 패키지 경계를 먼저 읽어야 합니다."
+          ;;
+        java)
+          printf '%s\n' "- \`pom.xml\`, \`build.gradle\`, \`build.gradle.kts\` 같은 빌드 설정 파일을 기준으로 모듈 경계와 실행 태스크를 먼저 확인해야 합니다."
+          printf '%s\n' "- \`src/main\`, \`src/test\`, 멀티모듈 구조 여부가 실제 변경 영향 범위를 크게 좌우합니다."
+          ;;
+        cpp)
+          printf '%s\n' "- \`Makefile\` 또는 \`CMakeLists.txt\` 기준으로 바이너리 타깃, 라이브러리 구성, 컴파일 흐름을 먼저 확인해야 합니다."
+          printf '%s\n' "- 헤더와 구현 파일 경계, 빌드 옵션, 플랫폼별 조건부 빌드가 핵심 위험 지점이 됩니다."
+          ;;
+        php)
+          printf '%s\n' "- \`composer.json\` 기준으로 의존성, 오토로딩, 프레임워크 진입점을 먼저 확인해야 합니다."
+          printf '%s\n' "- 웹 요청 진입점과 CLI 태스크가 함께 있으면 두 흐름을 분리해 기록해야 합니다."
+          ;;
+        ruby)
+          printf '%s\n' "- \`Gemfile\` 기준으로 런타임 의존성과 실행 태스크를 먼저 확인해야 합니다."
+          printf '%s\n' "- Rails, Rack, 순수 Ruby 스크립트 중 어떤 실행 모델인지 구분해야 분석 품질이 올라갑니다."
+          ;;
+        *)
+          printf '%s\n' "- \`$structure_hint\` 단서를 따라 핵심 사용자 흐름과 주요 변경 경계를 먼저 정리해야 합니다."
+          ;;
+      esac
 
-$(build_execution_flow_block "$project_type" "$structure_hint" "$workspace_hint")
+      cat <<EOF
 
 ## 하네스 관점 핵심 관심사
+EOF
+      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 패키지 또는 애플리케이션 경계를 흐리지 않는 변경 분류"
+      printf '%s\n' "- \`$key_axes_hint\` 축에서 영향도가 큰 영역 식별"
+      printf '%s\n' "- 실행 흐름, 설정 파일, 공용 계층 중 어디서 변경이 시작되는지 먼저 구분"
+      printf '%s\n' "- 검증 비용이 큰 경계와 수동 확인이 필요한 결합 지점을 역할 관점으로 분리"
 
-$(build_harness_interest_block "$signal_level" "$workspace_hint" "$key_axes_hint")
+      cat <<EOF
 
 ## 반복적으로 위험한 변경 유형
+EOF
+      printf '%s\n' "- 진입점 설정 파일과 빌드 설정 변경"
+      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 패키지 export 경로 또는 의존 관계 변경"
+      printf '%s\n' "- 공용 모듈, 공개 인터페이스, 소비 경로 변경"
+      printf '%s\n' "- 테스트 또는 검증 도구, 픽스처, 기준 문서 변경"
 
-$(build_risky_change_block "$signal_level" "$workspace_hint")
+      cat <<EOF
 
 ## 초기 관찰 내용
 
 $initial_observation_line
 
 ## 아직 열려 있는 질문
+EOF
+      printf '%s\n' "- 자동 분석만으로는 핵심 사용자 흐름과 실패 비용을 완전히 확정할 수 없습니다."
+      printf '%s\n' "- 대표 진입점 파일과 영향도가 큰 변경 경계는 후속 역할이 보강해야 합니다."
 
-$(build_open_question_block "$signal_level" "$project_type" "$workspace_hint")
+      cat <<EOF
 
 ## 다음 단계
 
@@ -811,8 +747,8 @@ EOF
 ## 역할별 초점
 
 ### domain-analyst
-- 실제 코드 경로와 워크스페이스 책임 경계를 구체화합니다.
-- 자동 분석 초안이 놓친 핵심 사용자 흐름과 영향 범위를 보정합니다.
+- 실제 코드 경로와 주요 책임 경계를 구체화합니다.
+- 자동 분석이 놓친 핵심 사용자 흐름과 영향 범위를 보정합니다.
 
 ### harness-architect
 - $key_axes_hint 축을 기준으로 역할 책임과 출력 문서를 정렬합니다.
@@ -828,11 +764,40 @@ EOF
 
 ### orchestrator
 - 작업 시작점을 사용자 요청 종류와 영향 범위에 따라 분기합니다.
-- 웹, 공용 패키지, 데스크톱 또는 빌드 흐름처럼 성격이 다른 작업을 다른 루프로 연결합니다.
+- 성격이 다른 작업 축과 검증 흐름을 서로 다른 루프로 연결합니다.
 
 ### validator
-- 프로젝트 특화 분석이 제네릭 초안으로 회귀하지 않았는지 확인합니다.
+- 프로젝트 특화 분석이 일반론으로 흐르지 않았는지 확인합니다.
 - 역할 문서와 운영 문서가 실제 저장소 구조를 반영하는지 점검합니다.
+
+## 7역할 유지 기준
+
+- 저장소 사실 확인, 구조 설계, 스킬 반영, QA 설계, 흐름 조율, 최종 검증, 기동 진입점을 분리해야 재생성 후에도 책임 충돌이 줄어듭니다.
+- 역할 수는 고정 답안이 아니라 경계 종류, 검증 비용, 운영 복잡도를 기준으로 조정해야 합니다.
+- run-harness를 별도 역할로 유지해야 현재 상태 판단과 실제 작업 역할 호출을 분리할 수 있습니다.
+
+## 역할별 입력/출력 기준
+
+- domain-analyst 입력: 실제 저장소 구조, 대표 진입점, 기존 리포트. 출력: 사실 기준 구조, 핵심 흐름, 예외 메모.
+- harness-architect 입력: domain-analysis, 핵심 작업 축, 변경 경계. 출력: 역할 책임, 축소/확장 기준, 구조 우선순위.
+- skill-scaffolder 입력: 역할 정의, 운영 규칙, 템플릿 요구사항. 출력: 로컬 스킬 문서, 보강된 템플릿, 연결된 산출물.
+- qa-designer 입력: 영향 범위, 실패 비용, 기존 테스트/검증 흐름. 출력: QA 질문, 변경 유형별 최소 체크, 테스트 설계 기준.
+- orchestrator 입력: 역할별 출력, 현재 요청 유형, 검증 비용. 출력: 시작 분기, handoff 규칙, 재진입 루프.
+- validator 입력: 전체 문서와 스킬 상태. 출력: 회귀 지점, 누락 항목, 다시 호출할 역할.
+- run-harness 입력: 사용자 요청, 현재 문서 상태, 최근 로그. 출력: 시작 역할, 사용자 확인 질문, 세션 시작 기록.
+
+## 축소/확장 판단
+
+- 단일 패키지이고 흐름이 단순하면 skill-scaffolder와 orchestrator의 책임을 일부 묶을 수 있습니다.
+- 여러 경계를 넘는 영향이나 별도 검증 축이 있으면 QA와 validator를 더 분리해 운영하는 편이 안전합니다.
+- 반대로 경계와 검증 비용이 단순하면 일부 역할을 더 가볍게 묶을 수 있습니다.
+
+## 구현 우선순위
+
+1. domain-analyst가 저장소 사실과 예외를 먼저 고정합니다.
+2. harness-architect가 역할 책임과 축소/확장 기준을 정렬합니다.
+3. skill-scaffolder와 qa-designer가 운영 가능한 문서와 체크리스트로 내립니다.
+4. orchestrator와 validator가 재진입 규칙과 회귀 방지를 고정합니다.
 
 ## 설계 원칙
 
@@ -901,24 +866,33 @@ EOF
 - $key_axes_hint
 EOF
       [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 경계와 패키지 간 영향 전파"
-      has_react_signal && printf '%s\n' "- 화면 상태, 라우팅, 공용 UI 계층의 정합성"
-      has_electron_signal && printf '%s\n' "- 데스크톱 셸, 패키징, 배포 경로의 분리 검증"
-      ([ -d "tests" ] || [ -d "test" ]) && printf '%s\n' "- 테스트 픽스처와 공용 검증 유틸리티의 안정성"
+      ([ -d "tests" ] || [ -d "test" ] || [ -d "__tests__" ]) && printf '%s\n' "- 테스트 자산과 검증 유틸리티의 안정성"
+      printf '%s\n' "- 공용 계층, 진입점 설정, 소비 경로 사이의 영향 전파"
       cat <<EOF
 
 ## 우선 검토 질문
 
 - 이번 변경이 어떤 작업 축을 건드리는가
-- 변경 범위가 단일 패키지인지, 공용 경계까지 전파되는가
+- 변경 범위가 단일 영역인지, 여러 경계까지 전파되는가
 - 빌드/테스트/배포 중 어떤 검증 경로를 반드시 다시 확인해야 하는가
 - 자동화보다 사람이 직접 봐야 하는 결합 지점은 어디인가
 
-## 체크포인트 예시
+## 변경 유형별 최소 체크
 
-- 도메인 분석과 오케스트레이션 계획이 실제 저장소 구조를 반영하는가
-- 역할 스킬 설명이 현재 프로젝트의 경계와 흐름을 충분히 드러내는가
-- 영향이 큰 패키지나 공용 계층 변경 시 QA 질문이 더 구체적으로 보강되는가
-- 무거운 검증 경로와 가벼운 검증 경로가 구분되어 운영되는가
+- 기능 변경: 영향받는 사용자 또는 호출 흐름, 핵심 진입점, 최소 회귀 확인 대상을 함께 적습니다.
+- 구조 변경: 역할 문서, 경계 설명, 오케스트레이션 계획이 새 구조를 반영하는지 확인합니다.
+- 빌드/설정 변경: 실행 명령, 검증 명령, 배포 또는 산출물 경로를 다시 확인합니다.
+- 경계 변경: 여러 모듈, 서비스, 패키지, 런타임 중 어디로 영향이 번지는지 실제 저장소 기준으로 다시 적습니다.
+
+## 테스트 설계 기준
+
+- 빠르게 실패를 잡는 얕은 체크와 실제 영향 경계를 확인하는 깊은 체크를 구분합니다.
+- 빠른 검증과 느린 검증, 단일 경계 검증과 교차 경계 검증을 구분해 적습니다.
+- 문서나 하네스 변경이라도 verify가 잡지 못하는 운영 판단 공백이 없는지 수동 확인 질문을 남깁니다.
+
+## 경계별 추가 확인
+
+- 도메인 분석과 오케스트레이션 계획이 실제 저장소 구조와 변경 경계를 반영하는지 다시 확인합니다.
 
 ## 다음 단계
 
@@ -997,17 +971,44 @@ EOF
 3. skill-scaffolder가 필요한 스킬 설명과 템플릿을 보강합니다.
 4. qa-designer가 이번 축에 맞는 검토 질문과 체크포인트를 보강합니다.
 5. orchestrator가 작업 시작 루프와 검증 루프를 정리합니다.
-6. validator가 산출물이 다시 제네릭 초안으로 후퇴하지 않았는지 확인합니다.
+6. validator가 산출물이 다시 일반론으로 흐르지 않았는지 확인합니다.
+
+## 작업 축별 권장 루프
+
+- 기능 또는 사용자 흐름 보강: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
+- 구조 또는 문서 정비: run-harness -> skill-scaffolder -> orchestrator -> validator
+- 경계 재정의가 필요한 변경: run-harness -> domain-analyst -> harness-architect -> qa-designer -> orchestrator -> validator
+- 검증 비용이 큰 변경: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
 
 ## 순서 조정 규칙
 
 - 시작 분기에서 뒤쪽 역할을 진입점으로 선택하더라도, 앞 단계의 판단이 이미 충분한 경우에만 일부 단계를 건너뜁니다.
 - 구조 설명이 낡았거나 generic하면 domain-analyst부터 다시 시작해 표준 전체 시퀀스로 복귀합니다.
-- 공용 경계나 다중 모듈 영향이 보이면 qa-designer와 validator를 뒤로 미루지 않습니다.
+- 핵심 경계나 다중 모듈 영향이 보이면 qa-designer와 validator를 뒤로 미루지 않습니다.
+
+## 현재 상태 판단 규칙
+
+- domain-analysis가 generic하거나 예외 메모가 비어 있으면 domain-analyst부터 다시 시작합니다.
+- 구조는 맞지만 역할 책임이나 확장 기준이 흐리면 harness-architect를 먼저 다시 부릅니다.
+- 체크리스트가 약하거나 검증 비용 구분이 흐리면 qa-designer를 우선 재진입시킵니다.
+- 흐름은 맞는데 handoff가 끊기면 orchestrator를 중심으로 다시 묶습니다.
+
+## 역할 간 handoff 규칙
+
+- domain-analyst -> harness-architect: 실제 경계, 예외, 핵심 흐름이 정리되면 구조 책임으로 넘깁니다.
+- harness-architect -> skill-scaffolder: 역할 책임과 출력 문서가 정리되면 로컬 스킬 설명과 템플릿 반영으로 넘깁니다.
+- qa-designer -> orchestrator: 검토 질문과 최소 체크가 정리되면 어떤 루프로 운영할지 넘깁니다.
+- validator -> orchestrator: 회귀, 누락, 재진입 필요 지점을 찾으면 다시 어떤 역할부터 돌릴지 되돌립니다.
+
+## 피드백 루프
+
+- validator가 generic 회귀를 발견하면 domain-analyst 또는 harness-architect 단계로 되돌립니다.
+- qa-designer가 새 위험 축을 찾으면 orchestrator가 시작 분기와 검증 루프를 다시 조정합니다.
+- session-log에 반복되는 우회 흐름이 쌓이면 team-playbook과 orchestration-plan을 함께 갱신합니다.
 
 ## 운영 원칙
 
-- 작은 변경도 공용 경계나 빌드 경계를 건드리면 별도 검증 루프로 올립니다.
+- 작은 변경도 핵심 경계나 빌드 경계를 건드리면 별도 검증 루프로 올립니다.
 - 문서 재생성은 기존 문장을 보존하는 것보다 실제 저장소 분석을 반영하는 것을 우선합니다.
 - 역할 호출 순서는 고정이 아니라 영향 범위와 검증 비용을 기준으로 조정합니다.
 
@@ -1073,6 +1074,13 @@ EOF
 - orchestrator: 요청 종류별 시작 루프와 보강 루프를 연결하는 역할
 - validator: 제네릭 산출물 회귀와 역할 연결 약화를 잡아내는 역할
 - run-harness: 현재 상태를 보고 어떤 역할부터 움직일지 결정하는 진입점
+
+## 저장소 맞춤 근거
+
+- QA가 중요한 이유: \`$key_axes_hint\` 축이 동시에 흔들리면 문서 정합성보다 실제 운영 리스크가 먼저 커지기 때문입니다.
+- 경계 설명이 중요한 이유: 단일 수정처럼 보여도 실제로는 여러 소비 경계나 호출 경로로 전파될 수 있기 때문입니다.
+- orchestrator 우선순위가 중요한 이유: 역할 수보다 handoff와 재진입 순서를 잘못 잡을 때 운영 비용이 더 크게 늘기 때문입니다.
+- validator를 끝에 두는 이유: 재생성된 문서가 저장소 특화 근거를 잃지 않았는지 마지막에 걸러야 하기 때문입니다.
 EOF
       ;;
   esac
@@ -1131,16 +1139,30 @@ EOF
 ## 시작 순서
 
 1. run-harness가 요청을 받고 $key_axes_hint 중 어느 축을 건드리는지 먼저 분류합니다.
-2. 영향 범위가 넓거나 공용 경계를 건드리면 domain-analyst와 qa-designer를 먼저 호출합니다.
+2. 영향 범위가 넓거나 핵심 경계를 건드리면 domain-analyst와 qa-designer를 먼저 호출합니다.
 3. 구조 보강이 필요하면 harness-architect와 skill-scaffolder를 붙여 역할 설명과 템플릿을 맞춥니다.
 4. orchestrator가 작업 루프와 검증 루프를 묶고 validator가 최종 구조를 점검합니다.
 
 ## 기본 운영 원칙
 
-- 문서 재생성은 실제 저장소 분석을 반영해야 하며, 제네릭 초안으로 되돌아가면 안 됩니다.
+- 문서 재생성은 실제 저장소 분석을 반영해야 하며, 일반론으로 되돌아가면 안 됩니다.
 - 변경이 여러 작업 축을 동시에 건드리면 단일 역할 판단으로 끝내지 않습니다.
 - 고비용 검증 경로는 초기에 식별하고 운영 계획에 반영합니다.
 - 중요한 역할 호출이나 흐름 변경은 session-log에 남깁니다.
+
+## 세션 시작 체크
+
+- 현재 요청이 어떤 작업 축을 건드리는지 한 줄로 기록합니다.
+- 직전 session-log와 latest-session-summary를 읽고 미해결 항목이 이어지는지 확인합니다.
+- domain-analysis, orchestration-plan, qa-strategy 중 낡았거나 generic한 문서가 있는지 먼저 봅니다.
+
+## 작업 유형별 빠른 운영 규칙
+
+- 기능 또는 사용자 흐름 보강: domain-analysis와 qa-strategy를 먼저 보고 최소 회귀 범위를 고정합니다.
+- 구조 또는 경계 수정: 바뀐 책임 경계와 영향 전파 범위를 먼저 적고 architect/qa 투입 시점을 정합니다.
+- 실행 또는 배포 경로 수정: 환경 차이와 최종 검증 경로를 분리해 기록합니다.
+- 여러 경계를 가로지르는 수정: 소비자 경로와 핵심 경계 보강 여부를 먼저 확인합니다.
+- 문서 재생성 또는 하네스 정비: wording보다 저장소 사실, handoff, 남은 약점이 유지되는지 먼저 봅니다.
 
 ## 로그 운영
 
@@ -1156,6 +1178,12 @@ EOF
 $next_step_detail_line
 - orchestrator는 요청 유형별 시작 루프를 실제 사례 기준으로 계속 다듬어야 합니다.
 - validator는 문서가 현재 저장소 분석을 유지하는지 반복 점검해야 합니다.
+
+## 세션 종료 기준
+
+- 이번 세션에서 시작 역할, handoff, 남은 약점을 session-log에 남깁니다.
+- validator 피드백이 있으면 다음 진입점을 명시한 채 세션을 닫습니다.
+- 재생성된 문서가 실제 저장소 분석을 잃지 않았는지 마지막으로 확인합니다.
 EOF
       ;;
   esac

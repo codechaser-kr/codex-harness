@@ -160,12 +160,15 @@ repo/
 
 필요할 때는 `harness-log.sh`, `harness-session-close.sh`, `harness-role-stats.sh`, `harness-template-candidates.sh`를 보조적으로 실행해 로그나 통계를 다시 정리할 수 있습니다.
 
-하네스를 구성한 프로젝트에서는 보통 다음 파일에서 로그 규칙, 최근 세션 요약, 역할 호출 통계, 템플릿 후보를 확인합니다.
+하네스를 구성한 프로젝트에서는 보통 다음 파일에서 로그 규칙, 최근 세션 요약, 역할 호출 통계를 확인합니다.
 
 - `.harness/logging-policy.md`
 - `.harness/logs/session-log.md`
 - `.harness/logs/latest-session-summary.md`
 - `.harness/logs/role-frequency.md`
+
+반복 작업 흐름 분석을 실행한 뒤에는 다음 파일도 확인할 수 있습니다.
+
 - `.harness/reports/template-candidates.md`
 
 ## 현재 범위와 한계

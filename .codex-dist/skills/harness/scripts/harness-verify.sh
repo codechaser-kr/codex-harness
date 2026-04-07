@@ -166,9 +166,9 @@ warn_if_anchor_count_below() {
   local label="$4"
   local count
 
-  count="$(count_markdown_bullets_under_h2 "$file" "$heading")"
+  count="$(count_markdown_bullets_under_h2 "$file" "$heading" | tr -d '[:space:]')"
 
-  if [ -z "$count" ]; then
+  if ! printf '%s' "$count" | grep -qE '^[0-9]+$'; then
     warn "$label 개수를 계산하지 못함: $file"
     return
   fi

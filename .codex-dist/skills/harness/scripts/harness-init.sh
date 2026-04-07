@@ -191,6 +191,11 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "empty" ] || [ "$PROJECT_SIGNAL_LEVEL" = "low" ];
 - Python: pandas, polars, scikit-learn, PyTorch, JAX
 - Rust: polars, candle
 - 파이프라인: Prefect, Airflow, dbt, Apache Beam
+
+### 인프라 / DevOps 도구
+- IaC: Terraform, Pulumi, CloudFormation, CDK
+- Container: Docker, Kubernetes, Helm
+- CI/CD: GitHub Actions, GitLab CI, ArgoCD
 "
 fi
 
@@ -577,7 +582,7 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 영향 범위가 공통 계층이나 다중 모듈로 번지면 domain-analyst와 qa-designer를 더 이른 순서에 배치한다.
 - 빈 저장소이거나 기술 스택/핵심 흐름 단서가 약하면, \`.harness/project-setup.md\`가 있는지 먼저 확인한다.
 - \`.harness/project-setup.md\`가 작성되어 있으면 그 내용을 domain-analyst의 시작 입력으로 연결한다.
-- 작성되어 있지 않으면 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인한 뒤 \`.harness/project-setup.md\`에 채우도록 안내한다.
+- 작성되어 있지 않으면 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인한 뒤, 파일이 없는 경우 템플릿 내용을 포함하여 \`.harness/project-setup.md\`에 채우도록 안내한다.
 - 사용자 답변이 모이면 그 내용을 domain-analysis와 orchestration-plan의 입력으로 바로 연결한다.
 - 리포트보다 실제 역할 팀 구조와 설명 품질을 더 중요하게 본다.
 - \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
@@ -589,7 +594,7 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 요청: "새 API 엔드포인트 추가" → 판단: 기능 구현, 단일 경계 → 시작: domain-analyst → qa-designer → orchestrator
 - 요청: "공통 유틸 함수 리팩터" → 판단: 공통 계층 영향, 다중 소비자 → 시작: domain-analyst → qa-designer → orchestrator
 - 요청: "하네스 역할 구조 재설계" → 판단: 경계 재정의, 구조 변경 → 시작: harness-architect → qa-designer → orchestrator
-- 요청: 저장소 단서 없음, project-setup.md 미작성 → 판단: 프로젝트 유형 불명 → 시작: project-setup.md 작성 안내 후 대기
+- 요청: 저장소 단서 없음, project-setup.md 미작성 → 판단: 프로젝트 유형 불명 → 시작: project-setup.md 템플릿 제공 및 작성 안내 후 대기
 - 요청: 저장소 단서 없음, project-setup.md 작성됨 → 판단: 목표·유형 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)
 "
 

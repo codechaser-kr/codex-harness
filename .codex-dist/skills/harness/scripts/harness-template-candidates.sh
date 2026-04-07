@@ -298,6 +298,11 @@ esac
 ensure_harness_log_scaffold
 mkdir -p "$REPORT_DIR"
 
+if ! optional_harness_assets_enabled; then
+  log "optional assets disabled: skip template candidate analysis"
+  exit 0
+fi
+
 EVENT_COUNT="$(
   awk -F '\t' '
     NR == 1 { next }

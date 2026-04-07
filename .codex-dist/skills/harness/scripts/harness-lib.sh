@@ -139,6 +139,14 @@ detect_project_signal_level() {
   echo "empty"
 }
 
+optional_harness_assets_enabled() {
+  [ "$(detect_project_signal_level)" = "stack" ] \
+    || [ -d ".harness/templates" ] \
+    || [ -d ".harness/scenarios" ] \
+    || [ -f ".harness/logs/role-frequency.md" ] \
+    || [ -f ".harness/reports/template-candidates.md" ]
+}
+
 detect_structure_hint() {
   local hints=()
   local candidate
@@ -494,19 +502,11 @@ EOF
       ;;
     *)
       cat <<EOF
-## 저장소가 다루는 문제
+## 요약
 EOF
       printf '%s\n' "- \`$structure_hint\` 단서를 기준으로, 이 저장소가 해결하는 사용자 또는 운영 문제를 먼저 정리해야 합니다."
       printf '%s\n' "- \`$core_flow_hint\`"
       printf '%s\n' "- 하네스 운영 구조는 저장소의 대표 업무 흐름과 실패 비용을 보조하는 방식으로만 붙입니다."
-
-      cat <<EOF
-
-## 핵심 도메인 흐름과 위험 축
-EOF
-      printf '%s\n' "- 대표 사용자 흐름 또는 운영 흐름이 어디서 시작되고 어디서 끝나는지 먼저 고정합니다."
-      printf '%s\n' "- \`$key_axes_hint\` 축 중 실제 업무 가치나 운영 비용이 크게 걸린 경계를 우선 식별합니다."
-      printf '%s\n' "- 구조 변경이 기능 회귀보다 더 위험한지, 반대로 기능 흐름 단절이 더 위험한지 구분해 적습니다."
 
       cat <<EOF
 
@@ -526,7 +526,7 @@ EOF
 
       cat <<EOF
 
-## 사실 기준 구조
+### 사실 기준 구조
 EOF
       if [ "$workspace_hint" != "추정 불가" ]; then
         while IFS= read -r workspace_path; do
@@ -567,7 +567,7 @@ EOF
 
       cat <<EOF
 
-## 예외 및 운영 메모
+### 예외 및 운영 메모
 EOF
       while IFS= read -r workspace_path; do
         [ -n "$workspace_path" ] || continue
@@ -619,7 +619,17 @@ EOF
 
       cat <<EOF
 
-## 핵심 실행 흐름
+## 운영 규칙
+
+### 핵심 도메인 흐름과 위험 축
+EOF
+      printf '%s\n' "- 대표 사용자 흐름 또는 운영 흐름이 어디서 시작되고 어디서 끝나는지 먼저 고정합니다."
+      printf '%s\n' "- \`$key_axes_hint\` 축 중 실제 업무 가치나 운영 비용이 크게 걸린 경계를 우선 식별합니다."
+      printf '%s\n' "- 구조 변경이 기능 회귀보다 더 위험한지, 반대로 기능 흐름 단절이 더 위험한지 구분해 적습니다."
+
+      cat <<EOF
+
+### 핵심 실행 흐름
 EOF
       case "$project_type" in
         node)
@@ -660,7 +670,7 @@ EOF
 
       cat <<EOF
 
-## 하네스 관점 핵심 관심사
+### 하네스 관점 핵심 관심사
 EOF
       [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 패키지 또는 애플리케이션 경계를 흐리지 않는 변경 분류"
       printf '%s\n' "- \`$key_axes_hint\` 축에서 영향도가 큰 영역 식별"
@@ -669,7 +679,7 @@ EOF
 
       cat <<EOF
 
-## 반복적으로 위험한 변경 유형
+### 반복적으로 위험한 변경 유형
 EOF
       printf '%s\n' "- 진입점 설정 파일과 빌드 설정 변경"
       [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 패키지 export 경로 또는 의존 관계 변경"
@@ -678,11 +688,11 @@ EOF
 
       cat <<EOF
 
-## 초기 관찰 내용
+### 초기 관찰 내용
 
 $initial_observation_line
 
-## 아직 열려 있는 질문
+### 아직 열려 있는 질문
 EOF
       printf '%s\n' "- 자동 분석만으로는 핵심 사용자 흐름과 실패 비용을 완전히 확정할 수 없습니다."
       printf '%s\n' "- 대표 진입점 파일과 영향도가 큰 변경 경계는 후속 역할이 보강해야 합니다."
@@ -755,6 +765,15 @@ build_architecture_report_block() {
 - \`.harness/logs\`는 실제 세션 흐름과 역할 호출 이력을 남기는 운영 레이어입니다.
 - templates/scenarios 같은 반복 자산은 역할 팀이 공유하는 실행 보조 구조로 확장할 수 있습니다.
 
+## 입력/출력 표
+
+- domain-analyst: 저장소 구조와 핵심 단서를 입력으로 받아 \`.harness/reports/domain-analysis.md\`를 출력합니다.
+- harness-architect: domain-analysis를 입력으로 받아 \`.harness/reports/harness-architecture.md\`를 출력합니다.
+- skill-scaffolder: architecture와 역할 정의를 입력으로 받아 \`.codex/skills/*\`를 출력합니다.
+- qa-designer: domain-analysis와 architecture를 입력으로 받아 \`.harness/reports/qa-strategy.md\`를 출력합니다.
+- orchestrator: 주요 보고서를 입력으로 받아 \`.harness/reports/orchestration-plan.md\`를 출력합니다.
+- validator: 전체 구조를 입력으로 받아 보완 지점과 다음 역할을 출력합니다.
+
 ## 설계 원칙
 
 - 특정 프레임워크에 과도하게 고정하지 않는다.
@@ -765,12 +784,9 @@ EOF
       ;;
     *)
       cat <<EOF
-## 목적
+## 요약
 
-이 문서는 현재 저장소의 실제 구조와 변경 경계를 바탕으로 실행 하네스 역할을 어떻게 배치할지 정리합니다.
-
-## 저장소 특성 요약
-
+- 이 문서는 현재 저장소의 실제 구조와 변경 경계를 바탕으로 실행 하네스 역할을 어떻게 배치할지 정리합니다.
 - 프로젝트 성격: $project_type_label
 - 핵심 작업 축: $key_axes_hint
 - 대표 흐름 가설: $core_flow_hint
@@ -778,7 +794,15 @@ EOF
       [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 단서: $workspace_hint"
       cat <<EOF
 
-## 권장 역할
+## 저장소 고유 근거
+
+- 역할 분리는 저장소 사실 확인, 구조 설계, 스킬 반영, QA 설계, 흐름 조율, 최종 검증, 기동 진입점을 분리하기 위한 장치입니다.
+- templates/scenarios 같은 반복 자산은 기본값이 아니라 저장소에 반복 패턴이 축적될 때만 붙는 확장 자산으로 봅니다.
+- run-harness를 별도 역할로 유지해야 현재 상태 판단과 실제 작업 역할 호출을 분리할 수 있습니다.
+
+## 운영 규칙
+
+### 권장 역할
 
 - domain-analyst
 - harness-architect
@@ -788,7 +812,7 @@ EOF
 - validator
 - run-harness
 
-## 역할별 초점
+### 역할별 초점
 
 ### domain-analyst
 - 실제 코드 경로와 주요 책임 경계를 구체화합니다.
@@ -814,30 +838,45 @@ EOF
 - 프로젝트 특화 분석이 일반론으로 흐르지 않았는지 확인합니다.
 - 역할 문서와 운영 문서가 실제 저장소 구조를 반영하는지 점검합니다.
 
-## 보조 구조
+### 보조 구조
 
 - \`.harness/reports\`는 역할 판단 근거와 저장소 분석 결과를 공유하는 보조 구조로 둡니다.
 - \`.harness/logs\`는 세션 흐름, handoff, 재진입 이력을 남기는 운영 구조로 둡니다.
 - templates/scenarios는 반복 실행 패턴이 축적될 때 붙는 확장 자산으로 봅니다.
 
-## 7역할 유지 기준
+### 입력/출력 표
+
+- domain-analyst: 저장소 구조와 대표 흐름을 입력으로 받아 domain-analysis를 출력합니다.
+- harness-architect: domain-analysis와 핵심 작업 축을 입력으로 받아 harness-architecture를 출력합니다.
+- skill-scaffolder: architecture와 역할 정의를 입력으로 받아 로컬 스킬 구조를 출력합니다.
+- qa-designer: domain-analysis와 architecture를 입력으로 받아 qa-strategy를 출력합니다.
+- orchestrator: 주요 보고서를 입력으로 받아 orchestration-plan을 출력합니다.
+- validator: 전체 구조를 입력으로 받아 회귀 지점과 보완 항목을 출력합니다.
+- run-harness: 현재 요청과 문서 상태를 입력으로 받아 시작 역할, 보강 역할, 질문 여부를 출력합니다.
+
+### 7역할 유지 기준
 
 - 저장소 사실 확인, 구조 설계, 스킬 반영, QA 설계, 흐름 조율, 최종 검증, 기동 진입점을 분리해야 재생성 후에도 책임 충돌이 줄어듭니다.
 - 역할 수는 고정 답안이 아니라 경계 종류, 검증 비용, 운영 복잡도를 기준으로 조정해야 합니다.
 - run-harness를 별도 역할로 유지해야 현재 상태 판단과 실제 작업 역할 호출을 분리할 수 있습니다.
 
-## 축소/확장 판단
+### 축소/확장 판단
 
 - 단일 패키지이고 흐름이 단순하면 skill-scaffolder와 orchestrator의 책임을 일부 묶을 수 있습니다.
 - 여러 경계를 넘는 영향이나 별도 검증 축이 있으면 QA와 validator를 더 분리해 운영하는 편이 안전합니다.
 - 반대로 경계와 검증 비용이 단순하면 일부 역할을 더 가볍게 묶을 수 있습니다.
 
-## 설계 원칙
+### 설계 원칙
 
 - 역할은 저장소 구조보다 추상적이어야 하지만, 저장소 경계를 무시하면 안 됩니다.
 - 핵심 작업 축이 많은 저장소일수록 역할 수를 늘리기보다 역할 판단 기준을 선명하게 둡니다.
 - 자동 재생성 결과라도 실제 저장소 단서를 반영한 분석이 먼저 와야 합니다.
 - 프로젝트 특화 판단이 필요한 부분은 후속 역할이 보강할 수 있게 열어 둡니다.
+
+## 다음 단계
+
+- domain-analysis와 qa-strategy가 실제 저장소 고유 명사와 실패 지점을 충분히 담는지 다시 확인합니다.
+- run-harness와 validator가 현재 역할 구조를 무리 없이 소비하는지 점검합니다.
 EOF
       ;;
   esac
@@ -881,18 +920,10 @@ EOF
       ;;
     *)
       cat <<EOF
-## 목적
+## 요약
 
-이 문서는 현재 저장소에서 변경 영향이 큰 경계와 반복 검증이 필요한 흐름을 QA 관점으로 정리합니다.
-
-## 핵심 품질 축
-
-- $key_axes_hint
-EOF
-      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 경계와 패키지 간 영향 전파"
-      ([ -d "tests" ] || [ -d "test" ] || [ -d "__tests__" ]) && printf '%s\n' "- 테스트 자산과 검증 유틸리티의 안정성"
-      printf '%s\n' "- 공용 계층, 진입점 설정, 소비 경로 사이의 영향 전파"
-      cat <<EOF
+- 이 문서는 현재 저장소에서 변경 영향이 큰 경계와 반복 검증이 필요한 흐름을 QA 관점으로 정리합니다.
+- 저장소 전용 질문은 구조 일반론이 아니라 실제 파일, 테스트 유틸, 진입점 단서를 기준으로 보강해야 합니다.
 
 ## 저장소 고유 확인 단서
 EOF
@@ -909,31 +940,47 @@ EOF
 
       cat <<EOF
 
-## 우선 검토 질문
+## 운영 규칙
+
+### 핵심 품질 축
+
+- $key_axes_hint
+EOF
+      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 경계와 패키지 간 영향 전파"
+      ([ -d "tests" ] || [ -d "test" ] || [ -d "__tests__" ]) && printf '%s\n' "- 테스트 자산과 검증 유틸리티의 안정성"
+      printf '%s\n' "- 공용 계층, 진입점 설정, 소비 경로 사이의 영향 전파"
+      cat <<EOF
+
+### 우선 검토 질문
 
 - 이번 변경이 어떤 작업 축을 건드리는가
 - 변경 범위가 단일 영역인지, 여러 경계까지 전파되는가
 - 빌드/테스트/배포 중 어떤 검증 경로를 반드시 다시 확인해야 하는가
 - 자동화보다 사람이 직접 봐야 하는 결합 지점은 어디인가
 
-## 변경 유형별 최소 체크
+### 변경 유형별 최소 체크
 
 - 기능 변경: 영향받는 사용자 또는 호출 흐름, 핵심 진입점, 최소 회귀 확인 대상을 함께 적습니다.
 - 구조 변경: 역할 문서, 경계 설명, 오케스트레이션 계획이 새 구조를 반영하는지 확인합니다.
 - 빌드/설정 변경: 실행 명령, 검증 명령, 배포 또는 산출물 경로를 다시 확인합니다.
 - 경계 변경: 여러 모듈, 서비스, 패키지, 런타임 중 어디로 영향이 번지는지 실제 저장소 기준으로 다시 적습니다.
 
-## 테스트 설계 기준
+### 테스트 설계 기준
 
 - 빠르게 실패를 잡는 얕은 체크와 실제 영향 경계를 확인하는 깊은 체크를 구분합니다.
 - 빠른 검증과 느린 검증, 단일 경계 검증과 교차 경계 검증을 구분해 적습니다.
 - 문서나 하네스 변경이라도 verify가 잡지 못하는 운영 판단 공백이 없는지 수동 확인 질문을 남깁니다.
 
-## 추가 확인 관점
+### 추가 확인 관점
 
 - 공개 인터페이스, 설정 진입점, 소비 경로가 함께 흔들리는지 확인합니다.
 - 공용 계층과 검증 경로가 같은 변경 안에서 동시에 깨질 수 있는지 살핍니다.
 - 문서 정합성보다 실제 운영 리스크가 더 큰 지점을 우선 수동 확인합니다.
+
+## 다음 단계
+
+- 저장소 고유 확인 단서를 기준으로 QA 질문을 로컬 고유 명사와 실패 지점까지 더 구체화합니다.
+- validator와 함께 실제 검증 경로가 문서 질문 세트와 어긋나지 않는지 확인합니다.
 EOF
       ;;
   esac
@@ -983,11 +1030,19 @@ EOF
       ;;
     *)
       cat <<EOF
-## 목적
+## 요약
 
-이 문서는 현재 저장소에서 어떤 요청이 들어왔을 때 어떤 역할을 먼저 움직여야 하는지 운영 흐름으로 정리합니다.
+- 이 문서는 현재 저장소에서 어떤 요청이 들어왔을 때 어떤 역할을 먼저 움직여야 하는지 운영 흐름으로 정리합니다.
+- 시작 분기와 재진입 기준은 현재 요청의 영향 범위와 검증 비용을 빨리 판별하기 위한 규칙입니다.
 
-## 시작 분기
+## 저장소 고유 근거
+
+- 현재 저장소의 핵심 작업 축은 \`$key_axes_hint\` 입니다.
+- 실제 시작 역할은 사용자 요청 유형보다도 경계 영향 범위와 남은 검증 비용에 더 크게 좌우됩니다.
+
+## 운영 규칙
+
+### 시작 분기
 
 이 섹션은 각 요청이 표준 전체 시퀀스 어디서 시작해야 하는지 정하는 진입점 규칙입니다.
 
@@ -997,7 +1052,7 @@ EOF
 4. 영향 범위가 좁고 구조 설명이 이미 충분하면 skill-scaffolder 또는 orchestrator부터 시작할 수 있습니다.
 5. 시작 분기는 표준 전체 시퀀스의 일부 단계를 생략하는 규칙이 아니라, 어느 역할을 진입점으로 먼저 세울지 정하는 규칙입니다.
 
-## 표준 전체 시퀀스
+### 표준 전체 시퀀스
 
 이 섹션은 모든 보강이 필요할 때 기준선으로 삼는 전체 순서입니다.
 
@@ -1008,14 +1063,14 @@ EOF
 5. orchestrator가 작업 시작 루프와 검증 루프를 정리합니다.
 6. validator가 산출물이 다시 일반론으로 흐르지 않았는지 확인합니다.
 
-## 대표 요청별 루프
+### 대표 요청별 루프
 
 - 기능 또는 사용자 흐름 보강: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
 - 구조 또는 문서 정비: run-harness -> skill-scaffolder -> orchestrator -> validator
 - 경계 재정의가 필요한 변경: run-harness -> domain-analyst -> harness-architect -> qa-designer -> orchestrator -> validator
 - 검증 비용이 큰 변경: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
 
-## 순서 조정 및 재진입 기준
+### 순서 조정 및 재진입 기준
 
 - 시작 분기에서 뒤쪽 역할을 진입점으로 선택하더라도, 앞 단계의 판단이 이미 충분한 경우에만 일부 단계를 건너뜁니다.
 - 구조 설명이 낡았거나 generic하면 domain-analyst부터 다시 시작해 표준 전체 시퀀스로 복귀합니다.
@@ -1025,24 +1080,29 @@ EOF
 - 체크리스트가 약하거나 검증 비용 구분이 흐리면 qa-designer를 우선 재진입시킵니다.
 - 흐름은 맞는데 handoff가 끊기면 orchestrator를 중심으로 다시 묶습니다.
 
-## 역할 간 handoff 규칙
+### 역할 간 handoff 규칙
 
 - domain-analyst -> harness-architect: 실제 경계, 예외, 핵심 흐름이 정리되면 구조 책임으로 넘깁니다.
 - harness-architect -> skill-scaffolder: 역할 책임과 출력 문서가 정리되면 로컬 스킬 설명과 템플릿 반영으로 넘깁니다.
 - qa-designer -> orchestrator: 검토 질문과 최소 체크가 정리되면 어떤 루프로 운영할지 넘깁니다.
 - validator -> orchestrator: 회귀, 누락, 재진입 필요 지점을 찾으면 다시 어떤 역할부터 돌릴지 되돌립니다.
 
-## 피드백 루프
+### 피드백 루프
 
 - validator가 generic 회귀를 발견하면 domain-analyst 또는 harness-architect 단계로 되돌립니다.
 - qa-designer가 새 위험 축을 찾으면 orchestrator가 시작 분기와 검증 루프를 다시 조정합니다.
 - session-log에 반복되는 우회 흐름이 쌓이면 team-playbook과 orchestration-plan을 함께 갱신합니다.
 
-## 운영 원칙
+### 운영 원칙
 
 - 작은 변경도 핵심 경계나 빌드 경계를 건드리면 별도 검증 루프로 올립니다.
 - 문서 재생성은 기존 문장을 보존하는 것보다 실제 저장소 분석을 반영하는 것을 우선합니다.
 - 역할 호출 순서는 고정이 아니라 영향 범위와 검증 비용을 기준으로 조정합니다.
+
+## 다음 단계
+
+- 반복적으로 등장하는 우회 흐름이 있으면 team-playbook과 함께 루프를 다시 압축합니다.
+- run-harness 출력 계약이 실제 시작 분기와 어긋나지 않는지 validator로 다시 확인합니다.
 EOF
       ;;
   esac
@@ -1077,11 +1137,20 @@ EOF
       ;;
     *)
       cat <<EOF
-## 목적
+## 요약
 
-이 문서는 현재 저장소의 핵심 작업 축을 어떤 역할 팀이 나눠서 다뤄야 하는지 설명합니다.
+- 이 문서는 현재 저장소의 핵심 작업 축을 어떤 역할 팀이 나눠서 다뤄야 하는지 설명합니다.
+- 역할 팀 구성은 저장소의 경계 종류와 검증 비용을 분리하기 위한 운영 장치입니다.
 
-## 팀 구성
+## 저장소 고유 근거
+
+- QA가 중요한 이유: \`$key_axes_hint\` 축이 동시에 흔들리면 문서 정합성보다 실제 운영 리스크가 먼저 커지기 때문입니다.
+- 경계 설명이 중요한 이유: 단일 수정처럼 보여도 실제로는 여러 소비 경계나 호출 경로로 전파될 수 있기 때문입니다.
+- orchestrator와 validator가 중요한 이유: handoff 순서와 회귀 점검이 흐트러지면 운영 비용이 빠르게 늘기 때문입니다.
+
+## 운영 규칙
+
+### 팀 구성
 
 - domain-analyst
 - harness-architect
@@ -1091,7 +1160,7 @@ EOF
 - validator
 - run-harness
 
-## 역할별 책임 요약
+### 역할별 책임 요약
 
 - domain-analyst: $key_axes_hint 축에서 사실 기준 분석을 맡습니다.
 - harness-architect: 역할 경계와 구조 배치를 맡습니다.
@@ -1101,17 +1170,16 @@ EOF
 - validator: 회귀와 누락 점검을 맡습니다.
 - run-harness: 시작 역할 결정과 사용자 확인 질문을 맡습니다.
 
-## 저장소 맞춤 근거
-
-- QA가 중요한 이유: \`$key_axes_hint\` 축이 동시에 흔들리면 문서 정합성보다 실제 운영 리스크가 먼저 커지기 때문입니다.
-- 경계 설명이 중요한 이유: 단일 수정처럼 보여도 실제로는 여러 소비 경계나 호출 경로로 전파될 수 있기 때문입니다.
-- orchestrator와 validator가 중요한 이유: handoff 순서와 회귀 점검이 흐트러지면 운영 비용이 빠르게 늘기 때문입니다.
-
-## 실전 분류 예시
+### 실전 분류 예시
 
 - 변경 중심이 사용자 진입점인지, 공용 계층인지, 별도 실행 환경인지 먼저 정합니다.
 - 단일 수정처럼 보여도 소비 경로나 공용 계층까지 번지면 domain-analyst와 qa-designer를 더 앞에 둡니다.
 - 문서 정비 요청이라도 handoff나 다음 진입점이 바뀌면 orchestrator와 validator를 함께 봅니다.
+
+## 다음 단계
+
+- 실제 저장소에서 자주 등장하는 변경 유형을 이 팀 구조의 실전 예시에 계속 누적합니다.
+- architecture와 orchestration이 이 팀 구조 설명과 같은 경계를 가리키는지 함께 확인합니다.
 EOF
       ;;
   esac
@@ -1156,17 +1224,25 @@ build_team_playbook_report_block() {
 - 역할별 누적 기록은 \`.harness/logs/session-log.md\`에 남깁니다.
 - 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
 - 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
-- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다.
-- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다.
 EOF
+      optional_harness_assets_enabled && printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다."
+      optional_harness_assets_enabled && printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다."
       ;;
     *)
       cat <<EOF
-## 목적
+## 요약
 
-이 문서는 현재 저장소의 실제 변경 경계를 기준으로 실행 하네스 팀을 어떻게 시작하고 되돌릴지 요약합니다.
+- 이 문서는 현재 저장소의 실제 변경 경계를 기준으로 실행 하네스 팀을 어떻게 시작하고 되돌릴지 요약합니다.
+- 빠른 체크리스트와 절차 문서는 함께 유지해야 세션 재진입 속도와 일관성이 올라갑니다.
 
-## 세션 시작 절차
+## 저장소 고유 근거
+
+- 먼저 읽을 문서는 domain-analysis, orchestration-plan, qa-strategy 중 현재 요청과 직접 연결되는 문서입니다.
+- 직전 session-log와 latest-session-summary는 현재 세션의 재진입 지점을 정하는 기본 근거입니다.
+
+## 운영 규칙
+
+### 세션 시작 절차
 
 1. run-harness가 요청을 받고 $key_axes_hint 중 어느 축을 건드리는지 먼저 분류합니다.
 2. 영향 범위가 넓거나 핵심 경계를 건드리면 domain-analyst와 qa-designer를 먼저 호출합니다.
@@ -1176,19 +1252,19 @@ EOF
 5. 직전 session-log와 latest-session-summary를 읽고 미해결 항목과 재진입 지점을 확인합니다.
 6. domain-analysis, orchestration-plan, qa-strategy 중 이번 요청과 직접 연결되는 문서를 먼저 읽습니다.
 
-## 세션 시작 체크
+### 세션 시작 체크
 
 - 현재 요청 요약과 영향 범위를 session-log에 먼저 남깁니다.
 - 직전 세션의 남은 약점이 이번 요청과 이어지는지 확인합니다.
 - 먼저 읽을 문서와 나중에 볼 문서를 구분해 빠르게 시작합니다.
 
-## 기본 운영 원칙
+### 기본 운영 원칙
 
 - 현재 요청 요약과 영향 범위 판단을 session-log에 먼저 남깁니다.
 - 여러 문서를 한꺼번에 다시 읽기보다 이번 요청과 직접 연결된 문서를 먼저 확인합니다.
 - 역할 호출이나 전환 이유가 바뀌면 그 근거를 session-log에 함께 남깁니다.
 
-## 작업 유형별 운영 규칙
+### 작업 유형별 운영 규칙
 
 - 기능 또는 사용자 흐름 보강: domain-analysis와 qa-strategy를 먼저 보고 최소 회귀 범위를 고정합니다.
 - 구조 또는 경계 수정: 바뀐 책임 경계와 영향 전파 범위를 먼저 적고 architect/qa 투입 시점을 정합니다.
@@ -1196,20 +1272,27 @@ EOF
 - 여러 경계를 가로지르는 수정: 소비자 경로와 핵심 경계 보강 여부를 먼저 확인합니다.
 - 문서 재생성 또는 하네스 정비: wording보다 저장소 사실, 이번 세션의 남은 약점, 다음 진입점이 유지되는지 먼저 봅니다.
 
-## 로그 운영
+### 로그 운영
 
 - 로그 정책은 \`.harness/logging-policy.md\`에서 확인합니다.
 - 역할별 누적 기록은 \`.harness/logs/session-log.md\`에 남깁니다.
 - 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
 - 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
-- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다.
-- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다.
+EOF
+      optional_harness_assets_enabled && printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다."
+      optional_harness_assets_enabled && printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다."
+      cat <<EOF
 
-## 세션 종료 기준
+### 세션 종료 기준
 
 - 이번 세션에서 시작 역할, handoff, 남은 약점을 session-log에 남깁니다.
 - validator 피드백이 있으면 다음 진입점을 명시한 채 세션을 닫습니다.
 - 재생성된 문서가 실제 저장소 분석을 잃지 않았는지 마지막으로 확인합니다.
+
+## 다음 단계
+
+- 다음 세션이 바로 이어질 수 있게 시작 역할, 보강 역할, 남은 질문을 최신 요약에 반영합니다.
+- 반복 업무가 누적되면 선택 자산을 활성화해 역할 빈도와 템플릿 후보를 함께 관리합니다.
 EOF
       ;;
   esac
@@ -1293,9 +1376,10 @@ ensure_harness_log_scaffold() {
 ## 자동화 도구
 
 - 전역 설치된 `harness-log.sh`는 역할 호출 시 세션 로그에 자동 append 합니다.
-- 전역 설치된 `harness-session-close.sh`는 세션 종료 시 최신 세션 요약과 역할 호출 빈도 통계를 자동 갱신합니다.
-- 전역 설치된 `harness-role-stats.sh`는 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
-- 전역 설치된 `harness-template-candidates.sh`는 누적 로그를 분석해 반복 업무 템플릿 후보를 `.harness/reports/template-candidates.md`로 정리합니다.
+- 전역 설치된 `harness-session-close.sh`는 세션 종료 시 최신 세션 요약을 자동 갱신합니다.
+- 선택 자산이 활성화된 프로젝트에서는 `harness-session-close.sh`가 역할 호출 빈도 통계와 템플릿 후보 분석까지 함께 갱신합니다.
+- 선택 자산이 활성화된 프로젝트에서는 `harness-role-stats.sh`가 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
+- 선택 자산이 활성화된 프로젝트에서는 `harness-template-candidates.sh`가 누적 로그를 분석해 반복 업무 템플릿 후보를 `.harness/reports/template-candidates.md`로 정리합니다.
 
 ## 로그를 남겨야 하는 상황
 
@@ -1381,7 +1465,7 @@ EOF
 EOF
   fi
 
-  if [ ! -f "$role_frequency_file" ]; then
+  if optional_harness_assets_enabled && [ ! -f "$role_frequency_file" ]; then
     cat > "$role_frequency_file" <<'EOF'
 # 역할 호출 빈도
 

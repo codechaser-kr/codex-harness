@@ -265,9 +265,13 @@ OUTPUT_LIST="$(join_keys OUTPUT_COUNTS)"
 
 cp "$SUMMARY_FILE" "$LATEST_SUMMARY_FILE"
 
-bash "$ROLE_STATS_SCRIPT"
-bash "$TEMPLATE_CANDIDATES_SCRIPT"
+if optional_harness_assets_enabled; then
+  bash "$ROLE_STATS_SCRIPT"
+  bash "$TEMPLATE_CANDIDATES_SCRIPT"
+else
+  log "optional assets disabled: skip role stats and template candidates"
+fi
 
 log "session summary updated: $SUMMARY_FILE"
 log "latest summary updated: $LATEST_SUMMARY_FILE"
-log "template candidates updated"
+optional_harness_assets_enabled && log "template candidates updated"

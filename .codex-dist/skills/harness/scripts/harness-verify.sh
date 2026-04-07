@@ -271,10 +271,10 @@ fi
 
 if [ -f ".harness/reports/domain-analysis.md" ]; then
   check_contains_hint ".harness/reports/domain-analysis.md" "사용자 확인 질문" "사용자 확인 질문 섹션"
-  check_placeholder_state ".harness/reports/domain-analysis.md" "프로젝트 유형: 미정" "프로젝트 유형 구체화"
-  check_placeholder_state ".harness/reports/domain-analysis.md" "주요 기술 스택: 미정" "기술 스택 구체화"
+  check_placeholder_state ".harness/reports/domain-analysis.md" "프로젝트 유형: (미정|unknown)" "프로젝트 유형 구체화"
+  check_placeholder_state ".harness/reports/domain-analysis.md" "주요 기술 스택(: 미정| 추정: 추정 불가)" "기술 스택 구체화"
   check_placeholder_state ".harness/reports/domain-analysis.md" "핵심 흐름: 미정" "핵심 흐름 구체화"
-  check_placeholder_state ".harness/reports/domain-analysis.md" "저장소를 분석한 뒤 이 내용을 구체화하세요" "도메인 분석 초안 치환"
+  check_placeholder_state ".harness/reports/domain-analysis.md" "저장소를 분석한 뒤 이 내용을 구체화하세요|domain-analyst가 실제 저장소 구조를 읽고 내용을 구체화합니다" "도메인 분석 초안 치환"
 fi
 
 if [ -f ".harness/reports/team-playbook.md" ]; then

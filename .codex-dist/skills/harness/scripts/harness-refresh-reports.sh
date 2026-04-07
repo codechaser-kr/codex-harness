@@ -84,6 +84,7 @@ cat > "$DOMAIN_REPORT" <<EOF_DOMAIN
 
 - 프로젝트 유형: $PROJECT_TYPE
 - 주요 기술 스택 추정: $STACK_HINT
+- 핵심 흐름: 미정
 
 ## 분석 관점
 
@@ -289,7 +290,7 @@ cat > "$TEAM_PLAYBOOK_REPORT" <<EOF_TEAM_PLAYBOOK
 ## 기본 운영 원칙
 
 - 문서보다 역할 팀을 본체로 봅니다.
-- `.harness/reports` 문서는 팀이 공유하는 보조 기준으로 사용합니다.
+- \`.harness/reports\` 문서는 팀이 공유하는 보조 기준으로 사용합니다.
 - 빈 저장소이거나 저장소 단서가 약하면 역할 호출보다 사용자 확인 질문을 먼저 남깁니다.
 - validator 피드백이 나오면 architect / scaffolder / orchestrator가 다시 보강합니다.
 - QA 질문이 약하면 qa-designer를 다시 호출해 보강합니다.
@@ -297,12 +298,12 @@ cat > "$TEAM_PLAYBOOK_REPORT" <<EOF_TEAM_PLAYBOOK
 
 ## 로그 운영
 
-- 로그 정책은 `.harness/logging-policy.md`에서 확인합니다.
-- 역할별 누적 기록은 `.harness/logs/session-log.md`에 남깁니다.
-- 구조화된 이벤트 원장은 `.harness/logs/session-events.tsv`를 사용합니다.
-- 최신 세션 요약은 `.harness/logs/latest-session-summary.md`에서 확인합니다.
-- 역할 호출 빈도 집계는 `.harness/logs/role-frequency.md`에서 확인합니다.
-- 반복 업무 템플릿 후보 분석 결과는 `.harness/reports/template-candidates.md`에서 확인합니다.
+- 로그 정책은 \`.harness/logging-policy.md\`에서 확인합니다.
+- 역할별 누적 기록은 \`.harness/logs/session-log.md\`에 남깁니다.
+- 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
+- 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
+- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다.
+- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다.
 
 ## 운영 메모
 

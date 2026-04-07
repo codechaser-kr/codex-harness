@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# harness-plan.sh
-# 보조 리포트 파일을 프로젝트 유형 감지 기반으로 덮어써서 생성합니다.
+# harness-refresh-reports.sh
+# `.harness/reports` 문서를 프로젝트 유형 감지 기반으로 덮어써서 생성합니다.
 # harness-init.sh와 차이:
 #   - harness-init.sh: 디렉토리/스킬/리포트를 최초 1회 생성 (기존 파일 유지)
-#   - harness-plan.sh: 리포트만 다시 생성 (항상 덮어씀, 스킬은 건드리지 않음)
-# 사용 시점: 이미 init된 저장소에서 리포트를 초기화하거나 재생성할 때
+#   - harness-refresh-reports.sh: `.harness/reports` 문서 전체를 다시 생성 (항상 덮어씀, 스킬은 건드리지 않음)
+# 사용 시점: 이미 init된 저장소에서 `.harness/reports` 문서를 초기화하거나 재생성할 때
 set -euo pipefail
 
 REPORT_DIR=".harness/reports"
@@ -12,9 +12,11 @@ DOMAIN_REPORT="$REPORT_DIR/domain-analysis.md"
 ARCH_REPORT="$REPORT_DIR/harness-architecture.md"
 QA_REPORT="$REPORT_DIR/qa-strategy.md"
 ORCH_REPORT="$REPORT_DIR/orchestration-plan.md"
+TEAM_STRUCTURE_REPORT="$REPORT_DIR/team-structure.md"
+TEAM_PLAYBOOK_REPORT="$REPORT_DIR/team-playbook.md"
 
 log() {
-  printf '[harness][plan] %s\n' "$1"
+  printf '[harness][refresh] %s\n' "$1"
 }
 
 detect_project_type() {
@@ -66,7 +68,7 @@ detect_stack_hint() {
 PROJECT_TYPE="$(detect_project_type)"
 STACK_HINT="$(detect_stack_hint)"
 
-log "하네스 계획 리포트 생성 시작"
+log "하네스 리포트 새로고침 시작"
 mkdir -p "$REPORT_DIR"
 
 cat > "$DOMAIN_REPORT" <<EOF_DOMAIN
@@ -230,8 +232,71 @@ cat > "$ORCH_REPORT" <<EOF_ORCH
 이 문서는 현재 저장소의 실제 작업 흐름에 맞게 계속 수정되어야 합니다.
 EOF_ORCH
 
-log "하네스 계획 리포트 생성 완료"
+cat > "$TEAM_STRUCTURE_REPORT" <<EOF_TEAM_STRUCTURE
+# 역할 팀 구조
+
+## 목적
+
+이 문서는 현재 프로젝트의 로컬 실행 하네스를 역할 팀 관점에서 설명합니다.
+
+## 팀 구성
+
+- domain-analyst
+- harness-architect
+- skill-scaffolder
+- qa-designer
+- orchestrator
+- validator
+- run-harness
+
+## 설명
+
+이 역할들은 각각 독립적인 판단 단위를 가지며,
+함께 프로젝트 실행 하네스를 구성합니다.
+EOF_TEAM_STRUCTURE
+
+cat > "$TEAM_PLAYBOOK_REPORT" <<EOF_TEAM_PLAYBOOK
+# 팀 운영 플레이북
+
+## 목적
+
+이 문서는 프로젝트 로컬 실행 하네스 팀을 실제로 어떻게 시작하고 운용할지 요약합니다.
+
+## 시작 순서
+
+1. 기본적으로는 run-harness를 실행 하네스 팀의 진입점으로 사용합니다.
+2. run-harness가 현재 상태를 보고 필요한 역할을 우선순위로 정합니다.
+3. 새 프로젝트라면 domain-analyst부터 시작하는 흐름을 우선합니다.
+4. 구조가 이미 있다면 orchestrator / validator 중심의 보강 루프를 우선합니다.
+
+## 기본 운영 원칙
+
+- 문서보다 역할 팀을 본체로 봅니다.
+- `.harness/reports` 문서는 팀이 공유하는 보조 기준으로 사용합니다.
+- validator 피드백이 나오면 architect / scaffolder / orchestrator가 다시 보강합니다.
+- QA 질문이 약하면 qa-designer를 다시 호출해 보강합니다.
+- 중요한 역할 호출이나 흐름 변경은 session-log에 남깁니다.
+
+## 로그 운영
+
+- 로그 정책은 `.harness/logging-policy.md`에서 확인합니다.
+- 역할별 누적 기록은 `.harness/logs/session-log.md`에 남깁니다.
+- 구조화된 이벤트 원장은 `.harness/logs/session-events.tsv`를 사용합니다.
+- 최신 세션 요약은 `.harness/logs/latest-session-summary.md`에서 확인합니다.
+- 역할 호출 빈도 집계는 `.harness/logs/role-frequency.md`에서 확인합니다.
+- 반복 업무 템플릿 후보 분석 결과는 `.harness/reports/template-candidates.md`에서 확인합니다.
+
+## 운영 메모
+
+- 작은 프로젝트는 역할을 줄일 수 있습니다.
+- 복잡한 프로젝트는 orchestrator 중심 운영이 중요합니다.
+- 이후 프로젝트 특화 실행 하네스로 확장할 수 있습니다.
+EOF_TEAM_PLAYBOOK
+
+log "하네스 리포트 새로고침 완료"
 log "생성됨: $DOMAIN_REPORT"
 log "생성됨: $ARCH_REPORT"
 log "생성됨: $QA_REPORT"
 log "생성됨: $ORCH_REPORT"
+log "생성됨: $TEAM_STRUCTURE_REPORT"
+log "생성됨: $TEAM_PLAYBOOK_REPORT"

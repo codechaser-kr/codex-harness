@@ -121,7 +121,7 @@ check_file "$HARNESS_REFERENCE_DIR/team-examples.md"
 DIST_SCRIPT_FILES=(
   "$HARNESS_SCRIPT_DIR/harness-lib.sh"
   "$HARNESS_SCRIPT_DIR/harness-init.sh"
-  "$HARNESS_SCRIPT_DIR/harness-plan.sh"
+  "$HARNESS_SCRIPT_DIR/harness-refresh-reports.sh"
   "$HARNESS_SCRIPT_DIR/harness-verify.sh"
   "$HARNESS_SCRIPT_DIR/harness-log.sh"
   "$HARNESS_SCRIPT_DIR/harness-session-close.sh"

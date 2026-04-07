@@ -58,7 +58,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - 최초 하네스 구성 요청이면 반드시 `bash scripts/harness-init.sh`를 먼저 실행한다.
 - 하네스 구성이 끝났다고 판단하기 전에 반드시 `bash scripts/harness-verify.sh`를 실행한다.
 - `scripts/harness-refresh-reports.sh`는 이미 하네스 구조가 있는 프로젝트에서 `.harness/reports/*` 전체를 재생성하거나 보강할 때 사용한다.
-- `harness-init.sh` 또는 `harness-refresh-reports.sh`가 만든 문서는 시작 산출물로 보고, 완료 전에 반드시 저장소 사실과 운영 흐름에 맞게 역할 관점으로 다시 가공한다.
+- `harness-init.sh` 또는 `harness-refresh-reports.sh`가 만든 문서는 시작 산출물로 보고, 완료 전에 반드시 저장소 사실, 기존 도메인 언어, 운영 흐름에 맞게 역할 관점으로 다시 가공한다.
 - `.harness/reports/*` 문서 재가공 없이 스크립트 출력만으로 완료 처리하지 않는다.
 - `scripts/harness-init.sh` 대신 `.codex/skills/*`, `.harness/*`를 수동으로 직접 생성하는 방식은 사용하지 않는다.
 - `scripts/harness-verify.sh`가 실패하면 완료로 간주하지 말고, 누락된 구조를 먼저 보강한다.
@@ -146,11 +146,12 @@ QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 
 1. `harness-init.sh` 또는 `harness-refresh-reports.sh`가 만든 `.harness/reports/*` 문서를 최종본으로 간주하지 않는다.
 2. domain-analyst가 저장소 사실, 대표 흐름, 예외를 기준으로 `domain-analysis.md`를 먼저 보정한다.
-3. harness-architect와 qa-designer가 역할 경계, handoff, 검증 기준을 현재 저장소 운영 방식에 맞게 다시 정렬한다.
-4. orchestrator가 시작 분기, 재진입 루프, 세션 운영 규칙을 실제 요청 유형 기준으로 다듬는다.
-5. validator는 문서가 스키마만 맞춘 일반론에 머물지 않고 저장소 특화 근거를 유지하는지 확인한다.
+3. 이 단계에서 기존 README, 도메인 문서, 사용자 흐름 설명에 있던 업무 용어와 문제 정의를 하네스 운영 문구가 덮어쓰지 않게 유지한다.
+4. harness-architect와 qa-designer가 역할 경계, handoff, 검증 기준을 현재 저장소 운영 방식에 맞게 다시 정렬한다.
+5. orchestrator가 시작 분기, 재진입 루프, 세션 운영 규칙을 실제 요청 유형 기준으로 다듬는다.
+6. validator는 문서가 스키마만 맞춘 일반론에 머물지 않고 저장소 특화 근거와 도메인 밀도를 유지하는지 확인한다.
 
-이 단계의 목적은 스크립트 출력물을 그대로 유지하는 것이 아니라, 각 프로젝트의 구조와 운영 맥락에 맞는 문서로 가공하는 것이다.
+이 단계의 목적은 스크립트 출력물을 그대로 유지하는 것이 아니라, 각 프로젝트의 구조, 운영 맥락, 기존 도메인 언어에 맞는 문서로 가공하는 것이다.
 
 ### Phase 6: 실행 하네스 팀 검증
 

@@ -67,6 +67,12 @@ detect_stack_hint() {
 
 PROJECT_TYPE="$(detect_project_type)"
 STACK_HINT="$(detect_stack_hint)"
+DISCOVERY_GUIDANCE="저장소 단서와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
+
+if [ "$PROJECT_TYPE" = "unknown" ] && [ "$STACK_HINT" = "추정 불가" ]; then
+  DISCOVERY_GUIDANCE="현재 저장소 단서만으로는 방향 판단이 어렵습니다. run-harness는 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인해야 합니다."
+  log "저장소 단서 부족: 사용자 확인 질문 우선"
+fi
 
 log "하네스 리포트 새로고침 시작"
 mkdir -p "$REPORT_DIR"
@@ -97,8 +103,19 @@ cat > "$DOMAIN_REPORT" <<EOF_DOMAIN
 - 변경 시 영향이 큰 영역은 어디인가
 - 검토를 자동화하거나 구조화할 가치가 큰 흐름은 무엇인가
 
+## 사용자 확인 질문
+
+- 저장소 단서만으로 판단이 어렵다면, 이 프로젝트는 애플리케이션, 라이브러리, 도구 중 무엇인가
+- 가장 먼저 성공해야 할 사용자 또는 개발자 흐름은 무엇인가
+- 선호하는 언어, 프레임워크, 런타임 제약이 있는가
+
+## 질문 유도 메모
+
+$DISCOVERY_GUIDANCE
+
 ## 다음 단계
 
+- 저장소 단서가 약하면 run-harness가 위 질문부터 사용자에게 짧게 확인합니다.
 - domain-analyst가 실제 저장소 구조를 읽고 내용을 구체화합니다.
 - 필요하면 디렉토리별 역할과 핵심 파일을 추가로 정리합니다.
 EOF_DOMAIN
@@ -265,7 +282,7 @@ cat > "$TEAM_PLAYBOOK_REPORT" <<EOF_TEAM_PLAYBOOK
 ## 시작 순서
 
 1. 기본적으로는 run-harness를 실행 하네스 팀의 진입점으로 사용합니다.
-2. run-harness가 현재 상태를 보고 필요한 역할을 우선순위로 정합니다.
+2. run-harness가 현재 상태를 보고, 저장소 단서가 약하면 사용자 확인 질문부터 정리하고, 단서가 충분하면 필요한 역할을 우선순위로 정합니다.
 3. 새 프로젝트라면 domain-analyst부터 시작하는 흐름을 우선합니다.
 4. 구조가 이미 있다면 orchestrator / validator 중심의 보강 루프를 우선합니다.
 
@@ -273,6 +290,7 @@ cat > "$TEAM_PLAYBOOK_REPORT" <<EOF_TEAM_PLAYBOOK
 
 - 문서보다 역할 팀을 본체로 봅니다.
 - `.harness/reports` 문서는 팀이 공유하는 보조 기준으로 사용합니다.
+- 빈 저장소이거나 저장소 단서가 약하면 역할 호출보다 사용자 확인 질문을 먼저 남깁니다.
 - validator 피드백이 나오면 architect / scaffolder / orchestrator가 다시 보강합니다.
 - QA 질문이 약하면 qa-designer를 다시 호출해 보강합니다.
 - 중요한 역할 호출이나 흐름 변경은 session-log에 남깁니다.

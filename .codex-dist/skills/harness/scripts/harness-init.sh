@@ -399,11 +399,12 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 ## 주요 작업
 
 1. 현재 \`.harness/reports/*\`와 \`.codex/skills/*\` 상태를 본다.
-2. domain-analysis가 비어 있거나 약하면 domain-analyst부터 시작한다.
-3. 구조 설계가 부족하면 harness-architect를 우선한다.
-4. QA 기준이 약하면 qa-designer를 다시 호출할 수 있다.
-5. 흐름 연결이 약하면 orchestrator를 중심으로 재정리한다.
-6. 마지막에 validator 관점으로 최소 구조를 점검한다.
+2. 저장소 단서가 부족하거나 빈 프로젝트에 가까우면 사용자에게 먼저 확인할 질문을 정리한다.
+3. domain-analysis가 비어 있거나 약하면 domain-analyst부터 시작한다.
+4. 구조 설계가 부족하면 harness-architect를 우선한다.
+5. QA 기준이 약하면 qa-designer를 다시 호출할 수 있다.
+6. 흐름 연결이 약하면 orchestrator를 중심으로 재정리한다.
+7. 마지막에 validator 관점으로 최소 구조를 점검한다.
 
 ## 입력
 
@@ -415,6 +416,7 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 
 - 현재 시점에 필요한 실행 하네스 팀 진행 순서
 - 보강이 필요한 역할 제안
+- 사용자에게 먼저 확인할 질문 세트
 
 ## 역할 팀 내 위치
 
@@ -426,11 +428,14 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 항상 모든 역할을 다 호출하려 하지 않는다.
 - 현재 상태에서 가장 약한 지점을 먼저 보강한다.
 - orchestrator와 validator를 흐름의 중심 축으로 삼는다.
+- 판단 근거가 약하면 역할 호출을 단정하기 전에 사용자 확인 질문부터 짧게 제시한다.
 
 ## 운영 규칙
 
 - 새 프로젝트라면 domain-analyst → harness-architect → skill-scaffolder → qa-designer → orchestrator → validator 순서를 기본으로 본다.
 - 이미 구조가 있는 프로젝트라면 부족한 역할만 다시 호출하는 쪽을 우선한다.
+- 빈 저장소이거나 기술 스택/핵심 흐름 단서가 약하면, 우선 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 확인한다.
+- 사용자 답변이 모이면 그 내용을 domain-analysis와 orchestration-plan의 입력으로 바로 연결한다.
 - 리포트보다 실제 역할 팀 구조와 설명 품질을 더 중요하게 본다.
 - \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
 - 로그 운영 기준은 \`.harness/logging-policy.md\`를 먼저 확인한다.
@@ -449,6 +454,17 @@ create_file_if_missing ".harness/reports/domain-analysis.md" \
 ## 초기 관찰 내용
 
 - 저장소를 분석한 뒤 이 내용을 구체화하세요.
+
+## 사용자 확인 질문
+
+- 이 프로젝트는 애플리케이션, 라이브러리, 도구 중 무엇인가요?
+- 가장 먼저 성공해야 할 사용자 또는 개발자 흐름은 무엇인가요?
+- 선호하는 언어, 프레임워크, 런타임 제약이 있나요?
+
+## 다음 단계
+
+- 저장소 단서가 약하면 run-harness가 위 질문부터 사용자에게 먼저 확인합니다.
+- 답변이 모이면 domain-analyst가 저장소 요약과 핵심 흐름을 구체화합니다.
 "
 
 create_file_if_missing ".harness/reports/harness-architecture.md" \
@@ -527,7 +543,7 @@ create_file_if_missing ".harness/reports/team-playbook.md" \
 ## 시작 순서
 
 1. 기본적으로는 run-harness를 실행 하네스 팀의 진입점으로 사용합니다.
-2. run-harness가 현재 상태를 보고 필요한 역할을 우선순위로 정합니다.
+2. run-harness가 현재 상태를 보고, 저장소 단서가 약하면 사용자 확인 질문부터 정리하고, 단서가 충분하면 필요한 역할을 우선순위로 정합니다.
 3. 새 프로젝트라면 domain-analyst부터 시작하는 흐름을 우선합니다.
 4. 구조가 이미 있다면 orchestrator / validator 중심의 보강 루프를 우선합니다.
 
@@ -535,6 +551,7 @@ create_file_if_missing ".harness/reports/team-playbook.md" \
 
 - 문서보다 역할 팀을 본체로 봅니다.
 - 리포트는 팀이 공유하는 보조 기준으로 사용합니다.
+- 빈 저장소이거나 저장소 단서가 약하면 역할 호출보다 사용자 확인 질문을 먼저 남깁니다.
 - validator 피드백이 나오면 architect / scaffolder / orchestrator가 다시 보강합니다.
 - QA 질문이 약하면 qa-designer를 다시 호출해 보강합니다.
 - 중요한 역할 호출이나 흐름 변경은 session-log에 남깁니다.

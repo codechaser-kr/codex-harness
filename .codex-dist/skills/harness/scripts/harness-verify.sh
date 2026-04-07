@@ -91,8 +91,64 @@ check_contains_hint() {
   fi
 }
 
+check_contains_any_hint() {
+  local file="$1"
+  local pattern="$2"
+  local label="$3"
+
+  if grep -Eq "$pattern" "$file"; then
+    log "OK $label: $file"
+  else
+    warn "$label 힌트 부족: $file"
+  fi
+}
+
+check_placeholder_state() {
+  local file="$1"
+  local pattern="$2"
+  local label="$3"
+
+  if grep -Eq "$pattern" "$file"; then
+    if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
+      fail "$label 미해결: $file"
+    else
+      warn "$label 미해결: $file"
+    fi
+  else
+    log "OK $label: $file"
+  fi
+}
+
+detect_project_signal_level() {
+  if [ -f "package.json" ] || [ -f "Cargo.toml" ] || [ -f "pyproject.toml" ] || [ -f "requirements.txt" ] || [ -f "go.mod" ]; then
+    echo "stack"
+    return
+  fi
+
+  local first_signal_path
+  first_signal_path="$(
+    find . -mindepth 1 -maxdepth 2 \
+      ! -path './.git' ! -path './.git/*' \
+      ! -path './.codex' ! -path './.codex/*' \
+      ! -path './.harness' ! -path './.harness/*' \
+      ! -name '.gitignore' \
+      ! -name '.DS_Store' \
+      -print -quit
+  )"
+
+  if [ -n "$first_signal_path" ]; then
+    echo "low"
+    return
+  fi
+
+  echo "empty"
+}
+
+PROJECT_SIGNAL_LEVEL="$(detect_project_signal_level)"
+
 log "실행 하네스 팀 구조 검증 시작"
 log "harness 기준 경로: $HARNESS_HOME"
+log "저장소 신호 수준: $PROJECT_SIGNAL_LEVEL"
 
 # 필수 디렉토리
 check_dir ".codex/skills"
@@ -206,15 +262,25 @@ fi
 if [ -f ".codex/skills/run-harness/SKILL.md" ]; then
   check_contains_hint ".codex/skills/run-harness/SKILL.md" "기동" "기동 엔트리포인트 설명"
   check_contains_hint ".codex/skills/run-harness/SKILL.md" "현재 상태" "현재 상태 기반 판단"
+  check_contains_hint ".codex/skills/run-harness/SKILL.md" "질문" "사용자 질문 유도"
 fi
 
 if [ -f ".harness/reports/team-structure.md" ]; then
   check_contains_hint ".harness/reports/team-structure.md" "역할 팀" "역할 팀 설명"
 fi
 
+if [ -f ".harness/reports/domain-analysis.md" ]; then
+  check_contains_hint ".harness/reports/domain-analysis.md" "사용자 확인 질문" "사용자 확인 질문 섹션"
+  check_placeholder_state ".harness/reports/domain-analysis.md" "프로젝트 유형: 미정" "프로젝트 유형 구체화"
+  check_placeholder_state ".harness/reports/domain-analysis.md" "주요 기술 스택: 미정" "기술 스택 구체화"
+  check_placeholder_state ".harness/reports/domain-analysis.md" "핵심 흐름: 미정" "핵심 흐름 구체화"
+  check_placeholder_state ".harness/reports/domain-analysis.md" "저장소를 분석한 뒤 이 내용을 구체화하세요" "도메인 분석 초안 치환"
+fi
+
 if [ -f ".harness/reports/team-playbook.md" ]; then
   check_contains_hint ".harness/reports/team-playbook.md" "시작 순서" "운영 시작 순서"
   check_contains_hint ".harness/reports/team-playbook.md" "운영 원칙" "운영 원칙"
+  check_contains_hint ".harness/reports/team-playbook.md" "사용자 확인 질문" "사용자 질문 우선 흐름"
 fi
 
 if [ -f ".harness/logging-policy.md" ]; then
@@ -244,8 +310,35 @@ if [ -f ".harness/logs/role-frequency.md" ]; then
   check_contains_hint ".harness/logs/role-frequency.md" "역할 호출 빈도" "역할 빈도 보고서"
 fi
 
+if [ "$PROJECT_SIGNAL_LEVEL" = "empty" ]; then
+  warn "빈 프로젝트 또는 프로젝트 단서가 거의 없는 저장소로 판단됨: 구조 검증과 사용자 질문 유도 기본값 중심으로 확인합니다"
+
+  if [ -f ".harness/reports/domain-analysis.md" ]; then
+    check_contains_any_hint ".harness/reports/domain-analysis.md" "프로젝트 유형: (미정|unknown)" "빈 프로젝트용 프로젝트 유형 기본값"
+    check_contains_any_hint ".harness/reports/domain-analysis.md" "가장 먼저 성공|첫 성공" "빈 프로젝트용 첫 성공 흐름 질문"
+  fi
+fi
+
+if [ "$PROJECT_SIGNAL_LEVEL" = "low" ]; then
+  warn "저장소 단서가 제한적입니다: 역할 추천 전에 사용자 질문 유도 흐름이 중요합니다"
+
+  if [ -f ".harness/reports/domain-analysis.md" ]; then
+    check_contains_hint ".harness/reports/domain-analysis.md" "사용자 확인 질문" "저신호 저장소용 질문 섹션"
+  fi
+fi
+
+if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
+  log "프로젝트 단서가 충분한 저장소로 판단됨: 프로젝트 특화 초안이 남아 있으면 실패로 처리합니다"
+fi
+
 if [ "$FAILURES" -eq 0 ]; then
-  log "검증 통과: 실행 하네스 팀 구조가 최소 요건을 만족합니다"
+  if [ "$PROJECT_SIGNAL_LEVEL" = "empty" ]; then
+    log "검증 통과: 빈 프로젝트용 하네스 구조와 질문 유도 기본값이 최소 요건을 만족합니다"
+  elif [ "$PROJECT_SIGNAL_LEVEL" = "low" ]; then
+    log "검증 통과: 저신호 저장소용 하네스 구조와 질문 유도 흐름이 최소 요건을 만족합니다"
+  else
+    log "검증 통과: 실행 하네스 팀 구조가 최소 요건을 만족합니다"
+  fi
   if [ "$WARNINGS" -gt 0 ]; then
     warn "경고 수: $WARNINGS"
   fi

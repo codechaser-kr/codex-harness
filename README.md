@@ -156,7 +156,7 @@ repo/
 
 이 시스템은 역할 호출 흐름이 실제로 어떻게 진행됐는지 남기기 위해 로그를 수집합니다. 핵심 목적은 단순 기록이 아니라, 어떤 역할 조합과 작업 흐름이 반복되는지 축적해서 더 재사용 가능한 운영 방식으로 정리하는 것입니다.
 
-로그는 보통 하네스 운영 과정에서 자동으로 남겨집니다. 누적된 로그를 바탕으로 세션 요약을 보고, 역할 호출 빈도를 집계하고, 반복 작업 흐름을 `.harness/reports/template-candidates.md`에 후보로 정리한 뒤, 필요하면 `.harness/templates/*.md` 형태의 재사용 가능한 템플릿으로 발전시킬 수 있습니다.
+하네스는 운영 과정에서 로그를 남기도록 설계되어 있습니다. 로그 기록과 집계는 관련 스크립트와 운영 규칙을 통해 이루어지며, 누적된 로그를 바탕으로 세션 요약을 보고, 역할 호출 빈도를 집계하고, 반복 작업 흐름을 `.harness/reports/template-candidates.md`에 후보로 정리한 뒤, 필요하면 `.harness/templates/*.md` 형태의 재사용 가능한 템플릿으로 발전시킬 수 있습니다.
 
 필요할 때는 `harness-log.sh`, `harness-session-close.sh`, `harness-role-stats.sh`, `harness-template-candidates.sh`를 보조적으로 실행해 로그나 통계를 다시 정리할 수 있습니다.
 

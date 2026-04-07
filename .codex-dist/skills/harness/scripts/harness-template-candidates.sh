@@ -573,7 +573,23 @@ if [ "$DRY_RUN" -eq 1 ]; then
   render_report "$CANDIDATE_ROWS" "$EVENT_COUNT" "$NEAR_MISS_COUNT"
   log "dry-run 모드이므로 후보 보고서를 stdout으로 출력했습니다"
 else
-  render_report "$CANDIDATE_ROWS" "$EVENT_COUNT" "$NEAR_MISS_COUNT" > "$REPORT_FILE"
+  # 수동 영역 보존: <!-- harness:manual --> 이후 내용을 유지하고 자동 영역만 갱신
+  MANUAL_SECTION=""
+  if [ -f "$REPORT_FILE" ] && grep -qF '<!-- harness:manual -->' "$REPORT_FILE"; then
+    MANUAL_SECTION="$(awk '/^<!-- harness:manual -->/{found=1; next} found{print}' "$REPORT_FILE")"
+  fi
+
+  {
+    render_report "$CANDIDATE_ROWS" "$EVENT_COUNT" "$NEAR_MISS_COUNT"
+    printf '\n<!-- harness:manual -->\n'
+    if [ -n "$MANUAL_SECTION" ]; then
+      printf '%s\n' "$MANUAL_SECTION"
+    else
+      printf '## 운영 메모\n\n'
+      printf '<!-- 이 섹션은 스크립트가 덮어쓰지 않습니다. 자유롭게 메모를 남길 수 있습니다. -->\n'
+    fi
+  } > "$REPORT_FILE"
+
   log "후보 보고서 생성: $REPORT_FILE"
 fi
 

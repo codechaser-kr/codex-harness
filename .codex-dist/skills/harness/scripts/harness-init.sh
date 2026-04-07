@@ -491,6 +491,13 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
 - 로그 운영 기준은 \`.harness/logging-policy.md\`를 먼저 확인한다.
 - 이 역할이 호출되면 \`.harness/logs/session-log.md\`에 새로운 세션 시작 기록을 남긴다.
+
+## 판단 예시
+
+- 요청: "새 API 엔드포인트 추가" → 판단: 기능 구현, 단일 경계 → 시작: domain-analyst → qa-designer → orchestrator
+- 요청: "공통 유틸 함수 리팩터" → 판단: 공통 계층 영향, 다중 소비자 → 시작: domain-analyst → qa-designer → orchestrator
+- 요청: "하네스 역할 구조 재설계" → 판단: 경계 재정의, 구조 변경 → 시작: harness-architect → qa-designer → orchestrator
+- 요청: 저장소 단서 없음 → 판단: 프로젝트 유형 불명 → 시작: 사용자에게 프로젝트 유형·핵심 사용자·첫 성공 시나리오 확인
 "
 
 create_file_if_missing ".harness/reports/domain-analysis.md" \

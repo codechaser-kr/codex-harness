@@ -1076,9 +1076,13 @@ EOF
 ### 대표 요청별 루프
 
 - 기능 또는 사용자 흐름 보강: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
+  - domain-analyst가 실제 코드 경로와 변경 경계를 먼저 확정해야 qa-designer가 올바른 검증 기준을 잡을 수 있습니다.
 - 구조 또는 문서 정비: run-harness -> skill-scaffolder -> orchestrator -> validator
+  - 역할 설명과 템플릿 반영이 중심이므로 domain 재분석 없이 scaffolder부터 시작해도 됩니다.
 - 경계 재정의가 필요한 변경: run-harness -> domain-analyst -> harness-architect -> qa-designer -> orchestrator -> validator
+  - 기존 경계 가정이 바뀌므로 구조 재설계(harness-architect)가 QA 기준 수립보다 앞에 와야 합니다.
 - 검증 비용이 큰 변경: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
+  - 경계가 비교적 명확하지만 회귀 비용이 높아 qa-designer를 domain-analyst 직후에 배치해 검증 기준을 일찍 고정합니다.
 
 ### 순서 조정 및 재진입 기준
 
@@ -1186,6 +1190,14 @@ EOF
 - 단일 수정처럼 보여도 소비 경로나 공용 계층까지 번지면 domain-analyst와 qa-designer를 더 앞에 둡니다.
 - 문서 정비 요청이라도 handoff나 다음 진입점이 바뀌면 orchestrator와 validator를 함께 봅니다.
 
+### 운영 기준
+
+- 역할 수는 많을수록 좋은 것이 아닙니다. 현재 저장소에서 실제로 구분이 필요한 책임 경계만큼만 팀을 구성합니다.
+- 역할을 추가할 때는 기존 역할이 담당하기 어려운 새 책임 경계가 생겼는지 먼저 확인합니다.
+- 역할을 줄일 때는 두 역할의 산출물과 판단 기준이 실제로 겹치는지 확인합니다.
+- domain-analyst와 harness-architect는 서로 다른 층을 봅니다. domain-analyst는 사실 기반 경계 분석, harness-architect는 역할 구조 설계입니다.
+- validator는 항상 유지합니다. 회귀와 누락 점검을 다른 역할이 겸하면 피드백 루프가 흐려집니다.
+
 ## 다음 단계
 
 - 실제 저장소에서 자주 등장하는 변경 유형을 이 팀 구조의 실전 예시에 계속 누적합니다.
@@ -1252,21 +1264,20 @@ EOF
 
 ## 운영 규칙
 
-### 세션 시작 절차
+### 세션 시작 체크
+
+- 직전 session-log와 latest-session-summary를 읽고 미해결 항목과 재진입 지점을 확인합니다.
+- domain-analysis, orchestration-plan, qa-strategy 중 이번 요청과 직접 연결되는 문서를 먼저 읽습니다.
+- 현재 요청 요약과 영향 범위를 session-log에 먼저 남깁니다.
+- 직전 세션의 남은 약점이 이번 요청과 이어지는지 확인합니다.
+- 먼저 읽을 문서와 나중에 볼 문서를 구분해 빠르게 시작합니다.
+
+### 역할 호출 순서
 
 1. run-harness가 요청을 받고 $key_axes_hint 중 어느 축을 건드리는지 먼저 분류합니다.
 2. 영향 범위가 넓거나 핵심 경계를 건드리면 domain-analyst와 qa-designer를 먼저 호출합니다.
 3. 구조 보강이 필요하면 harness-architect와 skill-scaffolder를 붙여 역할 설명과 템플릿을 맞춥니다.
 4. orchestrator가 작업 루프와 검증 루프를 묶고 validator가 최종 구조를 점검합니다.
-
-5. 직전 session-log와 latest-session-summary를 읽고 미해결 항목과 재진입 지점을 확인합니다.
-6. domain-analysis, orchestration-plan, qa-strategy 중 이번 요청과 직접 연결되는 문서를 먼저 읽습니다.
-
-### 세션 시작 체크
-
-- 현재 요청 요약과 영향 범위를 session-log에 먼저 남깁니다.
-- 직전 세션의 남은 약점이 이번 요청과 이어지는지 확인합니다.
-- 먼저 읽을 문서와 나중에 볼 문서를 구분해 빠르게 시작합니다.
 
 ### 기본 운영 원칙
 

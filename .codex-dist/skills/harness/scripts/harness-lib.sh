@@ -607,6 +607,11 @@ EOF
         [ -f "$workspace_path/build.gradle.kts" ] && notes+=("build.gradle.kts")
         [ -f "$workspace_path/Gemfile" ] && notes+=("Gemfile")
         [ -f "$workspace_path/composer.json" ] && notes+=("composer.json")
+        [ -f "$workspace_path/pubspec.yaml" ] && notes+=("pubspec.yaml")
+        [ -f "$workspace_path/mix.exs" ] && notes+=("mix.exs")
+        [ -f "$workspace_path/Package.swift" ] && notes+=("Package.swift")
+        [ -f "$workspace_path/CMakeLists.txt" ] && notes+=("CMakeLists.txt")
+        [ -f "$workspace_path/global.json" ] && notes+=("global.json")
 
         if [ -f "$workspace_path/.yarnrc.yml" ]; then
           if grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*node-modules([[:space:]]|$)' "$workspace_path/.yarnrc.yml"; then

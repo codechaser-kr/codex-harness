@@ -966,21 +966,18 @@ EOF
 5. orchestrator가 작업 시작 루프와 검증 루프를 정리합니다.
 6. validator가 산출물이 다시 일반론으로 흐르지 않았는지 확인합니다.
 
-## 작업 유형별 대표 루프
+## 대표 요청별 루프
 
 - 기능 또는 사용자 흐름 보강: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
 - 구조 또는 문서 정비: run-harness -> skill-scaffolder -> orchestrator -> validator
 - 경계 재정의가 필요한 변경: run-harness -> domain-analyst -> harness-architect -> qa-designer -> orchestrator -> validator
 - 검증 비용이 큰 변경: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
 
-## 순서 조정 규칙
+## 순서 조정 및 재진입 기준
 
 - 시작 분기에서 뒤쪽 역할을 진입점으로 선택하더라도, 앞 단계의 판단이 이미 충분한 경우에만 일부 단계를 건너뜁니다.
 - 구조 설명이 낡았거나 generic하면 domain-analyst부터 다시 시작해 표준 전체 시퀀스로 복귀합니다.
 - 핵심 경계나 다중 모듈 영향이 보이면 qa-designer와 validator를 뒤로 미루지 않습니다.
-
-## 재진입 기준
-
 - domain-analysis가 generic하거나 예외 메모가 비어 있으면 domain-analyst부터 다시 시작합니다.
 - 구조는 맞지만 역할 책임이나 확장 기준이 흐리면 harness-architect를 먼저 다시 부릅니다.
 - 체크리스트가 약하거나 검증 비용 구분이 흐리면 qa-designer를 우선 재진입시킵니다.
@@ -1127,10 +1124,9 @@ EOF
 
 ## 기본 운영 원칙
 
-- 문서 재생성은 실제 저장소 분석을 반영해야 하며, 일반론으로 되돌아가면 안 됩니다.
-- 변경이 여러 작업 축을 동시에 건드리면 단일 역할 판단으로 끝내지 않습니다.
-- 고비용 검증 경로는 초기에 식별하고 운영 계획에 반영합니다.
-- 중요한 역할 호출이나 흐름 변경은 session-log에 남깁니다.
+- 현재 요청 요약과 영향 범위 판단을 session-log에 먼저 남깁니다.
+- 여러 문서를 한꺼번에 다시 읽기보다 이번 요청과 직접 연결된 문서를 먼저 확인합니다.
+- 역할 호출이나 전환 이유가 바뀌면 그 근거를 session-log에 함께 남깁니다.
 
 ## 작업 유형별 운영 규칙
 
@@ -1138,7 +1134,7 @@ EOF
 - 구조 또는 경계 수정: 바뀐 책임 경계와 영향 전파 범위를 먼저 적고 architect/qa 투입 시점을 정합니다.
 - 실행 또는 배포 경로 수정: 환경 차이와 최종 검증 경로를 분리해 기록합니다.
 - 여러 경계를 가로지르는 수정: 소비자 경로와 핵심 경계 보강 여부를 먼저 확인합니다.
-- 문서 재생성 또는 하네스 정비: wording보다 저장소 사실, handoff, 남은 약점이 유지되는지 먼저 봅니다.
+- 문서 재생성 또는 하네스 정비: wording보다 저장소 사실, 이번 세션의 남은 약점, 다음 진입점이 유지되는지 먼저 봅니다.
 
 ## 로그 운영
 

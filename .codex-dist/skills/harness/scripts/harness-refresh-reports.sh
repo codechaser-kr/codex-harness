@@ -14,145 +14,11 @@ QA_REPORT="$REPORT_DIR/qa-strategy.md"
 ORCH_REPORT="$REPORT_DIR/orchestration-plan.md"
 TEAM_STRUCTURE_REPORT="$REPORT_DIR/team-structure.md"
 TEAM_PLAYBOOK_REPORT="$REPORT_DIR/team-playbook.md"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$SCRIPT_DIR/harness-lib.sh"
 
 log() {
   printf '[harness][refresh] %s\n' "$1"
-}
-
-detect_project_type() {
-  if [ -f "package.json" ]; then
-    echo "node"
-    return
-  fi
-
-  if [ -f "Cargo.toml" ]; then
-    echo "rust"
-    return
-  fi
-
-  if [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
-    echo "python"
-    return
-  fi
-
-  if [ -f "go.mod" ]; then
-    echo "go"
-    return
-  fi
-
-  echo "unknown"
-}
-
-detect_stack_hint() {
-  local hints=()
-
-  [ -f "package.json" ] && hints+=("Node.js")
-  [ -f "Cargo.toml" ] && hints+=("Rust")
-  [ -f "pyproject.toml" ] && hints+=("Python")
-  [ -f "requirements.txt" ] && hints+=("Python")
-  [ -f "go.mod" ] && hints+=("Go")
-  [ -f "tsconfig.json" ] && hints+=("TypeScript")
-  [ -f "vite.config.ts" ] && hints+=("Vite")
-  [ -f "next.config.js" ] && hints+=("Next.js")
-  [ -f "next.config.mjs" ] && hints+=("Next.js")
-
-  if [ "${#hints[@]}" -eq 0 ]; then
-    echo "추정 불가"
-    return
-  fi
-
-  local IFS=", "
-  echo "${hints[*]}"
-}
-
-detect_project_signal_level() {
-  if [ -f "package.json" ] || [ -f "Cargo.toml" ] || [ -f "pyproject.toml" ] || [ -f "requirements.txt" ] || [ -f "go.mod" ]; then
-    echo "stack"
-    return
-  fi
-
-  local first_signal_path
-  first_signal_path="$(
-    find . -mindepth 1 -maxdepth 2 \
-      ! -path './.git' ! -path './.git/*' \
-      ! -path './.codex' ! -path './.codex/*' \
-      ! -path './.harness' ! -path './.harness/*' \
-      ! -name '.gitignore' \
-      ! -name '.DS_Store' \
-      -print -quit
-  )"
-
-  if [ -n "$first_signal_path" ]; then
-    echo "low"
-    return
-  fi
-
-  echo "empty"
-}
-
-detect_structure_hint() {
-  local hints=()
-  local candidate
-
-  for candidate in src app lib cmd internal pkg packages services server client web api backend frontend docs tests test; do
-    if [ -d "$candidate" ]; then
-      hints+=("$candidate/")
-    fi
-  done
-
-  if [ -f "README.md" ]; then
-    hints+=("README.md")
-  fi
-
-  if [ "${#hints[@]}" -eq 0 ]; then
-    echo "뚜렷한 핵심 디렉토리 없음"
-    return
-  fi
-
-  local limited=("${hints[@]:0:5}")
-  local IFS=", "
-  echo "${limited[*]}"
-}
-
-build_core_flow_hint() {
-  case "$1" in
-    empty)
-      echo "미정"
-      ;;
-    low)
-      echo "저장소 단서가 제한적이므로 README, 핵심 디렉토리, 사용자 확인 질문을 함께 보며 첫 성공 흐름을 정리해야 합니다."
-      ;;
-    *)
-      case "$2" in
-        node)
-          echo "package.json과 $3 기준으로 애플리케이션 진입점, 주요 모듈, 실행 또는 빌드 흐름을 우선 정리해야 합니다."
-          ;;
-        rust)
-          echo "Cargo.toml과 $3 기준으로 크레이트 진입점, 명령 실행 흐름, 주요 모듈 연결을 우선 정리해야 합니다."
-          ;;
-        python)
-          echo "Python 설정 파일과 $3 기준으로 실행 진입점, 패키지 구조, 핵심 스크립트 흐름을 우선 정리해야 합니다."
-          ;;
-        go)
-          echo "go.mod와 $3 기준으로 main 패키지, 내부 패키지 연결, 실행 흐름을 우선 정리해야 합니다."
-          ;;
-        *)
-          echo "$3 기준으로 저장소의 핵심 사용자 흐름과 주요 변경 영향 지점을 우선 정리해야 합니다."
-          ;;
-      esac
-      ;;
-  esac
-}
-
-build_next_step_line() {
-  case "$1" in
-    empty|low)
-      echo "- domain-analyst가 실제 저장소 구조를 읽고 내용을 구체화합니다."
-      ;;
-    *)
-      echo "- domain-analyst가 자동 관찰 결과를 바탕으로 실제 코드 경로와 사용자 흐름 기준으로 분석을 보정합니다."
-      ;;
-  esac
 }
 
 PROJECT_TYPE="$(detect_project_type)"
@@ -160,7 +26,7 @@ STACK_HINT="$(detect_stack_hint)"
 PROJECT_SIGNAL_LEVEL="$(detect_project_signal_level)"
 STRUCTURE_HINT="$(detect_structure_hint)"
 CORE_FLOW_HINT="$(build_core_flow_hint "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT")"
-NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$PROJECT_SIGNAL_LEVEL")"
+NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$PROJECT_SIGNAL_LEVEL" "refresh")"
 DISCOVERY_GUIDANCE="저장소 단서와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
 
 if [ "$PROJECT_TYPE" = "unknown" ] && [ "$STACK_HINT" = "추정 불가" ]; then

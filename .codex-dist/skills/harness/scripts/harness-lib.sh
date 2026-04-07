@@ -25,6 +25,39 @@ join_by_comma() {
   printf '%s\n' "$result"
 }
 
+detect_harness_operation_mode() {
+  local has_skills=0
+  local has_reports=0
+  local has_logs=0
+
+  [ -d ".codex/skills" ] && find ".codex/skills" -mindepth 1 -maxdepth 1 -type d -print -quit | grep -q . && has_skills=1
+  [ -d ".harness/reports" ] && find ".harness/reports" -mindepth 1 -maxdepth 1 -type f -name '*.md' -print -quit | grep -q . && has_reports=1
+  [ -d ".harness/logs" ] && find ".harness/logs" -mindepth 1 -maxdepth 1 -type f -print -quit | grep -q . && has_logs=1
+
+  if [ "$has_skills" -eq 0 ] && [ "$has_reports" -eq 0 ] && [ "$has_logs" -eq 0 ]; then
+    printf '%s\n' "신규 구축"
+    return
+  fi
+
+  printf '%s\n' "기존 확장"
+}
+
+build_harness_audit_summary() {
+  local mode="$1"
+  local skill_count=0
+  local report_count=0
+  local log_count=0
+
+  [ -d ".codex/skills" ] && skill_count="$(find ".codex/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d '[:space:]')"
+  [ -d ".harness/reports" ] && report_count="$(find ".harness/reports" -mindepth 1 -maxdepth 1 -type f -name '*.md' | wc -l | tr -d '[:space:]')"
+  [ -d ".harness/logs" ] && log_count="$(find ".harness/logs" -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d '[:space:]')"
+
+  printf '%s\n' "모드: $mode"
+  printf '%s\n' "기존 로컬 역할 스킬 수: $skill_count"
+  printf '%s\n' "기존 보고서 수: $report_count"
+  printf '%s\n' "기존 로그 파일 수: $log_count"
+}
+
 has_stack_manifest() {
   [ -f "package.json" ] \
     || [ -f "Cargo.toml" ] \

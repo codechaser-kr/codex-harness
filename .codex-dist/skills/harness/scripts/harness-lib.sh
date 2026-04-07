@@ -533,40 +533,71 @@ EOF
           [ -n "$workspace_path" ] || continue
           workspace_name="$(basename "$workspace_path")"
 
-          case "$workspace_name" in
-            *common*|*shared*|*ui*|*design*|*core*)
-              printf '%s\n' "- \`$workspace_path\`: 공용 패키지 또는 공유 유틸리티 후보입니다."
-              ;;
-            *lib*|*library*)
-              printf '%s\n' "- \`$workspace_path\`: 재사용 가능한 라이브러리 또는 모듈 후보입니다."
-              ;;
-            *domain*|*model*)
-              printf '%s\n' "- \`$workspace_path\`: 도메인 모델 또는 비즈니스 로직 레이어 후보입니다."
-              ;;
-            *infra*|*infrastructure*)
-              printf '%s\n' "- \`$workspace_path\`: 인프라 또는 외부 의존성 어댑터 레이어 후보입니다."
-              ;;
-            *cmd*|*cli*)
-              printf '%s\n' "- \`$workspace_path\`: CLI 진입점 또는 실행 커맨드 패키지 후보입니다."
-              ;;
-            *desktop*|*electron*)
-              printf '%s\n' "- \`$workspace_path\`: 별도 실행 환경 또는 배포 경계를 가진 패키지 후보입니다."
-              ;;
-            *web*|*front*|*client*|*site*)
-              printf '%s\n' "- \`$workspace_path\`: 사용자 진입점을 담는 애플리케이션 패키지 후보입니다."
-              ;;
-            *app*|*application*)
-              printf '%s\n' "- \`$workspace_path\`: 애플리케이션 레이어 또는 실행 진입점 후보입니다."
-              ;;
-            *api*|*server*|*backend*|*service*)
-              printf '%s\n' "- \`$workspace_path\`: 서비스 또는 백엔드 책임을 가진 패키지 후보입니다."
-              ;;
-            *test*|*qa*)
-              printf '%s\n' "- \`$workspace_path\`: 테스트 또는 검증 보조 패키지 후보입니다."
-              ;;
-            *)
-              printf '%s\n' "- \`$workspace_path\`: 주요 패키지 후보입니다."
-              ;;
+          # 파일 기반 신호를 우선 판단하고, 단서가 없으면 이름 기반 폴백
+          workspace_role=""
+
+          # 1. package.json 의존성 기반 (jq 없이 grep)
+          if [ -z "$workspace_role" ] && [ -f "$workspace_path/package.json" ]; then
+            if grep -qE '"electron"' "$workspace_path/package.json"; then
+              workspace_role="desktop"
+            elif grep -qE '"(react|vue|svelte|@angular/core|solid-js|next|nuxt|astro|gatsby)"' "$workspace_path/package.json"; then
+              workspace_role="frontend"
+            elif grep -qE '"(express|fastify|koa|hapi|@nestjs/core|@hono/node-server)"' "$workspace_path/package.json"; then
+              workspace_role="backend"
+            elif grep -qE '[[:space:]]"bin"[[:space:]]*:' "$workspace_path/package.json"; then
+              workspace_role="cli"
+            elif ls "$workspace_path"/rollup.config.* "$workspace_path"/tsup.config.* "$workspace_path"/unbuild.config.* 2>/dev/null | grep -q .; then
+              workspace_role="library"
+            fi
+          fi
+
+          # 2. Cargo.toml 구조 기반 (Rust)
+          if [ -z "$workspace_role" ] && [ -f "$workspace_path/Cargo.toml" ]; then
+            if grep -q '^\[\[bin\]\]' "$workspace_path/Cargo.toml"; then
+              workspace_role="cli"
+            elif grep -q '^\[lib\]' "$workspace_path/Cargo.toml"; then
+              workspace_role="library"
+            fi
+          fi
+
+          # 3. 엔트리포인트 파일 존재 기반
+          if [ -z "$workspace_role" ] && { [ -f "$workspace_path/index.html" ] || [ -f "$workspace_path/public/index.html" ]; }; then
+            workspace_role="frontend"
+          fi
+          if [ -z "$workspace_role" ] && { [ -f "$workspace_path/Dockerfile" ] || [ -f "$workspace_path/docker-compose.yml" ]; }; then
+            workspace_role="deploy"
+          fi
+
+          # 4. 이름 기반 폴백
+          if [ -z "$workspace_role" ]; then
+            case "$workspace_name" in
+              *common*|*shared*|*ui*|*design*|*core*) workspace_role="shared" ;;
+              *lib*|*library*)                         workspace_role="library" ;;
+              *domain*|*model*)                        workspace_role="domain" ;;
+              *infra*|*infrastructure*)                workspace_role="infra" ;;
+              *cmd*|*cli*)                             workspace_role="cli" ;;
+              *desktop*|*electron*)                    workspace_role="desktop" ;;
+              *web*|*front*|*client*|*site*)           workspace_role="frontend" ;;
+              *app*|*application*)                     workspace_role="app" ;;
+              *api*|*server*|*backend*|*service*)      workspace_role="backend" ;;
+              *test*|*qa*)                             workspace_role="test" ;;
+              *)                                       workspace_role="unknown" ;;
+            esac
+          fi
+
+          case "$workspace_role" in
+            frontend) printf '%s\n' "- \`$workspace_path\`: 사용자 진입점을 담는 애플리케이션 패키지 후보입니다." ;;
+            backend)  printf '%s\n' "- \`$workspace_path\`: 서비스 또는 백엔드 책임을 가진 패키지 후보입니다." ;;
+            desktop)  printf '%s\n' "- \`$workspace_path\`: 별도 실행 환경 또는 배포 경계를 가진 패키지 후보입니다." ;;
+            cli)      printf '%s\n' "- \`$workspace_path\`: CLI 진입점 또는 실행 커맨드 패키지 후보입니다." ;;
+            library)  printf '%s\n' "- \`$workspace_path\`: 재사용 가능한 라이브러리 또는 모듈 후보입니다." ;;
+            shared)   printf '%s\n' "- \`$workspace_path\`: 공용 패키지 또는 공유 유틸리티 후보입니다." ;;
+            domain)   printf '%s\n' "- \`$workspace_path\`: 도메인 모델 또는 비즈니스 로직 레이어 후보입니다." ;;
+            infra)    printf '%s\n' "- \`$workspace_path\`: 인프라 또는 외부 의존성 어댑터 레이어 후보입니다." ;;
+            deploy)   printf '%s\n' "- \`$workspace_path\`: 독립 배포 단위 또는 컨테이너 경계를 가진 패키지 후보입니다." ;;
+            app)      printf '%s\n' "- \`$workspace_path\`: 애플리케이션 레이어 또는 실행 진입점 후보입니다." ;;
+            test)     printf '%s\n' "- \`$workspace_path\`: 테스트 또는 검증 보조 패키지 후보입니다." ;;
+            *)        printf '%s\n' "- \`$workspace_path\`: 주요 패키지 후보입니다." ;;
           esac
         done < <(list_workspace_packages)
       fi

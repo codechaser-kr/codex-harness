@@ -573,8 +573,6 @@ if [ "$DRY_RUN" -eq 1 ]; then
   render_report "$CANDIDATE_ROWS" "$EVENT_COUNT" "$NEAR_MISS_COUNT"
   log "dry-run 모드이므로 후보 보고서를 stdout으로 출력했습니다"
 else
-  AUTO_CONTENT="$(render_report "$CANDIDATE_ROWS" "$EVENT_COUNT" "$NEAR_MISS_COUNT")"
-
   # 수동 영역 보존: <!-- harness:manual --> 이후 내용을 유지하고 자동 영역만 갱신
   MANUAL_SECTION=""
   if [ -f "$REPORT_FILE" ] && grep -qF '<!-- harness:manual -->' "$REPORT_FILE"; then
@@ -582,7 +580,7 @@ else
   fi
 
   {
-    printf '%s\n' "$AUTO_CONTENT"
+    render_report "$CANDIDATE_ROWS" "$EVENT_COUNT" "$NEAR_MISS_COUNT"
     printf '\n<!-- harness:manual -->\n'
     if [ -n "$MANUAL_SECTION" ]; then
       printf '%s\n' "$MANUAL_SECTION"

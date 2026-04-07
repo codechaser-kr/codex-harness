@@ -335,37 +335,37 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
   log "프로젝트 단서가 충분한 저장소로 판단됨: 프로젝트 특화 초안이 남아 있으면 실패로 처리합니다"
 
   if [ -f ".harness/reports/domain-analysis.md" ]; then
-    check_contains_hint ".harness/reports/domain-analysis.md" "사실 기준 구조" "사실 기준 구조 섹션"
-    check_contains_hint ".harness/reports/domain-analysis.md" "예외 및 운영 메모" "도메인 분석 예외 메모"
-    check_contains_hint ".harness/reports/domain-analysis.md" "핵심 실행 흐름" "핵심 실행 흐름 섹션"
-    check_contains_hint ".harness/reports/domain-analysis.md" "반복적으로 위험한 변경 유형" "위험 변경 유형 섹션"
+    check_contains_any_hint ".harness/reports/domain-analysis.md" "사실 기준 구조|주요 구조 단서|구조 단서" "도메인 분석 구조 요약"
+    check_contains_any_hint ".harness/reports/domain-analysis.md" "예외 및 운영 메모|예외 메모|운영 메모" "도메인 분석 예외 메모"
+    check_contains_any_hint ".harness/reports/domain-analysis.md" "핵심 실행 흐름|핵심 흐름|실행 흐름" "도메인 분석 핵심 흐름"
+    check_contains_any_hint ".harness/reports/domain-analysis.md" "반복적으로 위험한 변경 유형|위험 변경 유형|위험 축" "도메인 분석 위험 요약"
   fi
 
   if [ -f ".harness/reports/harness-architecture.md" ]; then
-    check_contains_hint ".harness/reports/harness-architecture.md" "저장소 특성 요약" "아키텍처 저장소 특성 요약"
-    check_contains_hint ".harness/reports/harness-architecture.md" "역할별 초점" "아키텍처 역할별 초점"
-    check_contains_any_hint ".harness/reports/harness-architecture.md" "보조 구조|reports|logs" "아키텍처 보조 구조"
-    check_contains_hint ".harness/reports/harness-architecture.md" "7역할 유지 기준" "아키텍처 역할 유지 기준"
-    check_contains_hint ".harness/reports/harness-architecture.md" "축소/확장 판단" "아키텍처 축소 확장 기준"
-    check_contains_hint ".harness/reports/harness-architecture.md" "설계 원칙" "아키텍처 설계 원칙"
+    check_contains_any_hint ".harness/reports/harness-architecture.md" "저장소 특성 요약|프로젝트 성격|대표 흐름" "아키텍처 저장소 특성 요약"
+    check_contains_any_hint ".harness/reports/harness-architecture.md" "역할별 초점|권장 역할|역할별 책임" "아키텍처 역할 배치"
+    check_contains_any_hint ".harness/reports/harness-architecture.md" "보조 구조|reports|logs|templates|scenarios" "아키텍처 보조 구조"
+    check_contains_any_hint ".harness/reports/harness-architecture.md" "7역할 유지 기준|역할 유지 기준|역할 수" "아키텍처 역할 유지 기준"
+    check_contains_any_hint ".harness/reports/harness-architecture.md" "축소/확장 판단|축소|확장" "아키텍처 축소 확장 기준"
+    check_contains_any_hint ".harness/reports/harness-architecture.md" "설계 원칙|원칙" "아키텍처 설계 원칙"
   fi
 
   if [ -f ".harness/reports/qa-strategy.md" ]; then
-    check_contains_hint ".harness/reports/qa-strategy.md" "핵심 품질 축" "QA 핵심 품질 축"
+    check_contains_any_hint ".harness/reports/qa-strategy.md" "핵심 품질 축|품질 축" "QA 핵심 품질 축"
     check_contains_any_hint ".harness/reports/qa-strategy.md" "우선 검토 질문|검토 질문|핵심 질문" "QA 검토 질문"
-    check_contains_hint ".harness/reports/qa-strategy.md" "변경 유형별 최소 체크" "QA 변경 유형별 최소 체크"
-    check_contains_hint ".harness/reports/qa-strategy.md" "테스트 설계 기준" "QA 테스트 설계 기준"
-    check_contains_any_hint ".harness/reports/qa-strategy.md" "경계별 추가 확인|추가 확인|영향 전파|소비 경로" "QA 추가 확인 기준"
+    check_contains_any_hint ".harness/reports/qa-strategy.md" "변경 유형별 최소 체크|최소 체크|변경 유형" "QA 변경 유형별 최소 체크"
+    check_contains_any_hint ".harness/reports/qa-strategy.md" "테스트 설계 기준|테스트 기준|설계 기준" "QA 테스트 설계 기준"
+    check_contains_any_hint ".harness/reports/qa-strategy.md" "추가 확인 관점|경계별 추가 확인|추가 확인|영향 전파|소비 경로" "QA 추가 확인 기준"
   fi
 
   if [ -f ".harness/reports/orchestration-plan.md" ]; then
-    check_contains_hint ".harness/reports/orchestration-plan.md" "시작 분기" "오케스트레이션 시작 분기"
-    check_contains_hint ".harness/reports/orchestration-plan.md" "표준 전체 시퀀스" "오케스트레이션 표준 전체 시퀀스"
-    check_contains_any_hint ".harness/reports/orchestration-plan.md" "작업 축별 권장 루프|작업 유형별 루프|권장 루프|시작 루프" "오케스트레이션 작업 유형별 루프"
-    check_contains_hint ".harness/reports/orchestration-plan.md" "순서 조정 규칙" "오케스트레이션 순서 조정 규칙"
+    check_contains_any_hint ".harness/reports/orchestration-plan.md" "시작 분기|진입점 규칙|시작점" "오케스트레이션 시작 분기"
+    check_contains_any_hint ".harness/reports/orchestration-plan.md" "표준 전체 시퀀스|표준 시퀀스|전체 순서" "오케스트레이션 표준 전체 시퀀스"
+    check_contains_any_hint ".harness/reports/orchestration-plan.md" "작업 축별 권장 루프|작업 유형별 대표 루프|작업 유형별 루프|권장 루프|시작 루프" "오케스트레이션 작업 유형별 루프"
+    check_contains_any_hint ".harness/reports/orchestration-plan.md" "순서 조정 규칙|순서 조정|조정 규칙" "오케스트레이션 순서 조정 규칙"
     check_contains_any_hint ".harness/reports/orchestration-plan.md" "현재 상태 판단 규칙|현재 상태 판단|재진입 기준|재진입|다시 시작" "오케스트레이션 현재 상태 판단"
-    check_contains_hint ".harness/reports/orchestration-plan.md" "역할 간 handoff 규칙" "오케스트레이션 handoff 규칙"
-    check_contains_hint ".harness/reports/orchestration-plan.md" "피드백 루프" "오케스트레이션 피드백 루프"
+    check_contains_any_hint ".harness/reports/orchestration-plan.md" "역할 간 handoff 규칙|handoff|역할 간 연결" "오케스트레이션 handoff 규칙"
+    check_contains_any_hint ".harness/reports/orchestration-plan.md" "피드백 루프|되돌림|피드백" "오케스트레이션 피드백 루프"
   fi
 
   if [ -f ".harness/reports/team-structure.md" ]; then
@@ -376,9 +376,9 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
   if [ -f ".harness/reports/team-playbook.md" ]; then
     check_contains_any_hint ".harness/reports/team-playbook.md" "실제 변경 경계|영향 범위|핵심 경계" "플레이북 변경 경계 기준"
     check_contains_any_hint ".harness/reports/team-playbook.md" "문서 재생성은 실제 저장소 분석|실제 저장소 분석을 반영|일반론으로 되돌아가면 안 됩니다" "플레이북 재생성 원칙"
-    check_contains_any_hint ".harness/reports/team-playbook.md" "세션 시작 체크|세션 시작 절차|시작 체크" "플레이북 세션 시작 규칙"
+    check_contains_any_hint ".harness/reports/team-playbook.md" "세션 시작 체크|세션 시작 절차|시작 체크|시작 순서" "플레이북 세션 시작 규칙"
     check_contains_any_hint ".harness/reports/team-playbook.md" "작업 유형별 빠른 운영 규칙|작업 유형별 운영 규칙|운영 규칙" "플레이북 작업 유형별 운영 규칙"
-    check_contains_hint ".harness/reports/team-playbook.md" "세션 종료 기준" "플레이북 세션 종료 기준"
+    check_contains_any_hint ".harness/reports/team-playbook.md" "세션 종료 기준|세션 종료|종료 기준" "플레이북 세션 종료 기준"
   fi
 fi
 

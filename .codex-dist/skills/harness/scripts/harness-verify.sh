@@ -262,6 +262,8 @@ fi
 if [ -f ".codex/skills/run-harness/SKILL.md" ]; then
   check_contains_hint ".codex/skills/run-harness/SKILL.md" "기동" "기동 엔트리포인트 설명"
   check_contains_hint ".codex/skills/run-harness/SKILL.md" "현재 상태" "현재 상태 기반 판단"
+  check_contains_hint ".codex/skills/run-harness/SKILL.md" "분류" "요청 유형 분류"
+  check_contains_hint ".codex/skills/run-harness/SKILL.md" "영향 범위" "영향 범위 판단"
   check_contains_hint ".codex/skills/run-harness/SKILL.md" "질문" "사용자 질문 유도"
 fi
 
@@ -350,7 +352,8 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
 
   if [ -f ".harness/reports/orchestration-plan.md" ]; then
     check_contains_hint ".harness/reports/orchestration-plan.md" "시작 분기" "오케스트레이션 시작 분기"
-    check_contains_hint ".harness/reports/orchestration-plan.md" "권장 흐름" "오케스트레이션 권장 흐름"
+    check_contains_hint ".harness/reports/orchestration-plan.md" "표준 전체 시퀀스" "오케스트레이션 표준 전체 시퀀스"
+    check_contains_hint ".harness/reports/orchestration-plan.md" "순서 조정 규칙" "오케스트레이션 순서 조정 규칙"
   fi
 
   if [ -f ".harness/reports/team-structure.md" ]; then

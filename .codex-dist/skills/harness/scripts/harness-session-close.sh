@@ -11,6 +11,7 @@ LATEST_SUMMARY_FILE="$LOG_DIR/latest-session-summary.md"
 
 HARNESS_LOG_SCRIPT="$SCRIPT_DIR/harness-log.sh"
 ROLE_STATS_SCRIPT="$SCRIPT_DIR/harness-role-stats.sh"
+TEMPLATE_CANDIDATES_SCRIPT="$SCRIPT_DIR/harness-template-candidates.sh"
 
 SESSION_ID=""
 SUMMARY_NOTE="세션 종료 및 자동 집계 완료"
@@ -265,6 +266,8 @@ OUTPUT_LIST="$(join_keys OUTPUT_COUNTS)"
 cp "$SUMMARY_FILE" "$LATEST_SUMMARY_FILE"
 
 bash "$ROLE_STATS_SCRIPT"
+bash "$TEMPLATE_CANDIDATES_SCRIPT"
 
 log "session summary updated: $SUMMARY_FILE"
 log "latest summary updated: $LATEST_SUMMARY_FILE"
+log "template candidates updated"

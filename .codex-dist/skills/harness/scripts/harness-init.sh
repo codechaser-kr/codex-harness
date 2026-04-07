@@ -50,6 +50,164 @@ ensure_gitignore_entry() {
   log "gitignore 추가: $entry"
 }
 
+detect_project_type() {
+  if [ -f "package.json" ]; then
+    echo "node"
+    return
+  fi
+
+  if [ -f "Cargo.toml" ]; then
+    echo "rust"
+    return
+  fi
+
+  if [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
+    echo "python"
+    return
+  fi
+
+  if [ -f "go.mod" ]; then
+    echo "go"
+    return
+  fi
+
+  echo "unknown"
+}
+
+detect_stack_hint() {
+  local hints=()
+
+  [ -f "package.json" ] && hints+=("Node.js")
+  [ -f "Cargo.toml" ] && hints+=("Rust")
+  [ -f "pyproject.toml" ] && hints+=("Python")
+  [ -f "requirements.txt" ] && hints+=("Python")
+  [ -f "go.mod" ] && hints+=("Go")
+  [ -f "tsconfig.json" ] && hints+=("TypeScript")
+  [ -f "vite.config.ts" ] && hints+=("Vite")
+  [ -f "next.config.js" ] && hints+=("Next.js")
+  [ -f "next.config.mjs" ] && hints+=("Next.js")
+
+  if [ "${#hints[@]}" -eq 0 ]; then
+    echo "추정 불가"
+    return
+  fi
+
+  local IFS=", "
+  echo "${hints[*]}"
+}
+
+detect_project_signal_level() {
+  if [ -f "package.json" ] || [ -f "Cargo.toml" ] || [ -f "pyproject.toml" ] || [ -f "requirements.txt" ] || [ -f "go.mod" ]; then
+    echo "stack"
+    return
+  fi
+
+  local first_signal_path
+  first_signal_path="$(
+    find . -mindepth 1 -maxdepth 2 \
+      ! -path './.git' ! -path './.git/*' \
+      ! -path './.codex' ! -path './.codex/*' \
+      ! -path './.harness' ! -path './.harness/*' \
+      ! -name '.gitignore' \
+      ! -name '.DS_Store' \
+      -print -quit
+  )"
+
+  if [ -n "$first_signal_path" ]; then
+    echo "low"
+    return
+  fi
+
+  echo "empty"
+}
+
+detect_structure_hint() {
+  local hints=()
+  local candidate
+
+  for candidate in src app lib cmd internal pkg packages services server client web api backend frontend docs tests test; do
+    if [ -d "$candidate" ]; then
+      hints+=("$candidate/")
+    fi
+  done
+
+  if [ -f "README.md" ]; then
+    hints+=("README.md")
+  fi
+
+  if [ "${#hints[@]}" -eq 0 ]; then
+    echo "뚜렷한 핵심 디렉토리 없음"
+    return
+  fi
+
+  local limited=("${hints[@]:0:5}")
+  local IFS=", "
+  echo "${limited[*]}"
+}
+
+build_core_flow_hint() {
+  case "$1" in
+    empty)
+      echo "미정"
+      ;;
+    low)
+      echo "저장소 단서가 제한적이므로 README, 핵심 디렉토리, 사용자 확인 질문을 함께 보며 첫 성공 흐름을 정리해야 합니다."
+      ;;
+    *)
+      case "$2" in
+        node)
+          echo "package.json과 $3 기준으로 애플리케이션 진입점, 주요 모듈, 실행 또는 빌드 흐름을 우선 정리해야 합니다."
+          ;;
+        rust)
+          echo "Cargo.toml과 $3 기준으로 크레이트 진입점, 명령 실행 흐름, 주요 모듈 연결을 우선 정리해야 합니다."
+          ;;
+        python)
+          echo "Python 설정 파일과 $3 기준으로 실행 진입점, 패키지 구조, 핵심 스크립트 흐름을 우선 정리해야 합니다."
+          ;;
+        go)
+          echo "go.mod와 $3 기준으로 main 패키지, 내부 패키지 연결, 실행 흐름을 우선 정리해야 합니다."
+          ;;
+        *)
+          echo "$3 기준으로 저장소의 핵심 사용자 흐름과 주요 변경 영향 지점을 우선 정리해야 합니다."
+          ;;
+      esac
+      ;;
+  esac
+}
+
+build_initial_observation() {
+  case "$1" in
+    empty)
+      echo "- 저장소를 분석한 뒤 이 내용을 구체화하세요."
+      ;;
+    low)
+      echo "- 현재 저장소 단서가 제한적이므로 구조 단서와 사용자 응답을 함께 모아 초기 분석을 보강하세요."
+      ;;
+    *)
+      echo "- 자동 재분석 결과: $2 를 중심으로 첫 분석 초안을 만들었습니다."
+      ;;
+  esac
+}
+
+build_next_step_line() {
+  case "$1" in
+    empty|low)
+      echo "- 답변이 모이면 domain-analyst가 저장소 요약과 핵심 흐름을 구체화합니다."
+      ;;
+    *)
+      echo "- domain-analyst가 자동 관찰 결과를 바탕으로 실제 코드 경로와 사용자 흐름 기준으로 분석을 보정합니다."
+      ;;
+  esac
+}
+
+PROJECT_TYPE="$(detect_project_type)"
+STACK_HINT="$(detect_stack_hint)"
+PROJECT_SIGNAL_LEVEL="$(detect_project_signal_level)"
+STRUCTURE_HINT="$(detect_structure_hint)"
+CORE_FLOW_HINT="$(build_core_flow_hint "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT")"
+INITIAL_OBSERVATION_LINE="$(build_initial_observation "$PROJECT_SIGNAL_LEVEL" "$STRUCTURE_HINT")"
+NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$PROJECT_SIGNAL_LEVEL")"
+
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 
 create_dir ".codex"
@@ -447,13 +605,13 @@ create_file_if_missing ".harness/reports/domain-analysis.md" \
 
 ## 저장소 요약
 
-- 프로젝트 유형: 미정
-- 주요 기술 스택: 미정
-- 핵심 흐름: 미정
+- 프로젝트 유형: $PROJECT_TYPE
+- 주요 기술 스택: $STACK_HINT
+- 핵심 흐름: $CORE_FLOW_HINT
 
 ## 초기 관찰 내용
 
-- 저장소를 분석한 뒤 이 내용을 구체화하세요.
+$INITIAL_OBSERVATION_LINE
 
 ## 사용자 확인 질문
 
@@ -464,7 +622,7 @@ create_file_if_missing ".harness/reports/domain-analysis.md" \
 ## 다음 단계
 
 - 저장소 단서가 약하면 run-harness가 위 질문부터 사용자에게 먼저 확인합니다.
-- 답변이 모이면 domain-analyst가 저장소 요약과 핵심 흐름을 구체화합니다.
+$NEXT_STEP_DETAIL_LINE
 "
 
 create_file_if_missing ".harness/reports/harness-architecture.md" \

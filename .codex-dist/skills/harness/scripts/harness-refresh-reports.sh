@@ -65,13 +65,109 @@ detect_stack_hint() {
   echo "${hints[*]}"
 }
 
+detect_project_signal_level() {
+  if [ -f "package.json" ] || [ -f "Cargo.toml" ] || [ -f "pyproject.toml" ] || [ -f "requirements.txt" ] || [ -f "go.mod" ]; then
+    echo "stack"
+    return
+  fi
+
+  local first_signal_path
+  first_signal_path="$(
+    find . -mindepth 1 -maxdepth 2 \
+      ! -path './.git' ! -path './.git/*' \
+      ! -path './.codex' ! -path './.codex/*' \
+      ! -path './.harness' ! -path './.harness/*' \
+      ! -name '.gitignore' \
+      ! -name '.DS_Store' \
+      -print -quit
+  )"
+
+  if [ -n "$first_signal_path" ]; then
+    echo "low"
+    return
+  fi
+
+  echo "empty"
+}
+
+detect_structure_hint() {
+  local hints=()
+  local candidate
+
+  for candidate in src app lib cmd internal pkg packages services server client web api backend frontend docs tests test; do
+    if [ -d "$candidate" ]; then
+      hints+=("$candidate/")
+    fi
+  done
+
+  if [ -f "README.md" ]; then
+    hints+=("README.md")
+  fi
+
+  if [ "${#hints[@]}" -eq 0 ]; then
+    echo "뚜렷한 핵심 디렉토리 없음"
+    return
+  fi
+
+  local limited=("${hints[@]:0:5}")
+  local IFS=", "
+  echo "${limited[*]}"
+}
+
+build_core_flow_hint() {
+  case "$1" in
+    empty)
+      echo "미정"
+      ;;
+    low)
+      echo "저장소 단서가 제한적이므로 README, 핵심 디렉토리, 사용자 확인 질문을 함께 보며 첫 성공 흐름을 정리해야 합니다."
+      ;;
+    *)
+      case "$2" in
+        node)
+          echo "package.json과 $3 기준으로 애플리케이션 진입점, 주요 모듈, 실행 또는 빌드 흐름을 우선 정리해야 합니다."
+          ;;
+        rust)
+          echo "Cargo.toml과 $3 기준으로 크레이트 진입점, 명령 실행 흐름, 주요 모듈 연결을 우선 정리해야 합니다."
+          ;;
+        python)
+          echo "Python 설정 파일과 $3 기준으로 실행 진입점, 패키지 구조, 핵심 스크립트 흐름을 우선 정리해야 합니다."
+          ;;
+        go)
+          echo "go.mod와 $3 기준으로 main 패키지, 내부 패키지 연결, 실행 흐름을 우선 정리해야 합니다."
+          ;;
+        *)
+          echo "$3 기준으로 저장소의 핵심 사용자 흐름과 주요 변경 영향 지점을 우선 정리해야 합니다."
+          ;;
+      esac
+      ;;
+  esac
+}
+
+build_next_step_line() {
+  case "$1" in
+    empty|low)
+      echo "- domain-analyst가 실제 저장소 구조를 읽고 내용을 구체화합니다."
+      ;;
+    *)
+      echo "- domain-analyst가 자동 관찰 결과를 바탕으로 실제 코드 경로와 사용자 흐름 기준으로 분석을 보정합니다."
+      ;;
+  esac
+}
+
 PROJECT_TYPE="$(detect_project_type)"
 STACK_HINT="$(detect_stack_hint)"
+PROJECT_SIGNAL_LEVEL="$(detect_project_signal_level)"
+STRUCTURE_HINT="$(detect_structure_hint)"
+CORE_FLOW_HINT="$(build_core_flow_hint "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT")"
+NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$PROJECT_SIGNAL_LEVEL")"
 DISCOVERY_GUIDANCE="저장소 단서와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
 
 if [ "$PROJECT_TYPE" = "unknown" ] && [ "$STACK_HINT" = "추정 불가" ]; then
   DISCOVERY_GUIDANCE="현재 저장소 단서만으로는 방향 판단이 어렵습니다. run-harness는 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인해야 합니다."
   log "저장소 단서 부족: 사용자 확인 질문 우선"
+elif [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
+  DISCOVERY_GUIDANCE="현재 저장소는 $STRUCTURE_HINT 단서를 바탕으로 자동 재분석을 시작할 수 있습니다."
 fi
 
 log "하네스 리포트 새로고침 시작"
@@ -84,7 +180,7 @@ cat > "$DOMAIN_REPORT" <<EOF_DOMAIN
 
 - 프로젝트 유형: $PROJECT_TYPE
 - 주요 기술 스택 추정: $STACK_HINT
-- 핵심 흐름: 미정
+- 핵심 흐름: $CORE_FLOW_HINT
 
 ## 분석 관점
 
@@ -117,7 +213,7 @@ $DISCOVERY_GUIDANCE
 ## 다음 단계
 
 - 저장소 단서가 약하면 run-harness가 위 질문부터 사용자에게 짧게 확인합니다.
-- domain-analyst가 실제 저장소 구조를 읽고 내용을 구체화합니다.
+$NEXT_STEP_DETAIL_LINE
 - 필요하면 디렉토리별 역할과 핵심 파일을 추가로 정리합니다.
 EOF_DOMAIN
 

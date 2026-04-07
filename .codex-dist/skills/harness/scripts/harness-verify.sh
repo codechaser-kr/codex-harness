@@ -344,10 +344,10 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
   if [ -f ".harness/reports/harness-architecture.md" ]; then
     check_contains_hint ".harness/reports/harness-architecture.md" "저장소 특성 요약" "아키텍처 저장소 특성 요약"
     check_contains_hint ".harness/reports/harness-architecture.md" "역할별 초점" "아키텍처 역할별 초점"
+    check_contains_any_hint ".harness/reports/harness-architecture.md" "보조 구조|reports|logs" "아키텍처 보조 구조"
     check_contains_hint ".harness/reports/harness-architecture.md" "7역할 유지 기준" "아키텍처 역할 유지 기준"
-    check_contains_any_hint ".harness/reports/harness-architecture.md" "입력/출력 기준|입출력 기준|입력:|출력:" "아키텍처 역할 입출력 기준"
     check_contains_hint ".harness/reports/harness-architecture.md" "축소/확장 판단" "아키텍처 축소 확장 기준"
-    check_contains_hint ".harness/reports/harness-architecture.md" "구현 우선순위" "아키텍처 구현 우선순위"
+    check_contains_hint ".harness/reports/harness-architecture.md" "설계 원칙" "아키텍처 설계 원칙"
   fi
 
   if [ -f ".harness/reports/qa-strategy.md" ]; then
@@ -363,13 +363,13 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
     check_contains_hint ".harness/reports/orchestration-plan.md" "표준 전체 시퀀스" "오케스트레이션 표준 전체 시퀀스"
     check_contains_any_hint ".harness/reports/orchestration-plan.md" "작업 축별 권장 루프|작업 유형별 루프|권장 루프|시작 루프" "오케스트레이션 작업 유형별 루프"
     check_contains_hint ".harness/reports/orchestration-plan.md" "순서 조정 규칙" "오케스트레이션 순서 조정 규칙"
-    check_contains_any_hint ".harness/reports/orchestration-plan.md" "현재 상태 판단 규칙|현재 상태 판단|재진입|다시 시작" "오케스트레이션 현재 상태 판단"
+    check_contains_any_hint ".harness/reports/orchestration-plan.md" "현재 상태 판단 규칙|현재 상태 판단|재진입 기준|재진입|다시 시작" "오케스트레이션 현재 상태 판단"
     check_contains_hint ".harness/reports/orchestration-plan.md" "역할 간 handoff 규칙" "오케스트레이션 handoff 규칙"
     check_contains_hint ".harness/reports/orchestration-plan.md" "피드백 루프" "오케스트레이션 피드백 루프"
   fi
 
   if [ -f ".harness/reports/team-structure.md" ]; then
-    check_contains_hint ".harness/reports/team-structure.md" "역할 팀 해석" "팀 구조 해석"
+    check_contains_any_hint ".harness/reports/team-structure.md" "역할 팀 해석|역할별 책임 요약" "팀 구조 해석"
     check_contains_any_hint ".harness/reports/team-structure.md" "저장소 맞춤 근거|저장소 근거|맞춤 근거|왜 .* 중요한 이유" "팀 구조 저장소 맞춤 근거"
   fi
 

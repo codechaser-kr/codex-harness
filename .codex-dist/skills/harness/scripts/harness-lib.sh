@@ -41,6 +41,23 @@ join_by_plus() {
   printf '%s\n' "$result"
 }
 
+has_stack_manifest() {
+  [ -f "package.json" ] \
+    || [ -f "Cargo.toml" ] \
+    || [ -f "pyproject.toml" ] \
+    || [ -f "requirements.txt" ] \
+    || [ -f "go.mod" ] \
+    || [ -f "pom.xml" ] \
+    || [ -f "build.gradle" ] \
+    || [ -f "build.gradle.kts" ] \
+    || [ -f "settings.gradle" ] \
+    || [ -f "settings.gradle.kts" ] \
+    || [ -f "Makefile" ] \
+    || [ -f "CMakeLists.txt" ] \
+    || [ -f "composer.json" ] \
+    || [ -f "Gemfile" ]
+}
+
 detect_project_type() {
   if [ -f "package.json" ]; then
     echo "node"
@@ -62,6 +79,26 @@ detect_project_type() {
     return
   fi
 
+  if [ -f "pom.xml" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ] || [ -f "settings.gradle" ] || [ -f "settings.gradle.kts" ]; then
+    echo "java"
+    return
+  fi
+
+  if [ -f "Makefile" ] || [ -f "CMakeLists.txt" ]; then
+    echo "cpp"
+    return
+  fi
+
+  if [ -f "composer.json" ]; then
+    echo "php"
+    return
+  fi
+
+  if [ -f "Gemfile" ]; then
+    echo "ruby"
+    return
+  fi
+
   echo "unknown"
 }
 
@@ -73,6 +110,12 @@ detect_stack_hint() {
   [ -f "pyproject.toml" ] && hints+=("Python")
   [ -f "requirements.txt" ] && hints+=("Python")
   [ -f "go.mod" ] && hints+=("Go")
+  ([ -f "pom.xml" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ] || [ -f "settings.gradle" ] || [ -f "settings.gradle.kts" ]) && hints+=("Java")
+  ([ -f "build.gradle" ] || [ -f "build.gradle.kts" ] || [ -f "settings.gradle" ] || [ -f "settings.gradle.kts" ]) && hints+=("Gradle")
+  [ -f "Makefile" ] && hints+=("Make")
+  [ -f "CMakeLists.txt" ] && hints+=("CMake")
+  [ -f "composer.json" ] && hints+=("PHP")
+  [ -f "Gemfile" ] && hints+=("Ruby")
   [ -f "tsconfig.json" ] && hints+=("TypeScript")
   [ -f "vite.config.ts" ] && hints+=("Vite")
   [ -f "next.config.js" ] && hints+=("Next.js")
@@ -88,7 +131,7 @@ detect_stack_hint() {
 }
 
 detect_project_signal_level() {
-  if [ -f "package.json" ] || [ -f "Cargo.toml" ] || [ -f "pyproject.toml" ] || [ -f "requirements.txt" ] || [ -f "go.mod" ]; then
+  if has_stack_manifest; then
     echo "stack"
     return
   fi
@@ -236,6 +279,13 @@ detect_config_hints() {
   [ -f "vite.config.js" ] && hints+=("vite.config.js")
   [ -f "next.config.js" ] && hints+=("next.config.js")
   [ -f "next.config.mjs" ] && hints+=("next.config.mjs")
+  [ -f "pom.xml" ] && hints+=("pom.xml")
+  [ -f "build.gradle" ] && hints+=("build.gradle")
+  [ -f "build.gradle.kts" ] && hints+=("build.gradle.kts")
+  [ -f "Makefile" ] && hints+=("Makefile")
+  [ -f "CMakeLists.txt" ] && hints+=("CMakeLists.txt")
+  [ -f "composer.json" ] && hints+=("composer.json")
+  [ -f "Gemfile" ] && hints+=("Gemfile")
   [ -f "electron-builder.yml" ] && hints+=("electron-builder.yml")
 
   if [ "${#hints[@]}" -eq 0 ]; then
@@ -291,6 +341,22 @@ build_project_type_label() {
       ;;
     go)
       echo "Go 프로젝트"
+      ;;
+    java)
+      if [ -d "modules" ] || [ -d "services" ]; then
+        echo "Java 기반 멀티모듈 프로젝트"
+      else
+        echo "Java 기반 애플리케이션"
+      fi
+      ;;
+    cpp)
+      echo "C/C++ 프로젝트"
+      ;;
+    php)
+      echo "PHP 프로젝트"
+      ;;
+    ruby)
+      echo "Ruby 프로젝트"
       ;;
     *)
       echo "구조 분석이 필요한 프로젝트"
@@ -348,6 +414,18 @@ build_core_flow_hint() {
           ;;
         go)
           echo "go.mod와 $3 기준으로 main 패키지, 내부 패키지 연결, 실행 흐름을 우선 정리해야 합니다."
+          ;;
+        java)
+          echo "빌드 설정 파일과 $3 기준으로 애플리케이션 진입점, 모듈 경계, 실행 또는 테스트 흐름을 우선 정리해야 합니다."
+          ;;
+        cpp)
+          echo "빌드 스크립트와 $3 기준으로 바이너리 진입점, 라이브러리 경계, 컴파일 흐름을 우선 정리해야 합니다."
+          ;;
+        php)
+          echo "composer.json과 $3 기준으로 엔트리포인트, 프레임워크 구조, 의존성 경계를 우선 정리해야 합니다."
+          ;;
+        ruby)
+          echo "Gemfile과 $3 기준으로 애플리케이션 구조, 실행 태스크, 핵심 도메인 경계를 우선 정리해야 합니다."
           ;;
         *)
           echo "$3 기준으로 저장소의 핵심 사용자 흐름과 주요 변경 영향 지점을 우선 정리해야 합니다."
@@ -460,6 +538,22 @@ build_execution_flow_block() {
       ;;
     go)
       printf '%s\n' "- \`go.mod\`와 \`cmd/\`, \`internal/\`, \`pkg/\` 구조를 기준으로 바이너리 진입점과 내부 패키지 경계를 먼저 읽어야 합니다."
+      ;;
+    java)
+      printf '%s\n' "- \`pom.xml\`, \`build.gradle\`, \`build.gradle.kts\` 같은 빌드 설정 파일을 기준으로 모듈 경계와 실행 태스크를 먼저 확인해야 합니다."
+      printf '%s\n' "- \`src/main\`, \`src/test\`, 멀티모듈 구조 여부가 실제 변경 영향 범위를 크게 좌우합니다."
+      ;;
+    cpp)
+      printf '%s\n' "- \`Makefile\` 또는 \`CMakeLists.txt\` 기준으로 바이너리 타깃, 라이브러리 구성, 컴파일 흐름을 먼저 확인해야 합니다."
+      printf '%s\n' "- 헤더와 구현 파일 경계, 빌드 옵션, 플랫폼별 조건부 빌드가 핵심 위험 지점이 됩니다."
+      ;;
+    php)
+      printf '%s\n' "- \`composer.json\` 기준으로 의존성, 오토로딩, 프레임워크 진입점을 먼저 확인해야 합니다."
+      printf '%s\n' "- 웹 요청 진입점과 CLI 태스크가 함께 있으면 두 흐름을 분리해 기록해야 합니다."
+      ;;
+    ruby)
+      printf '%s\n' "- \`Gemfile\` 기준으로 런타임 의존성과 실행 태스크를 먼저 확인해야 합니다."
+      printf '%s\n' "- Rails, Rack, 순수 Ruby 스크립트 중 어떤 실행 모델인지 구분해야 분석 품질이 올라갑니다."
       ;;
     *)
       printf '%s\n' "- \`$structure_hint\` 단서를 따라 핵심 사용자 흐름과 주요 변경 경계를 먼저 정리해야 합니다."

@@ -19,6 +19,11 @@ fail() {
 
 ensure_harness_log_scaffold
 
+if ! optional_harness_assets_enabled; then
+  log "optional assets disabled: skip role frequency aggregation"
+  exit 0
+fi
+
 ROLE_ROWS="$(
   awk -F '\t' '
     NR == 1 { next }

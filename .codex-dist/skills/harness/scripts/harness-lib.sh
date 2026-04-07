@@ -9,6 +9,1361 @@ trim_text() {
   printf '%s' "$value" | sed 's/[[:space:]]\+/ /g; s/^ //; s/ $//'
 }
 
+join_by_comma() {
+  local delimiter=", "
+  local result=""
+  local item
+
+  for item in "$@"; do
+    if [ -z "$result" ]; then
+      result="$item"
+    else
+      result="$result$delimiter$item"
+    fi
+  done
+
+  printf '%s\n' "$result"
+}
+
+has_stack_manifest() {
+  [ -f "package.json" ] \
+    || [ -f "Cargo.toml" ] \
+    || [ -f "pyproject.toml" ] \
+    || [ -f "requirements.txt" ] \
+    || [ -f "go.mod" ] \
+    || [ -f "pom.xml" ] \
+    || [ -f "build.gradle" ] \
+    || [ -f "build.gradle.kts" ] \
+    || [ -f "settings.gradle" ] \
+    || [ -f "settings.gradle.kts" ] \
+    || [ -f "Makefile" ] \
+    || [ -f "CMakeLists.txt" ] \
+    || [ -f "composer.json" ] \
+    || [ -f "Gemfile" ]
+}
+
+detect_project_type() {
+  if [ -f "package.json" ]; then
+    echo "node"
+    return
+  fi
+
+  if [ -f "Cargo.toml" ]; then
+    echo "rust"
+    return
+  fi
+
+  if [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
+    echo "python"
+    return
+  fi
+
+  if [ -f "go.mod" ]; then
+    echo "go"
+    return
+  fi
+
+  if [ -f "pom.xml" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ] || [ -f "settings.gradle" ] || [ -f "settings.gradle.kts" ]; then
+    echo "java"
+    return
+  fi
+
+  if [ -f "Makefile" ] || [ -f "CMakeLists.txt" ]; then
+    echo "cpp"
+    return
+  fi
+
+  if [ -f "composer.json" ]; then
+    echo "php"
+    return
+  fi
+
+  if [ -f "Gemfile" ]; then
+    echo "ruby"
+    return
+  fi
+
+  echo "unknown"
+}
+
+detect_stack_hint() {
+  local hints=()
+
+  [ -f "package.json" ] && hints+=("Node.js")
+  [ -f "Cargo.toml" ] && hints+=("Rust")
+  [ -f "pyproject.toml" ] && hints+=("Python")
+  [ -f "requirements.txt" ] && hints+=("Python")
+  [ -f "go.mod" ] && hints+=("Go")
+  ([ -f "pom.xml" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ] || [ -f "settings.gradle" ] || [ -f "settings.gradle.kts" ]) && hints+=("Java")
+  ([ -f "build.gradle" ] || [ -f "build.gradle.kts" ] || [ -f "settings.gradle" ] || [ -f "settings.gradle.kts" ]) && hints+=("Gradle")
+  [ -f "Makefile" ] && hints+=("Make")
+  [ -f "CMakeLists.txt" ] && hints+=("CMake")
+  [ -f "composer.json" ] && hints+=("PHP")
+  [ -f "Gemfile" ] && hints+=("Ruby")
+  [ -f "tsconfig.json" ] && hints+=("TypeScript")
+  [ -f "vite.config.ts" ] && hints+=("Vite")
+  [ -f "next.config.js" ] && hints+=("Next.js")
+  [ -f "next.config.mjs" ] && hints+=("Next.js")
+
+  if [ "${#hints[@]}" -eq 0 ]; then
+    echo "추정 불가"
+    return
+  fi
+
+  local IFS=", "
+  echo "${hints[*]}"
+}
+
+detect_project_signal_level() {
+  if has_stack_manifest; then
+    echo "stack"
+    return
+  fi
+
+  local first_signal_path
+  first_signal_path="$(
+    find . -mindepth 1 -maxdepth 2 \
+      ! -path './.git' ! -path './.git/*' \
+      ! -path './.codex' ! -path './.codex/*' \
+      ! -path './.harness' ! -path './.harness/*' \
+      ! -name '.gitignore' \
+      ! -name '.DS_Store' \
+      -print -quit
+  )"
+
+  if [ -n "$first_signal_path" ]; then
+    echo "low"
+    return
+  fi
+
+  echo "empty"
+}
+
+optional_harness_assets_enabled() {
+  [ "$(detect_project_signal_level)" = "stack" ] \
+    || [ -d ".harness/templates" ] \
+    || [ -d ".harness/scenarios" ] \
+    || [ -f ".harness/logs/role-frequency.md" ] \
+    || [ -f ".harness/reports/template-candidates.md" ]
+}
+
+detect_structure_hint() {
+  local hints=()
+  local candidate
+
+  for candidate in src app lib cmd internal pkg packages services server client web api backend frontend docs tests test; do
+    if [ -d "$candidate" ]; then
+      hints+=("$candidate/")
+    fi
+  done
+
+  if [ -f "README.md" ]; then
+    hints+=("README.md")
+  fi
+
+  if [ "${#hints[@]}" -eq 0 ]; then
+    echo "뚜렷한 핵심 디렉토리 없음"
+    return
+  fi
+
+  local limited=("${hints[@]:0:5}")
+  local IFS=", "
+  echo "${limited[*]}"
+}
+
+detect_package_manager() {
+  if [ -f ".yarnrc.yml" ] || [ -f ".pnp.cjs" ] || [ -f ".pnp.loader.mjs" ]; then
+    if [ -f ".yarnrc.yml" ] && grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*node-modules([[:space:]]|$)' ".yarnrc.yml"; then
+      echo "Yarn modern (node-modules linker)"
+      return
+    fi
+
+    if [ -f ".yarnrc.yml" ] && grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*pnp([[:space:]]|$)' ".yarnrc.yml"; then
+      echo "Yarn modern (PnP linker)"
+      return
+    fi
+
+    if [ -f ".pnp.cjs" ] || [ -f ".pnp.loader.mjs" ]; then
+      echo "Yarn modern (PnP linker)"
+      return
+    fi
+
+    echo "Yarn modern"
+    return
+  fi
+
+  if [ -f "yarn.lock" ]; then
+    echo "Yarn"
+    return
+  fi
+
+  if [ -f "pnpm-lock.yaml" ]; then
+    echo "pnpm"
+    return
+  fi
+
+  if [ -f "package-lock.json" ]; then
+    echo "npm"
+    return
+  fi
+
+  if [ -f "bun.lockb" ] || [ -f "bun.lock" ]; then
+    echo "bun"
+    return
+  fi
+
+  echo "추정 불가"
+}
+
+detect_workspace_packages() {
+  local packages=()
+  local root
+  local dir
+
+  for root in packages apps libs services; do
+    [ -d "$root" ] || continue
+
+    for dir in "$root"/*; do
+      [ -d "$dir" ] || continue
+      packages+=("$dir")
+    done
+  done
+
+  if [ "${#packages[@]}" -eq 0 ]; then
+    echo "추정 불가"
+    return
+  fi
+
+  local limited=("${packages[@]:0:5}")
+  join_by_comma "${limited[@]}"
+}
+
+list_workspace_packages() {
+  local packages=()
+  local root
+  local dir
+
+  for root in packages apps libs services; do
+    [ -d "$root" ] || continue
+
+    for dir in "$root"/*; do
+      [ -d "$dir" ] || continue
+      packages+=("$dir")
+    done
+  done
+
+  [ "${#packages[@]}" -eq 0 ] && return
+  printf '%s\n' "${packages[@]:0:5}"
+}
+
+list_source_anchor_paths() {
+  find . \
+    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './node_modules' -o -path './.yarn' -o -path './dist' -o -path './build' -o -path './coverage' \) -prune \
+    -o \
+    -type f \
+    \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' -o -name '*.rs' -o -name '*.py' -o -name '*.go' -o -name '*.java' -o -name '*.kt' -o -name '*.swift' -o -name '*.php' -o -name '*.rb' -o -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.hpp' \) \
+    -print | sed 's#^\./##' | head -n 5
+}
+
+detect_config_hints() {
+  local hints=()
+
+  [ -f "package.json" ] && hints+=("package.json")
+  [ -f "tsconfig.json" ] && hints+=("tsconfig.json")
+  [ -f ".yarnrc.yml" ] && hints+=(".yarnrc.yml")
+  [ -f "vite.config.ts" ] && hints+=("vite.config.ts")
+  [ -f "vite.config.js" ] && hints+=("vite.config.js")
+  [ -f "next.config.js" ] && hints+=("next.config.js")
+  [ -f "next.config.mjs" ] && hints+=("next.config.mjs")
+  [ -f "pom.xml" ] && hints+=("pom.xml")
+  [ -f "build.gradle" ] && hints+=("build.gradle")
+  [ -f "build.gradle.kts" ] && hints+=("build.gradle.kts")
+  [ -f "Makefile" ] && hints+=("Makefile")
+  [ -f "CMakeLists.txt" ] && hints+=("CMakeLists.txt")
+  [ -f "composer.json" ] && hints+=("composer.json")
+  [ -f "Gemfile" ] && hints+=("Gemfile")
+  [ -f "electron-builder.yml" ] && hints+=("electron-builder.yml")
+
+  if [ "${#hints[@]}" -eq 0 ]; then
+    echo "추정 불가"
+    return
+  fi
+
+  local limited=("${hints[@]:0:5}")
+  join_by_comma "${limited[@]}"
+}
+
+build_project_type_label() {
+  local signal_level="$1"
+  local project_type="$2"
+
+  case "$signal_level" in
+    empty)
+      echo "미정"
+      return
+      ;;
+    low)
+      echo "단서가 제한적인 프로젝트"
+      return
+      ;;
+  esac
+
+  case "$project_type" in
+    node)
+      if [ -d "packages" ] || [ -d "apps" ]; then
+        echo "Node 기반 모노레포"
+      else
+        echo "Node 기반 애플리케이션"
+      fi
+      ;;
+    rust)
+      echo "Rust 프로젝트"
+      ;;
+    python)
+      echo "Python 프로젝트"
+      ;;
+    go)
+      echo "Go 프로젝트"
+      ;;
+    java)
+      if [ -d "modules" ] || [ -d "services" ]; then
+        echo "Java 기반 멀티모듈 프로젝트"
+      else
+        echo "Java 기반 애플리케이션"
+      fi
+      ;;
+    cpp)
+      echo "C/C++ 프로젝트"
+      ;;
+    php)
+      echo "PHP 프로젝트"
+      ;;
+    ruby)
+      echo "Ruby 프로젝트"
+      ;;
+    *)
+      echo "구조 분석이 필요한 프로젝트"
+      ;;
+  esac
+}
+
+build_key_axes_hint() {
+  local signal_level="$1"
+  local structure_hint="$2"
+  local axes=()
+
+  if [ "$signal_level" = "empty" ]; then
+    echo "미정"
+    return
+  fi
+
+  if [ "$signal_level" = "low" ]; then
+    echo "$structure_hint"
+    return
+  fi
+
+  ([ -d "packages" ] || [ -d "apps" ] || [ -d "libs" ] || [ -d "services" ]) && axes+=("워크스페이스 또는 모듈 경계")
+  ([ -d "common" ] || [ -d "shared" ] || [ -d "packages/common" ] || [ -d "packages/shared" ] || [ -d "libs/common" ] || [ -d "libs/shared" ]) && axes+=("공용 계층")
+  ([ -d "tests" ] || [ -d "test" ] || [ -d "__tests__" ]) && axes+=("검증 경로")
+  [ -f "package.json" ] || [ -f "Cargo.toml" ] || [ -f "pyproject.toml" ] || [ -f "go.mod" ] || [ -f "pom.xml" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ] && axes+=("실행 및 빌드 진입점")
+
+  if [ "${#axes[@]}" -eq 0 ]; then
+    echo "$structure_hint"
+    return
+  fi
+
+  join_by_comma "${axes[@]}"
+}
+
+build_core_flow_hint() {
+  case "$1" in
+    empty)
+      echo "미정"
+      ;;
+    low)
+      echo "저장소 단서가 제한적이므로 README, 핵심 디렉토리, 사용자 확인 질문을 함께 보며 첫 성공 흐름을 정리해야 합니다."
+      ;;
+    *)
+      case "$2" in
+        node)
+          echo "package.json과 $3 기준으로 애플리케이션 진입점, 주요 모듈, 실행 또는 빌드 흐름을 우선 정리해야 합니다."
+          ;;
+        rust)
+          echo "Cargo.toml과 $3 기준으로 크레이트 진입점, 명령 실행 흐름, 주요 모듈 연결을 우선 정리해야 합니다."
+          ;;
+        python)
+          echo "Python 설정 파일과 $3 기준으로 실행 진입점, 패키지 구조, 핵심 스크립트 흐름을 우선 정리해야 합니다."
+          ;;
+        go)
+          echo "go.mod와 $3 기준으로 main 패키지, 내부 패키지 연결, 실행 흐름을 우선 정리해야 합니다."
+          ;;
+        java)
+          echo "빌드 설정 파일과 $3 기준으로 애플리케이션 진입점, 모듈 경계, 실행 또는 테스트 흐름을 우선 정리해야 합니다."
+          ;;
+        cpp)
+          echo "빌드 스크립트와 $3 기준으로 바이너리 진입점, 라이브러리 경계, 컴파일 흐름을 우선 정리해야 합니다."
+          ;;
+        php)
+          echo "composer.json과 $3 기준으로 엔트리포인트, 프레임워크 구조, 의존성 경계를 우선 정리해야 합니다."
+          ;;
+        ruby)
+          echo "Gemfile과 $3 기준으로 애플리케이션 구조, 실행 태스크, 핵심 도메인 경계를 우선 정리해야 합니다."
+          ;;
+        *)
+          echo "$3 기준으로 저장소의 핵심 사용자 흐름과 주요 변경 영향 지점을 우선 정리해야 합니다."
+          ;;
+      esac
+      ;;
+  esac
+}
+
+build_initial_observation() {
+  local signal_level="$1"
+  local structure_hint="$2"
+  local workspace_hint="${3:-}"
+  local config_hint="${4:-}"
+
+  case "$signal_level" in
+    empty)
+      echo "- 저장소를 분석한 뒤 이 내용을 구체화하세요."
+      ;;
+    low)
+      echo "- 현재 저장소 단서가 제한적이므로 구조 단서와 사용자 응답을 함께 모아 초기 분석을 보강하세요."
+      ;;
+    *)
+      if [ "$workspace_hint" = "추정 불가" ]; then
+        echo "- $structure_hint, $config_hint 단서를 우선 확인했습니다."
+      else
+        echo "- $workspace_hint, $config_hint 단서를 우선 확인했습니다."
+      fi
+      ;;
+  esac
+}
+
+build_domain_report_detail_block() {
+  local signal_level="$1"
+  local project_type="$2"
+  local structure_hint="$3"
+  local package_manager_hint="$4"
+  local workspace_hint="$5"
+  local key_axes_hint="$6"
+  local config_hint="$7"
+  local core_flow_hint="$8"
+  local discovery_guidance="$9"
+  local initial_observation_line="${10}"
+  local next_step_detail_line="${11}"
+  local workspace_path
+  local workspace_name
+  local found_exception_note=0
+  local notes=()
+  local source_anchor_count=0
+
+  case "$signal_level" in
+    empty|low)
+      cat <<EOF
+## 분석 관점
+
+이 문서는 현재 저장소를 하네스 관점에서 이해하기 위한 출발점입니다.
+
+우선 다음을 정리해야 합니다.
+
+- 이 저장소가 해결하려는 문제는 무엇인가
+- 주요 사용자 또는 개발자 흐름은 무엇인가
+- 어떤 품질 문제가 반복적으로 발생할 수 있는가
+- 하네스가 우선적으로 다뤄야 할 핵심 축은 무엇인가
+
+## 초기 질문
+
+- 이 프로젝트는 애플리케이션인가, 라이브러리인가, 도구인가
+- 핵심 기능은 어디에 모여 있는가
+- 변경 시 영향이 큰 영역은 어디인가
+- 검토를 자동화하거나 구조화할 가치가 큰 흐름은 무엇인가
+
+## 사용자 확인 질문
+
+- 저장소 단서만으로 판단이 어렵다면, 이 프로젝트는 애플리케이션, 라이브러리, 도구 중 무엇인가
+- 가장 먼저 성공해야 할 사용자 또는 개발자 흐름은 무엇인가
+- 선호하는 언어, 프레임워크, 런타임 제약이 있는가
+
+## 질문 유도 메모
+
+$discovery_guidance
+
+## 초기 관찰 내용
+
+$initial_observation_line
+
+## 다음 단계
+
+- 저장소 단서가 약하면 run-harness가 위 질문부터 사용자에게 짧게 확인합니다.
+$next_step_detail_line
+- 필요하면 디렉토리별 역할과 핵심 파일을 추가로 정리합니다.
+EOF
+      ;;
+    *)
+      cat <<EOF
+## 요약
+EOF
+      printf '%s\n' "- \`$structure_hint\` 단서를 기준으로, 이 저장소가 해결하는 사용자 또는 운영 문제를 먼저 정리해야 합니다."
+      printf '%s\n' "- \`$core_flow_hint\`"
+      printf '%s\n' "- 하네스 운영 구조는 저장소의 대표 업무 흐름과 실패 비용을 보조하는 방식으로만 붙입니다."
+
+      cat <<EOF
+
+## 저장소 고유 근거
+EOF
+      while IFS= read -r workspace_path; do
+        [ -n "$workspace_path" ] || continue
+        printf '%s\n' "- \`$workspace_path\`: 현재 해석의 근거로 먼저 확인한 대표 소스 앵커입니다."
+        source_anchor_count=$((source_anchor_count + 1))
+      done < <(list_source_anchor_paths)
+
+      if [ "$source_anchor_count" -eq 0 ]; then
+        printf '%s\n' "- 아직 자동으로 포착한 대표 소스 앵커가 충분하지 않습니다. 실제 프로젝트에서는 최소 3개 이상의 파일/경로 근거를 직접 보강해야 합니다."
+      elif [ "$source_anchor_count" -lt 3 ]; then
+        printf '%s\n' "- 자동으로 포착한 소스 앵커가 3개 미만입니다. 실제 프로젝트에서는 대표 파일/경로 근거를 더 보강해야 합니다."
+      fi
+
+      cat <<EOF
+
+### 사실 기준 구조
+EOF
+      if [ "$workspace_hint" != "추정 불가" ]; then
+        while IFS= read -r workspace_path; do
+          [ -n "$workspace_path" ] || continue
+          workspace_name="$(basename "$workspace_path")"
+
+          case "$workspace_name" in
+            *common*|*shared*|*ui*|*design*|*core*)
+              printf '%s\n' "- \`$workspace_path\`: 공용 패키지 또는 공유 유틸리티 후보입니다."
+              ;;
+            *desktop*|*electron*)
+              printf '%s\n' "- \`$workspace_path\`: 별도 실행 환경 또는 배포 경계를 가진 패키지 후보입니다."
+              ;;
+            *web*|*front*|*client*|*site*)
+              printf '%s\n' "- \`$workspace_path\`: 사용자 진입점을 담는 애플리케이션 패키지 후보입니다."
+              ;;
+            *api*|*server*|*backend*|*service*)
+              printf '%s\n' "- \`$workspace_path\`: 서비스 또는 백엔드 책임을 가진 패키지 후보입니다."
+              ;;
+            *test*|*qa*)
+              printf '%s\n' "- \`$workspace_path\`: 테스트 또는 검증 보조 패키지 후보입니다."
+              ;;
+            *)
+              printf '%s\n' "- \`$workspace_path\`: 주요 워크스페이스 패키지 후보입니다."
+              ;;
+          esac
+        done < <(list_workspace_packages)
+      fi
+
+      [ -d "src" ] && printf '%s\n' "- \`src/\`: 애플리케이션 핵심 소스 디렉토리 후보입니다."
+      [ -d "app" ] && printf '%s\n' "- \`app/\`: 엔트리포인트 또는 라우팅 중심 디렉토리 후보입니다."
+      [ -d "docs" ] && printf '%s\n' "- \`docs/\`: 운영 또는 설계 문서 단서가 모이는 디렉토리입니다."
+      [ -d "tests" ] && printf '%s\n' "- \`tests/\`: 독립 테스트 시나리오 또는 검증 흐름 단서가 있습니다."
+      [ -d "test" ] && printf '%s\n' "- \`test/\`: 테스트 보조 코드 또는 시나리오 단서가 있습니다."
+      [ "$package_manager_hint" = "추정 불가" ] || printf '%s\n' "- 패키지 관리는 \`$package_manager_hint\` 단서가 확인됩니다."
+      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- 주요 설정 단서: \`$config_hint\`."
+      printf '%s\n' "- 현재 자동 분석 기준의 주요 구조 단서는 \`$structure_hint\` 입니다."
+
+      cat <<EOF
+
+### 예외 및 운영 메모
+EOF
+      while IFS= read -r workspace_path; do
+        [ -n "$workspace_path" ] || continue
+        notes=()
+
+        [ -f "$workspace_path/package-lock.json" ] && notes+=("package-lock.json")
+        [ -f "$workspace_path/pnpm-lock.yaml" ] && notes+=("pnpm-lock.yaml")
+        [ -f "$workspace_path/yarn.lock" ] && notes+=("yarn.lock")
+        [ -f "$workspace_path/bun.lockb" ] && notes+=("bun.lockb")
+        [ -f "$workspace_path/bun.lock" ] && notes+=("bun.lock")
+        [ -f "$workspace_path/.npmrc" ] && notes+=(".npmrc")
+        [ -f "$workspace_path/Cargo.toml" ] && notes+=("Cargo.toml")
+        [ -f "$workspace_path/pyproject.toml" ] && notes+=("pyproject.toml")
+        [ -f "$workspace_path/requirements.txt" ] && notes+=("requirements.txt")
+        [ -f "$workspace_path/go.mod" ] && notes+=("go.mod")
+        [ -f "$workspace_path/pom.xml" ] && notes+=("pom.xml")
+        [ -f "$workspace_path/build.gradle" ] && notes+=("build.gradle")
+        [ -f "$workspace_path/build.gradle.kts" ] && notes+=("build.gradle.kts")
+        [ -f "$workspace_path/Gemfile" ] && notes+=("Gemfile")
+        [ -f "$workspace_path/composer.json" ] && notes+=("composer.json")
+
+        if [ -f "$workspace_path/.yarnrc.yml" ]; then
+          if grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*node-modules([[:space:]]|$)' "$workspace_path/.yarnrc.yml"; then
+            notes+=(".yarnrc.yml(nodeLinker: node-modules)")
+          elif grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*pnp([[:space:]]|$)' "$workspace_path/.yarnrc.yml"; then
+            notes+=(".yarnrc.yml(nodeLinker: pnp)")
+          else
+            notes+=(".yarnrc.yml")
+          fi
+        fi
+
+        if find "$workspace_path" -maxdepth 2 -type d -name node_modules -print -quit | grep -q .; then
+          notes+=("node_modules 디렉토리")
+        fi
+
+        if find "$workspace_path" -maxdepth 2 -type d \( -name .venv -o -name vendor \) -print -quit | grep -q .; then
+          notes+=("로컬 의존성 디렉토리")
+        fi
+
+        if [ "${#notes[@]}" -gt 0 ]; then
+          printf '%s\n' "- \`$workspace_path\`: $(join_by_comma "${notes[@]}") 단서가 있어 루트 기본 흐름과 다른 설치/실행/검증 예외가 있는지 확인해야 합니다."
+          found_exception_note=1
+        fi
+      done < <(list_workspace_packages)
+
+      if [ "$found_exception_note" -eq 0 ]; then
+        printf '%s\n' "- 자동 탐지된 예외 단서는 제한적입니다. 루트 기본 흐름과 다른 설치/실행/검증 단계가 있으면 이 섹션에 직접 보강해야 합니다."
+      fi
+
+      cat <<EOF
+
+## 운영 규칙
+
+### 핵심 도메인 흐름과 위험 축
+EOF
+      printf '%s\n' "- 대표 사용자 흐름 또는 운영 흐름이 어디서 시작되고 어디서 끝나는지 먼저 고정합니다."
+      printf '%s\n' "- \`$key_axes_hint\` 축 중 실제 업무 가치나 운영 비용이 크게 걸린 경계를 우선 식별합니다."
+      printf '%s\n' "- 구조 변경이 기능 회귀보다 더 위험한지, 반대로 기능 흐름 단절이 더 위험한지 구분해 적습니다."
+
+      cat <<EOF
+
+### 핵심 실행 흐름
+EOF
+      case "$project_type" in
+        node)
+          printf '%s\n' "- \`package.json\` 기반으로 실행, 빌드, 테스트 스크립트가 첫 진입점이 될 가능성이 높습니다."
+          [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 패키지 간 의존 관계를 따라가며 변경 영향 범위를 먼저 정리해야 합니다."
+          ;;
+        rust)
+          printf '%s\n' "- \`Cargo.toml\`과 \`src/\` 기준으로 바이너리 또는 라이브러리 진입점을 먼저 확인해야 합니다."
+          printf '%s\n' "- 크레이트 경계와 feature 조합이 실제 실행 흐름을 바꿀 수 있으므로 이를 함께 기록해야 합니다."
+          ;;
+        python)
+          printf '%s\n' "- Python 설정 파일과 패키지 디렉토리 기준으로 엔트리포인트 스크립트와 핵심 모듈을 먼저 확인해야 합니다."
+          printf '%s\n' "- CLI, 서비스, 배치 중 어떤 실행 모델인지 먼저 구분해야 분석 품질이 올라갑니다."
+          ;;
+        go)
+          printf '%s\n' "- \`go.mod\`와 \`cmd/\`, \`internal/\`, \`pkg/\` 구조를 기준으로 바이너리 진입점과 내부 패키지 경계를 먼저 읽어야 합니다."
+          ;;
+        java)
+          printf '%s\n' "- \`pom.xml\`, \`build.gradle\`, \`build.gradle.kts\` 같은 빌드 설정 파일을 기준으로 모듈 경계와 실행 태스크를 먼저 확인해야 합니다."
+          printf '%s\n' "- \`src/main\`, \`src/test\`, 멀티모듈 구조 여부가 실제 변경 영향 범위를 크게 좌우합니다."
+          ;;
+        cpp)
+          printf '%s\n' "- \`Makefile\` 또는 \`CMakeLists.txt\` 기준으로 바이너리 타깃, 라이브러리 구성, 컴파일 흐름을 먼저 확인해야 합니다."
+          printf '%s\n' "- 헤더와 구현 파일 경계, 빌드 옵션, 플랫폼별 조건부 빌드가 핵심 위험 지점이 됩니다."
+          ;;
+        php)
+          printf '%s\n' "- \`composer.json\` 기준으로 의존성, 오토로딩, 프레임워크 진입점을 먼저 확인해야 합니다."
+          printf '%s\n' "- 웹 요청 진입점과 CLI 태스크가 함께 있으면 두 흐름을 분리해 기록해야 합니다."
+          ;;
+        ruby)
+          printf '%s\n' "- \`Gemfile\` 기준으로 런타임 의존성과 실행 태스크를 먼저 확인해야 합니다."
+          printf '%s\n' "- Rails, Rack, 순수 Ruby 스크립트 중 어떤 실행 모델인지 구분해야 분석 품질이 올라갑니다."
+          ;;
+        *)
+          printf '%s\n' "- \`$structure_hint\` 단서를 따라 핵심 사용자 흐름과 주요 변경 경계를 먼저 정리해야 합니다."
+          ;;
+      esac
+
+      cat <<EOF
+
+### 하네스 관점 핵심 관심사
+EOF
+      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 패키지 또는 애플리케이션 경계를 흐리지 않는 변경 분류"
+      printf '%s\n' "- \`$key_axes_hint\` 축에서 영향도가 큰 영역 식별"
+      printf '%s\n' "- 실행 흐름, 설정 파일, 공용 계층 중 어디서 변경이 시작되는지 먼저 구분"
+      printf '%s\n' "- 검증 비용이 큰 경계와 수동 확인이 필요한 결합 지점을 역할 관점으로 분리"
+
+      cat <<EOF
+
+### 반복적으로 위험한 변경 유형
+EOF
+      printf '%s\n' "- 진입점 설정 파일과 빌드 설정 변경"
+      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 패키지 export 경로 또는 의존 관계 변경"
+      printf '%s\n' "- 공용 모듈, 공개 인터페이스, 소비 경로 변경"
+      printf '%s\n' "- 테스트 또는 검증 도구, 픽스처, 기준 문서 변경"
+
+      cat <<EOF
+
+### 초기 관찰 내용
+
+$initial_observation_line
+
+## 아직 열려 있는 질문
+EOF
+      printf '%s\n' "- 자동 분석만으로는 핵심 사용자 흐름과 실패 비용을 완전히 확정할 수 없습니다."
+      printf '%s\n' "- 대표 진입점 파일과 영향도가 큰 변경 경계는 후속 역할이 보강해야 합니다."
+      printf '%s\n' "- 이 저장소에서 하네스가 실제로 개입해야 하는 핵심 불확실성은 무엇인가."
+      printf '%s\n' "- 어떤 실패 시나리오가 가장 비용이 크고, 현재 구조로 그것을 감지할 수 있는가."
+
+      cat <<EOF
+
+## 다음 단계
+
+$next_step_detail_line
+- qa-designer와 orchestrator가 위 구조와 흐름을 기준으로 후속 문서를 구체화합니다.
+- 필요하면 대표 디렉토리와 핵심 파일 단위로 분석 해상도를 올립니다.
+EOF
+      ;;
+  esac
+}
+
+build_architecture_report_block() {
+  local signal_level="$1"
+  local project_type_label="$2"
+  local key_axes_hint="$3"
+  local workspace_hint="$4"
+  local core_flow_hint="$5"
+
+  case "$signal_level" in
+    empty|low)
+      cat <<EOF
+## 목적
+
+이 문서는 현재 저장소에 어떤 범용 하네스 구조를 둘지 정의합니다.
+
+## 권장 역할
+
+- domain-analyst
+- harness-architect
+- skill-scaffolder
+- qa-designer
+- orchestrator
+- validator
+
+## 역할별 책임
+
+### domain-analyst
+- 저장소 목적과 도메인 파악
+- 기술 스택과 핵심 흐름 분석
+- 하네스 관점의 주요 관심사 정리
+
+### harness-architect
+- 로컬 하네스 구조 설계
+- 역할 분리와 확장 방향 정의
+- 스킬/리포트/시나리오 구성 제안
+
+### skill-scaffolder
+- 로컬 스킬 생성 및 보완
+- 구조와 스킬의 일관성 유지
+
+### qa-designer
+- 품질 기준과 검토 관점 정의
+- 체크포인트와 검토 흐름 정리
+
+### orchestrator
+- 여러 역할을 실제 작업 순서로 연결
+- 반복 가능한 작업 흐름 정의
+
+### validator
+- 현재 하네스 구조가 최소 요건을 만족하는지 점검
+
+## 보조 구조
+
+- \`.harness/reports\`는 역할 판단 근거와 저장소 분석 결과를 공유하는 보조 레이어입니다.
+- \`.harness/logs\`는 실제 세션 흐름과 역할 호출 이력을 남기는 운영 레이어입니다.
+- templates/scenarios 같은 반복 자산은 역할 팀이 공유하는 실행 보조 구조로 확장할 수 있습니다.
+
+## 입력/출력 표
+
+- domain-analyst: 저장소 구조와 핵심 단서를 입력으로 받아 \`.harness/reports/domain-analysis.md\`를 출력합니다.
+- harness-architect: domain-analysis를 입력으로 받아 \`.harness/reports/harness-architecture.md\`를 출력합니다.
+- skill-scaffolder: architecture와 역할 정의를 입력으로 받아 \`.codex/skills/*\`를 출력합니다.
+- qa-designer: domain-analysis와 architecture를 입력으로 받아 \`.harness/reports/qa-strategy.md\`를 출력합니다.
+- orchestrator: 주요 보고서를 입력으로 받아 \`.harness/reports/orchestration-plan.md\`를 출력합니다.
+- validator: 전체 구조를 입력으로 받아 보완 지점과 다음 역할을 출력합니다.
+
+## 설계 원칙
+
+- 특정 프레임워크에 과도하게 고정하지 않는다.
+- 사람이 읽고 수정할 수 있는 구조를 우선한다.
+- 생성기와 프로젝트 로컬 산출물을 분리한다.
+- 이후 프로젝트 특화 하네스로 확장할 수 있어야 한다.
+EOF
+      ;;
+    *)
+      cat <<EOF
+## 요약
+
+- 이 문서는 현재 저장소의 실제 구조와 변경 경계를 바탕으로 실행 하네스 역할을 어떻게 배치할지 정리합니다.
+- 프로젝트 성격: $project_type_label
+- 핵심 작업 축: $key_axes_hint
+- 대표 흐름 가설: $core_flow_hint
+EOF
+      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 단서: $workspace_hint"
+      cat <<EOF
+
+## 저장소 고유 근거
+
+- 역할 분리는 저장소 사실 확인, 구조 설계, 스킬 반영, QA 설계, 흐름 조율, 최종 검증, 기동 진입점을 분리하기 위한 장치입니다.
+- templates/scenarios 같은 반복 자산은 기본값이 아니라 저장소에 반복 패턴이 축적될 때만 붙는 확장 자산으로 봅니다.
+- run-harness를 별도 역할로 유지해야 현재 상태 판단과 실제 작업 역할 호출을 분리할 수 있습니다.
+
+## 운영 규칙
+
+### 권장 역할
+
+- domain-analyst
+- harness-architect
+- skill-scaffolder
+- qa-designer
+- orchestrator
+- validator
+- run-harness
+
+### 역할별 초점
+
+### domain-analyst
+- 실제 코드 경로와 주요 책임 경계를 구체화합니다.
+- 자동 분석이 놓친 핵심 사용자 흐름과 영향 범위를 보정합니다.
+
+### harness-architect
+- $key_axes_hint 축을 기준으로 역할 책임과 출력 문서를 정렬합니다.
+- 변경 영향이 큰 경계를 중심으로 하네스 확장 포인트를 정합니다.
+
+### skill-scaffolder
+- 역할 스킬 설명이 현재 저장소 구조와 맞도록 유지합니다.
+- 반복적으로 다루는 패키지/디렉토리 기준을 스킬 입력과 출력에 반영합니다.
+
+### qa-designer
+- 영향도가 큰 경계와 고비용 검증 흐름을 QA 질문 세트로 번역합니다.
+- 기능 변경과 구조 변경을 구분한 검토 기준을 정리합니다.
+
+### orchestrator
+- 작업 시작점을 사용자 요청 종류와 영향 범위에 따라 분기합니다.
+- 성격이 다른 작업 축과 검증 흐름을 서로 다른 루프로 연결합니다.
+
+### validator
+- 프로젝트 특화 분석이 일반론으로 흐르지 않았는지 확인합니다.
+- 역할 문서와 운영 문서가 실제 저장소 구조를 반영하는지 점검합니다.
+
+### 보조 구조
+
+- \`.harness/reports\`는 역할 판단 근거와 저장소 분석 결과를 공유하는 보조 구조로 둡니다.
+- \`.harness/logs\`는 세션 흐름, handoff, 재진입 이력을 남기는 운영 구조로 둡니다.
+- templates/scenarios는 반복 실행 패턴이 축적될 때 붙는 확장 자산으로 봅니다.
+
+### 입력/출력 표
+
+- domain-analyst: 저장소 구조와 대표 흐름을 입력으로 받아 domain-analysis를 출력합니다.
+- harness-architect: domain-analysis와 핵심 작업 축을 입력으로 받아 harness-architecture를 출력합니다.
+- skill-scaffolder: architecture와 역할 정의를 입력으로 받아 로컬 스킬 구조를 출력합니다.
+- qa-designer: domain-analysis와 architecture를 입력으로 받아 qa-strategy를 출력합니다.
+- orchestrator: 주요 보고서를 입력으로 받아 orchestration-plan을 출력합니다.
+- validator: 전체 구조를 입력으로 받아 회귀 지점과 보완 항목을 출력합니다.
+- run-harness: 현재 요청과 문서 상태를 입력으로 받아 시작 역할, 보강 역할, 질문 여부를 출력합니다.
+
+### 7역할 유지 기준
+
+- 저장소 사실 확인, 구조 설계, 스킬 반영, QA 설계, 흐름 조율, 최종 검증, 기동 진입점을 분리해야 재생성 후에도 책임 충돌이 줄어듭니다.
+- 역할 수는 고정 답안이 아니라 경계 종류, 검증 비용, 운영 복잡도를 기준으로 조정해야 합니다.
+- run-harness를 별도 역할로 유지해야 현재 상태 판단과 실제 작업 역할 호출을 분리할 수 있습니다.
+
+### 축소/확장 판단
+
+- 단일 패키지이고 흐름이 단순하면 skill-scaffolder와 orchestrator의 책임을 일부 묶을 수 있습니다.
+- 여러 경계를 넘는 영향이나 별도 검증 축이 있으면 QA와 validator를 더 분리해 운영하는 편이 안전합니다.
+- 반대로 경계와 검증 비용이 단순하면 일부 역할을 더 가볍게 묶을 수 있습니다.
+
+### 설계 원칙
+
+- 역할은 저장소 구조보다 추상적이어야 하지만, 저장소 경계를 무시하면 안 됩니다.
+- 핵심 작업 축이 많은 저장소일수록 역할 수를 늘리기보다 역할 판단 기준을 선명하게 둡니다.
+- 자동 재생성 결과라도 실제 저장소 단서를 반영한 분석이 먼저 와야 합니다.
+- 프로젝트 특화 판단이 필요한 부분은 후속 역할이 보강할 수 있게 열어 둡니다.
+
+## 다음 단계
+
+- domain-analysis와 qa-strategy가 실제 저장소 고유 명사와 실패 지점을 충분히 담는지 다시 확인합니다.
+- run-harness와 validator가 현재 역할 구조를 무리 없이 소비하는지 점검합니다.
+EOF
+      ;;
+  esac
+}
+
+build_qa_report_block() {
+  local signal_level="$1"
+  local key_axes_hint="$2"
+  local workspace_hint="$3"
+
+  case "$signal_level" in
+    empty|low)
+      cat <<EOF
+## 목적
+
+이 문서는 저장소에서 중요하게 봐야 할 품질 기준과 검토 지점을 정리합니다.
+
+## 기본 관점
+
+범용 하네스 1차 단계에서는 다음을 우선합니다.
+
+- 저장소 구조를 이해할 수 있는가
+- 역할이 분리되어 있는가
+- 생성된 하네스 산출물이 사람이 검토 가능한가
+- 로컬 스킬 구성이 반복 사용에 적합한가
+
+## 검토 질문
+
+- 이 저장소에서 가장 중요한 실패 유형은 무엇인가
+- 어떤 영역은 변경 영향도가 큰가
+- 어떤 흐름은 반복적으로 점검할 가치가 있는가
+- 어떤 산출물이 있으면 팀이 더 쉽게 검토할 수 있는가
+
+## 체크포인트 예시
+
+- 도메인 분석 리포트가 실제 저장소와 맞는가
+- 하네스 역할 정의가 과하거나 부족하지 않은가
+- 스킬 설명이 충분히 명확한가
+- 오케스트레이션 계획이 실제 작업 흐름과 연결되는가
+EOF
+      ;;
+    *)
+      cat <<EOF
+## 요약
+
+- 이 문서는 현재 저장소에서 변경 영향이 큰 경계와 반복 검증이 필요한 흐름을 QA 관점으로 정리합니다.
+- 저장소 전용 질문은 구조 일반론이 아니라 실제 파일, 테스트 유틸, 진입점 단서를 기준으로 보강해야 합니다.
+
+## 저장소 고유 확인 단서
+EOF
+      source_anchor_count=0
+      while IFS= read -r workspace_path; do
+        [ -n "$workspace_path" ] || continue
+        printf '%s\n' "- \`$workspace_path\`: 이번 저장소에서 QA 질문을 구체화할 때 다시 확인할 대표 소스 앵커입니다."
+        source_anchor_count=$((source_anchor_count + 1))
+      done < <(list_source_anchor_paths)
+
+      if [ "$source_anchor_count" -eq 0 ]; then
+        printf '%s\n' "- 자동으로 포착한 소스 앵커가 부족하면, 테스트 유틸 위치나 대표 진입점 파일을 직접 찾아 QA 질문을 보강해야 합니다."
+      fi
+
+      cat <<EOF
+
+## 운영 규칙
+
+### 핵심 품질 축
+
+- $key_axes_hint
+EOF
+      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 경계와 패키지 간 영향 전파"
+      ([ -d "tests" ] || [ -d "test" ] || [ -d "__tests__" ]) && printf '%s\n' "- 테스트 자산과 검증 유틸리티의 안정성"
+      printf '%s\n' "- 공용 계층, 진입점 설정, 소비 경로 사이의 영향 전파"
+      cat <<EOF
+
+### 우선 검토 질문
+
+- 이번 변경이 어떤 작업 축을 건드리는가
+- 변경 범위가 단일 영역인지, 여러 경계까지 전파되는가
+- 빌드/테스트/배포 중 어떤 검증 경로를 반드시 다시 확인해야 하는가
+- 자동화보다 사람이 직접 봐야 하는 결합 지점은 어디인가
+
+### 변경 유형별 최소 체크
+
+- 기능 변경: 영향받는 사용자 또는 호출 흐름, 핵심 진입점, 최소 회귀 확인 대상을 함께 적습니다.
+- 구조 변경: 역할 문서, 경계 설명, 오케스트레이션 계획이 새 구조를 반영하는지 확인합니다.
+- 빌드/설정 변경: 실행 명령, 검증 명령, 배포 또는 산출물 경로를 다시 확인합니다.
+- 경계 변경: 여러 모듈, 서비스, 패키지, 런타임 중 어디로 영향이 번지는지 실제 저장소 기준으로 다시 적습니다.
+
+### 테스트 설계 기준
+
+- 빠르게 실패를 잡는 얕은 체크와 실제 영향 경계를 확인하는 깊은 체크를 구분합니다.
+- 빠른 검증과 느린 검증, 단일 경계 검증과 교차 경계 검증을 구분해 적습니다.
+- 문서나 하네스 변경이라도 verify가 잡지 못하는 운영 판단 공백이 없는지 수동 확인 질문을 남깁니다.
+
+### 추가 확인 관점
+
+- 공개 인터페이스, 설정 진입점, 소비 경로가 함께 흔들리는지 확인합니다.
+- 공용 계층과 검증 경로가 같은 변경 안에서 동시에 깨질 수 있는지 살핍니다.
+- 문서 정합성보다 실제 운영 리스크가 더 큰 지점을 우선 수동 확인합니다.
+
+## QA 역할 운영 원칙
+
+- QA는 체크리스트 실행기가 아니라 변경 영향의 triage 도구로 작동합니다.
+- 매 요청마다 전체 질문 세트를 다 확인하지 않고, 이번 변경이 걸리는 축만 먼저 조이고 나머지는 위험 순위를 매깁니다.
+- QA 질문이 일반론에 머물면 의미가 없습니다. 저장소 고유 파일 이름, 경계, 실패 유형을 직접 참조하도록 계속 보강합니다.
+- 하네스 문서와 스킬 변경도 QA 범위에 포함합니다. 구조 정합성 역시 운영 품질입니다.
+- validator와 역할을 나누되, QA는 "무엇을 봐야 하는가"를 정의하고 validator는 "최소 구조가 갖춰졌는가"를 점검합니다.
+
+## 다음 단계
+
+- 저장소 고유 확인 단서를 기준으로 QA 질문을 로컬 고유 명사와 실패 지점까지 더 구체화합니다.
+- validator와 함께 실제 검증 경로가 문서 질문 세트와 어긋나지 않는지 확인합니다.
+EOF
+      ;;
+  esac
+}
+
+build_orchestration_report_block() {
+  local signal_level="$1"
+  local key_axes_hint="$2"
+
+  case "$signal_level" in
+    empty|low)
+      cat <<EOF
+## 목적
+
+이 문서는 여러 하네스 역할이 실제로 어떤 순서와 방식으로 협력해야 하는지 정리합니다.
+
+## 기본 흐름
+
+1. domain-analyst가 저장소를 분석한다.
+2. harness-architect가 하네스 구조를 설계한다.
+3. skill-scaffolder가 로컬 스킬과 기본 산출물을 정리한다.
+4. qa-designer가 품질 전략과 검토 지점을 정의한다.
+5. orchestrator가 반복 가능한 작업 흐름을 정리한다.
+6. validator가 현재 구성이 최소 요건을 만족하는지 점검한다.
+
+## 운영 원칙
+
+- 먼저 분석하고, 그 다음 구조를 만든다.
+- 구조를 만든 뒤 품질 관점을 붙인다.
+- 역할 간 책임이 겹치지 않게 한다.
+- 결과물은 사람이 쉽게 검토할 수 있어야 한다.
+
+## 확장 방향
+
+이 범용 하네스는 이후 다음으로 확장될 수 있습니다.
+
+- 프로젝트 특화 하네스
+- expected-state 구조
+- diff 전략
+- 시나리오 실행 연결
+- 자동 검증 파이프라인
+
+## 메모
+
+이 문서는 현재 저장소의 실제 작업 흐름에 맞게 계속 수정되어야 합니다.
+EOF
+      ;;
+    *)
+      cat <<EOF
+## 요약
+
+- 이 문서는 현재 저장소에서 어떤 요청이 들어왔을 때 어떤 역할을 먼저 움직여야 하는지 운영 흐름으로 정리합니다.
+- 시작 분기와 재진입 기준은 현재 요청의 영향 범위와 검증 비용을 빨리 판별하기 위한 규칙입니다.
+
+## 저장소 고유 근거
+
+- 현재 저장소의 핵심 작업 축은 \`$key_axes_hint\` 입니다.
+- 실제 시작 역할은 사용자 요청 유형보다도 경계 영향 범위와 남은 검증 비용에 더 크게 좌우됩니다.
+
+## 운영 규칙
+
+### 시작 분기
+
+이 섹션은 각 요청이 표준 전체 시퀀스 어디서 시작해야 하는지 정하는 진입점 규칙입니다.
+
+1. run-harness가 요청이 기능 구현, 구조 정리, 공통 모듈 보강, 빌드/검증 보강 중 어디에 가까운지 먼저 분류합니다.
+2. 변경이 $key_axes_hint 중 어느 축에 걸리는지 판단합니다.
+3. 영향 범위가 넓거나 경계가 불명확하면 domain-analyst와 qa-designer부터 시작합니다.
+4. 영향 범위가 좁고 구조 설명이 이미 충분하면 skill-scaffolder 또는 orchestrator부터 시작할 수 있습니다.
+5. 시작 분기는 표준 전체 시퀀스의 일부 단계를 생략하는 규칙이 아니라, 어느 역할을 진입점으로 먼저 세울지 정하는 규칙입니다.
+
+### 표준 전체 시퀀스
+
+이 섹션은 모든 보강이 필요할 때 기준선으로 삼는 전체 순서입니다.
+
+1. domain-analyst가 실제 코드 경로와 변경 경계를 재확인합니다.
+2. harness-architect가 현재 역할 구조가 이번 변경 유형을 충분히 설명하는지 봅니다.
+3. skill-scaffolder가 필요한 스킬 설명과 템플릿을 보강합니다.
+4. qa-designer가 이번 축에 맞는 검토 질문과 체크포인트를 보강합니다.
+5. orchestrator가 작업 시작 루프와 검증 루프를 정리합니다.
+6. validator가 산출물이 다시 일반론으로 흐르지 않았는지 확인합니다.
+
+### 대표 요청별 루프
+
+- 기능 또는 사용자 흐름 보강: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
+- 구조 또는 문서 정비: run-harness -> skill-scaffolder -> orchestrator -> validator
+- 경계 재정의가 필요한 변경: run-harness -> domain-analyst -> harness-architect -> qa-designer -> orchestrator -> validator
+- 검증 비용이 큰 변경: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
+
+### 순서 조정 및 재진입 기준
+
+- 시작 분기에서 뒤쪽 역할을 진입점으로 선택하더라도, 앞 단계의 판단이 이미 충분한 경우에만 일부 단계를 건너뜁니다.
+- 구조 설명이 낡았거나 generic하면 domain-analyst부터 다시 시작해 표준 전체 시퀀스로 복귀합니다.
+- 핵심 경계나 다중 모듈 영향이 보이면 qa-designer와 validator를 뒤로 미루지 않습니다.
+- domain-analysis가 generic하거나 예외 메모가 비어 있으면 domain-analyst부터 다시 시작합니다.
+- 구조는 맞지만 역할 책임이나 확장 기준이 흐리면 harness-architect를 먼저 다시 부릅니다.
+- 체크리스트가 약하거나 검증 비용 구분이 흐리면 qa-designer를 우선 재진입시킵니다.
+- 흐름은 맞는데 handoff가 끊기면 orchestrator를 중심으로 다시 묶습니다.
+
+### 역할 간 handoff 규칙
+
+- domain-analyst -> harness-architect: 실제 경계, 예외, 핵심 흐름이 정리되면 구조 책임으로 넘깁니다.
+- harness-architect -> skill-scaffolder: 역할 책임과 출력 문서가 정리되면 로컬 스킬 설명과 템플릿 반영으로 넘깁니다.
+- qa-designer -> orchestrator: 검토 질문과 최소 체크가 정리되면 어떤 루프로 운영할지 넘깁니다.
+- validator -> orchestrator: 회귀, 누락, 재진입 필요 지점을 찾으면 다시 어떤 역할부터 돌릴지 되돌립니다.
+
+### 피드백 루프
+
+- validator가 generic 회귀를 발견하면 domain-analyst 또는 harness-architect 단계로 되돌립니다.
+- qa-designer가 새 위험 축을 찾으면 orchestrator가 시작 분기와 검증 루프를 다시 조정합니다.
+- session-log에 반복되는 우회 흐름이 쌓이면 team-playbook과 orchestration-plan을 함께 갱신합니다.
+
+### 운영 원칙
+
+- 작은 변경도 핵심 경계나 빌드 경계를 건드리면 별도 검증 루프로 올립니다.
+- 문서 재생성은 기존 문장을 보존하는 것보다 실제 저장소 분석을 반영하는 것을 우선합니다.
+- 역할 호출 순서는 고정이 아니라 영향 범위와 검증 비용을 기준으로 조정합니다.
+
+## 다음 단계
+
+- 반복적으로 등장하는 우회 흐름이 있으면 team-playbook과 함께 루프를 다시 압축합니다.
+- run-harness 출력 계약이 실제 시작 분기와 어긋나지 않는지 validator로 다시 확인합니다.
+EOF
+      ;;
+  esac
+}
+
+build_team_structure_report_block() {
+  local signal_level="$1"
+  local key_axes_hint="$2"
+
+  case "$signal_level" in
+    empty|low)
+      cat <<EOF
+## 목적
+
+이 문서는 현재 프로젝트의 로컬 실행 하네스를 역할 팀 관점에서 설명합니다.
+
+## 팀 구성
+
+- domain-analyst
+- harness-architect
+- skill-scaffolder
+- qa-designer
+- orchestrator
+- validator
+- run-harness
+
+## 설명
+
+이 역할들은 각각 독립적인 판단 단위를 가지며,
+함께 프로젝트 실행 하네스를 구성합니다.
+EOF
+      ;;
+    *)
+      cat <<EOF
+## 요약
+
+- 이 문서는 현재 저장소의 핵심 작업 축을 어떤 역할 팀이 나눠서 다뤄야 하는지 설명합니다.
+- 역할 팀 구성은 저장소의 경계 종류와 검증 비용을 분리하기 위한 운영 장치입니다.
+
+## 저장소 고유 근거
+
+- QA가 중요한 이유: \`$key_axes_hint\` 축이 동시에 흔들리면 문서 정합성보다 실제 운영 리스크가 먼저 커지기 때문입니다.
+- 경계 설명이 중요한 이유: 단일 수정처럼 보여도 실제로는 여러 소비 경계나 호출 경로로 전파될 수 있기 때문입니다.
+- orchestrator와 validator가 중요한 이유: handoff 순서와 회귀 점검이 흐트러지면 운영 비용이 빠르게 늘기 때문입니다.
+
+## 운영 규칙
+
+### 팀 구성
+
+- domain-analyst
+- harness-architect
+- skill-scaffolder
+- qa-designer
+- orchestrator
+- validator
+- run-harness
+
+### 역할별 책임 요약
+
+- domain-analyst: $key_axes_hint 축에서 사실 기준 분석을 맡습니다.
+- harness-architect: 역할 경계와 구조 배치를 맡습니다.
+- skill-scaffolder: 로컬 스킬과 템플릿 반영을 맡습니다.
+- qa-designer: 품질 질문과 검토 기준 정리를 맡습니다.
+- orchestrator: 역할 간 handoff와 재진입 흐름을 맡습니다.
+- validator: 회귀와 누락 점검을 맡습니다.
+- run-harness: 시작 역할 결정과 사용자 확인 질문을 맡습니다.
+
+### 실전 분류 예시
+
+- 변경 중심이 사용자 진입점인지, 공용 계층인지, 별도 실행 환경인지 먼저 정합니다.
+- 단일 수정처럼 보여도 소비 경로나 공용 계층까지 번지면 domain-analyst와 qa-designer를 더 앞에 둡니다.
+- 문서 정비 요청이라도 handoff나 다음 진입점이 바뀌면 orchestrator와 validator를 함께 봅니다.
+
+## 다음 단계
+
+- 실제 저장소에서 자주 등장하는 변경 유형을 이 팀 구조의 실전 예시에 계속 누적합니다.
+- architecture와 orchestration이 이 팀 구조 설명과 같은 경계를 가리키는지 함께 확인합니다.
+EOF
+      ;;
+  esac
+}
+
+build_team_playbook_report_block() {
+  local signal_level="$1"
+  local key_axes_hint="$2"
+
+  case "$signal_level" in
+    empty|low)
+      cat <<EOF
+## 목적
+
+이 문서는 프로젝트 로컬 실행 하네스 팀을 실제로 어떻게 시작하고 운용할지 요약합니다.
+
+## 세션 시작 절차
+
+1. 기본적으로는 run-harness를 실행 하네스 팀의 진입점으로 사용합니다.
+2. run-harness가 현재 상태를 보고, 저장소 단서가 약하면 사용자 확인 질문부터 정리하고, 단서가 충분하면 필요한 역할을 우선순위로 정합니다.
+3. 새 프로젝트라면 domain-analyst부터 시작하는 흐름을 우선합니다.
+4. 구조가 이미 있다면 orchestrator / validator 중심의 보강 루프를 우선합니다.
+
+## 세션 시작 체크
+
+- 현재 요청 한 줄 요약과 영향 범위를 먼저 적습니다.
+- 직전 session-log를 읽고 미해결 항목이 이어지는지 확인합니다.
+- 이번 세션에서 먼저 읽을 문서를 1~2개로 좁힙니다.
+
+## 기본 운영 원칙
+
+- 문서보다 역할 팀을 본체로 봅니다.
+- \`.harness/reports\` 문서는 팀이 공유하는 보조 기준으로 사용합니다.
+- 빈 저장소이거나 저장소 단서가 약하면 역할 호출보다 사용자 확인 질문을 먼저 남깁니다.
+- validator 피드백이 나오면 architect / scaffolder / orchestrator가 다시 보강합니다.
+- QA 질문이 약하면 qa-designer를 다시 호출해 보강합니다.
+- 중요한 역할 호출이나 흐름 변경은 session-log에 남깁니다.
+
+## 로그 운영
+
+- 로그 정책은 \`.harness/logging-policy.md\`에서 확인합니다.
+- 역할별 누적 기록은 \`.harness/logs/session-log.md\`에 남깁니다.
+- 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
+- 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
+EOF
+      optional_harness_assets_enabled && printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다."
+      optional_harness_assets_enabled && printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다."
+      ;;
+    *)
+      cat <<EOF
+## 요약
+
+- 이 문서는 현재 저장소의 실제 변경 경계를 기준으로 실행 하네스 팀을 어떻게 시작하고 되돌릴지 요약합니다.
+- 빠른 체크리스트와 절차 문서는 함께 유지해야 세션 재진입 속도와 일관성이 올라갑니다.
+
+## 저장소 고유 근거
+
+- 먼저 읽을 문서는 domain-analysis, orchestration-plan, qa-strategy 중 현재 요청과 직접 연결되는 문서입니다.
+- 직전 session-log와 latest-session-summary는 현재 세션의 재진입 지점을 정하는 기본 근거입니다.
+
+## 운영 규칙
+
+### 세션 시작 절차
+
+1. run-harness가 요청을 받고 $key_axes_hint 중 어느 축을 건드리는지 먼저 분류합니다.
+2. 영향 범위가 넓거나 핵심 경계를 건드리면 domain-analyst와 qa-designer를 먼저 호출합니다.
+3. 구조 보강이 필요하면 harness-architect와 skill-scaffolder를 붙여 역할 설명과 템플릿을 맞춥니다.
+4. orchestrator가 작업 루프와 검증 루프를 묶고 validator가 최종 구조를 점검합니다.
+
+5. 직전 session-log와 latest-session-summary를 읽고 미해결 항목과 재진입 지점을 확인합니다.
+6. domain-analysis, orchestration-plan, qa-strategy 중 이번 요청과 직접 연결되는 문서를 먼저 읽습니다.
+
+### 세션 시작 체크
+
+- 현재 요청 요약과 영향 범위를 session-log에 먼저 남깁니다.
+- 직전 세션의 남은 약점이 이번 요청과 이어지는지 확인합니다.
+- 먼저 읽을 문서와 나중에 볼 문서를 구분해 빠르게 시작합니다.
+
+### 기본 운영 원칙
+
+- 현재 요청 요약과 영향 범위 판단을 session-log에 먼저 남깁니다.
+- 여러 문서를 한꺼번에 다시 읽기보다 이번 요청과 직접 연결된 문서를 먼저 확인합니다.
+- 역할 호출이나 전환 이유가 바뀌면 그 근거를 session-log에 함께 남깁니다.
+
+### 작업 유형별 운영 규칙
+
+- 기능 또는 사용자 흐름 보강: domain-analysis와 qa-strategy를 먼저 보고 최소 회귀 범위를 고정합니다.
+- 구조 또는 경계 수정: 바뀐 책임 경계와 영향 전파 범위를 먼저 적고 architect/qa 투입 시점을 정합니다.
+- 실행 또는 배포 경로 수정: 환경 차이와 최종 검증 경로를 분리해 기록합니다.
+- 여러 경계를 가로지르는 수정: 소비자 경로와 핵심 경계 보강 여부를 먼저 확인합니다.
+- 문서 재생성 또는 하네스 정비: wording보다 저장소 사실, 이번 세션의 남은 약점, 다음 진입점이 유지되는지 먼저 봅니다.
+
+### 로그 운영
+
+- 로그 정책은 \`.harness/logging-policy.md\`에서 확인합니다.
+- 역할별 누적 기록은 \`.harness/logs/session-log.md\`에 남깁니다.
+- 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
+- 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
+EOF
+      optional_harness_assets_enabled && printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다."
+      optional_harness_assets_enabled && printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다."
+      cat <<EOF
+
+### 세션 종료 기준
+
+- 이번 세션에서 시작 역할, handoff, 남은 약점을 session-log에 남깁니다.
+- validator 피드백이 있으면 다음 진입점을 명시한 채 세션을 닫습니다.
+- 재생성된 문서가 실제 저장소 분석을 잃지 않았는지 마지막으로 확인합니다.
+
+## 다음 단계
+
+- 다음 세션이 바로 이어질 수 있게 시작 역할, 보강 역할, 남은 질문을 최신 요약에 반영합니다.
+- 반복 업무가 누적되면 선택 자산을 활성화해 역할 빈도와 템플릿 후보를 함께 관리합니다.
+EOF
+      ;;
+  esac
+}
+
+build_domain_summary_block() {
+  local signal_level="$1"
+  local project_type_label="$2"
+  local stack_hint="$3"
+  local structure_hint="$4"
+  local core_flow_hint="$5"
+  local package_manager_hint="$6"
+  local workspace_hint="$7"
+  local key_axes_hint="$8"
+
+  case "$signal_level" in
+    empty)
+      cat <<EOF
+- 프로젝트 유형: 미정
+- 주요 기술 스택: 미정
+- 핵심 흐름: 미정
+EOF
+      ;;
+    low)
+      cat <<EOF
+- 프로젝트 유형: $project_type_label
+- 주요 기술 스택 추정: $stack_hint
+- 주요 구조 단서: $structure_hint
+- 핵심 흐름: $core_flow_hint
+EOF
+      ;;
+    *)
+      printf '%s\n' "- 프로젝트 유형: $project_type_label"
+      printf '%s\n' "- 주요 기술 스택 추정: $stack_hint"
+      [ "$package_manager_hint" = "추정 불가" ] || printf '%s\n' "- 패키지 관리: $package_manager_hint"
+      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스/패키지 단서: $workspace_hint"
+      printf '%s\n' "- 주요 구조 단서: $structure_hint"
+      [ "$key_axes_hint" = "$structure_hint" ] || printf '%s\n' "- 핵심 작업 축: $key_axes_hint"
+      printf '%s\n' "- 핵심 흐름: $core_flow_hint"
+      ;;
+  esac
+}
+
+build_next_step_line() {
+  local signal_level="$1"
+  local context="${2:-init}"
+
+  case "$signal_level" in
+    empty|low)
+      if [ "$context" = "refresh" ]; then
+        echo "- domain-analyst가 실제 저장소 구조를 읽고 내용을 구체화합니다."
+      else
+        echo "- 답변이 모이면 domain-analyst가 저장소 요약과 핵심 흐름을 구체화합니다."
+      fi
+      ;;
+    *)
+      echo "- domain-analyst가 자동 관찰 결과를 바탕으로 실제 코드 경로와 사용자 흐름 기준으로 분석을 보정합니다."
+      ;;
+  esac
+}
+
 ensure_harness_log_scaffold() {
   local harness_dir=".harness"
   local log_dir="$harness_dir/logs"
@@ -31,9 +1386,10 @@ ensure_harness_log_scaffold() {
 ## 자동화 도구
 
 - 전역 설치된 `harness-log.sh`는 역할 호출 시 세션 로그에 자동 append 합니다.
-- 전역 설치된 `harness-session-close.sh`는 세션 종료 시 최신 세션 요약과 역할 호출 빈도 통계를 자동 갱신합니다.
-- 전역 설치된 `harness-role-stats.sh`는 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
-- 전역 설치된 `harness-template-candidates.sh`는 누적 로그를 분석해 반복 업무 템플릿 후보를 `.harness/reports/template-candidates.md`로 정리합니다.
+- 전역 설치된 `harness-session-close.sh`는 세션 종료 시 최신 세션 요약을 자동 갱신합니다.
+- 선택 자산이 활성화된 프로젝트에서는 `harness-session-close.sh`가 역할 호출 빈도 통계와 템플릿 후보 분석까지 함께 갱신합니다.
+- 선택 자산이 활성화된 프로젝트에서는 `harness-role-stats.sh`가 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
+- 선택 자산이 활성화된 프로젝트에서는 `harness-template-candidates.sh`가 누적 로그를 분석해 반복 업무 템플릿 후보를 `.harness/reports/template-candidates.md`로 정리합니다.
 
 ## 로그를 남겨야 하는 상황
 
@@ -119,7 +1475,7 @@ EOF
 EOF
   fi
 
-  if [ ! -f "$role_frequency_file" ]; then
+  if optional_harness_assets_enabled && [ ! -f "$role_frequency_file" ]; then
     cat > "$role_frequency_file" <<'EOF'
 # 역할 호출 빈도
 

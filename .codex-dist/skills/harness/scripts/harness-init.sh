@@ -8,6 +8,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+. "$SCRIPT_DIR/harness-lib.sh"
 
 log() {
   printf '[harness][init] %s\n' "$1"
@@ -50,6 +52,34 @@ ensure_gitignore_entry() {
   log "gitignore 추가: $entry"
 }
 
+PROJECT_TYPE="$(detect_project_type)"
+STACK_HINT="$(detect_stack_hint)"
+PROJECT_SIGNAL_LEVEL="$(detect_project_signal_level)"
+STRUCTURE_HINT="$(detect_structure_hint)"
+PROJECT_TYPE_LABEL="$(build_project_type_label "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE")"
+PACKAGE_MANAGER_HINT="$(detect_package_manager)"
+WORKSPACE_HINT="$(detect_workspace_packages)"
+CONFIG_HINT="$(detect_config_hints)"
+KEY_AXES_HINT="$(build_key_axes_hint "$PROJECT_SIGNAL_LEVEL" "$STRUCTURE_HINT")"
+CORE_FLOW_HINT="$(build_core_flow_hint "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT")"
+DOMAIN_SUMMARY_BLOCK="$(build_domain_summary_block "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE_LABEL" "$STACK_HINT" "$STRUCTURE_HINT" "$CORE_FLOW_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT")"
+INITIAL_OBSERVATION_LINE="$(build_initial_observation "$PROJECT_SIGNAL_LEVEL" "$STRUCTURE_HINT" "$WORKSPACE_HINT" "$CONFIG_HINT")"
+NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$PROJECT_SIGNAL_LEVEL" "init")"
+DISCOVERY_GUIDANCE="저장소 단서와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
+
+if [ "$PROJECT_TYPE" = "unknown" ] && [ "$STACK_HINT" = "추정 불가" ]; then
+  DISCOVERY_GUIDANCE="현재 저장소 단서만으로는 방향 판단이 어렵습니다. run-harness는 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인해야 합니다."
+elif [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
+  DISCOVERY_GUIDANCE="현재 저장소는 $STRUCTURE_HINT 단서를 바탕으로 자동 재분석을 시작할 수 있습니다."
+fi
+
+DOMAIN_DETAIL_BLOCK="$(build_domain_report_detail_block "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT" "$CORE_FLOW_HINT" "$DISCOVERY_GUIDANCE" "$INITIAL_OBSERVATION_LINE" "$NEXT_STEP_DETAIL_LINE")"
+ARCH_REPORT_BLOCK="$(build_architecture_report_block "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE_LABEL" "$KEY_AXES_HINT" "$WORKSPACE_HINT" "$CORE_FLOW_HINT")"
+QA_REPORT_BLOCK="$(build_qa_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT" "$WORKSPACE_HINT")"
+ORCH_REPORT_BLOCK="$(build_orchestration_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT")"
+TEAM_STRUCTURE_REPORT_BLOCK="$(build_team_structure_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT")"
+TEAM_PLAYBOOK_REPORT_BLOCK="$(build_team_playbook_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT")"
+
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 
 create_dir ".codex"
@@ -64,9 +94,15 @@ create_dir ".codex/skills/run-harness"
 
 create_dir ".harness"
 create_dir ".harness/reports"
-create_dir ".harness/scenarios"
-create_dir ".harness/templates"
 create_dir ".harness/logs"
+
+if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
+  create_dir ".harness/scenarios"
+  create_dir ".harness/templates"
+else
+  log "조건부 자산 생성 보류: .harness/scenarios"
+  log "조건부 자산 생성 보류: .harness/templates"
+fi
 
 ensure_gitignore_entry ".harness/logs/.current-session"
 ensure_gitignore_entry ".harness/logs/session-log.md"
@@ -204,7 +240,8 @@ description: 실행 하네스 구조를 바탕으로 프로젝트 로컬 역할 
 ## 출력
 
 - \`.codex/skills/*\`
-- \`.harness/templates/*\`
+- 필요 시 \`.harness/templates/*\`
+- 필요 시 \`.harness/scenarios/*\`
 
 ## 역할 팀 내 위치
 
@@ -356,6 +393,8 @@ description: 생성된 프로젝트 로컬 실행 하네스가 최소 요건을 
 
 - \`.codex/skills/*\`
 - \`.harness/reports/*\`
+- 필요 시 \`.harness/templates/*\`
+- 필요 시 \`.harness/scenarios/*\`
 
 ## 출력
 
@@ -398,12 +437,15 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 
 ## 주요 작업
 
-1. 현재 \`.harness/reports/*\`와 \`.codex/skills/*\` 상태를 본다.
-2. domain-analysis가 비어 있거나 약하면 domain-analyst부터 시작한다.
-3. 구조 설계가 부족하면 harness-architect를 우선한다.
-4. QA 기준이 약하면 qa-designer를 다시 호출할 수 있다.
-5. 흐름 연결이 약하면 orchestrator를 중심으로 재정리한다.
-6. 마지막에 validator 관점으로 최소 구조를 점검한다.
+1. 현재 \`.harness/reports/*\`, \`.codex/skills/*\`, 로그 파일 상태를 읽는다.
+2. 요청이 기능 구현, 구조 정리, 공통 모듈 보강, 빌드/검증 보강 중 어디에 가까운지 먼저 분류한다.
+3. 변경 영향 범위가 단일 모듈인지, 여러 경계나 공통 계층까지 전파되는지 판단한다.
+4. 저장소 단서가 부족하거나 빈 프로젝트에 가까우면 사용자에게 먼저 확인할 질문을 정리한다.
+5. domain-analysis가 비어 있거나 약하면 domain-analyst부터 시작한다.
+6. 구조 설계나 패키지 경계 판단이 부족하면 harness-architect를 우선한다.
+7. QA 기준이 약하면 qa-designer를 다시 호출할 수 있다.
+8. 흐름 연결이 약하면 orchestrator를 중심으로 재정리한다.
+9. 마지막에 validator 관점으로 최소 구조를 점검한다.
 
 ## 입력
 
@@ -415,6 +457,15 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 
 - 현재 시점에 필요한 실행 하네스 팀 진행 순서
 - 보강이 필요한 역할 제안
+- 사용자에게 먼저 확인할 질문 세트
+
+## 출력 계약
+
+- 현재 시작 역할 1개를 먼저 제시한다.
+- 보강 필요 역할은 0~2개로 제한해 제안한다.
+- 추가 질문이 필요하면 0~2개만 남긴다.
+- 판단 근거는 1~3줄로 짧게 설명한다.
+- 세션을 시작했다면 session-log 반영 여부를 함께 남긴다.
 
 ## 역할 팀 내 위치
 
@@ -426,11 +477,16 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 항상 모든 역할을 다 호출하려 하지 않는다.
 - 현재 상태에서 가장 약한 지점을 먼저 보강한다.
 - orchestrator와 validator를 흐름의 중심 축으로 삼는다.
+- 판단 근거가 약하면 역할 호출을 단정하기 전에 사용자 확인 질문부터 짧게 제시한다.
 
 ## 운영 규칙
 
 - 새 프로젝트라면 domain-analyst → harness-architect → skill-scaffolder → qa-designer → orchestrator → validator 순서를 기본으로 본다.
 - 이미 구조가 있는 프로젝트라면 부족한 역할만 다시 호출하는 쪽을 우선한다.
+- 요청이 기능 구현, 구조 정리, 공통 모듈 보강, 빌드/검증 중 어디에 걸리는지 먼저 분류하고 그 결과를 orchestration-plan 판단의 입력으로 사용한다.
+- 영향 범위가 공통 계층이나 다중 모듈로 번지면 domain-analyst와 qa-designer를 더 이른 순서에 배치한다.
+- 빈 저장소이거나 기술 스택/핵심 흐름 단서가 약하면, 우선 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 확인한다.
+- 사용자 답변이 모이면 그 내용을 domain-analysis와 orchestration-plan의 입력으로 바로 연결한다.
 - 리포트보다 실제 역할 팀 구조와 설명 품질을 더 중요하게 본다.
 - \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
 - 로그 운영 기준은 \`.harness/logging-policy.md\`를 먼저 확인한다.
@@ -442,117 +498,39 @@ create_file_if_missing ".harness/reports/domain-analysis.md" \
 
 ## 저장소 요약
 
-- 프로젝트 유형: 미정
-- 주요 기술 스택: 미정
-- 핵심 흐름: 미정
+$DOMAIN_SUMMARY_BLOCK
 
-## 초기 관찰 내용
-
-- 저장소를 분석한 뒤 이 내용을 구체화하세요.
+$DOMAIN_DETAIL_BLOCK
 "
 
 create_file_if_missing ".harness/reports/harness-architecture.md" \
 "# 실행 하네스 아키텍처
 
-## 목적
-
-이 저장소에 어떤 프로젝트 로컬 실행 하네스 구조가 적절한지 정의합니다.
-
-## 제안 역할
-
-- domain-analyst
-- harness-architect
-- skill-scaffolder
-- qa-designer
-- orchestrator
-- validator
-- run-harness
+$ARCH_REPORT_BLOCK
 "
 
 create_file_if_missing ".harness/reports/qa-strategy.md" \
 "# QA 전략
 
-## 목표
-
-이 저장소에서 중요하게 볼 품질 기준과 검토 지점을 정리합니다.
+$QA_REPORT_BLOCK
 "
 
 create_file_if_missing ".harness/reports/orchestration-plan.md" \
 "# 실행 하네스 오케스트레이션 계획
 
-## 작업 흐름 개요
-
-여러 역할이 어떤 순서로 협력해야 하는지 정리합니다.
-
-## 예시 흐름
-
-1. domain-analyst가 저장소를 분석한다.
-2. harness-architect가 구조를 설계한다.
-3. skill-scaffolder가 로컬 역할 스킬을 정리한다.
-4. qa-designer가 품질 기준을 정리한다.
-5. orchestrator가 전체 실행 하네스 흐름을 정리한다.
-6. validator가 전체 구성을 점검한다.
+$ORCH_REPORT_BLOCK
 "
 
 create_file_if_missing ".harness/reports/team-structure.md" \
 "# 역할 팀 구조
 
-## 목적
-
-이 문서는 현재 프로젝트의 로컬 실행 하네스를 역할 팀 관점에서 설명합니다.
-
-## 팀 구성
-
-- domain-analyst
-- harness-architect
-- skill-scaffolder
-- qa-designer
-- orchestrator
-- validator
-- run-harness
-
-## 설명
-
-이 역할들은 각각 독립적인 판단 단위를 가지며,
-함께 프로젝트 실행 하네스를 구성합니다.
+$TEAM_STRUCTURE_REPORT_BLOCK
 "
 
 create_file_if_missing ".harness/reports/team-playbook.md" \
 "# 팀 운영 플레이북
 
-## 목적
-
-이 문서는 프로젝트 로컬 실행 하네스 팀을 실제로 어떻게 시작하고 운용할지 요약합니다.
-
-## 시작 순서
-
-1. 기본적으로는 run-harness를 실행 하네스 팀의 진입점으로 사용합니다.
-2. run-harness가 현재 상태를 보고 필요한 역할을 우선순위로 정합니다.
-3. 새 프로젝트라면 domain-analyst부터 시작하는 흐름을 우선합니다.
-4. 구조가 이미 있다면 orchestrator / validator 중심의 보강 루프를 우선합니다.
-
-## 기본 운영 원칙
-
-- 문서보다 역할 팀을 본체로 봅니다.
-- 리포트는 팀이 공유하는 보조 기준으로 사용합니다.
-- validator 피드백이 나오면 architect / scaffolder / orchestrator가 다시 보강합니다.
-- QA 질문이 약하면 qa-designer를 다시 호출해 보강합니다.
-- 중요한 역할 호출이나 흐름 변경은 session-log에 남깁니다.
-
-## 로그 운영
-
-- 로그 정책은 \`.harness/logging-policy.md\`에서 확인합니다.
-- 역할별 누적 기록은 \`.harness/logs/session-log.md\`에 남깁니다.
-- 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
-- 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
-- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다.
-- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다.
-
-## 운영 메모
-
-- 작은 프로젝트는 역할을 줄일 수 있습니다.
-- 복잡한 프로젝트는 orchestrator 중심 운영이 중요합니다.
-- 이후 프로젝트 특화 실행 하네스로 확장할 수 있습니다.
+$TEAM_PLAYBOOK_REPORT_BLOCK
 "
 
 create_file_if_missing ".harness/logging-policy.md" \
@@ -565,9 +543,10 @@ create_file_if_missing ".harness/logging-policy.md" \
 ## 자동화 도구
 
 - 전역 설치된 \`harness-log.sh\`는 역할 호출 시 세션 로그에 자동 append 합니다.
-- 전역 설치된 \`harness-session-close.sh\`는 세션 종료 시 최신 세션 요약과 역할 호출 빈도 통계를 자동 갱신합니다.
-- 전역 설치된 \`harness-role-stats.sh\`는 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
-- 전역 설치된 \`harness-template-candidates.sh\`는 누적 로그를 분석해 반복 업무 템플릿 후보를 \`.harness/reports/template-candidates.md\`로 정리합니다.
+- 전역 설치된 \`harness-session-close.sh\`는 세션 종료 시 최신 세션 요약을 자동 갱신합니다.
+- 선택 자산이 활성화된 프로젝트에서는 \`harness-session-close.sh\`가 역할 호출 빈도 통계와 템플릿 후보 분석까지 함께 갱신합니다.
+- 선택 자산이 활성화된 프로젝트에서는 \`harness-role-stats.sh\`가 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
+- 선택 자산이 활성화된 프로젝트에서는 \`harness-template-candidates.sh\`가 누적 로그를 분석해 반복 업무 템플릿 후보를 \`.harness/reports/template-candidates.md\`로 정리합니다.
 
 ## 로그를 남겨야 하는 상황
 
@@ -647,10 +626,12 @@ create_file_if_missing ".harness/logs/latest-session-summary.md" \
 아직 종료된 세션 집계가 없습니다.
 "
 
-create_file_if_missing ".harness/logs/role-frequency.md" \
+if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
+  create_file_if_missing ".harness/logs/role-frequency.md" \
 "# 역할 호출 빈도
 
 아직 집계된 역할 호출 통계가 없습니다.
 "
+fi
 
 log "프로젝트 로컬 실행 하네스 초기화 완료"

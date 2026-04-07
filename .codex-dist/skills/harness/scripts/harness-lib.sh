@@ -533,72 +533,233 @@ EOF
           [ -n "$workspace_path" ] || continue
           workspace_name="$(basename "$workspace_path")"
 
-          # 파일 기반 신호를 우선 판단하고, 단서가 없으면 이름 기반 폴백
-          workspace_role=""
+          # 복수 신호를 수집해 폴리글랏 패키지를 지원하고, 단서 없으면 이름 기반 폴백
+          workspace_roles=()
 
-          # 1. package.json 의존성 기반 (jq 없이 grep)
-          if [ -z "$workspace_role" ] && [ -f "$workspace_path/package.json" ]; then
-            if grep -qE '"electron"' "$workspace_path/package.json"; then
-              workspace_role="desktop"
-            elif grep -qE '"(react|vue|svelte|@angular/core|solid-js|next|nuxt|astro|gatsby)"' "$workspace_path/package.json"; then
-              workspace_role="frontend"
-            elif grep -qE '"(express|fastify|koa|hapi|@nestjs/core|@hono/node-server)"' "$workspace_path/package.json"; then
-              workspace_role="backend"
-            elif grep -qE '[[:space:]]"bin"[[:space:]]*:' "$workspace_path/package.json"; then
-              workspace_role="cli"
+          # 1. JavaScript / TypeScript (package.json)
+          if [ -f "$workspace_path/package.json" ]; then
+            _pkg="$workspace_path/package.json"
+            if grep -qE '"electron"' "$_pkg"; then
+              workspace_roles+=("desktop")
+            elif grep -qE '"(react|vue|svelte|@angular/core|solid-js|next|nuxt|astro|gatsby|remix)"' "$_pkg"; then
+              workspace_roles+=("frontend")
+            elif grep -qE '"(express|fastify|koa|hapi|@nestjs/core|@hono/node-server|elysia)"' "$_pkg"; then
+              workspace_roles+=("backend")
+            elif grep -qE '[[:space:]]"bin"[[:space:]]*:' "$_pkg"; then
+              workspace_roles+=("cli")
             elif ls "$workspace_path"/rollup.config.* "$workspace_path"/tsup.config.* "$workspace_path"/unbuild.config.* 2>/dev/null | grep -q .; then
-              workspace_role="library"
+              workspace_roles+=("library")
+            else
+              workspace_roles+=("js")
             fi
           fi
 
-          # 2. Cargo.toml 구조 기반 (Rust)
-          if [ -z "$workspace_role" ] && [ -f "$workspace_path/Cargo.toml" ]; then
+          # 2. Python (pyproject.toml / requirements.txt / setup.py / Pipfile)
+          if [ -f "$workspace_path/pyproject.toml" ] || [ -f "$workspace_path/requirements.txt" ] || [ -f "$workspace_path/setup.py" ] || [ -f "$workspace_path/Pipfile" ]; then
+            if grep -qiE '(django|flask|fastapi|tornado|aiohttp|starlette|bottle|falcon|sanic)' \
+                "$workspace_path/requirements.txt" "$workspace_path/pyproject.toml" "$workspace_path/Pipfile" 2>/dev/null; then
+              workspace_roles+=("backend")
+            elif grep -qiE '(click|typer)' \
+                "$workspace_path/requirements.txt" "$workspace_path/pyproject.toml" 2>/dev/null; then
+              workspace_roles+=("cli")
+            else
+              workspace_roles+=("python")
+            fi
+          fi
+
+          # 3. Rust (Cargo.toml)
+          if [ -f "$workspace_path/Cargo.toml" ]; then
             if grep -q '^\[\[bin\]\]' "$workspace_path/Cargo.toml"; then
-              workspace_role="cli"
+              workspace_roles+=("cli")
             elif grep -q '^\[lib\]' "$workspace_path/Cargo.toml"; then
-              workspace_role="library"
+              workspace_roles+=("library")
+            else
+              workspace_roles+=("rust")
             fi
           fi
 
-          # 3. 엔트리포인트 파일 존재 기반
-          if [ -z "$workspace_role" ] && { [ -f "$workspace_path/index.html" ] || [ -f "$workspace_path/public/index.html" ]; }; then
-            workspace_role="frontend"
-          fi
-          if [ -z "$workspace_role" ] && { [ -f "$workspace_path/Dockerfile" ] || [ -f "$workspace_path/docker-compose.yml" ]; }; then
-            workspace_role="deploy"
+          # 4. Go (go.mod)
+          if [ -f "$workspace_path/go.mod" ]; then
+            if [ -f "$workspace_path/main.go" ] || [ -d "$workspace_path/cmd" ]; then
+              workspace_roles+=("cli")
+            else
+              workspace_roles+=("go")
+            fi
           fi
 
-          # 4. 이름 기반 폴백
-          if [ -z "$workspace_role" ]; then
+          # 5. Java / Kotlin (pom.xml / build.gradle)
+          if [ -f "$workspace_path/pom.xml" ] || [ -f "$workspace_path/build.gradle" ] || [ -f "$workspace_path/build.gradle.kts" ]; then
+            if grep -qiE '(spring-boot|spring-web|quarkus|micronaut|jakarta.ws.rs)' \
+                "$workspace_path/pom.xml" "$workspace_path/build.gradle" "$workspace_path/build.gradle.kts" 2>/dev/null; then
+              workspace_roles+=("backend")
+            elif find "$workspace_path" -maxdepth 4 -name "AndroidManifest.xml" -print -quit 2>/dev/null | grep -q .; then
+              workspace_roles+=("android")
+            else
+              workspace_roles+=("jvm")
+            fi
+          fi
+
+          # 6. C# / .NET (*.csproj / global.json)
+          if find "$workspace_path" -maxdepth 2 -name "*.csproj" -print -quit 2>/dev/null | grep -q . || [ -f "$workspace_path/global.json" ]; then
+            workspace_roles+=("dotnet")
+          fi
+
+          # 7. Ruby (Gemfile)
+          if [ -f "$workspace_path/Gemfile" ]; then
+            if grep -qiE '(rails|sinatra|hanami|grape)' "$workspace_path/Gemfile" 2>/dev/null; then
+              workspace_roles+=("backend")
+            else
+              workspace_roles+=("ruby")
+            fi
+          fi
+
+          # 8. PHP (composer.json)
+          if [ -f "$workspace_path/composer.json" ]; then
+            if grep -qiE '(laravel|symfony|slim|yii|codeigniter|lumen)' "$workspace_path/composer.json" 2>/dev/null; then
+              workspace_roles+=("backend")
+            else
+              workspace_roles+=("php")
+            fi
+          fi
+
+          # 9. Swift (Package.swift)
+          if [ -f "$workspace_path/Package.swift" ]; then
+            if grep -qE 'executableTarget' "$workspace_path/Package.swift" 2>/dev/null; then
+              workspace_roles+=("cli")
+            else
+              workspace_roles+=("swift")
+            fi
+          fi
+
+          # 10. Dart / Flutter (pubspec.yaml)
+          if [ -f "$workspace_path/pubspec.yaml" ]; then
+            if grep -qE '^[[:space:]]*flutter:' "$workspace_path/pubspec.yaml" 2>/dev/null; then
+              workspace_roles+=("flutter")
+            else
+              workspace_roles+=("dart")
+            fi
+          fi
+
+          # 11. Elixir (mix.exs)
+          if [ -f "$workspace_path/mix.exs" ]; then
+            if grep -qiE '(phoenix|plug)' "$workspace_path/mix.exs" 2>/dev/null; then
+              workspace_roles+=("backend")
+            else
+              workspace_roles+=("elixir")
+            fi
+          fi
+
+          # 12. C / C++ (CMakeLists.txt / Makefile — package.json 없을 때만)
+          if [ -f "$workspace_path/CMakeLists.txt" ] || \
+             { [ -f "$workspace_path/Makefile" ] && ! [ -f "$workspace_path/package.json" ]; }; then
+            workspace_roles+=("native")
+          fi
+
+          # 13. Scala (build.sbt)
+          if [ -f "$workspace_path/build.sbt" ]; then
+            workspace_roles+=("scala")
+          fi
+
+          # 14. Haskell (stack.yaml / *.cabal)
+          if [ -f "$workspace_path/stack.yaml" ] || \
+             find "$workspace_path" -maxdepth 1 -name "*.cabal" -print -quit 2>/dev/null | grep -q .; then
+            workspace_roles+=("haskell")
+          fi
+
+          # 15. Clojure (deps.edn / project.clj)
+          if [ -f "$workspace_path/deps.edn" ] || [ -f "$workspace_path/project.clj" ]; then
+            workspace_roles+=("clojure")
+          fi
+
+          # 16. Zig (build.zig)
+          if [ -f "$workspace_path/build.zig" ]; then
+            workspace_roles+=("zig")
+          fi
+
+          # 17. Crystal (shard.yml)
+          if [ -f "$workspace_path/shard.yml" ]; then
+            workspace_roles+=("crystal")
+          fi
+
+          # 18. Julia (Project.toml)
+          if [ -f "$workspace_path/Project.toml" ]; then
+            workspace_roles+=("julia")
+          fi
+
+          # 19. OCaml (dune-project)
+          if [ -f "$workspace_path/dune-project" ]; then
+            workspace_roles+=("ocaml")
+          fi
+
+          # 20. Erlang (rebar.config)
+          if [ -f "$workspace_path/rebar.config" ]; then
+            workspace_roles+=("erlang")
+          fi
+
+          # 언어 무관 엔트리포인트 신호 (아직 역할 없을 때만)
+          if [ "${#workspace_roles[@]}" -eq 0 ]; then
+            if [ -f "$workspace_path/index.html" ] || [ -f "$workspace_path/public/index.html" ]; then
+              workspace_roles+=("frontend")
+            fi
+            if [ -f "$workspace_path/Dockerfile" ] || [ -f "$workspace_path/docker-compose.yml" ]; then
+              workspace_roles+=("deploy")
+            fi
+          fi
+
+          # 이름 기반 폴백 (파일 신호 없을 때)
+          if [ "${#workspace_roles[@]}" -eq 0 ]; then
             case "$workspace_name" in
-              *common*|*shared*|*ui*|*design*|*core*) workspace_role="shared" ;;
-              *lib*|*library*)                         workspace_role="library" ;;
-              *domain*|*model*)                        workspace_role="domain" ;;
-              *infra*|*infrastructure*)                workspace_role="infra" ;;
-              *cmd*|*cli*)                             workspace_role="cli" ;;
-              *desktop*|*electron*)                    workspace_role="desktop" ;;
-              *web*|*front*|*client*|*site*)           workspace_role="frontend" ;;
-              *app*|*application*)                     workspace_role="app" ;;
-              *api*|*server*|*backend*|*service*)      workspace_role="backend" ;;
-              *test*|*qa*)                             workspace_role="test" ;;
-              *)                                       workspace_role="unknown" ;;
+              *common*|*shared*|*ui*|*design*|*core*) workspace_roles+=("shared") ;;
+              *lib*|*library*)                         workspace_roles+=("library") ;;
+              *domain*|*model*)                        workspace_roles+=("domain") ;;
+              *infra*|*infrastructure*)                workspace_roles+=("infra") ;;
+              *cmd*|*cli*)                             workspace_roles+=("cli") ;;
+              *desktop*|*electron*)                    workspace_roles+=("desktop") ;;
+              *web*|*front*|*client*|*site*)           workspace_roles+=("frontend") ;;
+              *app*|*application*)                     workspace_roles+=("app") ;;
+              *api*|*server*|*backend*|*service*)      workspace_roles+=("backend") ;;
+              *test*|*qa*)                             workspace_roles+=("test") ;;
+              *)                                       workspace_roles+=("unknown") ;;
             esac
           fi
 
-          case "$workspace_role" in
-            frontend) printf '%s\n' "- \`$workspace_path\`: 사용자 진입점을 담는 애플리케이션 패키지 후보입니다." ;;
-            backend)  printf '%s\n' "- \`$workspace_path\`: 서비스 또는 백엔드 책임을 가진 패키지 후보입니다." ;;
-            desktop)  printf '%s\n' "- \`$workspace_path\`: 별도 실행 환경 또는 배포 경계를 가진 패키지 후보입니다." ;;
-            cli)      printf '%s\n' "- \`$workspace_path\`: CLI 진입점 또는 실행 커맨드 패키지 후보입니다." ;;
-            library)  printf '%s\n' "- \`$workspace_path\`: 재사용 가능한 라이브러리 또는 모듈 후보입니다." ;;
-            shared)   printf '%s\n' "- \`$workspace_path\`: 공용 패키지 또는 공유 유틸리티 후보입니다." ;;
-            domain)   printf '%s\n' "- \`$workspace_path\`: 도메인 모델 또는 비즈니스 로직 레이어 후보입니다." ;;
-            infra)    printf '%s\n' "- \`$workspace_path\`: 인프라 또는 외부 의존성 어댑터 레이어 후보입니다." ;;
-            deploy)   printf '%s\n' "- \`$workspace_path\`: 독립 배포 단위 또는 컨테이너 경계를 가진 패키지 후보입니다." ;;
-            app)      printf '%s\n' "- \`$workspace_path\`: 애플리케이션 레이어 또는 실행 진입점 후보입니다." ;;
-            test)     printf '%s\n' "- \`$workspace_path\`: 테스트 또는 검증 보조 패키지 후보입니다." ;;
-            *)        printf '%s\n' "- \`$workspace_path\`: 주요 패키지 후보입니다." ;;
-          esac
+          # 폴리글랏: 역할이 2개 이상이면 목록 나열
+          if [ "${#workspace_roles[@]}" -gt 1 ]; then
+            printf '%s\n' "- \`$workspace_path\`: 복수 언어/역할 혼합 패키지입니다 ($(join_by_comma "${workspace_roles[@]}"))."
+          else
+            case "${workspace_roles[0]}" in
+              frontend) printf '%s\n' "- \`$workspace_path\`: 사용자 진입점을 담는 애플리케이션 패키지 후보입니다." ;;
+              backend)  printf '%s\n' "- \`$workspace_path\`: 서비스 또는 백엔드 책임을 가진 패키지 후보입니다." ;;
+              desktop)  printf '%s\n' "- \`$workspace_path\`: 별도 실행 환경 또는 배포 경계를 가진 패키지 후보입니다." ;;
+              cli)      printf '%s\n' "- \`$workspace_path\`: CLI 진입점 또는 실행 커맨드 패키지 후보입니다." ;;
+              library)  printf '%s\n' "- \`$workspace_path\`: 재사용 가능한 라이브러리 또는 모듈 후보입니다." ;;
+              shared)   printf '%s\n' "- \`$workspace_path\`: 공용 패키지 또는 공유 유틸리티 후보입니다." ;;
+              domain)   printf '%s\n' "- \`$workspace_path\`: 도메인 모델 또는 비즈니스 로직 레이어 후보입니다." ;;
+              infra)    printf '%s\n' "- \`$workspace_path\`: 인프라 또는 외부 의존성 어댑터 레이어 후보입니다." ;;
+              deploy)   printf '%s\n' "- \`$workspace_path\`: 독립 배포 단위 또는 컨테이너 경계를 가진 패키지 후보입니다." ;;
+              app)      printf '%s\n' "- \`$workspace_path\`: 애플리케이션 레이어 또는 실행 진입점 후보입니다." ;;
+              test)     printf '%s\n' "- \`$workspace_path\`: 테스트 또는 검증 보조 패키지 후보입니다." ;;
+              android)  printf '%s\n' "- \`$workspace_path\`: Android 애플리케이션 패키지 후보입니다." ;;
+              flutter)  printf '%s\n' "- \`$workspace_path\`: Flutter 크로스플랫폼 애플리케이션 패키지 후보입니다." ;;
+              dart)     printf '%s\n' "- \`$workspace_path\`: Dart 패키지 후보입니다." ;;
+              swift)    printf '%s\n' "- \`$workspace_path\`: Swift 패키지 후보입니다." ;;
+              ruby)     printf '%s\n' "- \`$workspace_path\`: Ruby 패키지 후보입니다." ;;
+              php)      printf '%s\n' "- \`$workspace_path\`: PHP 패키지 후보입니다." ;;
+              elixir)   printf '%s\n' "- \`$workspace_path\`: Elixir 패키지 후보입니다." ;;
+              jvm)      printf '%s\n' "- \`$workspace_path\`: JVM 기반 패키지 후보입니다." ;;
+              dotnet)   printf '%s\n' "- \`$workspace_path\`: .NET 패키지 후보입니다." ;;
+              native)   printf '%s\n' "- \`$workspace_path\`: 네이티브 빌드 패키지 후보입니다." ;;
+              scala)    printf '%s\n' "- \`$workspace_path\`: Scala 패키지 후보입니다." ;;
+              haskell)  printf '%s\n' "- \`$workspace_path\`: Haskell 패키지 후보입니다." ;;
+              clojure)  printf '%s\n' "- \`$workspace_path\`: Clojure 패키지 후보입니다." ;;
+              zig)      printf '%s\n' "- \`$workspace_path\`: Zig 패키지 후보입니다." ;;
+              crystal)  printf '%s\n' "- \`$workspace_path\`: Crystal 패키지 후보입니다." ;;
+              julia)    printf '%s\n' "- \`$workspace_path\`: Julia 패키지 후보입니다." ;;
+              ocaml)    printf '%s\n' "- \`$workspace_path\`: OCaml 패키지 후보입니다." ;;
+              erlang)   printf '%s\n' "- \`$workspace_path\`: Erlang 패키지 후보입니다." ;;
+              *)        printf '%s\n' "- \`$workspace_path\`: 주요 패키지 후보입니다." ;;
+            esac
+          fi
         done < <(list_workspace_packages)
       fi
 

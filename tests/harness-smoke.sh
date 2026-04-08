@@ -25,6 +25,16 @@ assert_contains() {
   fi
 }
 
+assert_not_contains() {
+  local haystack="$1"
+  local needle="$2"
+  local label="$3"
+
+  if printf '%s' "$haystack" | grep -Fq -- "$needle"; then
+    fail "$label: '$needle' 포함됨"
+  fi
+}
+
 assert_file() {
   local path="$1"
 
@@ -51,6 +61,20 @@ assert_command_fails_with() {
 
   [ "$status" -ne 0 ] || fail "$label: 실패해야 하는 명령이 성공함"
   printf '%s' "$output" | grep -Fq -- "$needle" || fail "$label: '$needle' 없음"
+}
+
+setup_test_artifacts() {
+  local project_path="$1"
+
+  mkdir -p "$project_path/.claude/commands"
+  cat > "$project_path/.claude/note-explorer-implementation-plan.md" <<'EOF'
+# note explorer plan
+EOF
+  cat > "$project_path/.claude/commands/branch.md" <<'EOF'
+# branch command
+EOF
+  mkdir -p "$project_path/build/win/win-unpacked/resources"
+  touch "$project_path/build/win/win-unpacked/resources/app.asar"
 }
 
 log "내부 설계 레퍼런스 용어 확인"
@@ -176,10 +200,13 @@ assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "일회성 위임" "run-harness 보조 위임 판단"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "생성-검증" "run-harness 패턴 판단"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "저장소 고유 용어" "run-harness 사용자 맥락 판단"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "domain-analyst의 근거 제외 규칙" "run-harness 근거 제외 규칙 위임"
 assert_file "$TMP_ROOT/empty-project/.codex/agents/run-harness.md"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/agents/run-harness.md")" "## 역할" "run-harness agent 역할"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/agents/run-harness.md")" "## handoff" "run-harness agent handoff"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/domain-analyst/SKILL.md")" ".codex/agents/domain-analyst.md" "domain skill agent 연결"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/domain-analyst/SKILL.md")" ".claude" "domain skill AI 설정 디렉토리 제외 규칙"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/domain-analyst/SKILL.md")" "build" "domain skill 생성 산출물 제외 규칙"
 (
   cd "$TMP_ROOT/empty-project"
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"
@@ -212,12 +239,14 @@ if (appName !== "smoke-stack-project") {
   throw new Error("unexpected app name");
 }
 EOF
+setup_test_artifacts "$TMP_ROOT/stack-project"
 mkdir -p "$TMP_ROOT/stack-explore-project"
 cp "$TMP_ROOT/stack-project/package.json" "$TMP_ROOT/stack-explore-project/package.json"
 mkdir -p "$TMP_ROOT/stack-explore-project/src" "$TMP_ROOT/stack-explore-project/tests"
 cp "$TMP_ROOT/stack-project/src/main.ts" "$TMP_ROOT/stack-explore-project/src/main.ts"
 cp "$TMP_ROOT/stack-project/src/app.ts" "$TMP_ROOT/stack-explore-project/src/app.ts"
 cp "$TMP_ROOT/stack-project/tests/app.test.ts" "$TMP_ROOT/stack-explore-project/tests/app.test.ts"
+setup_test_artifacts "$TMP_ROOT/stack-explore-project"
 (
   cd "$TMP_ROOT/stack-explore-project"
   bash "$HARNESS_SCRIPT_DIR/harness-explore.sh"
@@ -226,6 +255,8 @@ assert_file "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "## 대표 진입점" "탐색 문서 진입점 섹션"
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" '`src/main.ts`' "탐색 문서 대표 진입점 앵커"
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" '`tests/app.test.ts`' "탐색 문서 테스트 자산 앵커"
+assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" ".claude/" "탐색 문서 AI 설정 디렉토리 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "app.asar" "탐색 문서 빌드 산출물 제외"
 STACK_INIT_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-init.sh"
@@ -244,8 +275,13 @@ assert_contains "$STACK_UPDATE_OUTPUT" "상위 컨텍스트 감사: AGENTS.md �
 assert_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"
+assert_contains "$(cat "$TMP_ROOT/stack-project/.codex/skills/run-harness/SKILL.md")" '요청: "새 API 엔드포인트 추가"' "run-harness 판단 예시 따옴표 유지"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" '`src/main.ts`' "생성된 탐색 문서 대표 진입점"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" ".claude/" "생성된 탐색 문서 AI 설정 디렉토리 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "app.asar" "생성된 탐색 문서 빌드 산출물 제외"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" "저장소 고유 근거" "스택 프로젝트 domain-analysis 저장소 근거"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" ".claude/" "domain-analysis AI 설정 디렉토리 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" "app.asar" "domain-analysis 빌드 산출물 제외"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/team-playbook.md")" "역할 호출 순서" "스택 프로젝트 team-playbook 상세 운영 규칙"
 STACK_VERIFY_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \

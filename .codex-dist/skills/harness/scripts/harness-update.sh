@@ -163,6 +163,7 @@ TEAM_PLAYBOOK_REPORT_BLOCK="$(build_team_playbook_report_block "$EXPLORATION_CON
 log "하네스 업데이트 시작"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
 log "탐색 근거 문서: $EXPLORATION_NOTES_FILE"
+log "탐색 상태: $EXPLORATION_CONTEXT_LEVEL"
 log "탐색 근거 요약: $EXPLORATION_ANCHOR_SUMMARY"
 log "선택 갱신 대상: $(build_selected_target_summary)"
 while IFS= read -r audit_line; do

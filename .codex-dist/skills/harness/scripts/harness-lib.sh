@@ -186,28 +186,35 @@ optional_harness_assets_enabled() {
   return 1
 }
 
-list_source_anchor_paths() {
+find_exploration_paths() {
   find . \
-    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './node_modules' -o -path './.yarn' -o -path './dist' -o -path './build' -o -path './coverage' \) -prune \
+    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './.claude' -o -path './.agents' -o -path './node_modules' -o -path './.yarn' -o -name dist -o -name build -o -name coverage \) -prune \
     -o \
+    "$@"
+}
+
+list_source_anchor_paths() {
+  find_exploration_paths \
     -type f \
     \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' -o -name '*.rs' -o -name '*.py' -o -name '*.go' -o -name '*.java' -o -name '*.kt' -o -name '*.swift' -o -name '*.php' -o -name '*.rb' -o -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.hpp' \) \
     -print | sed 's#^\./##' | head -n 5
 }
 
 list_entrypoint_anchor_paths() {
-  find . \
-    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './node_modules' -o -path './.yarn' -o -path './dist' -o -path './build' -o -path './coverage' \) -prune \
-    -o \
+  find_exploration_paths \
     -type f \
-    \( -name 'main.*' -o -name 'index.*' -o -name 'app.*' -o -name 'server.*' -o -name 'cli.*' -o -name 'lib.*' -o -name 'mod.rs' \) \
+    \( -name 'main.ts' -o -name 'main.tsx' -o -name 'main.js' -o -name 'main.jsx' -o -name 'main.rs' -o \
+       -name 'index.ts' -o -name 'index.tsx' -o -name 'index.js' -o -name 'index.jsx' -o \
+       -name 'app.ts' -o -name 'app.tsx' -o -name 'app.js' -o -name 'app.jsx' -o \
+       -name 'server.ts' -o -name 'server.tsx' -o -name 'server.js' -o -name 'server.jsx' -o \
+       -name 'cli.ts' -o -name 'cli.tsx' -o -name 'cli.js' -o -name 'cli.jsx' -o \
+       -name 'lib.ts' -o -name 'lib.tsx' -o -name 'lib.js' -o -name 'lib.jsx' -o \
+       -name 'mod.rs' \) \
     -print | sed 's#^\./##' | head -n 5
 }
 
 list_code_boundary_paths() {
-  find . \
-    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './node_modules' -o -path './.yarn' -o -path './dist' -o -path './build' -o -path './coverage' \) -prune \
-    -o \
+  find_exploration_paths \
     -type f \
     \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' -o -name '*.rs' -o -name '*.py' -o -name '*.go' -o -name '*.java' -o -name '*.kt' -o -name '*.swift' -o -name '*.php' -o -name '*.rb' -o -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.hpp' \) \
     -print | sed 's#^\./##' | awk -F/ '
@@ -217,26 +224,20 @@ list_code_boundary_paths() {
 }
 
 list_test_asset_paths() {
-  find . \
-    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './node_modules' -o -path './.yarn' -o -path './dist' -o -path './build' -o -path './coverage' \) -prune \
-    -o \
+  find_exploration_paths \
     \( -type d \( -name 'test' -o -name 'tests' -o -name '__tests__' \) -print \
     -o -type f \( -name '*test*' -o -name '*spec*' \) -print \) | sed 's#^\./##' | head -n 5
 }
 
 list_config_asset_paths() {
-  find . -maxdepth 3 \
-    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './node_modules' -o -path './.yarn' -o -path './dist' -o -path './build' -o -path './coverage' \) -prune \
-    -o \
+  find_exploration_paths -maxdepth 3 \
     -type f \
     \( -name 'package.json' -o -name 'Cargo.toml' -o -name 'pyproject.toml' -o -name 'requirements.txt' -o -name 'go.mod' -o -name 'pom.xml' -o -name 'build.gradle' -o -name 'build.gradle.kts' -o -name 'settings.gradle' -o -name 'settings.gradle.kts' -o -name 'composer.json' -o -name 'Gemfile' -o -name 'Makefile' -o -name 'CMakeLists.txt' -o -name 'Dockerfile' -o -name '*.yml' -o -name '*.yaml' \) \
     -print | sed 's#^\./##' | head -n 8
 }
 
 list_domain_context_paths() {
-  find . -maxdepth 4 \
-    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './node_modules' -o -path './.yarn' -o -path './dist' -o -path './build' -o -path './coverage' \) -prune \
-    -o \
+  find_exploration_paths -maxdepth 4 \
     -type f \
     \( -name 'README.md' -o -name '*.md' -o -name '*.mdx' -o -name '*.txt' \) \
     -print | sed 's#^\./##' | head -n 8

@@ -95,6 +95,7 @@ TEAM_PLAYBOOK_REPORT_BLOCK="$(build_team_playbook_report_block "$EXPLORATION_CON
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
 log "탐색 근거 문서: $EXPLORATION_NOTES_FILE"
+log "탐색 상태: $EXPLORATION_CONTEXT_LEVEL"
 log "탐색 근거 요약: $EXPLORATION_ANCHOR_SUMMARY"
 while IFS= read -r audit_line; do
   [ -n "$audit_line" ] || continue
@@ -403,9 +404,10 @@ description: 저장소의 목적, 대표 진입점, 주요 코드 경계, 실행
 
 1. 저장소의 목적과 범위를 추정한다.
 2. 대표 진입점과 주요 코드 경계를 확인한다.
-3. 주요 흐름을 식별한다.
-4. 실행·검증 경로와 하네스 관점에서 중요한 영역을 정리한다.
-5. 결과를 \`.harness/reports/domain-analysis.md\`에 반영한다.
+3. 저장소 고유 명사, 핵심 패키지 또는 모듈 책임, 주요 흐름을 식별한다.
+4. 상태 관리 경계, 데이터 흐름, 배포 또는 런타임 차이가 보이면 실제 파일 근거와 함께 정리한다.
+5. 실행·검증 경로와 하네스 관점에서 중요한 영역을 정리한다.
+6. 결과를 \`.harness/reports/domain-analysis.md\`에 반영한다.
 
 ## 입력
 
@@ -429,12 +431,19 @@ description: 저장소의 목적, 대표 진입점, 주요 코드 경계, 실행
 - 이후 역할이 사용할 수 있도록 구조적이고 요약된 결과를 남긴다.
 - 추정과 사실을 구분한다.
 - 구현 세부보다 역할 팀이 참고해야 할 핵심 흐름에 집중한다.
+- 저장소 고유 명사와 실제 업무 용어를 가능한 한 보존한다.
+- 도메인 설명은 실제 파일 또는 경로 근거와 연결해 남긴다.
+- 패키지 책임, 상태 흐름, 배포 경계가 보이면 파일 근거와 함께 정리한다.
 
 ## 운영 규칙
 
 - 분석이 불충분하면 architect가 설계를 강하게 진행할 수 없다는 점을 항상 의식한다.
 - 핵심 흐름이 불명확하면 \"무엇이 아직 불명확한지\"를 명시한다.
 - validator나 QA가 분석 약점을 지적하면, 요약만 고치지 말고 분석의 기준 자체를 다시 본다.
+- \`저장소 요약\`은 가능하면 일반 기술 스택 설명보다 실제 사용자 문제와 핵심 도메인 흐름을 먼저 설명한다.
+- \`저장소 고유 근거\`에는 도메인 설명을 뒷받침하는 대표 파일과 경로를 우선 남긴다.
+- \`.claude\`, \`.codex\`, \`.agents\` 같은 AI 설정 디렉토리는 도메인 근거와 실행 흐름 판단에서 제외한다.
+- \`build\`, \`dist\`, \`coverage\` 같은 생성 산출물 경로는 대표 진입점이나 핵심 흐름 근거로 쓰지 않는다.
 - \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
 - 역할이 호출되면 \`.harness/logs/session-log.md\`에 시작 요청, 호출 역할, 출력 파일, 다음 권장 역할을 남긴다.
 "
@@ -783,6 +792,7 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 요청이 기능 구현, 구조 정리, 공통 모듈 보강, 빌드/검증 중 어디에 걸리는지 먼저 분류하고 그 결과를 orchestration-plan 판단의 입력으로 사용한다.
 - 요청이 추상적이거나 저장소 맥락이 약하면 질문과 탐색 보강을 먼저 두고, 저장소 고유 용어와 영향 범위를 정확히 말하면 더 직접적인 역할 시작을 허용한다.
 - 영향 범위가 공통 계층이나 다중 모듈로 번지면 domain-analyst와 qa-designer를 더 이른 순서에 배치한다.
+- 후속 역할이 저장소를 직접 읽더라도 domain-analyst의 근거 제외 규칙을 그대로 따른다.
 - 빈 저장소이거나 탐색 근거가 부족하면, \`.harness/project-setup.md\`가 있는지 먼저 확인한다.
 - \`.harness/project-setup.md\`가 작성되어 있으면 그 내용을 domain-analyst의 시작 입력으로 연결한다.
 - 작성되어 있지 않으면 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 먼저 확인한 뒤, 파일이 없는 경우 템플릿 내용을 포함하여 \`.harness/project-setup.md\`에 채우도록 안내한다.
@@ -795,11 +805,11 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 
 ## 판단 예시
 
-- 요청: "새 API 엔드포인트 추가" → 판단: 기능 구현, 단일 경계 → 시작: domain-analyst → qa-designer → orchestrator
-- 요청: "공통 유틸 함수 리팩터" → 판단: 공통 계층 영향, 다중 소비자 → 시작: domain-analyst → qa-designer → orchestrator
-- 요청: "하네스 역할 구조 재설계" → 판단: 경계 재정의, 구조 변경 → 시작: harness-architect → qa-designer → orchestrator
-- 요청: "QA 문서만 보강" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --qa\` 검토 후 qa-designer
-- 요청: "domain-analysis만 오래됐음" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --domain\` 검토 후 domain-analyst
+- 요청: \"새 API 엔드포인트 추가\" → 판단: 기능 구현, 단일 경계 → 시작: domain-analyst → qa-designer → orchestrator
+- 요청: \"공통 유틸 함수 리팩터\" → 판단: 공통 계층 영향, 다중 소비자 → 시작: domain-analyst → qa-designer → orchestrator
+- 요청: \"하네스 역할 구조 재설계\" → 판단: 경계 재정의, 구조 변경 → 시작: harness-architect → qa-designer → orchestrator
+- 요청: \"QA 문서만 보강\" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --qa\` 검토 후 qa-designer
+- 요청: \"domain-analysis만 오래됐음\" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --domain\` 검토 후 domain-analyst
 - 요청: 역할 스킬은 있는데 보고서가 대부분 비어 있음 → 판단: 부분 구조 drift → 시작: 명시적 재구성 제안
 - 요청: 탐색 근거 부족, project-setup.md 미작성 → 판단: 프로젝트 성격 불명 → 시작: project-setup.md 템플릿 제공 및 작성 안내 후 대기
 - 요청: 탐색 근거 부족, project-setup.md 작성됨 → 판단: 목표·성격 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)

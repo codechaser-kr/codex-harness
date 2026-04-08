@@ -37,8 +37,7 @@ assert_dir() {
 }
 
 run_mode_check() {
-  local workdir="$1"
-  local expected="$2"
+  local expected="$1"
   local actual
 
   actual="$(bash -lc ". \"$HARNESS_SCRIPT_DIR/harness-lib.sh\"; detect_harness_operation_mode" 2>/dev/null)"
@@ -60,13 +59,13 @@ log "운영 모드 판정 확인"
 mkdir -p "$TMP_ROOT/mode-empty"
 (
   cd "$TMP_ROOT/mode-empty"
-  run_mode_check "$PWD" "신규 구축"
+  run_mode_check "신규 구축"
 )
 
 mkdir -p "$TMP_ROOT/mode-expand/.codex/skills/existing"
 (
   cd "$TMP_ROOT/mode-expand"
-  run_mode_check "$PWD" "기존 확장"
+  run_mode_check "기존 확장"
 )
 
 mkdir -p "$TMP_ROOT/mode-maint/.codex/skills/existing"
@@ -76,7 +75,7 @@ touch "$TMP_ROOT/mode-maint/.harness/reports/domain-analysis.md"
 touch "$TMP_ROOT/mode-maint/.harness/logs/session-log.md"
 (
   cd "$TMP_ROOT/mode-maint"
-  run_mode_check "$PWD" "운영 유지보수"
+  run_mode_check "운영 유지보수"
 )
 
 log "빈 프로젝트 init -> verify 확인"

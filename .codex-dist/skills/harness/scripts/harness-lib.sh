@@ -1355,9 +1355,18 @@ ensure_harness_log_scaffold() {
 
 - 전역 설치된 `harness-log.sh`는 역할 호출 시 세션 로그에 자동 append 합니다.
 - 전역 설치된 `harness-session-close.sh`는 세션 종료 시 최신 세션 요약을 자동 갱신합니다.
+
+## 기본 동작
+
+- 역할 호출 기록은 `.harness/logs/session-log.md`에 누적합니다.
+- 구조화된 이벤트는 `.harness/logs/session-events.tsv`에 남깁니다.
+- 세션 종료 시 최신 요약은 `.harness/logs/latest-session-summary.md`로 갱신합니다.
+
+## 선택 자산
+
 - 선택 자산이 활성화된 프로젝트에서는 `harness-session-close.sh`가 역할 호출 빈도 통계와 템플릿 후보 분석까지 함께 갱신합니다.
-- 선택 자산이 활성화된 프로젝트에서는 `harness-role-stats.sh`가 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
-- 선택 자산이 활성화된 프로젝트에서는 `harness-template-candidates.sh`가 누적 로그를 분석해 반복 업무 템플릿 후보를 `.harness/reports/template-candidates.md`로 정리합니다.
+- `harness-role-stats.sh`는 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
+- `harness-template-candidates.sh`는 누적 로그를 분석해 반복 업무 템플릿 후보를 `.harness/reports/template-candidates.md`로 정리합니다.
 
 ## 로그를 남겨야 하는 상황
 

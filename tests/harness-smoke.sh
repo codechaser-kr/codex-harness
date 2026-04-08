@@ -36,6 +36,22 @@ assert_dir() {
   [ -d "$path" ] || fail "디렉토리 누락: $path"
 }
 
+assert_command_fails_with() {
+  local workdir="$1"
+  local cmd="$2"
+  local needle="$3"
+  local label="$4"
+  local output
+
+  set +e
+  output="$(cd "$workdir" && eval "$cmd" 2>&1)"
+  local status=$?
+  set -e
+
+  [ "$status" -ne 0 ] || fail "$label: 실패해야 하는 명령이 성공함"
+  printf '%s' "$output" | grep -Fq "$needle" || fail "$label: '$needle' 없음"
+}
+
 run_mode_check() {
   local expected="$1"
   local actual
@@ -86,6 +102,14 @@ mkdir -p "$TMP_ROOT/empty-explore-project"
   bash "$HARNESS_SCRIPT_DIR/harness-explore.sh"
 )
 assert_file "$TMP_ROOT/empty-explore-project/.harness/reports/exploration-notes.md"
+
+log "빈 프로젝트 update 차단 확인"
+mkdir -p "$TMP_ROOT/empty-update-project"
+assert_command_fails_with \
+  "$TMP_ROOT/empty-update-project" \
+  "bash \"$HARNESS_SCRIPT_DIR/harness-update.sh\"" \
+  "update 대신 harness-init.sh를 사용해야 합니다." \
+  "빈 프로젝트 update 차단"
 
 log "빈 프로젝트 init -> verify 확인"
 mkdir -p "$TMP_ROOT/empty-project"
@@ -141,5 +165,13 @@ assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"
   cd "$TMP_ROOT/stack-project"
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"
 )
+
+log "부분 구조 프로젝트 재구성 안내 확인"
+mkdir -p "$TMP_ROOT/partial-project/.codex/skills/existing"
+assert_command_fails_with \
+  "$TMP_ROOT/partial-project" \
+  "bash \"$HARNESS_SCRIPT_DIR/harness-update.sh\"" \
+  "명시적 재구성이 적절합니다." \
+  "부분 구조 update 차단"
 
 log "harness smoke test 통과"

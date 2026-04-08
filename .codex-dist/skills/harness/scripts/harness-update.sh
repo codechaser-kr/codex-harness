@@ -26,7 +26,24 @@ STACK_HINT="$(detect_stack_hint)"
 PROJECT_SIGNAL_LEVEL="$(detect_project_signal_level)"
 HARNESS_OPERATION_MODE="$(detect_harness_operation_mode)"
 HARNESS_AUDIT_SUMMARY="$(build_harness_audit_summary "$HARNESS_OPERATION_MODE")"
+HARNESS_SKILL_COUNT="$(count_harness_skill_dirs)"
+HARNESS_REPORT_COUNT="$(count_harness_report_files)"
+HARNESS_LOG_COUNT="$(count_harness_log_files)"
 EXPLORATION_NOTES_FILE="$REPORT_DIR/exploration-notes.md"
+
+if [ "$HARNESS_OPERATION_MODE" = "신규 구축" ]; then
+  log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
+  log "기존 구조가 없으므로 update 대신 harness-init.sh를 사용해야 합니다."
+  exit 1
+fi
+
+if [ "$HARNESS_OPERATION_MODE" = "기존 확장" ] && { [ "$HARNESS_SKILL_COUNT" -eq 0 ] || [ "$HARNESS_REPORT_COUNT" -eq 0 ]; }; then
+  log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
+  log "부분 구조만 남아 있어 update보다 명시적 재구성이 적절합니다."
+  log "기존 하네스 구조 정리 후 harness-init.sh로 다시 구성하세요."
+  exit 1
+fi
+
 mkdir -p "$REPORT_DIR"
 bash "$SCRIPT_DIR/harness-explore.sh" "$EXPLORATION_NOTES_FILE" >/dev/null
 STRUCTURE_HINT="$(detect_structure_hint)"

@@ -181,33 +181,6 @@ warn_if_anchor_count_below() {
   fi
 }
 
-count_harness_skill_dirs() {
-  [ -d ".codex/skills" ] || {
-    printf '0\n'
-    return
-  }
-
-  find ".codex/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d '[:space:]'
-}
-
-count_harness_report_files() {
-  [ -d ".harness/reports" ] || {
-    printf '0\n'
-    return
-  }
-
-  find ".harness/reports" -mindepth 1 -maxdepth 1 -type f -name '*.md' | wc -l | tr -d '[:space:]'
-}
-
-count_harness_log_files() {
-  [ -d ".harness/logs" ] || {
-    printf '0\n'
-    return
-  }
-
-  find ".harness/logs" -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d '[:space:]'
-}
-
 audit_harness_drift() {
   local mode="$1"
   local skill_count="$2"

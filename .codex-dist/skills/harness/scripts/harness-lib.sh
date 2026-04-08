@@ -168,11 +168,10 @@ optional_harness_assets_enabled() {
   local boundary_count=0
   local test_count=0
 
-  [ -d ".harness/templates" ] \
+  if [ -d ".harness/templates" ] \
     || [ -d ".harness/scenarios" ] \
     || [ -f ".harness/logs/role-frequency.md" ] \
-    || [ -f ".harness/reports/template-candidates.md" ]
-  if [ "$?" -eq 0 ]; then
+    || [ -f ".harness/reports/template-candidates.md" ]; then
     return 0
   fi
 

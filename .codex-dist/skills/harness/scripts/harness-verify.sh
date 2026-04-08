@@ -480,12 +480,12 @@ if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
 
   if [ -f ".harness/reports/team-structure.md" ]; then
     check_contains_any_hint ".harness/reports/team-structure.md" "역할 팀 해석|역할별 책임 요약" "팀 구조 해석"
-    check_contains_any_hint ".harness/reports/team-structure.md" "저장소 맞춤 근거|저장소 근거|맞춤 근거|왜 .* 중요한 이유" "팀 구조 저장소 맞춤 근거"
+    check_contains_any_hint ".harness/reports/team-structure.md" "저장소 고유 근거|저장소 맞춤 근거|저장소 근거|맞춤 근거|왜 .* 중요한 이유" "팀 구조 저장소 맞춤 근거"
   fi
 
   if [ -f ".harness/reports/team-playbook.md" ]; then
     check_contains_any_hint ".harness/reports/team-playbook.md" "실제 변경 경계|영향 범위|핵심 경계" "플레이북 변경 경계 기준"
-    check_contains_any_hint ".harness/reports/team-playbook.md" "문서 재생성은 실제 저장소 분석|실제 저장소 분석을 반영|일반론으로 되돌아가면 안 됩니다" "플레이북 재생성 원칙"
+    check_contains_any_hint ".harness/reports/team-playbook.md" "문서 재생성은 실제 저장소 분석|실제 저장소 분석을 반영|일반론으로 되돌아가면 안 됩니다|wording보다 저장소 사실|저장소 분석을 잃지 않았는지" "플레이북 재생성 원칙"
     check_contains_any_hint ".harness/reports/team-playbook.md" "세션 시작 체크|세션 시작 절차|시작 체크|시작 순서" "플레이북 세션 시작 규칙"
     check_contains_any_hint ".harness/reports/team-playbook.md" "작업 유형별 빠른 운영 규칙|작업 유형별 운영 규칙|운영 규칙" "플레이북 작업 유형별 운영 규칙"
     check_contains_any_hint ".harness/reports/team-playbook.md" "세션 종료 기준|세션 종료|종료 기준" "플레이북 세션 종료 기준"

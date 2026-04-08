@@ -63,6 +63,20 @@ assert_command_fails_with() {
   printf '%s' "$output" | grep -Fq -- "$needle" || fail "$label: '$needle' 없음"
 }
 
+setup_test_artifacts() {
+  local project_path="$1"
+
+  mkdir -p "$project_path/.claude/commands"
+  cat > "$project_path/.claude/note-explorer-implementation-plan.md" <<'EOF'
+# note explorer plan
+EOF
+  cat > "$project_path/.claude/commands/branch.md" <<'EOF'
+# branch command
+EOF
+  mkdir -p "$project_path/build/win/win-unpacked/resources"
+  touch "$project_path/build/win/win-unpacked/resources/app.asar"
+}
+
 log "내부 설계 레퍼런스 용어 확인"
 assert_contains "$(cat "$HARNESS_REF_DIR/agent-design-patterns.md")" "Agent Teams / Subagents" "agent-design-patterns 실행 단위 용어"
 assert_contains "$(cat "$HARNESS_REF_DIR/agent-design-patterns.md")" "## 핵심 전제" "agent-design-patterns 핵심 전제"
@@ -225,26 +239,14 @@ if (appName !== "smoke-stack-project") {
   throw new Error("unexpected app name");
 }
 EOF
-mkdir -p "$TMP_ROOT/stack-project/.claude/commands"
-cat > "$TMP_ROOT/stack-project/.claude/note-explorer-implementation-plan.md" <<'EOF'
-# note explorer plan
-EOF
-cat > "$TMP_ROOT/stack-project/.claude/commands/branch.md" <<'EOF'
-# branch command
-EOF
-mkdir -p "$TMP_ROOT/stack-project/build/win/win-unpacked/resources"
-touch "$TMP_ROOT/stack-project/build/win/win-unpacked/resources/app.asar"
+setup_test_artifacts "$TMP_ROOT/stack-project"
 mkdir -p "$TMP_ROOT/stack-explore-project"
 cp "$TMP_ROOT/stack-project/package.json" "$TMP_ROOT/stack-explore-project/package.json"
 mkdir -p "$TMP_ROOT/stack-explore-project/src" "$TMP_ROOT/stack-explore-project/tests"
 cp "$TMP_ROOT/stack-project/src/main.ts" "$TMP_ROOT/stack-explore-project/src/main.ts"
 cp "$TMP_ROOT/stack-project/src/app.ts" "$TMP_ROOT/stack-explore-project/src/app.ts"
 cp "$TMP_ROOT/stack-project/tests/app.test.ts" "$TMP_ROOT/stack-explore-project/tests/app.test.ts"
-mkdir -p "$TMP_ROOT/stack-explore-project/.claude/commands"
-cp "$TMP_ROOT/stack-project/.claude/note-explorer-implementation-plan.md" "$TMP_ROOT/stack-explore-project/.claude/note-explorer-implementation-plan.md"
-cp "$TMP_ROOT/stack-project/.claude/commands/branch.md" "$TMP_ROOT/stack-explore-project/.claude/commands/branch.md"
-mkdir -p "$TMP_ROOT/stack-explore-project/build/win/win-unpacked/resources"
-touch "$TMP_ROOT/stack-explore-project/build/win/win-unpacked/resources/app.asar"
+setup_test_artifacts "$TMP_ROOT/stack-explore-project"
 (
   cd "$TMP_ROOT/stack-explore-project"
   bash "$HARNESS_SCRIPT_DIR/harness-explore.sh"

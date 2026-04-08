@@ -59,6 +59,11 @@ assert_contains "$(cat "$HARNESS_REF_DIR/agent-design-patterns.md")" "## 6. 패�
 assert_contains "$(cat "$HARNESS_REF_DIR/orchestrator-template.md")" "## 6. 패턴 선택 기준" "orchestrator-template 패턴 선택 기준"
 assert_contains "$(cat "$HARNESS_REF_DIR/orchestrator-template.md")" "Agent Teams" "orchestrator-template agent teams 용어"
 assert_contains "$(cat "$HARNESS_REF_DIR/orchestrator-template.md")" "Subagents" "orchestrator-template subagents 용어"
+assert_file "$HARNESS_REF_DIR/reference-writing-guide.md"
+assert_contains "$(cat "$HARNESS_REF_DIR/reference-writing-guide.md")" "## 2. 공통 권장 구조" "reference-writing-guide 공통 구조"
+assert_contains "$(cat "$HARNESS_REF_DIR/reference-writing-guide.md")" "## 3. 공통 용어" "reference-writing-guide 공통 용어"
+assert_contains "$(cat "$HARNESS_REF_DIR/reference-writing-guide.md")" "Agent Teams" "reference-writing-guide 내부 설계 용어"
+assert_contains "$(cat "$HARNESS_REF_DIR/reference-writing-guide.md")" "## 7. 회귀 방지 원칙" "reference-writing-guide 회귀 방지"
 
 run_mode_check() {
   local expected="$1"

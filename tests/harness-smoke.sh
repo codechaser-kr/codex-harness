@@ -94,9 +94,11 @@ EMPTY_INIT_OUTPUT="$(
   bash "$HARNESS_SCRIPT_DIR/harness-init.sh"
 )"
 assert_contains "$EMPTY_INIT_OUTPUT" "하네스 운영 모드: 신규 구축" "빈 프로젝트 init 로그"
+assert_contains "$EMPTY_INIT_OUTPUT" "탐색 근거 문서: .harness/reports/exploration-notes.md" "빈 프로젝트 init 탐색 로그"
 assert_dir "$TMP_ROOT/empty-project/.codex/skills/run-harness"
 assert_dir "$TMP_ROOT/empty-project/.harness/reports"
 assert_file "$TMP_ROOT/empty-project/.harness/project-setup.md"
+assert_file "$TMP_ROOT/empty-project/.harness/reports/exploration-notes.md"
 (
   cd "$TMP_ROOT/empty-project"
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"
@@ -131,8 +133,10 @@ STACK_REFRESH_OUTPUT="$(
   bash "$HARNESS_SCRIPT_DIR/harness-refresh-reports.sh"
 )"
 assert_contains "$STACK_REFRESH_OUTPUT" "하네스 운영 모드: 운영 유지보수" "스택 프로젝트 refresh 로그"
+assert_contains "$STACK_REFRESH_OUTPUT" "탐색 근거 문서: .harness/reports/exploration-notes.md" "스택 프로젝트 refresh 탐색 로그"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"
+assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"
 (
   cd "$TMP_ROOT/stack-project"
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"

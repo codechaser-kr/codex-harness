@@ -57,22 +57,43 @@ STACK_HINT="$(detect_stack_hint)"
 PROJECT_SIGNAL_LEVEL="$(detect_project_signal_level)"
 HARNESS_OPERATION_MODE="$(detect_harness_operation_mode)"
 HARNESS_AUDIT_SUMMARY="$(build_harness_audit_summary "$HARNESS_OPERATION_MODE")"
+EXPLORATION_NOTES_FILE="$EXPLORATION_NOTES_DEFAULT_PATH"
+mkdir -p ".harness/reports"
+bash "$SCRIPT_DIR/harness-explore.sh" "$EXPLORATION_NOTES_FILE" >/dev/null
 STRUCTURE_HINT="$(detect_structure_hint)"
+EXPLORATION_ENTRYPOINT_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "대표 진입점" "추정 불가")"
+EXPLORATION_BOUNDARY_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "주요 코드 경계" "$STRUCTURE_HINT")"
+EXPLORATION_TEST_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "테스트 및 검증 자산" "추정 불가")"
+EXPLORATION_CONFIG_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "설정 및 실행 경로" "추정 불가")"
+EXPLORATION_DOMAIN_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "저장소 고유 용어 단서" "추정 불가")"
 PROJECT_TYPE_LABEL="$(build_project_type_label "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE")"
 PACKAGE_MANAGER_HINT="$(detect_package_manager)"
 WORKSPACE_HINT="$(detect_workspace_packages)"
 CONFIG_HINT="$(detect_config_hints)"
+if [ "$EXPLORATION_BOUNDARY_HINT" != "추정 불가" ]; then
+  STRUCTURE_HINT="$EXPLORATION_BOUNDARY_HINT"
+fi
+if [ "$EXPLORATION_CONFIG_HINT" != "추정 불가" ]; then
+  CONFIG_HINT="$EXPLORATION_CONFIG_HINT"
+fi
 KEY_AXES_HINT="$(build_key_axes_hint "$PROJECT_SIGNAL_LEVEL" "$STRUCTURE_HINT")"
+if [ "$EXPLORATION_TEST_HINT" != "추정 불가" ]; then
+  KEY_AXES_HINT="$(join_by_comma "$STRUCTURE_HINT" "$EXPLORATION_TEST_HINT")"
+fi
 CORE_FLOW_HINT="$(build_core_flow_hint "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT")"
+if [ "$EXPLORATION_ENTRYPOINT_HINT" != "추정 불가" ]; then
+  CORE_FLOW_HINT="\`$EXPLORATION_ENTRYPOINT_HINT\` 기준으로 실제 시작 흐름과 소비 경계를 먼저 정리해야 합니다."
+fi
 DOMAIN_SUMMARY_BLOCK="$(build_domain_summary_block "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE_LABEL" "$STACK_HINT" "$STRUCTURE_HINT" "$CORE_FLOW_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT")"
 INITIAL_OBSERVATION_LINE="$(build_initial_observation "$PROJECT_SIGNAL_LEVEL" "$STRUCTURE_HINT" "$WORKSPACE_HINT" "$CONFIG_HINT")"
+if [ "$EXPLORATION_DOMAIN_HINT" != "추정 불가" ]; then
+  INITIAL_OBSERVATION_LINE="- 탐색 문서에서 \`$EXPLORATION_DOMAIN_HINT\` 단서를 먼저 수집했습니다."
+fi
 NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$PROJECT_SIGNAL_LEVEL" "init")"
-DISCOVERY_GUIDANCE="저장소 단서와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
+DISCOVERY_GUIDANCE="$(build_exploration_guidance "$EXPLORATION_NOTES_FILE" "$PROJECT_SIGNAL_LEVEL" "$STRUCTURE_HINT")"
 
 if [ "$PROJECT_TYPE" = "unknown" ] && [ "$STACK_HINT" = "추정 불가" ]; then
   DISCOVERY_GUIDANCE="현재 저장소 단서만으로는 방향 판단이 어렵습니다. run-harness는 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인해야 합니다."
-elif [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
-  DISCOVERY_GUIDANCE="현재 저장소는 $STRUCTURE_HINT 단서를 바탕으로 자동 재분석을 시작할 수 있습니다."
 fi
 
 DOMAIN_DETAIL_BLOCK="$(build_domain_report_detail_block "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT" "$CORE_FLOW_HINT" "$DISCOVERY_GUIDANCE" "$INITIAL_OBSERVATION_LINE" "$NEXT_STEP_DETAIL_LINE")"
@@ -84,6 +105,7 @@ TEAM_PLAYBOOK_REPORT_BLOCK="$(build_team_playbook_report_block "$PROJECT_SIGNAL_
 
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
+log "탐색 근거 문서: $EXPLORATION_NOTES_FILE"
 while IFS= read -r audit_line; do
   [ -n "$audit_line" ] || continue
   log "하네스 감사: $audit_line"

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # 이 파일은 소싱 전용입니다. 직접 실행하지 마세요.
 
+EXPLORATION_NOTES_DEFAULT_PATH=".harness/reports/exploration-notes.md"
+
 trim_text() {
   local value="$1"
   value="${value//$'\t'/ }"
@@ -373,6 +375,108 @@ print_markdown_bullets_or_fallback() {
   if [ "$printed" -eq 0 ]; then
     printf '%s\n' "- $fallback"
   fi
+}
+
+count_markdown_bullets_under_heading() {
+  local file="$1"
+  local heading="$2"
+
+  [ -f "$file" ] || {
+    printf '0\n'
+    return
+  }
+
+  awk -v heading="$heading" '
+    BEGIN {
+      in_section = 0
+      count = 0
+    }
+    $0 ~ ("^##[[:space:]]+" heading "$") {
+      in_section = 1
+      next
+    }
+    in_section && $0 ~ "^##[[:space:]]+" {
+      print count
+      exit
+    }
+    in_section && $0 ~ /^- / {
+      count++
+    }
+    END {
+      if (in_section) {
+        print count
+      }
+    }
+  ' "$file"
+}
+
+list_markdown_bullets_under_heading() {
+  local file="$1"
+  local heading="$2"
+
+  [ -f "$file" ] || return
+
+  awk -v heading="$heading" '
+    BEGIN {
+      in_section = 0
+    }
+    $0 ~ ("^##[[:space:]]+" heading "$") {
+      in_section = 1
+      next
+    }
+    in_section && $0 ~ "^##[[:space:]]+" {
+      exit
+    }
+    in_section && $0 ~ /^- / {
+      sub(/^- /, "", $0)
+      gsub(/`/, "", $0)
+      print $0
+    }
+  ' "$file"
+}
+
+build_exploration_section_summary() {
+  local file="$1"
+  local heading="$2"
+  local fallback="$3"
+  local limit="${4:-3}"
+  local items=()
+  local item
+
+  while IFS= read -r item; do
+    [ -n "$item" ] || continue
+    items+=("$item")
+    [ "${#items[@]}" -ge "$limit" ] && break
+  done < <(list_markdown_bullets_under_heading "$file" "$heading")
+
+  if [ "${#items[@]}" -eq 0 ]; then
+    printf '%s\n' "$fallback"
+    return
+  fi
+
+  join_by_comma "${items[@]}"
+}
+
+build_exploration_guidance() {
+  local file="$1"
+  local signal_level="$2"
+  local boundary_hint="$3"
+
+  if [ ! -f "$file" ]; then
+    if [ "$signal_level" = "empty" ] || [ "$signal_level" = "low" ]; then
+      printf '%s\n' "저장소 단서와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
+    else
+      printf '%s\n' "현재 저장소는 실제 코드 경계와 대표 흐름을 먼저 읽고 후속 문서를 보강해야 합니다."
+    fi
+    return
+  fi
+
+  if [ "$signal_level" = "empty" ] || [ "$signal_level" = "low" ]; then
+    printf '%s\n' "탐색 문서에 수집된 단서를 바탕으로, 부족한 부분만 사용자 질문으로 보강합니다."
+    return
+  fi
+
+  printf '%s\n' "현재 저장소는 탐색 문서의 대표 진입점과 코드 경계($boundary_hint)를 바탕으로 후속 문서를 보강합니다."
 }
 
 detect_config_hints() {

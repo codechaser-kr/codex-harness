@@ -186,8 +186,8 @@ repo/
 
 전역 설치된 `harness` 스킬은 다음 스크립트를 사용합니다.
 
-- `harness-init.sh`: 새 하네스 구조 생성 또는 기존 구조 보강
-- `harness-refresh-reports.sh`: 기존 `.harness/reports` 문서 전체를 다시 생성
+- `harness-init.sh`: 새 하네스 구조 생성 또는 명시적 재구성
+- `harness-update.sh`: 기존 하네스 구조를 감사한 뒤 필요한 문서와 탐색 근거를 보강
 - `harness-verify.sh`: 필수 구조 검증
 - `harness-log.sh`: 세션 로그 기록
 - `harness-session-close.sh`: 세션 종료 로그 정리와 요약/통계 갱신
@@ -197,8 +197,8 @@ repo/
 기본 동작 원칙은 다음과 같습니다.
 
 - 최초 구성 요청이면 `harness-init.sh`를 먼저 실행합니다.
+- 기존 확장이나 운영 유지보수는 `harness-update.sh`를 우선 사용합니다.
 - 완료로 보기 전에 `harness-verify.sh`를 반드시 실행합니다.
-- `harness-refresh-reports.sh`는 `.harness/reports` 문서 전체를 다시 생성할 때 사용합니다.
 - `harness-verify.sh`가 실패하면 구성이 완료된 것으로 보지 않습니다.
 
 ## 로그 운영

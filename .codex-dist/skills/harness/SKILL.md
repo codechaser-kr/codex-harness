@@ -54,8 +54,8 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 
 - 최초 하네스 구성 요청이면 반드시 `bash scripts/harness-init.sh`를 먼저 실행한다.
 - 하네스 구성이 끝났다고 판단하기 전에 반드시 `bash scripts/harness-verify.sh`를 실행한다.
-- `scripts/harness-refresh-reports.sh`는 이미 하네스 구조가 있는 프로젝트에서 `.harness/reports/*` 전체를 재생성하거나 보강할 때 사용한다.
-- `harness-init.sh` 또는 `harness-refresh-reports.sh`가 만든 문서는 시작 산출물로 보고, 완료 전에 반드시 저장소 사실, 기존 도메인 언어, 운영 흐름에 맞게 역할 관점으로 다시 가공한다.
+- `scripts/harness-update.sh`는 이미 하네스 구조가 있는 프로젝트에서 필요한 문서와 탐색 근거를 보강할 때 사용한다.
+- `harness-init.sh` 또는 `harness-update.sh`가 만든 문서는 시작 산출물로 보고, 완료 전에 반드시 저장소 사실, 기존 도메인 언어, 운영 흐름에 맞게 역할 관점으로 다시 가공한다.
 - `.harness/reports/*` 문서 재가공 없이 스크립트 출력만으로 완료 처리하지 않는다.
 - `scripts/harness-init.sh` 대신 `.codex/skills/*`, `.harness/*`를 수동으로 직접 생성하는 방식은 사용하지 않는다.
 - `scripts/harness-verify.sh`가 실패하면 완료로 간주하지 말고, 누락된 구조를 먼저 보강한다.
@@ -89,12 +89,12 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 1. `.codex/skills/`, `.harness/reports/`, `.harness/logs/`의 존재와 현재 파일 수를 먼저 확인한다.
 2. 현황에 따라 실행 모드를 나눈다.
 3. 기존 하네스가 있으면 덮어쓰기보다 보강을 우선하고, drift 가능성을 확인한다.
-4. 감사 결과는 이후 init/refresh/verify의 입력으로 계속 사용한다.
+4. 감사 결과는 이후 init/update/verify의 입력으로 계속 사용한다.
 
 ### 실행 모드
 
 - `신규 구축`: 로컬 역할 스킬, 보고서, 로그 구조가 거의 없는 상태. `harness-init.sh` 중심으로 시작한다.
-- `기존 확장`: 일부 역할 스킬, 보고서, 로그 구조가 이미 있는 상태. `harness-init.sh` 또는 `harness-refresh-reports.sh`로 필요한 부분만 보강한다.
+- `기존 확장`: 일부 역할 스킬, 보고서, 로그 구조가 이미 있는 상태. `harness-update.sh`로 필요한 부분만 보강한다.
 - `운영 유지보수`: 구조는 있으나 문서/스킬/로그 정합성 점검이나 drift 확인이 필요한 상태. 불필요한 재생성보다 감사와 verify를 우선한다.
 
 ### drift 점검 기준
@@ -107,9 +107,9 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 ## 기본 실행 순서
 
 - 새 프로젝트 하네스 구성: `bash scripts/harness-init.sh` → 역할 기반 `.harness/reports/*` 문서 가공 → 필요 시 역할 보강 → `bash scripts/harness-verify.sh`
-- 기존 프로젝트의 `.harness/reports` 문서 전체 재생성: `bash scripts/harness-refresh-reports.sh` → 역할 기반 `.harness/reports/*` 문서 가공 → `bash scripts/harness-verify.sh`
-- 기존 프로젝트의 구조 누락 보강: `bash scripts/harness-init.sh` → 필요 시 `bash scripts/harness-refresh-reports.sh` → 역할 기반 `.harness/reports/*` 문서 가공 → `bash scripts/harness-verify.sh`
-- 기존 프로젝트의 운영 유지보수/감사: 하네스 현황 감사 → 필요 시 `bash scripts/harness-refresh-reports.sh` 또는 `bash scripts/harness-init.sh` → 역할 기반 `.harness/reports/*` 문서 가공 → `bash scripts/harness-verify.sh`
+- 기존 프로젝트 확장: 하네스 현황 감사 → `bash scripts/harness-update.sh` → 역할 기반 `.harness/reports/*` 문서 가공 → `bash scripts/harness-verify.sh`
+- 기존 프로젝트의 구조 누락 보강: 하네스 현황 감사 → 필요한 경우에만 `bash scripts/harness-init.sh` 또는 명시적 재구성 → 역할 기반 `.harness/reports/*` 문서 가공 → `bash scripts/harness-verify.sh`
+- 기존 프로젝트의 운영 유지보수/감사: 하네스 현황 감사 → 필요 시 `bash scripts/harness-update.sh` → 역할 기반 `.harness/reports/*` 문서 가공 → `bash scripts/harness-verify.sh`
 
 ---
 
@@ -186,7 +186,7 @@ QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 
 ### Phase 5: `.harness/reports/*` 문서 프로젝트 맞춤 가공
 
-1. `harness-init.sh` 또는 `harness-refresh-reports.sh`가 만든 `.harness/reports/*` 문서를 최종본으로 간주하지 않는다.
+1. `harness-init.sh` 또는 `harness-update.sh`가 만든 `.harness/reports/*` 문서를 최종본으로 간주하지 않는다.
 2. domain-analyst가 저장소 사실, 대표 흐름, 예외를 기준으로 `domain-analysis.md`를 먼저 보정한다.
 3. 이 단계에서 기존 README, 도메인 문서, 사용자 흐름 설명에 있던 업무 용어와 문제 정의를 하네스 운영 문구가 덮어쓰지 않게 유지한다.
 4. harness-architect와 qa-designer가 역할 경계, handoff, 검증 기준을 현재 저장소 운영 방식에 맞게 다시 정렬한다.

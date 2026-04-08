@@ -52,7 +52,7 @@ log "bash 문법 확인"
 bash -n "$HARNESS_SCRIPT_DIR/harness-lib.sh"
 bash -n "$HARNESS_SCRIPT_DIR/harness-init.sh"
 bash -n "$HARNESS_SCRIPT_DIR/harness-explore.sh"
-bash -n "$HARNESS_SCRIPT_DIR/harness-refresh-reports.sh"
+bash -n "$HARNESS_SCRIPT_DIR/harness-update.sh"
 bash -n "$HARNESS_SCRIPT_DIR/harness-verify.sh"
 bash -n "$HARNESS_SCRIPT_DIR/harness-session-close.sh"
 
@@ -104,7 +104,7 @@ assert_file "$TMP_ROOT/empty-project/.harness/reports/exploration-notes.md"
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"
 )
 
-log "스택 프로젝트 refresh -> verify 확인"
+log "스택 프로젝트 update -> verify 확인"
 mkdir -p "$TMP_ROOT/stack-project"
 cat > "$TMP_ROOT/stack-project/package.json" <<'EOF'
 {
@@ -128,12 +128,12 @@ STACK_INIT_OUTPUT="$(
   bash "$HARNESS_SCRIPT_DIR/harness-init.sh"
 )"
 assert_contains "$STACK_INIT_OUTPUT" "하네스 운영 모드: 신규 구축" "스택 프로젝트 init 로그"
-STACK_REFRESH_OUTPUT="$(
+STACK_UPDATE_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \
-  bash "$HARNESS_SCRIPT_DIR/harness-refresh-reports.sh"
+  bash "$HARNESS_SCRIPT_DIR/harness-update.sh"
 )"
-assert_contains "$STACK_REFRESH_OUTPUT" "하네스 운영 모드: 운영 유지보수" "스택 프로젝트 refresh 로그"
-assert_contains "$STACK_REFRESH_OUTPUT" "탐색 근거 문서: .harness/reports/exploration-notes.md" "스택 프로젝트 refresh 탐색 로그"
+assert_contains "$STACK_UPDATE_OUTPUT" "하네스 운영 모드: 운영 유지보수" "스택 프로젝트 update 로그"
+assert_contains "$STACK_UPDATE_OUTPUT" "탐색 근거 문서: .harness/reports/exploration-notes.md" "스택 프로젝트 update 탐색 로그"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # harness-init.sh
 # 디렉토리, 로컬 역할 스킬, 보조 리포트를 최초 1회 생성합니다.
-# harness-refresh-reports.sh와 차이:
+# harness-update.sh와 차이:
 #   - harness-init.sh: 디렉토리/스킬/리포트 모두 생성 (기존 파일 유지)
-#   - harness-refresh-reports.sh: `.harness/reports` 문서 전체를 다시 생성 (항상 덮어씀, 스킬은 건드리지 않음)
+#   - harness-update.sh: 기존 하네스 구조를 감사한 뒤 필요한 보조 문서를 보강
 # 사용 시점: 프로젝트에 처음 하네스를 구성할 때
 set -euo pipefail
 

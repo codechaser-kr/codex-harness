@@ -29,5 +29,5 @@
 ## 사용 위치
 
 - `harness-explore.sh`는 이 모델을 따라 탐색 근거 문서를 만든다.
-- `harness-init.sh`와 `harness-refresh-reports.sh`는 이후 배치에서 이 결과를 공통 입력으로 읽는다.
+- `harness-init.sh`와 `harness-update.sh`는 이 결과를 공통 입력으로 읽는다.
 - `harness-verify.sh`는 탐색 근거와 문서 해석의 연결을 점검한다.

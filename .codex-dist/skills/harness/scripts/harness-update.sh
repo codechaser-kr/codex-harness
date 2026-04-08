@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# harness-refresh-reports.sh
-# `.harness/reports` 문서를 프로젝트 유형 감지 기반으로 덮어써서 생성합니다.
-# harness-init.sh와 차이:
-#   - harness-init.sh: 디렉토리/스킬/리포트를 최초 1회 생성 (기존 파일 유지)
-#   - harness-refresh-reports.sh: `.harness/reports` 문서 전체를 다시 생성 (항상 덮어씀, 스킬은 건드리지 않음)
-# 사용 시점: 이미 init된 저장소에서 `.harness/reports` 문서를 초기화하거나 재생성할 때
+# harness-update.sh
+# 기존 하네스 구조를 감사한 뒤 필요한 보조 문서와 탐색 근거를 보강합니다.
+# 사용 시점:
+#   - 기존 하네스 구조 확장
+#   - 운영 유지보수 중 문서/근거 보강
+#   - 명시적 재구성 전, 현재 구조 보강 가능성 점검
 set -euo pipefail
 
 REPORT_DIR=".harness/reports"
@@ -18,7 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/harness-lib.sh"
 
 log() {
-  printf '[harness][refresh] %s\n' "$1"
+  printf '[harness][update] %s\n' "$1"
 }
 
 PROJECT_TYPE="$(detect_project_type)"
@@ -58,7 +58,7 @@ INITIAL_OBSERVATION_LINE="$(build_initial_observation "$PROJECT_SIGNAL_LEVEL" "$
 if [ "$EXPLORATION_DOMAIN_HINT" != "추정 불가" ]; then
   INITIAL_OBSERVATION_LINE="- 탐색 문서에서 \`$EXPLORATION_DOMAIN_HINT\` 단서를 먼저 수집했습니다."
 fi
-NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$PROJECT_SIGNAL_LEVEL" "refresh")"
+NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$PROJECT_SIGNAL_LEVEL" "update")"
 DISCOVERY_GUIDANCE="$(build_exploration_guidance "$EXPLORATION_NOTES_FILE" "$PROJECT_SIGNAL_LEVEL" "$STRUCTURE_HINT")"
 
 if [ "$PROJECT_TYPE" = "unknown" ] && [ "$STACK_HINT" = "추정 불가" ]; then
@@ -73,14 +73,13 @@ ORCH_REPORT_BLOCK="$(build_orchestration_report_block "$PROJECT_SIGNAL_LEVEL" "$
 TEAM_STRUCTURE_REPORT_BLOCK="$(build_team_structure_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT")"
 TEAM_PLAYBOOK_REPORT_BLOCK="$(build_team_playbook_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT")"
 
-log "하네스 리포트 새로고침 시작"
+log "하네스 업데이트 시작"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
 log "탐색 근거 문서: $EXPLORATION_NOTES_FILE"
 while IFS= read -r audit_line; do
   [ -n "$audit_line" ] || continue
   log "하네스 감사: $audit_line"
 done <<< "$HARNESS_AUDIT_SUMMARY"
-mkdir -p "$REPORT_DIR"
 
 cat > "$DOMAIN_REPORT" <<EOF_DOMAIN
 # 도메인 분석
@@ -122,10 +121,10 @@ cat > "$TEAM_PLAYBOOK_REPORT" <<EOF_TEAM_PLAYBOOK
 $TEAM_PLAYBOOK_REPORT_BLOCK
 EOF_TEAM_PLAYBOOK
 
-log "하네스 리포트 새로고침 완료"
-log "생성됨: $DOMAIN_REPORT"
-log "생성됨: $ARCH_REPORT"
-log "생성됨: $QA_REPORT"
-log "생성됨: $ORCH_REPORT"
-log "생성됨: $TEAM_STRUCTURE_REPORT"
-log "생성됨: $TEAM_PLAYBOOK_REPORT"
+log "하네스 업데이트 완료"
+log "갱신됨: $DOMAIN_REPORT"
+log "갱신됨: $ARCH_REPORT"
+log "갱신됨: $QA_REPORT"
+log "갱신됨: $ORCH_REPORT"
+log "갱신됨: $TEAM_STRUCTURE_REPORT"
+log "갱신됨: $TEAM_PLAYBOOK_REPORT"

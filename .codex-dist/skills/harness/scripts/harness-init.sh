@@ -558,7 +558,10 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 
 - 새 프로젝트라면 domain-analyst → harness-architect → skill-scaffolder → qa-designer → orchestrator → validator 순서를 기본으로 본다.
 - 이미 구조가 있는 프로젝트라면 \`harness-update.sh\`로 현재 상태를 다시 읽고 부족한 역할만 다시 호출하는 쪽을 우선한다.
+- 문서, 로그, handoff를 계속 유지해야 하는 중심 역할은 Agent Teams로 두고, 좁은 보조 판단만 Subagents로 본다.
+- 새 구조를 안정적으로 세울 때는 파이프라인을, 생성 직후 검증을 붙여야 할 때는 생성-검증을, 하위 경계가 독립적일 때만 팬아웃/팬인을, handoff와 재진입이 핵심이면 오케스트레이션 중심 구조를 우선한다.
 - 요청이 기능 구현, 구조 정리, 공통 모듈 보강, 빌드/검증 중 어디에 걸리는지 먼저 분류하고 그 결과를 orchestration-plan 판단의 입력으로 사용한다.
+- 요청이 추상적이거나 저장소 맥락이 약하면 질문과 탐색 보강을 먼저 두고, 저장소 고유 용어와 영향 범위를 정확히 말하면 더 직접적인 역할 시작을 허용한다.
 - 영향 범위가 공통 계층이나 다중 모듈로 번지면 domain-analyst와 qa-designer를 더 이른 순서에 배치한다.
 - 빈 저장소이거나 탐색 근거가 부족하면, \`.harness/project-setup.md\`가 있는지 먼저 확인한다.
 - \`.harness/project-setup.md\`가 작성되어 있으면 그 내용을 domain-analyst의 시작 입력으로 연결한다.

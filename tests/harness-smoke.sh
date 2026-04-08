@@ -130,6 +130,10 @@ assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/project-setup.md")" "##
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "harness-update.sh" "run-harness update 진입 규칙"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "명시적 재구성" "run-harness 재구성 규칙"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "--domain" "run-harness 선택 갱신 예시"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "Agent Teams" "run-harness 실행 단위 판단"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "Subagents" "run-harness subagents 판단"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "생성-검증" "run-harness 패턴 판단"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "저장소 고유 용어" "run-harness 사용자 맥락 판단"
 (
   cd "$TMP_ROOT/empty-project"
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"

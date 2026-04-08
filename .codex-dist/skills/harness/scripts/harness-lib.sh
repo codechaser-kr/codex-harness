@@ -98,115 +98,6 @@ optional_harness_assets_enabled() {
   return 1
 }
 
-detect_structure_hint() {
-  local hints=()
-  local candidate
-
-  for candidate in src app lib cmd internal pkg packages services server client web api backend frontend docs tests test; do
-    if [ -d "$candidate" ]; then
-      hints+=("$candidate/")
-    fi
-  done
-
-  if [ -f "README.md" ]; then
-    hints+=("README.md")
-  fi
-
-  if [ "${#hints[@]}" -eq 0 ]; then
-    echo "뚜렷한 핵심 디렉토리 없음"
-    return
-  fi
-
-  local limited=("${hints[@]:0:5}")
-  local IFS=", "
-  echo "${limited[*]}"
-}
-
-detect_package_manager() {
-  if [ -f ".yarnrc.yml" ] || [ -f ".pnp.cjs" ] || [ -f ".pnp.loader.mjs" ]; then
-    if [ -f ".yarnrc.yml" ] && grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*node-modules([[:space:]]|$)' ".yarnrc.yml"; then
-      echo "Yarn modern (node-modules linker)"
-      return
-    fi
-
-    if [ -f ".yarnrc.yml" ] && grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*pnp([[:space:]]|$)' ".yarnrc.yml"; then
-      echo "Yarn modern (PnP linker)"
-      return
-    fi
-
-    if [ -f ".pnp.cjs" ] || [ -f ".pnp.loader.mjs" ]; then
-      echo "Yarn modern (PnP linker)"
-      return
-    fi
-
-    echo "Yarn modern"
-    return
-  fi
-
-  if [ -f "yarn.lock" ]; then
-    echo "Yarn"
-    return
-  fi
-
-  if [ -f "pnpm-lock.yaml" ]; then
-    echo "pnpm"
-    return
-  fi
-
-  if [ -f "package-lock.json" ]; then
-    echo "npm"
-    return
-  fi
-
-  if [ -f "bun.lockb" ] || [ -f "bun.lock" ]; then
-    echo "bun"
-    return
-  fi
-
-  echo "추정 불가"
-}
-
-detect_workspace_packages() {
-  local packages=()
-  local root
-  local dir
-
-  for root in packages apps libs services; do
-    [ -d "$root" ] || continue
-
-    for dir in "$root"/*; do
-      [ -d "$dir" ] || continue
-      packages+=("$dir")
-    done
-  done
-
-  if [ "${#packages[@]}" -eq 0 ]; then
-    echo "추정 불가"
-    return
-  fi
-
-  local limited=("${packages[@]:0:5}")
-  join_by_comma "${limited[@]}"
-}
-
-list_workspace_packages() {
-  local packages=()
-  local root
-  local dir
-
-  for root in packages apps libs services; do
-    [ -d "$root" ] || continue
-
-    for dir in "$root"/*; do
-      [ -d "$dir" ] || continue
-      packages+=("$dir")
-    done
-  done
-
-  [ "${#packages[@]}" -eq 0 ] && return
-  printf '%s\n' "${packages[@]:0:5}"
-}
-
 list_source_anchor_paths() {
   find . \
     \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './node_modules' -o -path './.yarn' -o -path './dist' -o -path './build' -o -path './coverage' \) -prune \
@@ -470,38 +361,9 @@ build_exploration_guidance() {
   printf '%s\n' "현재 저장소는 탐색 문서의 대표 진입점과 코드 경계($boundary_hint)를 바탕으로 후속 문서를 보강합니다."
 }
 
-detect_config_hints() {
-  local hints=()
-
-  [ -f "package.json" ] && hints+=("package.json")
-  [ -f "tsconfig.json" ] && hints+=("tsconfig.json")
-  [ -f ".yarnrc.yml" ] && hints+=(".yarnrc.yml")
-  [ -f "vite.config.ts" ] && hints+=("vite.config.ts")
-  [ -f "vite.config.js" ] && hints+=("vite.config.js")
-  [ -f "next.config.js" ] && hints+=("next.config.js")
-  [ -f "next.config.mjs" ] && hints+=("next.config.mjs")
-  [ -f "pom.xml" ] && hints+=("pom.xml")
-  [ -f "build.gradle" ] && hints+=("build.gradle")
-  [ -f "build.gradle.kts" ] && hints+=("build.gradle.kts")
-  [ -f "Makefile" ] && hints+=("Makefile")
-  [ -f "CMakeLists.txt" ] && hints+=("CMakeLists.txt")
-  [ -f "composer.json" ] && hints+=("composer.json")
-  [ -f "Gemfile" ] && hints+=("Gemfile")
-  [ -f "electron-builder.yml" ] && hints+=("electron-builder.yml")
-
-  if [ "${#hints[@]}" -eq 0 ]; then
-    echo "추정 불가"
-    return
-  fi
-
-  local limited=("${hints[@]:0:5}")
-  join_by_comma "${limited[@]}"
-}
-
 build_project_type_label() {
   local exploration_context_level="$1"
-  local structure_hint="$2"
-  local workspace_hint="$3"
+  local boundary_hint="$2"
 
   case "$exploration_context_level" in
     초기)
@@ -514,22 +376,19 @@ build_project_type_label() {
       ;;
   esac
 
-  if [ "$workspace_hint" != "추정 불가" ]; then
-    echo "다중 경계 저장소"
+  if [ "$boundary_hint" = "추정 불가" ]; then
+    echo "경계 해석이 더 필요한 저장소"
     return
   fi
 
-  if printf '%s' "$structure_hint" | grep -q ','; then
-    echo "복수 경계 저장소"
-    return
-  fi
-
-  echo "단일 경계 중심 저장소"
+  echo "탐색 근거가 축적된 저장소"
 }
 
 build_key_axes_hint() {
   local exploration_context_level="$1"
-  local structure_hint="$2"
+  local boundary_hint="$2"
+  local test_hint="${3:-추정 불가}"
+  local config_hint="${4:-추정 불가}"
   local axes=()
 
   if [ "$exploration_context_level" = "초기" ]; then
@@ -538,17 +397,16 @@ build_key_axes_hint() {
   fi
 
   if [ "$exploration_context_level" = "제한적" ]; then
-    echo "$structure_hint"
+    echo "$boundary_hint"
     return
   fi
 
-  ([ -d "packages" ] || [ -d "apps" ] || [ -d "libs" ] || [ -d "services" ]) && axes+=("워크스페이스 또는 모듈 경계")
-  ([ -d "common" ] || [ -d "shared" ] || [ -d "packages/common" ] || [ -d "packages/shared" ] || [ -d "libs/common" ] || [ -d "libs/shared" ]) && axes+=("공용 계층")
-  ([ -d "tests" ] || [ -d "test" ] || [ -d "__tests__" ]) && axes+=("검증 경로")
-  [ -f "package.json" ] || [ -f "Cargo.toml" ] || [ -f "pyproject.toml" ] || [ -f "go.mod" ] || [ -f "pom.xml" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ] && axes+=("실행 및 빌드 진입점")
+  [ "$boundary_hint" = "추정 불가" ] || axes+=("$boundary_hint")
+  [ "$test_hint" = "추정 불가" ] || axes+=("$test_hint")
+  [ "$config_hint" = "추정 불가" ] || axes+=("$config_hint")
 
   if [ "${#axes[@]}" -eq 0 ]; then
-    echo "$structure_hint"
+    echo "$boundary_hint"
     return
   fi
 
@@ -571,22 +429,22 @@ build_core_flow_hint() {
 
 build_initial_observation() {
   local exploration_context_level="$1"
-  local structure_hint="$2"
-  local workspace_hint="${3:-}"
-  local config_hint="${4:-}"
+  local boundary_hint="$2"
+  local config_hint="${3:-}"
+  local domain_hint="${4:-}"
 
   case "$exploration_context_level" in
     초기)
       echo "- 저장소를 분석한 뒤 이 내용을 구체화하세요."
       ;;
     제한적)
-      echo "- 현재 탐색 근거가 제한적이므로 구조 단서와 사용자 응답을 함께 모아 초기 분석을 보강하세요."
+      echo "- 현재 탐색 근거가 제한적이므로 대표 경계와 사용자 응답을 함께 모아 초기 분석을 보강하세요."
       ;;
     *)
-      if [ "$workspace_hint" = "추정 불가" ]; then
-        echo "- $structure_hint, $config_hint 단서를 우선 확인했습니다."
+      if [ "$domain_hint" != "추정 불가" ]; then
+        echo "- $boundary_hint, $config_hint, $domain_hint 단서를 우선 확인했습니다."
       else
-        echo "- $workspace_hint, $config_hint 단서를 우선 확인했습니다."
+        echo "- $boundary_hint, $config_hint 단서를 우선 확인했습니다."
       fi
       ;;
   esac
@@ -594,19 +452,14 @@ build_initial_observation() {
 
 build_domain_report_detail_block() {
   local exploration_context_level="$1"
-  local structure_hint="$2"
-  local package_manager_hint="$3"
-  local workspace_hint="$4"
-  local key_axes_hint="$5"
-  local config_hint="$6"
-  local core_flow_hint="$7"
-  local discovery_guidance="$8"
-  local initial_observation_line="${9}"
-  local next_step_detail_line="${10}"
-  local workspace_path
-  local workspace_name
-  local found_exception_note=0
-  local notes=()
+  local boundary_hint="$2"
+  local key_axes_hint="$3"
+  local config_hint="$4"
+  local core_flow_hint="$5"
+  local discovery_guidance="$6"
+  local initial_observation_line="$7"
+  local next_step_detail_line="$8"
+  local source_anchor
   local source_anchor_count=0
 
   case "$exploration_context_level" in
@@ -659,7 +512,7 @@ EOF
       cat <<EOF
 ## 요약
 EOF
-      printf '%s\n' "- \`$structure_hint\` 단서를 기준으로, 이 저장소가 해결하는 사용자 또는 운영 문제를 먼저 정리해야 합니다."
+      printf '%s\n' "- \`$boundary_hint\` 단서를 기준으로, 이 저장소가 해결하는 사용자 또는 운영 문제를 먼저 정리해야 합니다."
       printf '%s\n' "- \`$core_flow_hint\`"
       printf '%s\n' "- 하네스 운영 구조는 저장소의 대표 업무 흐름과 실패 비용을 보조하는 방식으로만 붙입니다."
 
@@ -667,9 +520,9 @@ EOF
 
 ## 저장소 고유 근거
 EOF
-      while IFS= read -r workspace_path; do
-        [ -n "$workspace_path" ] || continue
-        printf '%s\n' "- \`$workspace_path\`: 현재 해석의 근거로 먼저 확인한 대표 소스 앵커입니다."
+      while IFS= read -r source_anchor; do
+        [ -n "$source_anchor" ] || continue
+        printf '%s\n' "- \`$source_anchor\`: 현재 해석의 근거로 먼저 확인한 대표 소스 앵커입니다."
         source_anchor_count=$((source_anchor_count + 1))
       done < <(list_source_anchor_paths)
 
@@ -683,316 +536,23 @@ EOF
 
 ### 사실 기준 구조
 EOF
-      if [ "$workspace_hint" != "추정 불가" ]; then
-        local _undetected_packages=()
-        while IFS= read -r workspace_path; do
-          [ -n "$workspace_path" ] || continue
-          workspace_name="$(basename "$workspace_path")"
-
-          # 복수 신호를 수집해 폴리글랏 패키지를 지원하고, 단서 없으면 탐지 불가 명시
-          workspace_roles=()
-
-          # 1. JavaScript / TypeScript (package.json)
-          if [ -f "$workspace_path/package.json" ]; then
-            _pkg="$workspace_path/package.json"
-            if grep -qE '"electron"' "$_pkg"; then
-              workspace_roles+=("desktop")
-            elif grep -qE '"(react|vue|svelte|@angular/core|solid-js|next|nuxt|astro|gatsby|remix)"' "$_pkg"; then
-              workspace_roles+=("frontend")
-            elif grep -qE '"(express|fastify|koa|hapi|@nestjs/core|@hono/node-server|elysia)"' "$_pkg"; then
-              workspace_roles+=("backend")
-            elif grep -qE '[[:space:]]"bin"[[:space:]]*:' "$_pkg"; then
-              workspace_roles+=("cli")
-            elif ls "$workspace_path"/rollup.config.* "$workspace_path"/tsup.config.* "$workspace_path"/unbuild.config.* 2>/dev/null | grep -q .; then
-              workspace_roles+=("library")
-            else
-              workspace_roles+=("js")
-            fi
-          fi
-
-          # 2. Python (pyproject.toml / requirements.txt / setup.py / Pipfile)
-          if [ -f "$workspace_path/pyproject.toml" ] || [ -f "$workspace_path/requirements.txt" ] || [ -f "$workspace_path/setup.py" ] || [ -f "$workspace_path/Pipfile" ]; then
-            if grep -qiE '(django|flask|fastapi|tornado|aiohttp|starlette|bottle|falcon|sanic)' \
-                "$workspace_path/requirements.txt" "$workspace_path/pyproject.toml" "$workspace_path/Pipfile" 2>/dev/null; then
-              workspace_roles+=("backend")
-            elif grep -qiE '(click|typer)' \
-                "$workspace_path/requirements.txt" "$workspace_path/pyproject.toml" 2>/dev/null; then
-              workspace_roles+=("cli")
-            else
-              workspace_roles+=("python")
-            fi
-          fi
-
-          # 3. Rust (Cargo.toml)
-          if [ -f "$workspace_path/Cargo.toml" ]; then
-            if grep -q '^\[\[bin\]\]' "$workspace_path/Cargo.toml"; then
-              workspace_roles+=("cli")
-            elif grep -q '^\[lib\]' "$workspace_path/Cargo.toml"; then
-              workspace_roles+=("library")
-            else
-              workspace_roles+=("rust")
-            fi
-          fi
-
-          # 4. Go (go.mod)
-          if [ -f "$workspace_path/go.mod" ]; then
-            if [ -f "$workspace_path/main.go" ] || [ -d "$workspace_path/cmd" ]; then
-              workspace_roles+=("cli")
-            else
-              workspace_roles+=("go")
-            fi
-          fi
-
-          # 5. Java / Kotlin (pom.xml / build.gradle)
-          if [ -f "$workspace_path/pom.xml" ] || [ -f "$workspace_path/build.gradle" ] || [ -f "$workspace_path/build.gradle.kts" ]; then
-            if grep -qiE '(spring-boot|spring-web|quarkus|micronaut|jakarta.ws.rs)' \
-                "$workspace_path/pom.xml" "$workspace_path/build.gradle" "$workspace_path/build.gradle.kts" 2>/dev/null; then
-              workspace_roles+=("backend")
-            elif find "$workspace_path" -maxdepth 4 -name "AndroidManifest.xml" -print -quit 2>/dev/null | grep -q .; then
-              workspace_roles+=("android")
-            else
-              workspace_roles+=("jvm")
-            fi
-          fi
-
-          # 6. C# / .NET (*.csproj / global.json)
-          if find "$workspace_path" -maxdepth 2 -name "*.csproj" -print -quit 2>/dev/null | grep -q . || [ -f "$workspace_path/global.json" ]; then
-            workspace_roles+=("dotnet")
-          fi
-
-          # 7. Ruby (Gemfile)
-          if [ -f "$workspace_path/Gemfile" ]; then
-            if grep -qiE '(rails|sinatra|hanami|grape)' "$workspace_path/Gemfile" 2>/dev/null; then
-              workspace_roles+=("backend")
-            else
-              workspace_roles+=("ruby")
-            fi
-          fi
-
-          # 8. PHP (composer.json)
-          if [ -f "$workspace_path/composer.json" ]; then
-            if grep -qiE '(laravel|symfony|slim|yii|codeigniter|lumen)' "$workspace_path/composer.json" 2>/dev/null; then
-              workspace_roles+=("backend")
-            else
-              workspace_roles+=("php")
-            fi
-          fi
-
-          # 9. Swift (Package.swift)
-          if [ -f "$workspace_path/Package.swift" ]; then
-            if grep -qE 'executableTarget' "$workspace_path/Package.swift" 2>/dev/null; then
-              workspace_roles+=("cli")
-            else
-              workspace_roles+=("swift")
-            fi
-          fi
-
-          # 10. Dart / Flutter (pubspec.yaml)
-          if [ -f "$workspace_path/pubspec.yaml" ]; then
-            if grep -qE '^[[:space:]]*flutter:' "$workspace_path/pubspec.yaml" 2>/dev/null; then
-              workspace_roles+=("flutter")
-            else
-              workspace_roles+=("dart")
-            fi
-          fi
-
-          # 11. Elixir (mix.exs)
-          if [ -f "$workspace_path/mix.exs" ]; then
-            if grep -qiE '(phoenix|plug)' "$workspace_path/mix.exs" 2>/dev/null; then
-              workspace_roles+=("backend")
-            else
-              workspace_roles+=("elixir")
-            fi
-          fi
-
-          # 12. C / C++ (CMakeLists.txt / Makefile — package.json 없을 때만)
-          if [ -f "$workspace_path/CMakeLists.txt" ] || \
-             { [ -f "$workspace_path/Makefile" ] && ! [ -f "$workspace_path/package.json" ]; }; then
-            workspace_roles+=("native")
-          fi
-
-          # 13. Scala (build.sbt)
-          if [ -f "$workspace_path/build.sbt" ]; then
-            workspace_roles+=("scala")
-          fi
-
-          # 14. Haskell (stack.yaml / *.cabal)
-          if [ -f "$workspace_path/stack.yaml" ] || \
-             find "$workspace_path" -maxdepth 1 -name "*.cabal" -print -quit 2>/dev/null | grep -q .; then
-            workspace_roles+=("haskell")
-          fi
-
-          # 15. Clojure (deps.edn / project.clj)
-          if [ -f "$workspace_path/deps.edn" ] || [ -f "$workspace_path/project.clj" ]; then
-            workspace_roles+=("clojure")
-          fi
-
-          # 16. Zig (build.zig)
-          if [ -f "$workspace_path/build.zig" ]; then
-            workspace_roles+=("zig")
-          fi
-
-          # 17. Crystal (shard.yml)
-          if [ -f "$workspace_path/shard.yml" ]; then
-            workspace_roles+=("crystal")
-          fi
-
-          # 18. Julia (Project.toml)
-          if [ -f "$workspace_path/Project.toml" ]; then
-            workspace_roles+=("julia")
-          fi
-
-          # 19. OCaml (dune-project)
-          if [ -f "$workspace_path/dune-project" ]; then
-            workspace_roles+=("ocaml")
-          fi
-
-          # 20. Erlang (rebar.config)
-          if [ -f "$workspace_path/rebar.config" ]; then
-            workspace_roles+=("erlang")
-          fi
-
-          # 언어 무관 엔트리포인트 신호 (아직 역할 없을 때만)
-          if [ "${#workspace_roles[@]}" -eq 0 ]; then
-            if [ -f "$workspace_path/index.html" ] || [ -f "$workspace_path/public/index.html" ]; then
-              workspace_roles+=("frontend")
-            fi
-            if [ -f "$workspace_path/Dockerfile" ] || [ -f "$workspace_path/docker-compose.yml" ]; then
-              workspace_roles+=("deploy")
-            fi
-          fi
-
-          # 파일 신호가 없으면 탐지 불가로 명시 (이름 기반 추측 금지)
-          if [ "${#workspace_roles[@]}" -eq 0 ]; then
-            workspace_roles+=("undetected")
-          fi
-
-          # 폴리글랏: 역할이 2개 이상이면 목록 나열
-          if [ "${#workspace_roles[@]}" -gt 1 ]; then
-            printf '%s\n' "- \`$workspace_path\`: 복수 언어/역할 혼합 패키지입니다 ($(join_by_comma "${workspace_roles[@]}"))."
-          else
-            case "${workspace_roles[0]}" in
-              frontend) printf '%s\n' "- \`$workspace_path\`: 사용자 진입점을 담는 애플리케이션 패키지 후보입니다." ;;
-              backend)  printf '%s\n' "- \`$workspace_path\`: 서비스 또는 백엔드 책임을 가진 패키지 후보입니다." ;;
-              desktop)  printf '%s\n' "- \`$workspace_path\`: 별도 실행 환경 또는 배포 경계를 가진 패키지 후보입니다." ;;
-              cli)      printf '%s\n' "- \`$workspace_path\`: CLI 진입점 또는 실행 커맨드 패키지 후보입니다." ;;
-              library)  printf '%s\n' "- \`$workspace_path\`: 재사용 가능한 라이브러리 또는 모듈 후보입니다." ;;
-              shared)   printf '%s\n' "- \`$workspace_path\`: 공용 패키지 또는 공유 유틸리티 후보입니다." ;;
-              domain)   printf '%s\n' "- \`$workspace_path\`: 도메인 모델 또는 비즈니스 로직 레이어 후보입니다." ;;
-              infra)    printf '%s\n' "- \`$workspace_path\`: 인프라 또는 외부 의존성 어댑터 레이어 후보입니다." ;;
-              deploy)   printf '%s\n' "- \`$workspace_path\`: 독립 배포 단위 또는 컨테이너 경계를 가진 패키지 후보입니다." ;;
-              app)      printf '%s\n' "- \`$workspace_path\`: 애플리케이션 레이어 또는 실행 진입점 후보입니다." ;;
-              test)     printf '%s\n' "- \`$workspace_path\`: 테스트 또는 검증 보조 패키지 후보입니다." ;;
-              android)  printf '%s\n' "- \`$workspace_path\`: Android 애플리케이션 패키지 후보입니다." ;;
-              flutter)  printf '%s\n' "- \`$workspace_path\`: Flutter 크로스플랫폼 애플리케이션 패키지 후보입니다." ;;
-              dart)     printf '%s\n' "- \`$workspace_path\`: Dart 패키지 후보입니다." ;;
-              swift)    printf '%s\n' "- \`$workspace_path\`: Swift 패키지 후보입니다." ;;
-              ruby)     printf '%s\n' "- \`$workspace_path\`: Ruby 패키지 후보입니다." ;;
-              php)      printf '%s\n' "- \`$workspace_path\`: PHP 패키지 후보입니다." ;;
-              elixir)   printf '%s\n' "- \`$workspace_path\`: Elixir 패키지 후보입니다." ;;
-              jvm)      printf '%s\n' "- \`$workspace_path\`: JVM 기반 패키지 후보입니다." ;;
-              dotnet)   printf '%s\n' "- \`$workspace_path\`: .NET 패키지 후보입니다." ;;
-              native)   printf '%s\n' "- \`$workspace_path\`: 네이티브 빌드 패키지 후보입니다." ;;
-              scala)    printf '%s\n' "- \`$workspace_path\`: Scala 패키지 후보입니다." ;;
-              haskell)  printf '%s\n' "- \`$workspace_path\`: Haskell 패키지 후보입니다." ;;
-              clojure)  printf '%s\n' "- \`$workspace_path\`: Clojure 패키지 후보입니다." ;;
-              zig)      printf '%s\n' "- \`$workspace_path\`: Zig 패키지 후보입니다." ;;
-              crystal)  printf '%s\n' "- \`$workspace_path\`: Crystal 패키지 후보입니다." ;;
-              julia)    printf '%s\n' "- \`$workspace_path\`: Julia 패키지 후보입니다." ;;
-              ocaml)    printf '%s\n' "- \`$workspace_path\`: OCaml 패키지 후보입니다." ;;
-              erlang)     printf '%s\n' "- \`$workspace_path\`: Erlang 패키지 후보입니다." ;;
-              undetected)
-                printf '%s\n' "- \`$workspace_path\`: 자동 탐지 단서 없음 — 이 패키지의 역할과 핵심 경계를 직접 명시해야 합니다."
-                _undetected_packages+=("$workspace_path")
-                ;;
-              *) printf '%s\n' "- \`$workspace_path\`: 주요 패키지 후보입니다." ;;
-            esac
-          fi
-        done < <(list_workspace_packages)
-
-        if [ "${#_undetected_packages[@]}" -gt 0 ]; then
-          printf '\n### 미확인 패키지 — 직접 입력 필요\n\n'
-          printf '%s\n' "자동 탐지 단서가 없는 패키지가 ${#_undetected_packages[@]}개 있습니다. 아래 질문에 답해 이 문서를 직접 보강해 주세요."
-          printf '\n'
-          for _pkg in "${_undetected_packages[@]}"; do
-            printf '%s\n' "**\`$_pkg\`**"
-            printf '%s\n' "- 이 패키지의 주된 역할은 무엇인가? (예: 웹 프론트엔드, API 서버, 공용 유틸, CLI 도구 등)"
-            printf '%s\n' "- 핵심 진입점 파일이나 디렉토리는 무엇인가?"
-            printf '%s\n' "- 다른 패키지가 이 패키지를 소비하는가, 아니면 독립 실행인가?"
-            printf '\n'
-          done
-        fi
+      if [ "$boundary_hint" != "추정 불가" ]; then
+        while IFS= read -r source_anchor; do
+          [ -n "$source_anchor" ] || continue
+          printf '%s\n' "- \`$source_anchor\`: 탐색 문서가 식별한 실제 구조 근거입니다."
+        done < <(list_markdown_bullets_under_heading "$EXPLORATION_NOTES_DEFAULT_PATH" "주요 코드 경계")
+      else
+        printf '%s\n' "- 주요 코드 경계가 아직 충분히 정리되지 않았습니다. 후속 역할이 대표 경계를 직접 보강해야 합니다."
       fi
-
-      [ -d "src" ] && printf '%s\n' "- \`src/\`: 애플리케이션 핵심 소스 디렉토리 후보입니다."
-      [ -d "app" ] && printf '%s\n' "- \`app/\`: 엔트리포인트 또는 라우팅 중심 디렉토리 후보입니다."
-      [ -d "lib" ] && printf '%s\n' "- \`lib/\`: 라이브러리 또는 공유 모듈 디렉토리 후보입니다."
-      [ -d "cmd" ] && printf '%s\n' "- \`cmd/\`: CLI 또는 실행 커맨드 진입점 디렉토리 후보입니다."
-      [ -d "internal" ] && printf '%s\n' "- \`internal/\`: 내부 전용 패키지 디렉토리 후보입니다."
-      [ -d "pkg" ] && printf '%s\n' "- \`pkg/\`: 외부 공개 패키지 디렉토리 후보입니다."
-      [ -d "docs" ] && printf '%s\n' "- \`docs/\`: 운영 또는 설계 문서 단서가 모이는 디렉토리입니다."
-      [ -d "tests" ] && printf '%s\n' "- \`tests/\`: 독립 테스트 시나리오 또는 검증 흐름 단서가 있습니다."
-      [ -d "test" ] && printf '%s\n' "- \`test/\`: 테스트 보조 코드 또는 시나리오 단서가 있습니다."
-      [ "$package_manager_hint" = "추정 불가" ] || printf '%s\n' "- 패키지 관리는 \`$package_manager_hint\` 단서가 확인됩니다."
-      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- 주요 설정 단서: \`$config_hint\`."
-      printf '%s\n' "- 현재 자동 분석 기준의 주요 구조 단서는 \`$structure_hint\` 입니다."
+      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- \`$config_hint\`: 실제 실행, 빌드, 검증 경로를 해석할 때 다시 확인할 설정 단서입니다."
 
       cat <<EOF
 
 ### 예외 및 운영 메모
 EOF
-      while IFS= read -r workspace_path; do
-        [ -n "$workspace_path" ] || continue
-        notes=()
-
-        [ -f "$workspace_path/package-lock.json" ] && notes+=("package-lock.json")
-        [ -f "$workspace_path/pnpm-lock.yaml" ] && notes+=("pnpm-lock.yaml")
-        [ -f "$workspace_path/yarn.lock" ] && notes+=("yarn.lock")
-        [ -f "$workspace_path/bun.lockb" ] && notes+=("bun.lockb")
-        [ -f "$workspace_path/bun.lock" ] && notes+=("bun.lock")
-        [ -f "$workspace_path/.npmrc" ] && notes+=(".npmrc")
-        [ -f "$workspace_path/Cargo.toml" ] && notes+=("Cargo.toml")
-        [ -f "$workspace_path/pyproject.toml" ] && notes+=("pyproject.toml")
-        [ -f "$workspace_path/requirements.txt" ] && notes+=("requirements.txt")
-        [ -f "$workspace_path/go.mod" ] && notes+=("go.mod")
-        [ -f "$workspace_path/pom.xml" ] && notes+=("pom.xml")
-        [ -f "$workspace_path/build.gradle" ] && notes+=("build.gradle")
-        [ -f "$workspace_path/build.gradle.kts" ] && notes+=("build.gradle.kts")
-        [ -f "$workspace_path/Gemfile" ] && notes+=("Gemfile")
-        [ -f "$workspace_path/composer.json" ] && notes+=("composer.json")
-        [ -f "$workspace_path/pubspec.yaml" ] && notes+=("pubspec.yaml")
-        [ -f "$workspace_path/mix.exs" ] && notes+=("mix.exs")
-        [ -f "$workspace_path/Package.swift" ] && notes+=("Package.swift")
-        [ -f "$workspace_path/CMakeLists.txt" ] && notes+=("CMakeLists.txt")
-        [ -f "$workspace_path/global.json" ] && notes+=("global.json")
-
-        if [ -f "$workspace_path/.yarnrc.yml" ]; then
-          if grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*node-modules([[:space:]]|$)' "$workspace_path/.yarnrc.yml"; then
-            notes+=(".yarnrc.yml(nodeLinker: node-modules)")
-          elif grep -Eq '^[[:space:]]*nodeLinker:[[:space:]]*pnp([[:space:]]|$)' "$workspace_path/.yarnrc.yml"; then
-            notes+=(".yarnrc.yml(nodeLinker: pnp)")
-          else
-            notes+=(".yarnrc.yml")
-          fi
-        fi
-
-        if find "$workspace_path" -maxdepth 2 -type d -name node_modules -print -quit | grep -q .; then
-          notes+=("node_modules 디렉토리")
-        fi
-
-        if find "$workspace_path" -maxdepth 2 -type d \( -name .venv -o -name vendor \) -print -quit | grep -q .; then
-          notes+=("로컬 의존성 디렉토리")
-        fi
-
-        if [ "${#notes[@]}" -gt 0 ]; then
-          printf '%s\n' "- \`$workspace_path\`: $(join_by_comma "${notes[@]}") 단서가 있어 루트 기본 흐름과 다른 설치/실행/검증 예외가 있는지 확인해야 합니다."
-          found_exception_note=1
-        fi
-      done < <(list_workspace_packages)
-
-      if [ "$found_exception_note" -eq 0 ]; then
-        printf '%s\n' "- 자동 탐지된 예외 단서는 제한적입니다. 루트 기본 흐름과 다른 설치/실행/검증 단계가 있으면 이 섹션에 직접 보강해야 합니다."
-      fi
+      printf '%s\n' "- 예외 판단은 자동 분류보다 탐색 문서와 실제 실행 로그를 우선합니다."
+      printf '%s\n' "- 루트 흐름과 다른 설치, 빌드, 검증 단계가 보이면 해당 경계를 이 섹션에 직접 보강합니다."
+      printf '%s\n' "- validator는 예외가 빈칸인지보다, 실제 경계 변화와 운영 비용이 설명되는지를 우선 확인합니다."
 
       cat <<EOF
 
@@ -1010,13 +570,13 @@ EOF
 EOF
       printf '%s\n' "- \`$core_flow_hint\`"
       [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- \`$config_hint\` 경로를 기준으로 실제 실행, 빌드, 검증 흐름이 어디서 갈라지는지 먼저 확인해야 합니다."
-      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- \`$workspace_hint\` 경계를 따라 변경 영향 범위와 소비 관계를 먼저 정리해야 합니다."
+      [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- \`$boundary_hint\` 경계를 따라 변경 영향 범위와 소비 관계를 먼저 정리해야 합니다."
 
       cat <<EOF
 
 ### 하네스 관점 핵심 관심사
 EOF
-      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 패키지 또는 애플리케이션 경계를 흐리지 않는 변경 분류"
+      [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- 실제 코드 경계를 흐리지 않는 변경 분류"
       printf '%s\n' "- \`$key_axes_hint\` 축에서 영향도가 큰 영역 식별"
       printf '%s\n' "- 실행 흐름, 설정 파일, 공용 계층 중 어디서 변경이 시작되는지 먼저 구분"
       printf '%s\n' "- 검증 비용이 큰 경계와 수동 확인이 필요한 결합 지점을 역할 관점으로 분리"
@@ -1026,7 +586,7 @@ EOF
 ### 반복적으로 위험한 변경 유형
 EOF
       printf '%s\n' "- 진입점 설정 파일과 빌드 설정 변경"
-      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 패키지 export 경로 또는 의존 관계 변경"
+      [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- 여러 경계에 걸친 공개 경로 또는 소비 관계 변경"
       printf '%s\n' "- 공용 모듈, 공개 인터페이스, 소비 경로 변경"
       printf '%s\n' "- 테스트 또는 검증 도구, 픽스처, 기준 문서 변경"
 
@@ -1059,8 +619,7 @@ build_architecture_report_block() {
   local exploration_context_level="$1"
   local project_type_label="$2"
   local key_axes_hint="$3"
-  local workspace_hint="$4"
-  local core_flow_hint="$5"
+  local core_flow_hint="$4"
 
   case "$exploration_context_level" in
     초기|제한적)
@@ -1137,7 +696,6 @@ EOF
 - 핵심 작업 축: $key_axes_hint
 - 대표 흐름 해석: $core_flow_hint
 EOF
-      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 단서: $workspace_hint"
       cat <<EOF
 
 ## 저장소 고유 근거
@@ -1251,7 +809,8 @@ EOF
 build_qa_report_block() {
   local exploration_context_level="$1"
   local key_axes_hint="$2"
-  local workspace_hint="$3"
+  local boundary_hint="$3"
+  local test_hint="$4"
 
   case "$exploration_context_level" in
     초기|제한적)
@@ -1312,8 +871,8 @@ EOF
 
 - $key_axes_hint
 EOF
-      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 경계와 패키지 간 영향 전파"
-      ([ -d "tests" ] || [ -d "test" ] || [ -d "__tests__" ]) && printf '%s\n' "- 테스트 자산과 검증 유틸리티의 안정성"
+      [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- 실제 코드 경계와 소비 관계의 영향 전파"
+      [ "$test_hint" = "추정 불가" ] || printf '%s\n' "- 테스트 자산과 검증 유틸리티의 안정성"
       printf '%s\n' "- 공용 계층, 진입점 설정, 소비 경로 사이의 영향 전파"
       cat <<EOF
 
@@ -1697,12 +1256,10 @@ EOF
 build_domain_summary_block() {
   local exploration_context_level="$1"
   local project_type_label="$2"
-  local structure_hint="$3"
+  local boundary_hint="$3"
   local core_flow_hint="$4"
-  local package_manager_hint="$5"
-  local workspace_hint="$6"
-  local key_axes_hint="$7"
-  local config_hint="$8"
+  local key_axes_hint="$5"
+  local config_hint="$6"
 
   case "$exploration_context_level" in
     초기)
@@ -1715,7 +1272,7 @@ EOF
     제한적)
       cat <<EOF
 - 프로젝트 성격: $project_type_label
-- 주요 구조 단서: $structure_hint
+ - 주요 구조 단서: $boundary_hint
 - 설정 및 실행 단서: $config_hint
 - 핵심 흐름: $core_flow_hint
 EOF
@@ -1723,10 +1280,8 @@ EOF
     *)
       printf '%s\n' "- 프로젝트 성격: $project_type_label"
       [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- 설정 및 실행 단서: $config_hint"
-      [ "$package_manager_hint" = "추정 불가" ] || printf '%s\n' "- 패키지 관리: $package_manager_hint"
-      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스/패키지 단서: $workspace_hint"
-      printf '%s\n' "- 주요 구조 단서: $structure_hint"
-      [ "$key_axes_hint" = "$structure_hint" ] || printf '%s\n' "- 핵심 작업 축: $key_axes_hint"
+      printf '%s\n' "- 주요 구조 단서: $boundary_hint"
+      [ "$key_axes_hint" = "$boundary_hint" ] || printf '%s\n' "- 핵심 작업 축: $key_axes_hint"
       printf '%s\n' "- 핵심 흐름: $core_flow_hint"
       ;;
   esac

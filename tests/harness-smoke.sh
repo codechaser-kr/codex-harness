@@ -186,6 +186,8 @@ assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "일회성 위임" "run-harness 보조 위임 판단"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "생성-검증" "run-harness 패턴 판단"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "저장소 고유 용어" "run-harness 사용자 맥락 판단"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" ".claude" "run-harness AI 설정 디렉토리 제외 규칙"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "생성 산출물 경로" "run-harness 생성 산출물 제외 규칙"
 assert_file "$TMP_ROOT/empty-project/.codex/agents/run-harness.md"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/agents/run-harness.md")" "## 역할" "run-harness agent 역할"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/agents/run-harness.md")" "## handoff" "run-harness agent handoff"
@@ -193,6 +195,8 @@ assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/domain-analyst/SKI
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/domain-analyst/SKILL.md")" "저장소 고유 명사와 업무 용어를 일반론으로 바꾸지 않는다." "domain skill 고유 용어 보존"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/domain-analyst/SKILL.md")" "최소 3개의 실제 파일 또는 경로 근거" "domain skill 파일 근거 요구"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/domain-analyst/SKILL.md")" "패키지 책임, 상태 흐름, 배포 경계" "domain skill 도메인 해석 책임"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/domain-analyst/SKILL.md")" ".claude" "domain skill AI 설정 디렉토리 제외 규칙"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/domain-analyst/SKILL.md")" "build" "domain skill 생성 산출물 제외 규칙"
 (
   cd "$TMP_ROOT/empty-project"
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"

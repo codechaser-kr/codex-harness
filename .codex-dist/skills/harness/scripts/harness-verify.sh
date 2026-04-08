@@ -483,6 +483,8 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
     check_contains_any_hint ".harness/reports/harness-architecture.md" "역할별 초점|권장 역할|역할별 책임" "아키텍처 역할 배치"
     check_contains_any_hint ".harness/reports/harness-architecture.md" "보조 구조|reports|logs|templates|scenarios" "아키텍처 보조 구조"
     check_contains_any_hint ".harness/reports/harness-architecture.md" "7역할 유지 기준|역할 유지 기준|역할 수" "아키텍처 역할 유지 기준"
+    check_contains_any_hint ".harness/reports/harness-architecture.md" "아키텍처 패턴 선택 기준|패턴 선택 기준|파이프라인|팬아웃|운영 유지보수" "아키텍처 패턴 선택 기준"
+    check_contains_any_hint ".harness/reports/harness-architecture.md" "역할 분리 판단 기준|분리 판단 기준|입력과 출력|위임 비용" "아키텍처 역할 분리 기준"
     check_contains_any_hint ".harness/reports/harness-architecture.md" "축소/확장 판단|축소|확장" "아키텍처 축소 확장 기준"
     check_contains_any_hint ".harness/reports/harness-architecture.md" "설계 원칙|원칙" "아키텍처 설계 원칙"
   fi
@@ -499,6 +501,7 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
     check_contains_any_hint ".harness/reports/orchestration-plan.md" "시작 분기|진입점 규칙|시작점" "오케스트레이션 시작 분기"
     check_contains_any_hint ".harness/reports/orchestration-plan.md" "표준 전체 시퀀스|표준 시퀀스|전체 순서" "오케스트레이션 표준 전체 시퀀스"
     check_contains_any_hint ".harness/reports/orchestration-plan.md" "작업 축별 권장 루프|대표 요청별 루프|작업 유형별 대표 루프|작업 유형별 루프|권장 루프|시작 루프" "오케스트레이션 작업 유형별 루프"
+    check_contains_any_hint ".harness/reports/orchestration-plan.md" "운영 패턴 선택 기준|패턴 선택 기준|신규 구축|기존 확장|운영 유지보수" "오케스트레이션 패턴 선택 기준"
     check_contains_any_hint ".harness/reports/orchestration-plan.md" "순서 조정 및 재진입 기준|순서 조정 규칙|순서 조정|조정 규칙|재진입 기준" "오케스트레이션 순서 조정 규칙"
     check_contains_any_hint ".harness/reports/orchestration-plan.md" "현재 상태 판단 규칙|현재 상태 판단|재진입 기준|재진입|다시 시작" "오케스트레이션 현재 상태 판단"
     check_contains_any_hint ".harness/reports/orchestration-plan.md" "역할 간 handoff 규칙|handoff|역할 간 연결" "오케스트레이션 handoff 규칙"

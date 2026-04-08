@@ -231,6 +231,7 @@ STACK_UPDATE_OUTPUT="$(
 assert_contains "$STACK_UPDATE_OUTPUT" "하네스 운영 모드: 운영 유지보수" "스택 프로젝트 update 로그"
 assert_contains "$STACK_UPDATE_OUTPUT" "탐색 근거 문서: .harness/reports/exploration-notes.md" "스택 프로젝트 update 탐색 로그"
 assert_contains "$STACK_UPDATE_OUTPUT" "탐색 근거 요약: 대표 진입점" "스택 프로젝트 update 탐색 요약"
+assert_contains "$STACK_UPDATE_OUTPUT" "상위 컨텍스트 감사: AGENTS.md 상태: 없음" "스택 프로젝트 update agents 감사"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"
@@ -259,5 +260,59 @@ assert_command_fails_with \
   "bash \"$HARNESS_SCRIPT_DIR/harness-update.sh\"" \
   "명시적 재구성이 적절합니다." \
   "부분 구조 update 차단"
+
+log "정렬된 AGENTS.md 감사 확인"
+mkdir -p "$TMP_ROOT/aligned-agents-project"
+cp "$TMP_ROOT/stack-project/package.json" "$TMP_ROOT/aligned-agents-project/package.json"
+mkdir -p "$TMP_ROOT/aligned-agents-project/src" "$TMP_ROOT/aligned-agents-project/tests"
+cp "$TMP_ROOT/stack-project/src/main.ts" "$TMP_ROOT/aligned-agents-project/src/main.ts"
+cp "$TMP_ROOT/stack-project/src/app.ts" "$TMP_ROOT/aligned-agents-project/src/app.ts"
+cp "$TMP_ROOT/stack-project/tests/app.test.ts" "$TMP_ROOT/aligned-agents-project/tests/app.test.ts"
+cat > "$TMP_ROOT/aligned-agents-project/AGENTS.md" <<'EOF'
+# AGENTS
+
+- run-harness를 기본 진입점으로 사용합니다.
+- 신규 구축, 기존 확장, 운영 유지보수를 구분합니다.
+- 구조 변경이 크면 재구성을 먼저 판단합니다.
+- 세부 실행은 .codex/skills 와 .harness 자산을 따릅니다.
+EOF
+ALIGNED_INIT_OUTPUT="$(
+  cd "$TMP_ROOT/aligned-agents-project" && \
+  bash "$HARNESS_SCRIPT_DIR/harness-init.sh"
+)"
+assert_contains "$ALIGNED_INIT_OUTPUT" "상위 컨텍스트 감사: AGENTS.md 상태: 정렬됨" "정렬된 agents init 감사"
+(
+  cd "$TMP_ROOT/aligned-agents-project"
+  bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"
+)
+
+log "충돌하는 AGENTS.md update 차단 확인"
+mkdir -p "$TMP_ROOT/conflict-agents-project"
+cp "$TMP_ROOT/stack-project/package.json" "$TMP_ROOT/conflict-agents-project/package.json"
+mkdir -p "$TMP_ROOT/conflict-agents-project/src" "$TMP_ROOT/conflict-agents-project/tests"
+cp "$TMP_ROOT/stack-project/src/main.ts" "$TMP_ROOT/conflict-agents-project/src/main.ts"
+cp "$TMP_ROOT/stack-project/src/app.ts" "$TMP_ROOT/conflict-agents-project/src/app.ts"
+cp "$TMP_ROOT/stack-project/tests/app.test.ts" "$TMP_ROOT/conflict-agents-project/tests/app.test.ts"
+(
+  cd "$TMP_ROOT/conflict-agents-project"
+  bash "$HARNESS_SCRIPT_DIR/harness-init.sh" >/dev/null
+)
+cat > "$TMP_ROOT/conflict-agents-project/AGENTS.md" <<'EOF'
+# AGENTS
+
+- CLAUDE.md를 상위 계약으로 사용합니다.
+- .claude/agents 와 .claude/skills 를 기준으로 동작합니다.
+- harness-refresh-reports.sh 로 보고서를 재생성합니다.
+EOF
+assert_command_fails_with \
+  "$TMP_ROOT/conflict-agents-project" \
+  "bash \"$HARNESS_SCRIPT_DIR/harness-update.sh\"" \
+  "AGENTS.md 운영 계약 충돌" \
+  "충돌 agents update 차단"
+assert_command_fails_with \
+  "$TMP_ROOT/conflict-agents-project" \
+  "bash \"$HARNESS_SCRIPT_DIR/harness-verify.sh\"" \
+  "AGENTS.md 운영 계약 충돌이 커서 정렬보다 재구성이 필요합니다" \
+  "충돌 agents verify 실패"
 
 log "harness smoke test 통과"

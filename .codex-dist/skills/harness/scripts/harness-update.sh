@@ -93,6 +93,8 @@ parse_update_targets "$@"
 
 HARNESS_OPERATION_MODE="$(detect_harness_operation_mode)"
 HARNESS_AUDIT_SUMMARY="$(build_harness_audit_summary "$HARNESS_OPERATION_MODE")"
+AGENTS_ALIGNMENT_STATUS="$(detect_agents_alignment_status "$HARNESS_OPERATION_MODE")"
+AGENTS_AUDIT_SUMMARY="$(build_agents_audit_summary "$HARNESS_OPERATION_MODE")"
 HARNESS_SKILL_COUNT="$(count_harness_skill_dirs)"
 HARNESS_REPORT_COUNT="$(count_harness_report_files)"
 HARNESS_LOG_COUNT="$(count_harness_log_files)"
@@ -108,6 +110,16 @@ if [ "$HARNESS_OPERATION_MODE" = "기존 확장" ] && { [ "$HARNESS_SKILL_COUNT"
   log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
   log "부분 구조만 남아 있어 update보다 명시적 재구성이 적절합니다."
   log "기존 하네스 구조 정리 후 harness-init.sh로 다시 구성하세요."
+  exit 1
+fi
+
+if [ "$AGENTS_ALIGNMENT_STATUS" = "충돌" ] || [ "$AGENTS_ALIGNMENT_STATUS" = "재구성 필요" ]; then
+  log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
+  while IFS= read -r agents_line; do
+    [ -n "$agents_line" ] || continue
+    log "상위 컨텍스트 감사: $agents_line"
+  done <<< "$AGENTS_AUDIT_SUMMARY"
+  log "AGENTS.md 운영 계약 충돌이 있어 update 대신 정렬 또는 명시적 재구성이 필요합니다."
   exit 1
 fi
 
@@ -157,6 +169,10 @@ while IFS= read -r audit_line; do
   [ -n "$audit_line" ] || continue
   log "하네스 감사: $audit_line"
 done <<< "$HARNESS_AUDIT_SUMMARY"
+while IFS= read -r agents_line; do
+  [ -n "$agents_line" ] || continue
+  log "상위 컨텍스트 감사: $agents_line"
+done <<< "$AGENTS_AUDIT_SUMMARY"
 
 if [ "$UPDATE_DOMAIN" -eq 1 ]; then
   cat > "$DOMAIN_REPORT" <<EOF_DOMAIN

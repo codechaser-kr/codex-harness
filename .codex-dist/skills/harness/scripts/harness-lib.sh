@@ -57,6 +57,95 @@ detect_harness_operation_mode() {
   printf '%s\n' "기존 확장"
 }
 
+has_agents_contract() {
+  [ -f "AGENTS.md" ]
+}
+
+agents_mentions_current_harness() {
+  [ -f "AGENTS.md" ] || return 1
+  grep -Eq 'run-harness|harness-init\.sh|harness-update\.sh|harness-verify\.sh|\.codex/skills|\.harness/' "AGENTS.md"
+}
+
+agents_mentions_operation_modes() {
+  [ -f "AGENTS.md" ] || return 1
+  grep -Eq '신규 구축|기존 확장|운영 유지보수|재구성' "AGENTS.md"
+}
+
+agents_conflict_markers() {
+  [ -f "AGENTS.md" ] || return 0
+
+  grep -Eo 'CLAUDE\.md|\.claude/agents|\.claude/skills|harness-refresh-reports\.sh|refresh-reports' "AGENTS.md" \
+    | awk '!seen[$0]++'
+}
+
+build_agents_conflict_summary() {
+  local markers
+
+  markers="$(agents_conflict_markers || true)"
+  if [ -n "$markers" ]; then
+    printf '%s\n' "$markers" | paste -sd ', ' -
+  else
+    printf '%s\n' "없음"
+  fi
+}
+
+detect_agents_alignment_status() {
+  local mode="${1:-$(detect_harness_operation_mode)}"
+
+  if ! has_agents_contract; then
+    printf '%s\n' "없음"
+    return
+  fi
+
+  local has_current_markers=0
+  local has_mode_markers=0
+  local has_conflict_markers=0
+
+  agents_mentions_current_harness && has_current_markers=1
+  agents_mentions_operation_modes && has_mode_markers=1
+  [ "$(build_agents_conflict_summary)" != "없음" ] && has_conflict_markers=1
+
+  if [ "$has_conflict_markers" -eq 1 ] && [ "$mode" = "운영 유지보수" ] && [ "$has_current_markers" -eq 0 ]; then
+    printf '%s\n' "재구성 필요"
+    return
+  fi
+
+  if [ "$has_conflict_markers" -eq 1 ]; then
+    printf '%s\n' "충돌"
+    return
+  fi
+
+  if [ "$has_current_markers" -eq 1 ] && [ "$has_mode_markers" -eq 1 ]; then
+    printf '%s\n' "정렬됨"
+    return
+  fi
+
+  printf '%s\n' "보강 필요"
+}
+
+build_agents_audit_summary() {
+  local mode="${1:-$(detect_harness_operation_mode)}"
+  local status
+  local current_harness_marker="아니오"
+  local mode_marker="아니오"
+  local conflict_summary
+
+  status="$(detect_agents_alignment_status "$mode")"
+  conflict_summary="$(build_agents_conflict_summary)"
+  agents_mentions_current_harness && current_harness_marker="예"
+  agents_mentions_operation_modes && mode_marker="예"
+
+  printf '%s\n' "AGENTS.md 상태: $status"
+
+  if [ "$status" = "없음" ]; then
+    return
+  fi
+
+  printf '%s\n' "AGENTS.md 현재 하네스 진입점 언급: $current_harness_marker"
+  printf '%s\n' "AGENTS.md 운영 모드 언급: $mode_marker"
+  printf '%s\n' "AGENTS.md 충돌 단서: $conflict_summary"
+}
+
 build_harness_audit_summary() {
   local mode="$1"
   local skill_count=0

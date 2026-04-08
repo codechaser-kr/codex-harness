@@ -217,6 +217,34 @@ audit_harness_drift() {
   fi
 }
 
+check_agents_alignment() {
+  local mode="$1"
+  local status
+  local summary
+
+  status="$(detect_agents_alignment_status "$mode")"
+  summary="$(build_agents_audit_summary "$mode")"
+
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    log "상위 컨텍스트 감사: $line"
+  done <<< "$summary"
+
+  case "$status" in
+    없음|정렬됨)
+      ;;
+    보강\ 필요)
+      warn "AGENTS.md가 현재 하네스 진입점 또는 운영 모드 설명을 충분히 담고 있지 않습니다"
+      ;;
+    충돌)
+      fail "AGENTS.md 운영 계약이 현재 하네스 진입점 또는 운영 모델과 충돌합니다"
+      ;;
+    재구성\ 필요)
+      fail "AGENTS.md 운영 계약 충돌이 커서 정렬보다 재구성이 필요합니다"
+      ;;
+  esac
+}
+
 HARNESS_SKILL_COUNT="$(count_harness_skill_dirs)"
 HARNESS_REPORT_COUNT="$(count_harness_report_files)"
 HARNESS_LOG_COUNT="$(count_harness_log_files)"
@@ -234,6 +262,7 @@ log "하네스 감사: 기존 로컬 역할 스킬 수: $HARNESS_SKILL_COUNT"
 log "하네스 감사: 기존 보고서 수: $HARNESS_REPORT_COUNT"
 log "하네스 감사: 기존 로그 파일 수: $HARNESS_LOG_COUNT"
 audit_harness_drift "$HARNESS_OPERATION_MODE" "$HARNESS_SKILL_COUNT" "$HARNESS_REPORT_COUNT" "$HARNESS_LOG_COUNT" "$EXPLORATION_CONTEXT_LEVEL"
+check_agents_alignment "$HARNESS_OPERATION_MODE"
 
 # 필수 디렉토리
 check_dir ".codex/skills"

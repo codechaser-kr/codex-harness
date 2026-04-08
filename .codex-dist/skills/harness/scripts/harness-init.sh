@@ -54,6 +54,7 @@ ensure_gitignore_entry() {
 
 HARNESS_OPERATION_MODE="$(detect_harness_operation_mode)"
 HARNESS_AUDIT_SUMMARY="$(build_harness_audit_summary "$HARNESS_OPERATION_MODE")"
+AGENTS_AUDIT_SUMMARY="$(build_agents_audit_summary "$HARNESS_OPERATION_MODE")"
 EXPLORATION_NOTES_FILE="$EXPLORATION_NOTES_DEFAULT_PATH"
 mkdir -p ".harness/reports"
 bash "$SCRIPT_DIR/harness-explore.sh" "$EXPLORATION_NOTES_FILE" >/dev/null
@@ -99,6 +100,10 @@ while IFS= read -r audit_line; do
   [ -n "$audit_line" ] || continue
   log "하네스 감사: $audit_line"
 done <<< "$HARNESS_AUDIT_SUMMARY"
+while IFS= read -r agents_line; do
+  [ -n "$agents_line" ] || continue
+  log "상위 컨텍스트 감사: $agents_line"
+done <<< "$AGENTS_AUDIT_SUMMARY"
 
 create_dir ".codex"
 create_dir ".codex/skills"

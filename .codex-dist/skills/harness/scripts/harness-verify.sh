@@ -124,6 +124,8 @@ check_placeholder_state() {
   if grep -Eq -- "$pattern" "$file"; then
     if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
       fail "$label 미해결: $file"
+    elif [ "$EXPLORATION_CONTEXT_LEVEL" = "초기" ]; then
+      log "OK $label 초기값 유지: $file"
     else
       warn "$label 미해결: $file"
     fi
@@ -188,6 +190,7 @@ audit_harness_drift() {
   local skill_count="$2"
   local report_count="$3"
   local log_count="$4"
+  local exploration_context_level="$5"
 
   if [ "$mode" = "기존 확장" ]; then
     if [ "$skill_count" -gt 0 ] && [ "$report_count" -eq 0 ]; then
@@ -203,7 +206,7 @@ audit_harness_drift() {
     fi
   fi
 
-  if [ "$mode" = "운영 유지보수" ]; then
+  if [ "$mode" = "운영 유지보수" ] && [ "$exploration_context_level" = "충분" ]; then
     if [ -f ".harness/reports/orchestration-plan.md" ] && ! grep -Eq 'run-harness|시작 역할|진입점' ".harness/reports/orchestration-plan.md"; then
       warn "운영 drift 가능성: orchestration-plan이 run-harness 진입 규칙을 충분히 설명하지 않습니다"
     fi
@@ -230,7 +233,7 @@ log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
 log "하네스 감사: 기존 로컬 역할 스킬 수: $HARNESS_SKILL_COUNT"
 log "하네스 감사: 기존 보고서 수: $HARNESS_REPORT_COUNT"
 log "하네스 감사: 기존 로그 파일 수: $HARNESS_LOG_COUNT"
-audit_harness_drift "$HARNESS_OPERATION_MODE" "$HARNESS_SKILL_COUNT" "$HARNESS_REPORT_COUNT" "$HARNESS_LOG_COUNT"
+audit_harness_drift "$HARNESS_OPERATION_MODE" "$HARNESS_SKILL_COUNT" "$HARNESS_REPORT_COUNT" "$HARNESS_LOG_COUNT" "$EXPLORATION_CONTEXT_LEVEL"
 
 # 필수 디렉토리
 check_dir ".codex/skills"
@@ -413,7 +416,7 @@ if [ "$EXPLORATION_CONTEXT_LEVEL" = "초기" ]; then
 
   if [ -f ".harness/reports/domain-analysis.md" ]; then
     check_contains_any_hint ".harness/reports/domain-analysis.md" "프로젝트 유형: (미정|unknown)" "빈 프로젝트용 프로젝트 유형 기본값"
-    check_contains_any_hint ".harness/reports/domain-analysis.md" "가장 먼저 성공|첫 성공" "빈 프로젝트용 첫 성공 흐름 질문"
+    check_contains_any_hint ".harness/reports/domain-analysis.md" "가장 먼저 성공|첫 성공|핵심 흐름 한 가지|가장 먼저 동작해야 할 핵심 흐름" "빈 프로젝트용 첫 성공 흐름 질문"
   fi
 fi
 

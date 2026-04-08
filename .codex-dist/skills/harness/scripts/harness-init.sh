@@ -92,7 +92,7 @@ NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$EXPLORATION_CONTEXT_LEVEL" "init
 DISCOVERY_GUIDANCE="$(build_exploration_guidance "$EXPLORATION_NOTES_FILE" "$EXPLORATION_CONTEXT_LEVEL" "$STRUCTURE_HINT")"
 
 if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
-  DISCOVERY_GUIDANCE="현재 탐색 근거만으로는 방향 판단이 어렵습니다. run-harness는 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인해야 합니다."
+  DISCOVERY_GUIDANCE="현재 탐색 근거만으로는 방향 판단이 어렵습니다. run-harness는 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 먼저 확인해야 합니다."
 fi
 
 DOMAIN_DETAIL_BLOCK="$(build_domain_report_detail_block "$EXPLORATION_CONTEXT_LEVEL" "$STRUCTURE_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT" "$CORE_FLOW_HINT" "$DISCOVERY_GUIDANCE" "$INITIAL_OBSERVATION_LINE" "$NEXT_STEP_DETAIL_LINE")"
@@ -143,7 +143,7 @@ if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
 탐색 근거가 아직 부족해 자동 분석이 제한적입니다.
 아래 항목을 채운 뒤 AI에게 다음과 같이 요청하세요:
 
-> "project-setup.md 작성했어. 이걸 바탕으로 하네스 분석 시작해줘."
+> project-setup.md를 작성했습니다. 이 내용을 바탕으로 하네스 분석을 시작해주세요.
 
 그러면 domain-analyst가 이 파일의 답변을 시작 입력으로 사용해 분석을 시작합니다.
 
@@ -153,18 +153,9 @@ if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
 
 <!-- 이 프로젝트가 해결하려는 문제를 한 문장으로 적어주세요 -->
 
-## 프로젝트 유형
+## 프로젝트 성격
 
-<!-- 해당하는 항목에 x를 표시하거나 직접 입력하세요 -->
-
-- [ ] 웹 애플리케이션 (프론트엔드 + 백엔드)
-- [ ] REST / GraphQL API 서버
-- [ ] CLI 도구
-- [ ] 모바일 앱 (iOS / Android / Flutter)
-- [ ] 라이브러리 / SDK
-- [ ] 데이터 파이프라인 / ML 프로젝트
-- [ ] 인프라 / DevOps 도구
-- [ ] 기타: ___
+<!-- 애플리케이션, 라이브러리, 내부 도구, 운영 시스템 등 현재 생각하는 성격을 자유롭게 적어주세요 -->
 
 ## 주요 사용자
 
@@ -174,57 +165,21 @@ if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
 
 <!-- 가장 먼저 동작해야 할 핵심 흐름 한 가지를 한 문장으로 적어주세요 -->
 
-## 예상 기술 스택
+## 대표 진입점 또는 시작 경로
 
-<!-- 사용할 언어, 프레임워크, 데이터베이스 등이 정해져 있다면 적어주세요 -->
+<!-- 어디서부터 실행 흐름을 읽어야 할지 알고 있다면 파일/디렉토리/명령 기준으로 적어주세요 -->
+
+## 현재 알고 있는 주요 경계
+
+<!-- 앱/서비스/패키지/모듈/문서/운영 영역처럼 나뉘는 단위가 있으면 적어주세요 -->
+
+## 현재 알고 있는 실행·검증 경로
+
+<!-- 실행 명령, 테스트 명령, 배포 경로, 운영 확인 경로 중 아는 것이 있으면 적어주세요 -->
 
 ## 실패 비용이 큰 영역
 
 <!-- 이 프로젝트에서 잘못되면 가장 큰 문제가 생기는 부분은 어디인가요? -->
-
----
-
-## 프로젝트 유형별 추천 스택
-
-### 웹 애플리케이션
-- Frontend: React/Next.js, Vue/Nuxt, Svelte/SvelteKit, Angular
-- Backend: Node.js(Fastify/NestJS), Python(FastAPI/Django), Go, Java(Spring Boot), Rust(Axum)
-- DB: PostgreSQL, MySQL, MongoDB, Redis
-- 추천 초기 구조: \`apps/web\`, \`apps/api\`, \`packages/shared\`
-
-### REST / GraphQL API 서버
-- Node.js: Fastify, NestJS, Hono
-- Python: FastAPI, Django REST Framework
-- Go: gin, echo, fiber
-- Java/Kotlin: Spring Boot
-- Rust: Axum, Actix
-
-### CLI 도구
-- Rust: clap, indicatif
-- Go: cobra, urfave/cli
-- Python: click, typer
-- Node.js: commander, oclif
-
-### 모바일 앱
-- Cross-platform: Flutter(Dart), React Native(TypeScript)
-- Native iOS: Swift(SwiftUI)
-- Native Android: Kotlin(Jetpack Compose)
-
-### 라이브러리 / SDK
-- TypeScript: tsup/unbuild + JSR/npm 배포
-- Rust: lib crate + docs.rs
-- Python: pyproject.toml + PyPI
-- Go: 표준 모듈 구조
-
-### 데이터 파이프라인 / ML
-- Python: pandas, polars, scikit-learn, PyTorch, JAX
-- Rust: polars, candle
-- 파이프라인: Prefect, Airflow, dbt, Apache Beam
-
-### 인프라 / DevOps 도구
-- IaC: Terraform, Pulumi, CloudFormation, CDK
-- Container: Docker, Kubernetes, Helm
-- CI/CD: GitHub Actions, GitLab CI, ArgoCD
 "
 fi
 
@@ -618,7 +573,7 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 영향 범위가 공통 계층이나 다중 모듈로 번지면 domain-analyst와 qa-designer를 더 이른 순서에 배치한다.
 - 빈 저장소이거나 탐색 근거가 부족하면, \`.harness/project-setup.md\`가 있는지 먼저 확인한다.
 - \`.harness/project-setup.md\`가 작성되어 있으면 그 내용을 domain-analyst의 시작 입력으로 연결한다.
-- 작성되어 있지 않으면 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인한 뒤, 파일이 없는 경우 템플릿 내용을 포함하여 \`.harness/project-setup.md\`에 채우도록 안내한다.
+- 작성되어 있지 않으면 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 먼저 확인한 뒤, 파일이 없는 경우 템플릿 내용을 포함하여 \`.harness/project-setup.md\`에 채우도록 안내한다.
 - 사용자 답변이 모이면 그 내용을 domain-analysis와 orchestration-plan의 입력으로 바로 연결한다.
 - 재구성이 필요한 상태라면 어떤 구조가 비어 있거나 어긋났는지 먼저 설명하고, 기존 하네스 정리 후 \`harness-init.sh\`로 다시 구성하도록 제안한다.
 - 리포트보다 실제 역할 팀 구조와 설명 품질을 더 중요하게 본다.
@@ -634,8 +589,8 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 요청: "QA 문서만 보강" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --qa\` 검토 후 qa-designer
 - 요청: "domain-analysis만 오래됐음" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --domain\` 검토 후 domain-analyst
 - 요청: 역할 스킬은 있는데 보고서가 대부분 비어 있음 → 판단: 부분 구조 drift → 시작: 명시적 재구성 제안
-- 요청: 탐색 근거 부족, project-setup.md 미작성 → 판단: 프로젝트 유형 불명 → 시작: project-setup.md 템플릿 제공 및 작성 안내 후 대기
-- 요청: 탐색 근거 부족, project-setup.md 작성됨 → 판단: 목표·유형 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)
+- 요청: 탐색 근거 부족, project-setup.md 미작성 → 판단: 프로젝트 성격 불명 → 시작: project-setup.md 템플릿 제공 및 작성 안내 후 대기
+- 요청: 탐색 근거 부족, project-setup.md 작성됨 → 판단: 목표·성격 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)
 "
 
 create_file_if_missing ".harness/reports/domain-analysis.md" \

@@ -601,9 +601,9 @@ EOF
       cat <<EOF
 ## 요약
 EOF
-      printf '%s\n' "- \`$boundary_hint\` 단서를 기준으로, 이 저장소가 해결하는 사용자 또는 운영 문제를 먼저 정리해야 합니다."
-      printf '%s\n' "- \`$core_flow_hint\`"
-      printf '%s\n' "- 하네스 운영 구조는 저장소의 대표 업무 흐름과 실패 비용을 보조하는 방식으로만 붙입니다."
+      printf '%s\n' "- 이 저장소는 \`$boundary_hint\` 단서를 기준으로 대표 사용자 흐름과 운영 경계를 먼저 읽어야 합니다."
+      printf '%s\n' "- 대표 흐름 요약: \`$core_flow_hint\`"
+      printf '%s\n' "- 하네스 운영 구조는 위 흐름과 실패 비용을 보조하는 방식으로만 붙입니다."
 
       cat <<EOF
 
@@ -611,7 +611,7 @@ EOF
 EOF
       while IFS= read -r source_anchor; do
         [ -n "$source_anchor" ] || continue
-        printf '%s\n' "- \`$source_anchor\`: 현재 해석의 근거로 먼저 확인한 대표 소스 앵커입니다."
+        printf '%s\n' "- \`$source_anchor\`"
         source_anchor_count=$((source_anchor_count + 1))
       done < <(list_source_anchor_paths)
 
@@ -626,9 +626,10 @@ EOF
 ### 사실 기준 구조
 EOF
       if [ "$boundary_hint" != "추정 불가" ]; then
+        printf '%s\n' "- 아래 항목은 저장소를 어떤 경계로 읽어야 하는지 정리한 구조 요약입니다."
         while IFS= read -r source_anchor; do
           [ -n "$source_anchor" ] || continue
-          printf '%s\n' "- \`$source_anchor\`: 탐색 문서가 식별한 실제 구조 근거입니다."
+          printf '%s\n' "- \`$source_anchor\`"
         done < <(list_markdown_bullets_under_heading "$EXPLORATION_NOTES_DEFAULT_PATH" "주요 코드 경계")
       else
         printf '%s\n' "- 주요 코드 경계가 아직 충분히 정리되지 않았습니다. 후속 역할이 대표 경계를 직접 보강해야 합니다."
@@ -640,8 +641,8 @@ EOF
 ### 예외 및 운영 메모
 EOF
       printf '%s\n' "- 예외 판단은 자동 분류보다 탐색 문서와 실제 실행 로그를 우선합니다."
-      printf '%s\n' "- 루트 흐름과 다른 설치, 빌드, 검증 단계가 보이면 해당 경계를 이 섹션에 직접 보강합니다."
-      printf '%s\n' "- validator는 예외가 빈칸인지보다, 실제 경계 변화와 운영 비용이 설명되는지를 우선 확인합니다."
+      printf '%s\n' "- 루트 흐름과 다른 설치, 빌드, 검증 단계가 보이면 그 차이만 짧게 보강합니다."
+      printf '%s\n' "- validator는 예외가 빈칸인지보다 실제 경계 변화와 운영 비용이 설명되는지를 우선 확인합니다."
 
       cat <<EOF
 
@@ -659,7 +660,7 @@ EOF
 EOF
       printf '%s\n' "- \`$core_flow_hint\`"
       [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- \`$config_hint\` 경로를 기준으로 실제 실행, 빌드, 검증 흐름이 어디서 갈라지는지 먼저 확인해야 합니다."
-      [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- \`$boundary_hint\` 경계를 따라 변경 영향 범위와 소비 관계를 먼저 정리해야 합니다."
+      [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- \`$boundary_hint\` 경계를 따라 변경 영향 범위와 소비 관계를 정리합니다."
 
       cat <<EOF
 

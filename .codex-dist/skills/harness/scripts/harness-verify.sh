@@ -180,6 +180,69 @@ warn_if_anchor_count_below() {
   fi
 }
 
+count_harness_skill_dirs() {
+  [ -d ".codex/skills" ] || {
+    printf '0\n'
+    return
+  }
+
+  find ".codex/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d '[:space:]'
+}
+
+count_harness_report_files() {
+  [ -d ".harness/reports" ] || {
+    printf '0\n'
+    return
+  }
+
+  find ".harness/reports" -mindepth 1 -maxdepth 1 -type f -name '*.md' | wc -l | tr -d '[:space:]'
+}
+
+count_harness_log_files() {
+  [ -d ".harness/logs" ] || {
+    printf '0\n'
+    return
+  }
+
+  find ".harness/logs" -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d '[:space:]'
+}
+
+detect_harness_operation_mode() {
+  local skill_count="$1"
+  local report_count="$2"
+  local log_count="$3"
+
+  if [ "$skill_count" -eq 0 ] && [ "$report_count" -eq 0 ] && [ "$log_count" -eq 0 ]; then
+    printf '%s\n' "신규 구축"
+    return
+  fi
+
+  if [ "$skill_count" -gt 0 ] && [ "$report_count" -gt 0 ] && [ "$log_count" -gt 0 ]; then
+    printf '%s\n' "운영 유지보수"
+    return
+  fi
+
+  printf '%s\n' "기존 확장"
+}
+
+audit_harness_drift() {
+  local mode="$1"
+  local skill_count="$2"
+  local report_count="$3"
+  local log_count="$4"
+
+  if [ "$mode" = "기존 확장" ]; then
+    [ "$skill_count" -gt 0 ] && [ "$report_count" -eq 0 ] && warn "하네스 drift 가능성: 역할 스킬은 있으나 보고서가 비어 있습니다"
+    [ "$report_count" -gt 0 ] && [ "$skill_count" -eq 0 ] && warn "하네스 drift 가능성: 보고서는 있으나 역할 스킬이 비어 있습니다"
+    [ "$skill_count" -gt 0 ] && [ "$log_count" -eq 0 ] && warn "하네스 drift 가능성: 역할 스킬은 있으나 로그 구조가 비어 있습니다"
+  fi
+
+  if [ "$mode" = "운영 유지보수" ]; then
+    [ -f ".harness/reports/orchestration-plan.md" ] && ! grep -Eq 'run-harness|시작 역할|진입점' ".harness/reports/orchestration-plan.md" && warn "운영 drift 가능성: orchestration-plan이 run-harness 진입 규칙을 충분히 설명하지 않습니다"
+    [ -f ".harness/logging-policy.md" ] && [ -f ".harness/logs/role-frequency.md" ] && ! grep -Eq '선택 자산|호출 빈도|template-candidates|템플릿 후보' ".harness/logging-policy.md" && warn "운영 drift 가능성: 로그 정책이 선택 자산 운영 규칙을 충분히 설명하지 않습니다"
+  fi
+}
+
 detect_project_signal_level() {
   if [ -f "package.json" ] || [ -f "Cargo.toml" ] || [ -f "pyproject.toml" ] || [ -f "requirements.txt" ] || [ -f "go.mod" ]; then
     echo "stack"
@@ -206,10 +269,19 @@ detect_project_signal_level() {
 }
 
 PROJECT_SIGNAL_LEVEL="$(detect_project_signal_level)"
+HARNESS_SKILL_COUNT="$(count_harness_skill_dirs)"
+HARNESS_REPORT_COUNT="$(count_harness_report_files)"
+HARNESS_LOG_COUNT="$(count_harness_log_files)"
+HARNESS_OPERATION_MODE="$(detect_harness_operation_mode "$HARNESS_SKILL_COUNT" "$HARNESS_REPORT_COUNT" "$HARNESS_LOG_COUNT")"
 
 log "실행 하네스 팀 구조 검증 시작"
 log "harness 기준 경로: $HARNESS_HOME"
 log "저장소 신호 수준: $PROJECT_SIGNAL_LEVEL"
+log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
+log "하네스 감사: 기존 로컬 역할 스킬 수: $HARNESS_SKILL_COUNT"
+log "하네스 감사: 기존 보고서 수: $HARNESS_REPORT_COUNT"
+log "하네스 감사: 기존 로그 파일 수: $HARNESS_LOG_COUNT"
+audit_harness_drift "$HARNESS_OPERATION_MODE" "$HARNESS_SKILL_COUNT" "$HARNESS_REPORT_COUNT" "$HARNESS_LOG_COUNT"
 
 # 필수 디렉토리
 check_dir ".codex/skills"

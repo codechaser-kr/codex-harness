@@ -39,6 +39,11 @@ detect_harness_operation_mode() {
     return
   fi
 
+  if [ "$has_skills" -eq 1 ] && [ "$has_reports" -eq 1 ] && [ "$has_logs" -eq 1 ]; then
+    printf '%s\n' "운영 유지보수"
+    return
+  fi
+
   printf '%s\n' "기존 확장"
 }
 

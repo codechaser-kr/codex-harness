@@ -77,6 +77,9 @@ assert_contains "$(cat "$HARNESS_REF_DIR/reference-writing-guide.md")" "## 3. �
 assert_contains "$(cat "$HARNESS_REF_DIR/reference-writing-guide.md")" "Agent Teams" "reference-writing-guide 내부 설계 용어"
 assert_contains "$(cat "$HARNESS_REF_DIR/reference-writing-guide.md")" "## 7. 회귀 방지 원칙" "reference-writing-guide 회귀 방지"
 
+log "내부 설계 레퍼런스 일관성 검사"
+bash "$ROOT_DIR/tests/reference-consistency.sh"
+
 run_mode_check() {
   local expected="$1"
   local actual

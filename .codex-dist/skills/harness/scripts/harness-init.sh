@@ -95,6 +95,7 @@ TEAM_PLAYBOOK_REPORT_BLOCK="$(build_team_playbook_report_block "$EXPLORATION_CON
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
 log "탐색 근거 문서: $EXPLORATION_NOTES_FILE"
+log "탐색 상태: $EXPLORATION_CONTEXT_LEVEL"
 log "탐색 근거 요약: $EXPLORATION_ANCHOR_SUMMARY"
 while IFS= read -r audit_line; do
   [ -n "$audit_line" ] || continue
@@ -795,11 +796,11 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 
 ## 판단 예시
 
-- 요청: "새 API 엔드포인트 추가" → 판단: 기능 구현, 단일 경계 → 시작: domain-analyst → qa-designer → orchestrator
-- 요청: "공통 유틸 함수 리팩터" → 판단: 공통 계층 영향, 다중 소비자 → 시작: domain-analyst → qa-designer → orchestrator
-- 요청: "하네스 역할 구조 재설계" → 판단: 경계 재정의, 구조 변경 → 시작: harness-architect → qa-designer → orchestrator
-- 요청: "QA 문서만 보강" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --qa\` 검토 후 qa-designer
-- 요청: "domain-analysis만 오래됐음" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --domain\` 검토 후 domain-analyst
+- 요청: \"새 API 엔드포인트 추가\" → 판단: 기능 구현, 단일 경계 → 시작: domain-analyst → qa-designer → orchestrator
+- 요청: \"공통 유틸 함수 리팩터\" → 판단: 공통 계층 영향, 다중 소비자 → 시작: domain-analyst → qa-designer → orchestrator
+- 요청: \"하네스 역할 구조 재설계\" → 판단: 경계 재정의, 구조 변경 → 시작: harness-architect → qa-designer → orchestrator
+- 요청: \"QA 문서만 보강\" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --qa\` 검토 후 qa-designer
+- 요청: \"domain-analysis만 오래됐음\" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --domain\` 검토 후 domain-analyst
 - 요청: 역할 스킬은 있는데 보고서가 대부분 비어 있음 → 판단: 부분 구조 drift → 시작: 명시적 재구성 제안
 - 요청: 탐색 근거 부족, project-setup.md 미작성 → 판단: 프로젝트 성격 불명 → 시작: project-setup.md 템플릿 제공 및 작성 안내 후 대기
 - 요청: 탐색 근거 부족, project-setup.md 작성됨 → 판단: 목표·성격 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)

@@ -151,7 +151,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 4. 탐색만으로 부족한 부분은 사용자에게 확인할 질문으로 분리한다.
 
 이 단계의 결과는 실행 하네스 팀의 출발점이 된다.  
-분석 기준은 `references/agent-design-patterns.md`를 참고한다.
+분석 기준은 `references/agent-design-patterns.md`, 탐색 결과 형식은 `references/exploration-model.md`를 참고한다.
 
 ### Phase 2: 실행 하네스 팀 설계
 

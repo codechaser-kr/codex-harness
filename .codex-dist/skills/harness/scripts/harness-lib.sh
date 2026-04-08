@@ -311,6 +311,70 @@ list_source_anchor_paths() {
     -print | sed 's#^\./##' | head -n 5
 }
 
+list_entrypoint_anchor_paths() {
+  find . \
+    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './node_modules' -o -path './.yarn' -o -path './dist' -o -path './build' -o -path './coverage' \) -prune \
+    -o \
+    -type f \
+    \( -name 'main.*' -o -name 'index.*' -o -name 'app.*' -o -name 'server.*' -o -name 'cli.*' -o -name 'lib.*' -o -name 'mod.rs' \) \
+    -print | sed 's#^\./##' | head -n 5
+}
+
+list_code_boundary_paths() {
+  find . \
+    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './node_modules' -o -path './.yarn' -o -path './dist' -o -path './build' -o -path './coverage' \) -prune \
+    -o \
+    -type f \
+    \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' -o -name '*.rs' -o -name '*.py' -o -name '*.go' -o -name '*.java' -o -name '*.kt' -o -name '*.swift' -o -name '*.php' -o -name '*.rb' -o -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.hpp' \) \
+    -print | sed 's#^\./##' | awk -F/ '
+      NF >= 2 { print $1 "/" $2; next }
+      NF == 1 { print $1 }
+    ' | awk '!seen[$0]++' | head -n 5
+}
+
+list_test_asset_paths() {
+  find . \
+    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './node_modules' -o -path './.yarn' -o -path './dist' -o -path './build' -o -path './coverage' \) -prune \
+    -o \
+    \( -type d \( -name 'test' -o -name 'tests' -o -name '__tests__' \) -print \
+    -o -type f \( -name '*test*' -o -name '*spec*' \) -print \) | sed 's#^\./##' | head -n 5
+}
+
+list_config_asset_paths() {
+  find . -maxdepth 3 \
+    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './node_modules' -o -path './.yarn' -o -path './dist' -o -path './build' -o -path './coverage' \) -prune \
+    -o \
+    -type f \
+    \( -name 'package.json' -o -name 'Cargo.toml' -o -name 'pyproject.toml' -o -name 'requirements.txt' -o -name 'go.mod' -o -name 'pom.xml' -o -name 'build.gradle' -o -name 'build.gradle.kts' -o -name 'settings.gradle' -o -name 'settings.gradle.kts' -o -name 'composer.json' -o -name 'Gemfile' -o -name 'Makefile' -o -name 'CMakeLists.txt' -o -name 'Dockerfile' -o -name '*.yml' -o -name '*.yaml' \) \
+    -print | sed 's#^\./##' | head -n 8
+}
+
+list_domain_context_paths() {
+  find . -maxdepth 4 \
+    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './node_modules' -o -path './.yarn' -o -path './dist' -o -path './build' -o -path './coverage' \) -prune \
+    -o \
+    -type f \
+    \( -name 'README.md' -o -name '*.md' -o -name '*.mdx' -o -name '*.txt' \) \
+    -print | sed 's#^\./##' | head -n 8
+}
+
+print_markdown_bullets_or_fallback() {
+  local producer="$1"
+  local fallback="$2"
+  local printed=0
+  local item
+
+  while IFS= read -r item; do
+    [ -n "$item" ] || continue
+    printf '%s\n' "- \`$item\`"
+    printed=1
+  done < <("$producer")
+
+  if [ "$printed" -eq 0 ]; then
+    printf '%s\n' "- $fallback"
+  fi
+}
+
 detect_config_hints() {
   local hints=()
 

@@ -51,6 +51,7 @@ mkdir -p "$TMP_ROOT"
 log "bash 문법 확인"
 bash -n "$HARNESS_SCRIPT_DIR/harness-lib.sh"
 bash -n "$HARNESS_SCRIPT_DIR/harness-init.sh"
+bash -n "$HARNESS_SCRIPT_DIR/harness-explore.sh"
 bash -n "$HARNESS_SCRIPT_DIR/harness-refresh-reports.sh"
 bash -n "$HARNESS_SCRIPT_DIR/harness-verify.sh"
 bash -n "$HARNESS_SCRIPT_DIR/harness-session-close.sh"
@@ -78,6 +79,14 @@ touch "$TMP_ROOT/mode-maint/.harness/logs/session-log.md"
   run_mode_check "운영 유지보수"
 )
 
+log "빈 프로젝트 탐색 문서 생성 확인"
+mkdir -p "$TMP_ROOT/empty-explore-project"
+(
+  cd "$TMP_ROOT/empty-explore-project"
+  bash "$HARNESS_SCRIPT_DIR/harness-explore.sh"
+)
+assert_file "$TMP_ROOT/empty-explore-project/.harness/reports/exploration-notes.md"
+
 log "빈 프로젝트 init -> verify 확인"
 mkdir -p "$TMP_ROOT/empty-project"
 EMPTY_INIT_OUTPUT="$(
@@ -104,6 +113,14 @@ cat > "$TMP_ROOT/stack-project/package.json" <<'EOF'
   }
 }
 EOF
+mkdir -p "$TMP_ROOT/stack-explore-project"
+cp "$TMP_ROOT/stack-project/package.json" "$TMP_ROOT/stack-explore-project/package.json"
+(
+  cd "$TMP_ROOT/stack-explore-project"
+  bash "$HARNESS_SCRIPT_DIR/harness-explore.sh"
+)
+assert_file "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md"
+assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "## 대표 진입점" "탐색 문서 진입점 섹션"
 STACK_INIT_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-init.sh"

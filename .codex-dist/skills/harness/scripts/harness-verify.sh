@@ -523,6 +523,7 @@ if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
     check_contains_any_hint ".harness/reports/qa-strategy.md" "우선 검토 질문|검토 질문|핵심 질문" "QA 검토 질문"
     check_contains_any_hint ".harness/reports/qa-strategy.md" "변경 유형별 최소 체크|최소 체크|변경 유형" "QA 변경 유형별 최소 체크"
     check_contains_any_hint ".harness/reports/qa-strategy.md" "테스트 설계 기준|테스트 기준|설계 기준" "QA 테스트 설계 기준"
+    check_contains_any_hint ".harness/reports/qa-strategy.md" "실행 예시|검증 명령|verify.sh|harness-update.sh --qa" "QA 실행 예시"
     check_contains_any_hint ".harness/reports/qa-strategy.md" "추가 확인 관점|경계별 추가 확인|추가 확인|영향 전파|소비 경로" "QA 추가 확인 기준"
   fi
 

@@ -935,6 +935,13 @@ EOF
 - 빠른 검증과 느린 검증, 단일 경계 검증과 교차 경계 검증을 구분해 적습니다.
 - 문서나 하네스 변경이라도 verify가 잡지 못하는 운영 판단 공백이 없는지 수동 확인 질문을 남깁니다.
 
+### 실행 예시
+
+- 로컬 역할 구조와 보고서 정합성 확인: \`bash .codex-dist/skills/harness/scripts/harness-verify.sh\`
+- 최신 탐색 근거와 보고서 보강: \`bash .codex-dist/skills/harness/scripts/harness-update.sh --qa\`
+- 세션 로그와 최신 요약 재확인: \`tail -n 40 .harness/logs/session-log.md\` 와 \`cat .harness/logs/latest-session-summary.md\`
+- 저장소별 실제 테스트나 빌드 명령은 위 단서와 대표 진입점 파일을 다시 읽고 프로젝트 문맥에 맞게 직접 보강합니다.
+
 ### 추가 확인 관점
 
 - 공개 인터페이스, 설정 진입점, 소비 경로가 함께 흔들리는지 확인합니다.

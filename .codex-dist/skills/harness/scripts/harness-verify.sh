@@ -370,7 +370,7 @@ if [ -f ".harness/reports/domain-analysis.md" ]; then
 fi
 
 if [ -f ".harness/reports/team-playbook.md" ]; then
-  check_contains_hint ".harness/reports/team-playbook.md" "시작 순서" "운영 시작 순서"
+  check_contains_any_hint ".harness/reports/team-playbook.md" "세션 시작 절차|세션 시작 체크|시작 체크|시작 순서" "운영 시작 순서"
   check_contains_hint ".harness/reports/team-playbook.md" "운영 원칙" "운영 원칙"
 fi
 

@@ -25,6 +25,16 @@ assert_contains() {
   fi
 }
 
+assert_not_contains() {
+  local haystack="$1"
+  local needle="$2"
+  local label="$3"
+
+  if printf '%s' "$haystack" | grep -Fq -- "$needle"; then
+    fail "$label: '$needle' 포함됨"
+  fi
+}
+
 assert_file() {
   local path="$1"
 
@@ -212,12 +222,26 @@ if (appName !== "smoke-stack-project") {
   throw new Error("unexpected app name");
 }
 EOF
+mkdir -p "$TMP_ROOT/stack-project/.claude/commands"
+cat > "$TMP_ROOT/stack-project/.claude/note-explorer-implementation-plan.md" <<'EOF'
+# note explorer plan
+EOF
+cat > "$TMP_ROOT/stack-project/.claude/commands/branch.md" <<'EOF'
+# branch command
+EOF
+mkdir -p "$TMP_ROOT/stack-project/build/win/win-unpacked/resources"
+touch "$TMP_ROOT/stack-project/build/win/win-unpacked/resources/app.asar"
 mkdir -p "$TMP_ROOT/stack-explore-project"
 cp "$TMP_ROOT/stack-project/package.json" "$TMP_ROOT/stack-explore-project/package.json"
 mkdir -p "$TMP_ROOT/stack-explore-project/src" "$TMP_ROOT/stack-explore-project/tests"
 cp "$TMP_ROOT/stack-project/src/main.ts" "$TMP_ROOT/stack-explore-project/src/main.ts"
 cp "$TMP_ROOT/stack-project/src/app.ts" "$TMP_ROOT/stack-explore-project/src/app.ts"
 cp "$TMP_ROOT/stack-project/tests/app.test.ts" "$TMP_ROOT/stack-explore-project/tests/app.test.ts"
+mkdir -p "$TMP_ROOT/stack-explore-project/.claude/commands"
+cp "$TMP_ROOT/stack-project/.claude/note-explorer-implementation-plan.md" "$TMP_ROOT/stack-explore-project/.claude/note-explorer-implementation-plan.md"
+cp "$TMP_ROOT/stack-project/.claude/commands/branch.md" "$TMP_ROOT/stack-explore-project/.claude/commands/branch.md"
+mkdir -p "$TMP_ROOT/stack-explore-project/build/win/win-unpacked/resources"
+touch "$TMP_ROOT/stack-explore-project/build/win/win-unpacked/resources/app.asar"
 (
   cd "$TMP_ROOT/stack-explore-project"
   bash "$HARNESS_SCRIPT_DIR/harness-explore.sh"
@@ -226,6 +250,8 @@ assert_file "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "## 대표 진입점" "탐색 문서 진입점 섹션"
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" '`src/main.ts`' "탐색 문서 대표 진입점 앵커"
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" '`tests/app.test.ts`' "탐색 문서 테스트 자산 앵커"
+assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" ".claude/" "탐색 문서 AI 설정 디렉토리 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "app.asar" "탐색 문서 빌드 산출물 제외"
 STACK_INIT_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-init.sh"
@@ -246,7 +272,11 @@ assert_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.codex/skills/run-harness/SKILL.md")" '요청: "새 API 엔드포인트 추가"' "run-harness 판단 예시 따옴표 유지"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" '`src/main.ts`' "생성된 탐색 문서 대표 진입점"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" ".claude/" "생성된 탐색 문서 AI 설정 디렉토리 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "app.asar" "생성된 탐색 문서 빌드 산출물 제외"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" "저장소 고유 근거" "스택 프로젝트 domain-analysis 저장소 근거"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" ".claude/" "domain-analysis AI 설정 디렉토리 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" "app.asar" "domain-analysis 빌드 산출물 제외"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/team-playbook.md")" "역할 호출 순서" "스택 프로젝트 team-playbook 상세 운영 규칙"
 STACK_VERIFY_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \

@@ -19,7 +19,7 @@ assert_contains() {
   local needle="$2"
   local label="$3"
 
-  if ! printf '%s' "$haystack" | grep -Fq "$needle"; then
+  if ! printf '%s' "$haystack" | grep -Fq -- "$needle"; then
     fail "$label: '$needle' 없음"
   fi
 }
@@ -49,7 +49,7 @@ assert_command_fails_with() {
   set -e
 
   [ "$status" -ne 0 ] || fail "$label: 실패해야 하는 명령이 성공함"
-  printf '%s' "$output" | grep -Fq "$needle" || fail "$label: '$needle' 없음"
+  printf '%s' "$output" | grep -Fq -- "$needle" || fail "$label: '$needle' 없음"
 }
 
 run_mode_check() {
@@ -123,6 +123,9 @@ assert_dir "$TMP_ROOT/empty-project/.codex/skills/run-harness"
 assert_dir "$TMP_ROOT/empty-project/.harness/reports"
 assert_file "$TMP_ROOT/empty-project/.harness/project-setup.md"
 assert_file "$TMP_ROOT/empty-project/.harness/reports/exploration-notes.md"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "harness-update.sh" "run-harness update 진입 규칙"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "명시적 재구성" "run-harness 재구성 규칙"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "--domain" "run-harness 선택 갱신 예시"
 (
   cd "$TMP_ROOT/empty-project"
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"

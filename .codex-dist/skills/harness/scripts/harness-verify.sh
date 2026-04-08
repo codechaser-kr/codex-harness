@@ -85,7 +85,7 @@ check_contains_hint() {
   local pattern="$2"
   local label="$3"
 
-  if grep -q "$pattern" "$file"; then
+  if grep -q -- "$pattern" "$file"; then
     log "OK $label: $file"
   else
     warn "$label 힌트 부족: $file"
@@ -97,7 +97,7 @@ check_contains_any_hint() {
   local pattern="$2"
   local label="$3"
 
-  if grep -Eq "$pattern" "$file"; then
+  if grep -Eq -- "$pattern" "$file"; then
     log "OK $label: $file"
   else
     warn "$label 힌트 부족: $file"
@@ -109,7 +109,7 @@ check_required_any_hint() {
   local pattern="$2"
   local label="$3"
 
-  if grep -Eq "$pattern" "$file"; then
+  if grep -Eq -- "$pattern" "$file"; then
     log "OK $label: $file"
   else
     fail "$label 누락: $file"
@@ -370,6 +370,9 @@ if [ -f ".codex/skills/run-harness/SKILL.md" ]; then
   check_contains_hint ".codex/skills/run-harness/SKILL.md" "영향 범위" "영향 범위 판단"
   check_contains_hint ".codex/skills/run-harness/SKILL.md" "질문" "사용자 질문 유도"
   check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "출력 계약|현재 시작 역할|보강 필요 역할|추가 질문" "출력 계약"
+  check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "신규 구축|기존 확장|운영 유지보수" "운영 모드 진입 규칙"
+  check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "명시적 재구성|재구성" "재구성 판단 규칙"
+  check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "--domain|--qa|--architecture|--orchestration|--team-structure|--team-playbook" "선택 갱신 예시"
 fi
 
 if [ -f ".harness/reports/team-structure.md" ]; then

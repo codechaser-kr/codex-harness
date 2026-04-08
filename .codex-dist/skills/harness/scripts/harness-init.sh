@@ -591,6 +591,13 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 판단 근거는 1~3줄로 짧게 설명한다.
 - 세션을 시작했다면 session-log 반영 여부를 함께 남긴다.
 
+## 현재 상태별 진입 규칙
+
+- 신규 구축이면 \`harness-init.sh\` 기준으로 기본 팀 구조를 먼저 만든다.
+- 기존 확장 또는 운영 유지보수이면 \`harness-update.sh\`를 기본 진입점으로 사용한다.
+- 부분 구조만 남아 있거나 문서와 역할 구성이 크게 어긋나면 update로 봉합하지 말고 명시적 재구성을 먼저 제안한다.
+- 보고서 한 영역만 약하면 \`harness-update.sh --domain\`, \`--qa\`, \`--architecture\`, \`--orchestration\`, \`--team-structure\`, \`--team-playbook\` 같은 선택 갱신을 우선 고려한다.
+
 ## 역할 팀 내 위치
 
 - 실행 하네스 팀의 기동 엔트리포인트
@@ -606,13 +613,14 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 ## 운영 규칙
 
 - 새 프로젝트라면 domain-analyst → harness-architect → skill-scaffolder → qa-designer → orchestrator → validator 순서를 기본으로 본다.
-- 이미 구조가 있는 프로젝트라면 부족한 역할만 다시 호출하는 쪽을 우선한다.
+- 이미 구조가 있는 프로젝트라면 \`harness-update.sh\`로 현재 상태를 다시 읽고 부족한 역할만 다시 호출하는 쪽을 우선한다.
 - 요청이 기능 구현, 구조 정리, 공통 모듈 보강, 빌드/검증 중 어디에 걸리는지 먼저 분류하고 그 결과를 orchestration-plan 판단의 입력으로 사용한다.
 - 영향 범위가 공통 계층이나 다중 모듈로 번지면 domain-analyst와 qa-designer를 더 이른 순서에 배치한다.
 - 빈 저장소이거나 기술 스택/핵심 흐름 단서가 약하면, \`.harness/project-setup.md\`가 있는지 먼저 확인한다.
 - \`.harness/project-setup.md\`가 작성되어 있으면 그 내용을 domain-analyst의 시작 입력으로 연결한다.
 - 작성되어 있지 않으면 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인한 뒤, 파일이 없는 경우 템플릿 내용을 포함하여 \`.harness/project-setup.md\`에 채우도록 안내한다.
 - 사용자 답변이 모이면 그 내용을 domain-analysis와 orchestration-plan의 입력으로 바로 연결한다.
+- 재구성이 필요한 상태라면 어떤 구조가 비어 있거나 어긋났는지 먼저 설명하고, 기존 하네스 정리 후 \`harness-init.sh\`로 다시 구성하도록 제안한다.
 - 리포트보다 실제 역할 팀 구조와 설명 품질을 더 중요하게 본다.
 - \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
 - 로그 운영 기준은 \`.harness/logging-policy.md\`를 먼저 확인한다.
@@ -623,6 +631,9 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 요청: "새 API 엔드포인트 추가" → 판단: 기능 구현, 단일 경계 → 시작: domain-analyst → qa-designer → orchestrator
 - 요청: "공통 유틸 함수 리팩터" → 판단: 공통 계층 영향, 다중 소비자 → 시작: domain-analyst → qa-designer → orchestrator
 - 요청: "하네스 역할 구조 재설계" → 판단: 경계 재정의, 구조 변경 → 시작: harness-architect → qa-designer → orchestrator
+- 요청: "QA 문서만 보강" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --qa\` 검토 후 qa-designer
+- 요청: "domain-analysis만 오래됐음" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --domain\` 검토 후 domain-analyst
+- 요청: 역할 스킬은 있는데 보고서가 대부분 비어 있음 → 판단: 부분 구조 drift → 시작: 명시적 재구성 제안
 - 요청: 저장소 단서 없음, project-setup.md 미작성 → 판단: 프로젝트 유형 불명 → 시작: project-setup.md 템플릿 제공 및 작성 안내 후 대기
 - 요청: 저장소 단서 없음, project-setup.md 작성됨 → 판단: 목표·유형 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)
 "

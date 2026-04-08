@@ -64,11 +64,34 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - `scripts/harness-verify.sh`가 실패하면 완료로 간주하지 말고, 누락된 구조를 먼저 보강한다.
 - 생성 문서와 예시 명령에 사용자 홈 디렉토리나 절대경로를 하드코딩하지 않는다. 실행 예시는 상대경로나 스킬 기준 경로를 사용한다.
 
+## Phase 0: 하네스 현황 감사
+
+하네스 스킬이 트리거되면, 실제 생성 전에 현재 저장소의 하네스 현황을 먼저 감사한다.
+
+1. `.codex/skills/`, `.harness/reports/`, `.harness/logs/`의 존재와 현재 파일 수를 먼저 확인한다.
+2. 현황에 따라 실행 모드를 나눈다.
+3. 기존 하네스가 있으면 덮어쓰기보다 보강을 우선하고, drift 가능성을 확인한다.
+4. 감사 결과는 이후 init/refresh/verify의 입력으로 계속 사용한다.
+
+### 실행 모드
+
+- `신규 구축`: 로컬 역할 스킬, 보고서, 로그 구조가 거의 없는 상태. `harness-init.sh` 중심으로 시작한다.
+- `기존 확장`: 일부 역할 스킬, 보고서, 로그 구조가 이미 있는 상태. `harness-init.sh` 또는 `harness-refresh-reports.sh`로 필요한 부분만 보강한다.
+- `운영 유지보수`: 구조는 있으나 문서/스킬/로그 정합성 점검이나 drift 확인이 필요한 상태. 불필요한 재생성보다 감사와 verify를 우선한다.
+
+### drift 점검 기준
+
+- 역할 스킬 수와 보고서 수가 현재 기본 구조와 크게 어긋나는가
+- `.harness/reports/*` 문서가 현재 저장소 구조보다 일반론으로 되돌아갔는가
+- 로그 정책과 실제 로그 자산이 서로 다른 운영 모델을 말하고 있는가
+- run-harness, orchestrator, validator의 역할 설명이 서로 충돌하는가
+
 ## 기본 실행 순서
 
 - 새 프로젝트 하네스 구성: `bash scripts/harness-init.sh` → 역할 기반 `.harness/reports/*` 문서 가공 → 필요 시 역할 보강 → `bash scripts/harness-verify.sh`
 - 기존 프로젝트의 `.harness/reports` 문서 전체 재생성: `bash scripts/harness-refresh-reports.sh` → 역할 기반 `.harness/reports/*` 문서 가공 → `bash scripts/harness-verify.sh`
 - 기존 프로젝트의 구조 누락 보강: `bash scripts/harness-init.sh` → 필요 시 `bash scripts/harness-refresh-reports.sh` → 역할 기반 `.harness/reports/*` 문서 가공 → `bash scripts/harness-verify.sh`
+- 기존 프로젝트의 운영 유지보수/감사: 하네스 현황 감사 → 필요 시 `bash scripts/harness-refresh-reports.sh` 또는 `bash scripts/harness-init.sh` → 역할 기반 `.harness/reports/*` 문서 가공 → `bash scripts/harness-verify.sh`
 
 ---
 
@@ -106,7 +129,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 
 1. 현재 저장소의 목적과 기술 스택을 파악한다.
 2. 핵심 디렉토리, 주요 흐름, 하네스 관점의 핵심 관심사를 식별한다.
-3. 기존 로컬 하네스 구조가 있는지 확인해 충돌을 피한다.
+3. Phase 0 감사 결과를 기준으로 기존 로컬 하네스 구조와 충돌을 피한다.
 4. 저장소 단서가 부족하면 사용자에게 먼저 확인할 질문을 정리한다.
 
 이 단계의 결과는 실행 하네스 팀의 출발점이 된다.  

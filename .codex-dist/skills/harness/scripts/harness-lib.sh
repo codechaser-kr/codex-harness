@@ -25,6 +25,52 @@ join_by_comma() {
   printf '%s\n' "$result"
 }
 
+detect_harness_operation_mode() {
+  local has_skills=0
+  local has_reports=0
+  local has_logs=0
+
+  if [ -d ".codex/skills" ] && find ".codex/skills" -mindepth 1 -maxdepth 1 -type d -print -quit | grep -q .; then
+    has_skills=1
+  fi
+
+  if [ -d ".harness/reports" ] && find ".harness/reports" -mindepth 1 -maxdepth 1 -type f -name '*.md' -print -quit | grep -q .; then
+    has_reports=1
+  fi
+
+  if [ -d ".harness/logs" ] && find ".harness/logs" -mindepth 1 -maxdepth 1 -type f -print -quit | grep -q .; then
+    has_logs=1
+  fi
+
+  if [ "$has_skills" -eq 0 ] && [ "$has_reports" -eq 0 ] && [ "$has_logs" -eq 0 ]; then
+    printf '%s\n' "신규 구축"
+    return
+  fi
+
+  if [ "$has_skills" -eq 1 ] && [ "$has_reports" -eq 1 ] && [ "$has_logs" -eq 1 ]; then
+    printf '%s\n' "운영 유지보수"
+    return
+  fi
+
+  printf '%s\n' "기존 확장"
+}
+
+build_harness_audit_summary() {
+  local mode="$1"
+  local skill_count=0
+  local report_count=0
+  local log_count=0
+
+  [ -d ".codex/skills" ] && skill_count="$(find ".codex/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d '[:space:]')"
+  [ -d ".harness/reports" ] && report_count="$(find ".harness/reports" -mindepth 1 -maxdepth 1 -type f -name '*.md' | wc -l | tr -d '[:space:]')"
+  [ -d ".harness/logs" ] && log_count="$(find ".harness/logs" -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d '[:space:]')"
+
+  printf '%s\n' "모드: $mode"
+  printf '%s\n' "기존 로컬 역할 스킬 수: $skill_count"
+  printf '%s\n' "기존 보고서 수: $report_count"
+  printf '%s\n' "기존 로그 파일 수: $log_count"
+}
+
 has_stack_manifest() {
   [ -f "package.json" ] \
     || [ -f "Cargo.toml" ] \
@@ -1088,11 +1134,31 @@ EOF
 - 역할 수는 고정 답안이 아니라 경계 종류, 검증 비용, 운영 복잡도를 기준으로 조정해야 합니다.
 - run-harness를 별도 역할로 유지해야 현재 상태 판단과 실제 작업 역할 호출을 분리할 수 있습니다.
 
+### 아키텍처 패턴 선택 기준
+
+- 신규 구축: domain-analyst -> harness-architect -> skill-scaffolder -> validator 중심의 기본 파이프라인을 먼저 안정화합니다.
+- 기존 확장: 전부 재생성하지 말고, 어떤 문서와 역할부터 재진입할지 먼저 정합니다.
+- 운영 유지보수: 새 초안 생성보다 drift 감지, 피드백 루프, 로그 정합성 점검을 우선합니다.
+- 팬아웃/팬인은 하위 영역이 실제로 독립적일 때만 쓰고, 최종적으로 다시 하나의 구조 설명으로 모읍니다.
+
+### 역할 분리 판단 기준
+
+- 서로 다른 판단 방식이 필요한가
+- 입력과 출력이 한 문장으로 설명 가능한가
+- 역할을 나눴을 때 validator와 사람이 결과를 검토하기 쉬워지는가
+- 위임 비용보다 분리 이득이 큰가
+
 ### 축소/확장 판단
 
 - 단일 패키지이고 흐름이 단순하면 skill-scaffolder와 orchestrator의 책임을 일부 묶을 수 있습니다.
 - 여러 경계를 넘는 영향이나 별도 검증 축이 있으면 QA와 validator를 더 분리해 운영하는 편이 안전합니다.
 - 반대로 경계와 검증 비용이 단순하면 일부 역할을 더 가볍게 묶을 수 있습니다.
+
+### 확장 자산 판단 기준
+
+- templates/scenarios는 반복 handoff와 산출물 흐름이 실제로 누적될 때만 붙입니다.
+- role-frequency나 template-candidates는 운영 유지보수 단계에서 반복성 분석 가치가 생길 때 활성화합니다.
+- 확장 자산은 기본값이 아니라, 팀이 반복 작업을 학습하기 시작했을 때 추가하는 보조 구조입니다.
 
 ### 설계 원칙
 
@@ -1310,6 +1376,13 @@ EOF
 - 검증 비용이 큰 변경: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
   - 경계가 비교적 명확하지만 회귀 비용이 높아 qa-designer를 domain-analyst 직후에 배치해 검증 기준을 일찍 고정합니다.
 
+### 운영 패턴 선택 기준
+
+- 신규 구축: 기본 파이프라인을 우선하고, 분기는 최소한으로 둡니다.
+- 기존 확장: 현재 요청과 drift 지점이 만나는 역할부터 재진입시킵니다.
+- 운영 유지보수: validator와 session-log를 먼저 보고, 되돌림 지점을 가장 짧게 만드는 루프를 선택합니다.
+- 팬아웃/팬인은 하위 영역 간 비교 축이 먼저 정리됐을 때만 선택합니다.
+
 ### 순서 조정 및 재진입 기준
 
 - 시작 분기에서 뒤쪽 역할을 진입점으로 선택하더라도, 앞 단계의 판단이 이미 충분한 경우에만 일부 단계를 건너뜁니다.
@@ -1473,8 +1546,10 @@ build_team_playbook_report_block() {
 - 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
 - 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
 EOF
-      optional_harness_assets_enabled && printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다."
-      optional_harness_assets_enabled && printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다."
+      if optional_harness_assets_enabled; then
+        printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다."
+        printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다."
+      fi
       ;;
     *)
       cat <<EOF
@@ -1526,8 +1601,10 @@ EOF
 - 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
 - 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
 EOF
-      optional_harness_assets_enabled && printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다."
-      optional_harness_assets_enabled && printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다."
+      if optional_harness_assets_enabled; then
+        printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다."
+        printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다."
+      fi
       cat <<EOF
 
 ### 세션 종료 기준

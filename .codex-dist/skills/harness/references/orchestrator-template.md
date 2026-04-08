@@ -71,7 +71,29 @@ orchestrator는 최소한 아래를 항상 확인해야 한다.
 
 ---
 
-## 4. 역할별 연결 기준
+## 4. 운영 모드별 조율 기준
+
+orchestrator는 항상 같은 방식으로 움직이지 않는다.  
+현재 저장소의 하네스 상태에 따라 조율 우선순위가 달라진다.
+
+### 신규 구축
+
+- domain-analyst → harness-architect → skill-scaffolder → qa-designer → validator 순서의 기본 파이프라인을 먼저 안정화한다.
+- 이 단계에서는 분기 수를 늘리기보다, 입력/출력 연결을 선명하게 두는 것이 우선이다.
+
+### 기존 확장
+
+- 어떤 문서나 역할이 먼저 재진입해야 하는지 정하는 것이 핵심이다.
+- 모든 산출물을 다시 만드는 대신, 현재 요청과 drift 지점을 기준으로 최소 재진입 루프를 만든다.
+
+### 운영 유지보수
+
+- 새 초안 생성보다 drift 감지, 피드백 루프, 운영 로그 정합성을 먼저 본다.
+- validator와 logging-policy, latest-session-summary, orchestration-plan의 연결이 끊기지 않게 유지한다.
+
+---
+
+## 5. 역할별 연결 기준
 
 ### domain-analyst → harness-architect
 - 분석 결과는 구조 설계의 출발점이 된다
@@ -95,7 +117,32 @@ orchestrator는 최소한 아래를 항상 확인해야 한다.
 
 ---
 
-## 5. orchestrator가 피해야 하는 실수
+## 6. 패턴 선택 기준
+
+orchestrator는 현재 저장소에 맞는 운영 패턴을 선택할 수 있어야 한다.
+
+### 파이프라인
+
+- 입력/출력 의존성이 선명하고 새 구조를 안정적으로 세워야 할 때
+
+### 생성-검증
+
+- 스킬/문서 생성 직후 validator 피드백을 빠르게 반영해야 할 때
+
+### 팬아웃 / 팬인
+
+- 하위 영역이 독립적으로 분석 가능하고, 최종적으로 다시 하나의 구조 문서로 모아야 할 때
+
+### 오케스트레이션 중심 구조
+
+- 역할 수가 늘고 handoff와 재진입 판단이 중요해졌을 때
+
+핵심은 패턴 이름이 아니라,  
+현재 요청에서 “어디서 시작하고 어디로 되돌릴지”를 가장 명확하게 만드는 선택인가이다.
+
+---
+
+## 7. orchestrator가 피해야 하는 실수
 
 ### 1) 모든 역할을 동등하게 다루는 것
 실제 프로젝트에서는 중심 역할이 있어야 한다.  
@@ -115,7 +162,7 @@ validator는 단순 마지막 검사자가 아니라
 
 ---
 
-## 6. 좋은 orchestrator의 조건
+## 8. 좋은 orchestrator의 조건
 
 좋은 orchestrator는 다음 조건을 가진다.
 
@@ -128,7 +175,7 @@ validator는 단순 마지막 검사자가 아니라
 
 ---
 
-## 7. orchestrator가 남겨야 하는 산출물
+## 9. orchestrator가 남겨야 하는 산출물
 
 orchestrator는 최소한 다음을 남겨야 한다.
 
@@ -144,7 +191,7 @@ orchestrator는 최소한 다음을 남겨야 한다.
 
 ---
 
-## 8. validator / QA와의 관계
+## 10. validator / QA와의 관계
 
 ### orchestrator와 QA
 - QA는 흐름의 건강성을 질문한다
@@ -160,7 +207,7 @@ QA와 validator의 결과를 모두 흡수해
 
 ---
 
-## 9. 사람 개입과 orchestrator
+## 11. 사람 개입과 orchestrator
 
 orchestrator는 사람 개입을 가장 잘 흡수해야 하는 역할 중 하나다.
 
@@ -178,7 +225,7 @@ orchestrator는 이런 판단을
 
 ---
 
-## 10. 핵심 요약
+## 12. 핵심 요약
 
 - orchestrator는 단순 설명자가 아니다
 - orchestrator는 실행 하네스 팀의 중심 조율자다

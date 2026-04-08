@@ -55,6 +55,8 @@ ensure_gitignore_entry() {
 PROJECT_TYPE="$(detect_project_type)"
 STACK_HINT="$(detect_stack_hint)"
 PROJECT_SIGNAL_LEVEL="$(detect_project_signal_level)"
+HARNESS_OPERATION_MODE="$(detect_harness_operation_mode)"
+HARNESS_AUDIT_SUMMARY="$(build_harness_audit_summary "$HARNESS_OPERATION_MODE")"
 STRUCTURE_HINT="$(detect_structure_hint)"
 PROJECT_TYPE_LABEL="$(build_project_type_label "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE")"
 PACKAGE_MANAGER_HINT="$(detect_package_manager)"
@@ -81,6 +83,11 @@ TEAM_STRUCTURE_REPORT_BLOCK="$(build_team_structure_report_block "$PROJECT_SIGNA
 TEAM_PLAYBOOK_REPORT_BLOCK="$(build_team_playbook_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT")"
 
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
+log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
+while IFS= read -r audit_line; do
+  [ -n "$audit_line" ] || continue
+  log "하네스 감사: $audit_line"
+done <<< "$HARNESS_AUDIT_SUMMARY"
 
 create_dir ".codex"
 create_dir ".codex/skills"

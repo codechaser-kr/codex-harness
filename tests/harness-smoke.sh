@@ -239,6 +239,7 @@ STACK_UPDATE_OUTPUT="$(
 assert_contains "$STACK_UPDATE_OUTPUT" "하네스 운영 모드: 운영 유지보수" "스택 프로젝트 update 로그"
 assert_contains "$STACK_UPDATE_OUTPUT" "탐색 근거 문서: .harness/reports/exploration-notes.md" "스택 프로젝트 update 탐색 로그"
 assert_contains "$STACK_UPDATE_OUTPUT" "탐색 근거 요약: 대표 진입점" "스택 프로젝트 update 탐색 요약"
+assert_contains "$STACK_UPDATE_OUTPUT" "탐색 상태: 충분" "스택 프로젝트 update 충분 탐색 상태"
 assert_contains "$STACK_UPDATE_OUTPUT" "상위 컨텍스트 감사: AGENTS.md 상태: 없음" "스택 프로젝트 update agents 감사"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"

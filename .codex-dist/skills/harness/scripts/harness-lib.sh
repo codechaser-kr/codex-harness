@@ -332,6 +332,11 @@ detect_exploration_context_level() {
     return
   fi
 
+  if [ "${entrypoint_count:-0}" -lt 2 ] || [ "${boundary_count:-0}" -lt 2 ]; then
+    printf '%s\n' "제한적"
+    return
+  fi
+
   printf '%s\n' "충분"
 }
 

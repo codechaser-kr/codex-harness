@@ -421,14 +421,14 @@ if [ "$EXPLORATION_CONTEXT_LEVEL" = "초기" ]; then
 fi
 
 if [ "$EXPLORATION_CONTEXT_LEVEL" = "제한적" ]; then
-  warn "저장소 단서가 제한적입니다: 역할 추천 전에 사용자 질문 유도 흐름이 중요합니다"
+  warn "탐색 근거가 제한적입니다: 역할 추천 전에 사용자 질문 유도 흐름이 중요합니다"
 
   if [ -f ".harness/reports/domain-analysis.md" ]; then
-    check_contains_hint ".harness/reports/domain-analysis.md" "사용자 확인 질문" "저신호 저장소용 질문 섹션"
+    check_contains_hint ".harness/reports/domain-analysis.md" "사용자 확인 질문" "탐색 제한 상태 질문 섹션"
   fi
 
   if [ -f ".harness/reports/team-playbook.md" ]; then
-    check_contains_hint ".harness/reports/team-playbook.md" "사용자 확인 질문" "저신호 저장소용 사용자 질문 우선 흐름"
+    check_contains_hint ".harness/reports/team-playbook.md" "사용자 확인 질문" "탐색 제한 상태 사용자 질문 우선 흐름"
   fi
 fi
 
@@ -501,7 +501,7 @@ if [ "$FAILURES" -eq 0 ]; then
   if [ "$EXPLORATION_CONTEXT_LEVEL" = "초기" ]; then
     log "검증 통과: 빈 프로젝트용 하네스 구조와 질문 유도 기본값이 최소 요건을 만족합니다"
   elif [ "$EXPLORATION_CONTEXT_LEVEL" = "제한적" ]; then
-    log "검증 통과: 저신호 저장소용 하네스 구조와 질문 유도 흐름이 최소 요건을 만족합니다"
+    log "검증 통과: 탐색 제한 상태 하네스 구조와 질문 유도 흐름이 최소 요건을 만족합니다"
   else
     log "검증 통과: 실행 하네스 팀 구조가 최소 요건을 만족합니다"
   fi

@@ -73,23 +73,6 @@ build_harness_audit_summary() {
   printf '%s\n' "기존 로그 파일 수: $log_count"
 }
 
-has_stack_manifest() {
-  [ -f "package.json" ] \
-    || [ -f "Cargo.toml" ] \
-    || [ -f "pyproject.toml" ] \
-    || [ -f "requirements.txt" ] \
-    || [ -f "go.mod" ] \
-    || [ -f "pom.xml" ] \
-    || [ -f "build.gradle" ] \
-    || [ -f "build.gradle.kts" ] \
-    || [ -f "settings.gradle" ] \
-    || [ -f "settings.gradle.kts" ] \
-    || [ -f "Makefile" ] \
-    || [ -f "CMakeLists.txt" ] \
-    || [ -f "composer.json" ] \
-    || [ -f "Gemfile" ]
-}
-
 detect_project_type() {
   if [ -f "package.json" ]; then
     echo "node"
@@ -597,7 +580,7 @@ build_project_type_label() {
       return
       ;;
     제한적)
-      echo "단서가 제한적인 프로젝트"
+      echo "탐색 근거가 제한적인 프로젝트"
       return
       ;;
   esac
@@ -675,7 +658,7 @@ build_core_flow_hint() {
       echo "미정"
       ;;
     제한적)
-      echo "저장소 단서가 제한적이므로 README, 핵심 디렉토리, 사용자 확인 질문을 함께 보며 첫 성공 흐름을 정리해야 합니다."
+      echo "탐색 근거가 제한적이므로 README, 핵심 디렉토리, 사용자 확인 질문을 함께 보며 첫 성공 흐름을 정리해야 합니다."
       ;;
     *)
       case "$2" in
@@ -722,7 +705,7 @@ build_initial_observation() {
       echo "- 저장소를 분석한 뒤 이 내용을 구체화하세요."
       ;;
     제한적)
-      echo "- 현재 저장소 단서가 제한적이므로 구조 단서와 사용자 응답을 함께 모아 초기 분석을 보강하세요."
+      echo "- 현재 탐색 근거가 제한적이므로 구조 단서와 사용자 응답을 함께 모아 초기 분석을 보강하세요."
       ;;
     *)
       if [ "$workspace_hint" = "추정 불가" ]; then

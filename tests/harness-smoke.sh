@@ -142,28 +142,55 @@ cat > "$TMP_ROOT/stack-project/package.json" <<'EOF'
   }
 }
 EOF
+mkdir -p "$TMP_ROOT/stack-project/src" "$TMP_ROOT/stack-project/tests"
+cat > "$TMP_ROOT/stack-project/src/main.ts" <<'EOF'
+export function main() {
+  return "ok";
+}
+EOF
+cat > "$TMP_ROOT/stack-project/src/app.ts" <<'EOF'
+export const appName = "smoke-stack-project";
+EOF
+cat > "$TMP_ROOT/stack-project/tests/app.test.ts" <<'EOF'
+import { appName } from "../src/app";
+
+if (appName !== "smoke-stack-project") {
+  throw new Error("unexpected app name");
+}
+EOF
 mkdir -p "$TMP_ROOT/stack-explore-project"
 cp "$TMP_ROOT/stack-project/package.json" "$TMP_ROOT/stack-explore-project/package.json"
+mkdir -p "$TMP_ROOT/stack-explore-project/src" "$TMP_ROOT/stack-explore-project/tests"
+cp "$TMP_ROOT/stack-project/src/main.ts" "$TMP_ROOT/stack-explore-project/src/main.ts"
+cp "$TMP_ROOT/stack-project/src/app.ts" "$TMP_ROOT/stack-explore-project/src/app.ts"
+cp "$TMP_ROOT/stack-project/tests/app.test.ts" "$TMP_ROOT/stack-explore-project/tests/app.test.ts"
 (
   cd "$TMP_ROOT/stack-explore-project"
   bash "$HARNESS_SCRIPT_DIR/harness-explore.sh"
 )
 assert_file "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md"
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "## 대표 진입점" "탐색 문서 진입점 섹션"
+assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" '`src/main.ts`' "탐색 문서 대표 진입점 앵커"
+assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" '`tests/app.test.ts`' "탐색 문서 테스트 자산 앵커"
 STACK_INIT_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-init.sh"
 )"
 assert_contains "$STACK_INIT_OUTPUT" "하네스 운영 모드: 신규 구축" "스택 프로젝트 init 로그"
+assert_contains "$STACK_INIT_OUTPUT" "탐색 근거 요약: 대표 진입점" "스택 프로젝트 init 탐색 요약"
 STACK_UPDATE_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-update.sh"
 )"
 assert_contains "$STACK_UPDATE_OUTPUT" "하네스 운영 모드: 운영 유지보수" "스택 프로젝트 update 로그"
 assert_contains "$STACK_UPDATE_OUTPUT" "탐색 근거 문서: .harness/reports/exploration-notes.md" "스택 프로젝트 update 탐색 로그"
+assert_contains "$STACK_UPDATE_OUTPUT" "탐색 근거 요약: 대표 진입점" "스택 프로젝트 update 탐색 요약"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"
+assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" '`src/main.ts`' "생성된 탐색 문서 대표 진입점"
+assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" "저장소 고유 근거" "스택 프로젝트 domain-analysis 저장소 근거"
+assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/team-playbook.md")" "역할 호출 순서" "스택 프로젝트 team-playbook 상세 운영 규칙"
 (
   cd "$TMP_ROOT/stack-project"
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"

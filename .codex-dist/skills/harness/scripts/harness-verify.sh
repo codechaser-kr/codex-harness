@@ -121,8 +121,8 @@ check_placeholder_state() {
   local pattern="$2"
   local label="$3"
 
-  if grep -Eq "$pattern" "$file"; then
-    if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
+  if grep -Eq -- "$pattern" "$file"; then
+    if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
       fail "$label 미해결: $file"
     else
       warn "$label 미해결: $file"
@@ -140,6 +140,7 @@ count_markdown_bullets_under_h2() {
     BEGIN {
       in_section = 0
       count = 0
+      printed = 0
     }
     $0 ~ ("^##[[:space:]]+" heading "$") {
       in_section = 1
@@ -147,13 +148,14 @@ count_markdown_bullets_under_h2() {
     }
     in_section && $0 ~ "^##[[:space:]]+" {
       print count
+      printed = 1
       exit
     }
-    in_section && $0 ~ /^- / {
+    in_section && $0 ~ /^- / && $0 ~ /`/ {
       count++
     }
     END {
-      if (in_section) {
+      if (in_section && printed == 0) {
         print count
       }
     }
@@ -212,40 +214,18 @@ audit_harness_drift() {
   fi
 }
 
-detect_project_signal_level() {
-  if [ -f "package.json" ] || [ -f "Cargo.toml" ] || [ -f "pyproject.toml" ] || [ -f "requirements.txt" ] || [ -f "go.mod" ]; then
-    echo "stack"
-    return
-  fi
-
-  local first_signal_path
-  first_signal_path="$(
-    find . -mindepth 1 -maxdepth 2 \
-      ! -path './.git' ! -path './.git/*' \
-      ! -path './.codex' ! -path './.codex/*' \
-      ! -path './.harness' ! -path './.harness/*' \
-      ! -name '.gitignore' \
-      ! -name '.DS_Store' \
-      -print -quit
-  )"
-
-  if [ -n "$first_signal_path" ]; then
-    echo "low"
-    return
-  fi
-
-  echo "empty"
-}
-
-PROJECT_SIGNAL_LEVEL="$(detect_project_signal_level)"
 HARNESS_SKILL_COUNT="$(count_harness_skill_dirs)"
 HARNESS_REPORT_COUNT="$(count_harness_report_files)"
 HARNESS_LOG_COUNT="$(count_harness_log_files)"
 HARNESS_OPERATION_MODE="$(detect_harness_operation_mode)"
+EXPLORATION_NOTES_FILE=".harness/reports/exploration-notes.md"
+EXPLORATION_CONTEXT_LEVEL="$(detect_exploration_context_level "$EXPLORATION_NOTES_FILE")"
+EXPLORATION_ANCHOR_SUMMARY="$(build_exploration_anchor_summary "$EXPLORATION_NOTES_FILE")"
 
 log "실행 하네스 팀 구조 검증 시작"
 log "harness 기준 경로: $HARNESS_HOME"
-log "저장소 신호 수준: $PROJECT_SIGNAL_LEVEL"
+log "탐색 상태: $EXPLORATION_CONTEXT_LEVEL"
+log "탐색 근거 요약: $EXPLORATION_ANCHOR_SUMMARY"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
 log "하네스 감사: 기존 로컬 역할 스킬 수: $HARNESS_SKILL_COUNT"
 log "하네스 감사: 기존 보고서 수: $HARNESS_REPORT_COUNT"
@@ -428,7 +408,7 @@ else
   log "선택 자산 생략: .harness/logs/role-frequency.md"
 fi
 
-if [ "$PROJECT_SIGNAL_LEVEL" = "empty" ]; then
+if [ "$EXPLORATION_CONTEXT_LEVEL" = "초기" ]; then
   warn "빈 프로젝트 또는 프로젝트 단서가 거의 없는 저장소로 판단됨: 구조 검증과 사용자 질문 유도 기본값 중심으로 확인합니다"
 
   if [ -f ".harness/reports/domain-analysis.md" ]; then
@@ -437,7 +417,7 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "empty" ]; then
   fi
 fi
 
-if [ "$PROJECT_SIGNAL_LEVEL" = "low" ]; then
+if [ "$EXPLORATION_CONTEXT_LEVEL" = "제한적" ]; then
   warn "저장소 단서가 제한적입니다: 역할 추천 전에 사용자 질문 유도 흐름이 중요합니다"
 
   if [ -f ".harness/reports/domain-analysis.md" ]; then
@@ -449,7 +429,7 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "low" ]; then
   fi
 fi
 
-if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
+if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
   log "프로젝트 단서가 충분한 저장소로 판단됨: 프로젝트 특화 초안이 남아 있으면 실패로 처리합니다"
 
   if [ -f ".codex/skills/run-harness/SKILL.md" ]; then
@@ -515,9 +495,9 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
 fi
 
 if [ "$FAILURES" -eq 0 ]; then
-  if [ "$PROJECT_SIGNAL_LEVEL" = "empty" ]; then
+  if [ "$EXPLORATION_CONTEXT_LEVEL" = "초기" ]; then
     log "검증 통과: 빈 프로젝트용 하네스 구조와 질문 유도 기본값이 최소 요건을 만족합니다"
-  elif [ "$PROJECT_SIGNAL_LEVEL" = "low" ]; then
+  elif [ "$EXPLORATION_CONTEXT_LEVEL" = "제한적" ]; then
     log "검증 통과: 저신호 저장소용 하네스 구조와 질문 유도 흐름이 최소 요건을 만족합니다"
   else
     log "검증 통과: 실행 하네스 팀 구조가 최소 요건을 만족합니다"

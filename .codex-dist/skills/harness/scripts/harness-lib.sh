@@ -188,11 +188,28 @@ detect_project_signal_level() {
 }
 
 optional_harness_assets_enabled() {
-  [ "$(detect_project_signal_level)" = "stack" ] \
-    || [ -d ".harness/templates" ] \
+  local exploration_file="${1:-$EXPLORATION_NOTES_DEFAULT_PATH}"
+  local entrypoint_count=0
+  local boundary_count=0
+  local test_count=0
+
+  [ -d ".harness/templates" ] \
     || [ -d ".harness/scenarios" ] \
     || [ -f ".harness/logs/role-frequency.md" ] \
     || [ -f ".harness/reports/template-candidates.md" ]
+  if [ "$?" -eq 0 ]; then
+    return 0
+  fi
+
+  [ -f "$exploration_file" ] || return 1
+
+  entrypoint_count="$(count_markdown_bullets_under_heading "$exploration_file" "대표 진입점" | tr -d '[:space:]')"
+  boundary_count="$(count_markdown_bullets_under_heading "$exploration_file" "주요 코드 경계" | tr -d '[:space:]')"
+  test_count="$(count_markdown_bullets_under_heading "$exploration_file" "테스트 및 검증 자산" | tr -d '[:space:]')"
+
+  [ "${entrypoint_count:-0}" -gt 0 ] && [ "${boundary_count:-0}" -gt 0 ] && return 0
+  [ "${boundary_count:-0}" -gt 0 ] && [ "${test_count:-0}" -gt 0 ] && return 0
+  return 1
 }
 
 detect_structure_hint() {
@@ -390,6 +407,7 @@ count_markdown_bullets_under_heading() {
     BEGIN {
       in_section = 0
       count = 0
+      printed = 0
     }
     $0 ~ ("^##[[:space:]]+" heading "$") {
       in_section = 1
@@ -397,17 +415,77 @@ count_markdown_bullets_under_heading() {
     }
     in_section && $0 ~ "^##[[:space:]]+" {
       print count
+      printed = 1
       exit
     }
-    in_section && $0 ~ /^- / {
+    in_section && $0 ~ /^- / && $0 ~ /`/ {
       count++
     }
     END {
-      if (in_section) {
+      if (in_section && printed == 0) {
         print count
       }
     }
   ' "$file"
+}
+
+exploration_requires_user_bootstrap() {
+  local file="${1:-$EXPLORATION_NOTES_DEFAULT_PATH}"
+  local entrypoint_count=0
+  local boundary_count=0
+
+  [ -f "$file" ] || return 0
+
+  entrypoint_count="$(count_markdown_bullets_under_heading "$file" "대표 진입점" | tr -d '[:space:]')"
+  boundary_count="$(count_markdown_bullets_under_heading "$file" "주요 코드 경계" | tr -d '[:space:]')"
+
+  [ "${entrypoint_count:-0}" -eq 0 ] && [ "${boundary_count:-0}" -eq 0 ]
+}
+
+detect_exploration_context_level() {
+  local file="${1:-$EXPLORATION_NOTES_DEFAULT_PATH}"
+  local entrypoint_count=0
+  local boundary_count=0
+
+  [ -f "$file" ] || {
+    printf '%s\n' "초기"
+    return
+  }
+
+  entrypoint_count="$(count_markdown_bullets_under_heading "$file" "대표 진입점" | tr -d '[:space:]')"
+  boundary_count="$(count_markdown_bullets_under_heading "$file" "주요 코드 경계" | tr -d '[:space:]')"
+
+  if [ "${entrypoint_count:-0}" -eq 0 ] && [ "${boundary_count:-0}" -eq 0 ]; then
+    printf '%s\n' "초기"
+    return
+  fi
+
+  if [ "${entrypoint_count:-0}" -eq 0 ] || [ "${boundary_count:-0}" -eq 0 ]; then
+    printf '%s\n' "제한적"
+    return
+  fi
+
+  printf '%s\n' "충분"
+}
+
+build_exploration_anchor_summary() {
+  local file="${1:-$EXPLORATION_NOTES_DEFAULT_PATH}"
+  local entrypoint_count=0
+  local boundary_count=0
+  local test_count=0
+  local config_count=0
+  local domain_count=0
+
+  if [ -f "$file" ]; then
+    entrypoint_count="$(count_markdown_bullets_under_heading "$file" "대표 진입점" | tr -d '[:space:]')"
+    boundary_count="$(count_markdown_bullets_under_heading "$file" "주요 코드 경계" | tr -d '[:space:]')"
+    test_count="$(count_markdown_bullets_under_heading "$file" "테스트 및 검증 자산" | tr -d '[:space:]')"
+    config_count="$(count_markdown_bullets_under_heading "$file" "설정 및 실행 경로" | tr -d '[:space:]')"
+    domain_count="$(count_markdown_bullets_under_heading "$file" "저장소 고유 용어 단서" | tr -d '[:space:]')"
+  fi
+
+  printf '대표 진입점 %s개, 주요 코드 경계 %s개, 테스트 자산 %s개, 설정 경로 %s개, 도메인 단서 %s개\n' \
+    "${entrypoint_count:-0}" "${boundary_count:-0}" "${test_count:-0}" "${config_count:-0}" "${domain_count:-0}"
 }
 
 count_harness_skill_dirs() {

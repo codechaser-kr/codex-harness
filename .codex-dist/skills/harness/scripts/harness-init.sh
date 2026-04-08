@@ -60,6 +60,8 @@ HARNESS_AUDIT_SUMMARY="$(build_harness_audit_summary "$HARNESS_OPERATION_MODE")"
 EXPLORATION_NOTES_FILE="$EXPLORATION_NOTES_DEFAULT_PATH"
 mkdir -p ".harness/reports"
 bash "$SCRIPT_DIR/harness-explore.sh" "$EXPLORATION_NOTES_FILE" >/dev/null
+EXPLORATION_CONTEXT_LEVEL="$(detect_exploration_context_level "$EXPLORATION_NOTES_FILE")"
+EXPLORATION_ANCHOR_SUMMARY="$(build_exploration_anchor_summary "$EXPLORATION_NOTES_FILE")"
 STRUCTURE_HINT="$(detect_structure_hint)"
 EXPLORATION_ENTRYPOINT_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "대표 진입점" "추정 불가")"
 EXPLORATION_BOUNDARY_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "주요 코드 경계" "$STRUCTURE_HINT")"
@@ -106,6 +108,7 @@ TEAM_PLAYBOOK_REPORT_BLOCK="$(build_team_playbook_report_block "$PROJECT_SIGNAL_
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
 log "탐색 근거 문서: $EXPLORATION_NOTES_FILE"
+log "탐색 근거 요약: $EXPLORATION_ANCHOR_SUMMARY"
 while IFS= read -r audit_line; do
   [ -n "$audit_line" ] || continue
   log "하네스 감사: $audit_line"
@@ -125,7 +128,7 @@ create_dir ".harness"
 create_dir ".harness/reports"
 create_dir ".harness/logs"
 
-if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
+if optional_harness_assets_enabled "$EXPLORATION_NOTES_FILE"; then
   create_dir ".harness/scenarios"
   create_dir ".harness/templates"
 else
@@ -134,7 +137,7 @@ else
 fi
 
 # 빈/약한 프로젝트: 사용자 입력 유도 파일 생성
-if [ "$PROJECT_SIGNAL_LEVEL" = "empty" ] || [ "$PROJECT_SIGNAL_LEVEL" = "low" ]; then
+if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
   create_file_if_missing ".harness/project-setup.md" \
 "# 프로젝트 설정
 

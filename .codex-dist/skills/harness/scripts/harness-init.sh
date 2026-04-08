@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # harness-init.sh
 # 디렉토리, 로컬 역할 스킬, 보조 리포트를 최초 1회 생성합니다.
-# harness-refresh-reports.sh와 차이:
+# harness-update.sh와 차이:
 #   - harness-init.sh: 디렉토리/스킬/리포트 모두 생성 (기존 파일 유지)
-#   - harness-refresh-reports.sh: `.harness/reports` 문서 전체를 다시 생성 (항상 덮어씀, 스킬은 건드리지 않음)
+#   - harness-update.sh: 기존 하네스 구조를 감사한 뒤 필요한 보조 문서를 보강
 # 사용 시점: 프로젝트에 처음 하네스를 구성할 때
 set -euo pipefail
 
@@ -52,44 +52,61 @@ ensure_gitignore_entry() {
   log "gitignore 추가: $entry"
 }
 
-PROJECT_TYPE="$(detect_project_type)"
-STACK_HINT="$(detect_stack_hint)"
-PROJECT_SIGNAL_LEVEL="$(detect_project_signal_level)"
 HARNESS_OPERATION_MODE="$(detect_harness_operation_mode)"
 HARNESS_AUDIT_SUMMARY="$(build_harness_audit_summary "$HARNESS_OPERATION_MODE")"
-STRUCTURE_HINT="$(detect_structure_hint)"
-PROJECT_TYPE_LABEL="$(build_project_type_label "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE")"
-PACKAGE_MANAGER_HINT="$(detect_package_manager)"
-WORKSPACE_HINT="$(detect_workspace_packages)"
-CONFIG_HINT="$(detect_config_hints)"
-KEY_AXES_HINT="$(build_key_axes_hint "$PROJECT_SIGNAL_LEVEL" "$STRUCTURE_HINT")"
-CORE_FLOW_HINT="$(build_core_flow_hint "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT")"
-DOMAIN_SUMMARY_BLOCK="$(build_domain_summary_block "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE_LABEL" "$STACK_HINT" "$STRUCTURE_HINT" "$CORE_FLOW_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT")"
-INITIAL_OBSERVATION_LINE="$(build_initial_observation "$PROJECT_SIGNAL_LEVEL" "$STRUCTURE_HINT" "$WORKSPACE_HINT" "$CONFIG_HINT")"
-NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$PROJECT_SIGNAL_LEVEL" "init")"
-DISCOVERY_GUIDANCE="저장소 단서와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
+AGENTS_AUDIT_SUMMARY="$(build_agents_audit_summary "$HARNESS_OPERATION_MODE")"
+EXPLORATION_NOTES_FILE="$EXPLORATION_NOTES_DEFAULT_PATH"
+mkdir -p ".harness/reports"
+bash "$SCRIPT_DIR/harness-explore.sh" "$EXPLORATION_NOTES_FILE" >/dev/null
+EXPLORATION_CONTEXT_LEVEL="$(detect_exploration_context_level "$EXPLORATION_NOTES_FILE")"
+EXPLORATION_ANCHOR_SUMMARY="$(build_exploration_anchor_summary "$EXPLORATION_NOTES_FILE")"
+EXPLORATION_ENTRYPOINT_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "대표 진입점" "추정 불가")"
+EXPLORATION_BOUNDARY_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "주요 코드 경계" "추정 불가")"
+EXPLORATION_TEST_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "테스트 및 검증 자산" "추정 불가")"
+EXPLORATION_CONFIG_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "설정 및 실행 경로" "추정 불가")"
+EXPLORATION_DOMAIN_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "저장소 고유 용어 단서" "추정 불가")"
+BOUNDARY_HINT="$EXPLORATION_BOUNDARY_HINT"
+CONFIG_HINT="$EXPLORATION_CONFIG_HINT"
+PROJECT_TYPE_LABEL="$(build_project_type_label "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT")"
+KEY_AXES_HINT="$(build_key_axes_hint "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT" "$EXPLORATION_TEST_HINT" "$CONFIG_HINT")"
+CORE_FLOW_HINT="$(build_core_flow_hint "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT")"
+if [ "$EXPLORATION_ENTRYPOINT_HINT" != "추정 불가" ]; then
+  CORE_FLOW_HINT="\`$EXPLORATION_ENTRYPOINT_HINT\` 기준으로 실제 시작 흐름과 소비 경계를 먼저 정리해야 합니다."
+fi
+DOMAIN_SUMMARY_BLOCK="$(build_domain_summary_block "$EXPLORATION_CONTEXT_LEVEL" "$PROJECT_TYPE_LABEL" "$BOUNDARY_HINT" "$CORE_FLOW_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT")"
+INITIAL_OBSERVATION_LINE="$(build_initial_observation "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT" "$CONFIG_HINT" "$EXPLORATION_DOMAIN_HINT")"
+if [ "$EXPLORATION_DOMAIN_HINT" != "추정 불가" ]; then
+  INITIAL_OBSERVATION_LINE="- 탐색 문서에서 \`$EXPLORATION_DOMAIN_HINT\` 단서를 먼저 수집했습니다."
+fi
+NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$EXPLORATION_CONTEXT_LEVEL" "init")"
+DISCOVERY_GUIDANCE="$(build_exploration_guidance "$EXPLORATION_NOTES_FILE" "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT")"
 
-if [ "$PROJECT_TYPE" = "unknown" ] && [ "$STACK_HINT" = "추정 불가" ]; then
-  DISCOVERY_GUIDANCE="현재 저장소 단서만으로는 방향 판단이 어렵습니다. run-harness는 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인해야 합니다."
-elif [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
-  DISCOVERY_GUIDANCE="현재 저장소는 $STRUCTURE_HINT 단서를 바탕으로 자동 재분석을 시작할 수 있습니다."
+if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
+  DISCOVERY_GUIDANCE="현재 탐색 근거만으로는 방향 판단이 어렵습니다. run-harness는 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 먼저 확인해야 합니다."
 fi
 
-DOMAIN_DETAIL_BLOCK="$(build_domain_report_detail_block "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT" "$CORE_FLOW_HINT" "$DISCOVERY_GUIDANCE" "$INITIAL_OBSERVATION_LINE" "$NEXT_STEP_DETAIL_LINE")"
-ARCH_REPORT_BLOCK="$(build_architecture_report_block "$PROJECT_SIGNAL_LEVEL" "$PROJECT_TYPE_LABEL" "$KEY_AXES_HINT" "$WORKSPACE_HINT" "$CORE_FLOW_HINT")"
-QA_REPORT_BLOCK="$(build_qa_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT" "$WORKSPACE_HINT")"
-ORCH_REPORT_BLOCK="$(build_orchestration_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT")"
-TEAM_STRUCTURE_REPORT_BLOCK="$(build_team_structure_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT")"
-TEAM_PLAYBOOK_REPORT_BLOCK="$(build_team_playbook_report_block "$PROJECT_SIGNAL_LEVEL" "$KEY_AXES_HINT")"
+DOMAIN_DETAIL_BLOCK="$(build_domain_report_detail_block "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT" "$CORE_FLOW_HINT" "$DISCOVERY_GUIDANCE" "$INITIAL_OBSERVATION_LINE" "$NEXT_STEP_DETAIL_LINE")"
+ARCH_REPORT_BLOCK="$(build_architecture_report_block "$EXPLORATION_CONTEXT_LEVEL" "$PROJECT_TYPE_LABEL" "$KEY_AXES_HINT" "$CORE_FLOW_HINT")"
+QA_REPORT_BLOCK="$(build_qa_report_block "$EXPLORATION_CONTEXT_LEVEL" "$KEY_AXES_HINT" "$BOUNDARY_HINT" "$EXPLORATION_TEST_HINT")"
+ORCH_REPORT_BLOCK="$(build_orchestration_report_block "$EXPLORATION_CONTEXT_LEVEL" "$KEY_AXES_HINT")"
+TEAM_STRUCTURE_REPORT_BLOCK="$(build_team_structure_report_block "$EXPLORATION_CONTEXT_LEVEL" "$KEY_AXES_HINT")"
+TEAM_PLAYBOOK_REPORT_BLOCK="$(build_team_playbook_report_block "$EXPLORATION_CONTEXT_LEVEL" "$KEY_AXES_HINT")"
 
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
+log "탐색 근거 문서: $EXPLORATION_NOTES_FILE"
+log "탐색 근거 요약: $EXPLORATION_ANCHOR_SUMMARY"
 while IFS= read -r audit_line; do
   [ -n "$audit_line" ] || continue
   log "하네스 감사: $audit_line"
 done <<< "$HARNESS_AUDIT_SUMMARY"
+while IFS= read -r agents_line; do
+  [ -n "$agents_line" ] || continue
+  log "상위 컨텍스트 감사: $agents_line"
+done <<< "$AGENTS_AUDIT_SUMMARY"
 
 create_dir ".codex"
+create_dir ".codex/agents"
 create_dir ".codex/skills"
 create_dir ".codex/skills/domain-analyst"
 create_dir ".codex/skills/harness-architect"
@@ -99,11 +116,211 @@ create_dir ".codex/skills/orchestrator"
 create_dir ".codex/skills/validator"
 create_dir ".codex/skills/run-harness"
 
+create_file_if_missing ".codex/agents/domain-analyst.md" \
+"# domain-analyst
+
+## 역할
+
+- 저장소 탐색의 출발점을 맡는 분석 역할
+
+## 핵심 책임
+
+- 대표 진입점, 주요 코드 경계, 실행·검증 경로를 정리한다.
+- 후속 역할이 공통으로 사용할 분석 근거를 만든다.
+
+## 입력
+
+- 저장소 루트
+- 탐색 결과
+
+## 출력
+
+- \`.harness/reports/domain-analysis.md\`
+
+## handoff
+
+- \`harness-architect\`
+- \`qa-designer\`
+- \`orchestrator\`
+"
+
+create_file_if_missing ".codex/agents/harness-architect.md" \
+"# harness-architect
+
+## 역할
+
+- 역할 팀 구조와 경계를 설계하는 구조 설계 역할
+
+## 핵심 책임
+
+- 분석 결과를 역할 팀 구조로 번역한다.
+- 어떤 역할을 유지·축소·확장할지 정한다.
+
+## 입력
+
+- \`.harness/reports/domain-analysis.md\`
+
+## 출력
+
+- \`.harness/reports/harness-architecture.md\`
+
+## handoff
+
+- \`skill-scaffolder\`
+- \`orchestrator\`
+"
+
+create_file_if_missing ".codex/agents/skill-scaffolder.md" \
+"# skill-scaffolder
+
+## 역할
+
+- 역할 정의와 구조 설계를 실제 로컬 파일로 옮기는 구현 역할
+
+## 핵심 책임
+
+- 역할 팀 구조를 \`.codex/skills/*\`와 선택 자산으로 반영한다.
+- validator가 점검 가능한 구조를 유지한다.
+
+## 입력
+
+- \`.harness/reports/harness-architecture.md\`
+
+## 출력
+
+- \`.codex/skills/*\`
+- 필요 시 \`.harness/templates/*\`
+- 필요 시 \`.harness/scenarios/*\`
+
+## handoff
+
+- \`orchestrator\`
+- \`validator\`
+"
+
+create_file_if_missing ".codex/agents/qa-designer.md" \
+"# qa-designer
+
+## 역할
+
+- 품질 축과 반복 검토 질문을 설계하는 QA 역할
+
+## 핵심 책임
+
+- 프로젝트의 반복 위험을 품질 질문으로 정리한다.
+- validator와 orchestrator가 참조할 QA 기준을 만든다.
+
+## 입력
+
+- \`.harness/reports/domain-analysis.md\`
+- \`.harness/reports/harness-architecture.md\`
+
+## 출력
+
+- \`.harness/reports/qa-strategy.md\`
+
+## handoff
+
+- \`orchestrator\`
+- \`validator\`
+"
+
+create_file_if_missing ".codex/agents/orchestrator.md" \
+"# orchestrator
+
+## 역할
+
+- 역할 팀 전체 흐름과 handoff를 조율하는 중심 역할
+
+## 핵심 책임
+
+- 역할 호출 순서와 재진입 기준을 정리한다.
+- 산출물 연결과 피드백 루프를 유지한다.
+
+## 입력
+
+- \`.harness/reports/domain-analysis.md\`
+- \`.harness/reports/harness-architecture.md\`
+- \`.harness/reports/qa-strategy.md\`
+
+## 출력
+
+- \`.harness/reports/orchestration-plan.md\`
+
+## handoff
+
+- \`validator\`
+- 필요 시 앞선 역할 재호출
+"
+
+create_file_if_missing ".codex/agents/validator.md" \
+"# validator
+
+## 역할
+
+- 실행 하네스 구조와 연결성을 점검하는 검증 역할
+
+## 핵심 책임
+
+- 누락, 충돌, 약한 설명, 잘못된 연결을 식별한다.
+- 보완이 필요한 위치를 다시 역할 팀에 돌려보낸다.
+
+## 입력
+
+- \`.codex/skills/*\`
+- \`.harness/reports/*\`
+
+## 출력
+
+- 검증 로그
+- 보완 제안
+
+## handoff
+
+- \`harness-architect\`
+- \`skill-scaffolder\`
+- \`qa-designer\`
+- \`orchestrator\`
+"
+
+create_file_if_missing ".codex/agents/run-harness.md" \
+"# run-harness
+
+## 역할
+
+- 현재 상태를 읽고 시작 역할과 보강 역할을 정하는 팀 기동 역할
+
+## 핵심 책임
+
+- 신규 구축, 기존 확장, 운영 유지보수, 재구성 여부를 판단한다.
+- 현재 시작 역할과 후속 handoff를 제안한다.
+
+## 입력
+
+- 현재 저장소 상태
+- \`.codex/skills/*\`
+- \`.harness/reports/*\`
+
+## 출력
+
+- 시작 역할 1개
+- 보강 필요 역할 0~2개
+- 추가 질문 0~2개
+
+## handoff
+
+- \`domain-analyst\`
+- \`harness-architect\`
+- \`qa-designer\`
+- \`orchestrator\`
+- \`validator\`
+"
+
 create_dir ".harness"
 create_dir ".harness/reports"
 create_dir ".harness/logs"
 
-if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
+if optional_harness_assets_enabled "$EXPLORATION_NOTES_FILE"; then
   create_dir ".harness/scenarios"
   create_dir ".harness/templates"
 else
@@ -112,16 +329,16 @@ else
 fi
 
 # 빈/약한 프로젝트: 사용자 입력 유도 파일 생성
-if [ "$PROJECT_SIGNAL_LEVEL" = "empty" ] || [ "$PROJECT_SIGNAL_LEVEL" = "low" ]; then
+if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
   create_file_if_missing ".harness/project-setup.md" \
 "# 프로젝트 설정
 
 ## 작성 안내
 
-저장소 단서가 부족해 자동 분석이 제한적입니다.
+탐색 근거가 아직 부족해 자동 분석이 제한적입니다.
 아래 항목을 채운 뒤 AI에게 다음과 같이 요청하세요:
 
-> "project-setup.md 작성했어. 이걸 바탕으로 하네스 분석 시작해줘."
+> project-setup.md를 작성했습니다. 이 내용을 바탕으로 하네스 분석을 시작해주세요.
 
 그러면 domain-analyst가 이 파일의 답변을 시작 입력으로 사용해 분석을 시작합니다.
 
@@ -131,18 +348,9 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "empty" ] || [ "$PROJECT_SIGNAL_LEVEL" = "low" ];
 
 <!-- 이 프로젝트가 해결하려는 문제를 한 문장으로 적어주세요 -->
 
-## 프로젝트 유형
+## 프로젝트 성격
 
-<!-- 해당하는 항목에 x를 표시하거나 직접 입력하세요 -->
-
-- [ ] 웹 애플리케이션 (프론트엔드 + 백엔드)
-- [ ] REST / GraphQL API 서버
-- [ ] CLI 도구
-- [ ] 모바일 앱 (iOS / Android / Flutter)
-- [ ] 라이브러리 / SDK
-- [ ] 데이터 파이프라인 / ML 프로젝트
-- [ ] 인프라 / DevOps 도구
-- [ ] 기타: ___
+<!-- 애플리케이션, 라이브러리, 내부 도구, 운영 시스템 등 현재 생각하는 성격을 자유롭게 적어주세요 -->
 
 ## 주요 사용자
 
@@ -152,57 +360,21 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "empty" ] || [ "$PROJECT_SIGNAL_LEVEL" = "low" ];
 
 <!-- 가장 먼저 동작해야 할 핵심 흐름 한 가지를 한 문장으로 적어주세요 -->
 
-## 예상 기술 스택
+## 대표 진입점 또는 시작 경로
 
-<!-- 사용할 언어, 프레임워크, 데이터베이스 등이 정해져 있다면 적어주세요 -->
+<!-- 어디서부터 실행 흐름을 읽어야 할지 알고 있다면 파일/디렉토리/명령 기준으로 적어주세요 -->
+
+## 현재 알고 있는 주요 경계
+
+<!-- 앱/서비스/패키지/모듈/문서/운영 영역처럼 나뉘는 단위가 있으면 적어주세요 -->
+
+## 현재 알고 있는 실행·검증 경로
+
+<!-- 실행 명령, 테스트 명령, 배포 경로, 운영 확인 경로 중 아는 것이 있으면 적어주세요 -->
 
 ## 실패 비용이 큰 영역
 
 <!-- 이 프로젝트에서 잘못되면 가장 큰 문제가 생기는 부분은 어디인가요? -->
-
----
-
-## 프로젝트 유형별 추천 스택
-
-### 웹 애플리케이션
-- Frontend: React/Next.js, Vue/Nuxt, Svelte/SvelteKit, Angular
-- Backend: Node.js(Fastify/NestJS), Python(FastAPI/Django), Go, Java(Spring Boot), Rust(Axum)
-- DB: PostgreSQL, MySQL, MongoDB, Redis
-- 추천 초기 구조: \`apps/web\`, \`apps/api\`, \`packages/shared\`
-
-### REST / GraphQL API 서버
-- Node.js: Fastify, NestJS, Hono
-- Python: FastAPI, Django REST Framework
-- Go: gin, echo, fiber
-- Java/Kotlin: Spring Boot
-- Rust: Axum, Actix
-
-### CLI 도구
-- Rust: clap, indicatif
-- Go: cobra, urfave/cli
-- Python: click, typer
-- Node.js: commander, oclif
-
-### 모바일 앱
-- Cross-platform: Flutter(Dart), React Native(TypeScript)
-- Native iOS: Swift(SwiftUI)
-- Native Android: Kotlin(Jetpack Compose)
-
-### 라이브러리 / SDK
-- TypeScript: tsup/unbuild + JSR/npm 배포
-- Rust: lib crate + docs.rs
-- Python: pyproject.toml + PyPI
-- Go: 표준 모듈 구조
-
-### 데이터 파이프라인 / ML
-- Python: pandas, polars, scikit-learn, PyTorch, JAX
-- Rust: polars, candle
-- 파이프라인: Prefect, Airflow, dbt, Apache Beam
-
-### 인프라 / DevOps 도구
-- IaC: Terraform, Pulumi, CloudFormation, CDK
-- Container: Docker, Kubernetes, Helm
-- CI/CD: GitHub Actions, GitLab CI, ArgoCD
 "
 fi
 
@@ -216,7 +388,7 @@ ensure_gitignore_entry ".harness/logs/session-summary-*.md"
 create_file_if_missing ".codex/skills/domain-analyst/SKILL.md" \
 "---
 name: domain-analyst
-description: 저장소의 목적, 기술 스택, 핵심 디렉토리, 주요 흐름, 하네스 관점의 핵심 관심사를 분석합니다. 프로젝트 구조 분석, 저장소 이해, 기술 스택 식별, 핵심 흐름 정리, 하네스 출발점 정의가 필요할 때 적극적으로 사용합니다.
+description: 저장소의 목적, 대표 진입점, 주요 코드 경계, 실행·검증 경로, 하네스 관점의 핵심 관심사를 분석합니다. 프로젝트 구조 분석, 탐색 근거 정리, 핵심 흐름 해석, 하네스 출발점 정의가 필요할 때 적극적으로 사용합니다.
 ---
 
 # domain-analyst
@@ -230,16 +402,16 @@ description: 저장소의 목적, 기술 스택, 핵심 디렉토리, 주요 흐
 ## 주요 작업
 
 1. 저장소의 목적과 범위를 추정한다.
-2. 기술 스택과 핵심 디렉토리를 확인한다.
+2. 대표 진입점과 주요 코드 경계를 확인한다.
 3. 주요 흐름을 식별한다.
-4. 하네스 관점에서 중요한 영역을 정리한다.
+4. 실행·검증 경로와 하네스 관점에서 중요한 영역을 정리한다.
 5. 결과를 \`.harness/reports/domain-analysis.md\`에 반영한다.
 
 ## 입력
 
 - 저장소 루트 구조
-- 주요 설정 파일
-- 핵심 소스 디렉토리
+- 주요 설정 및 실행 경로
+- 핵심 소스 디렉토리와 테스트 자산
 
 ## 출력
 
@@ -249,6 +421,8 @@ description: 저장소의 목적, 기술 스택, 핵심 디렉토리, 주요 흐
 
 - 실행 하네스의 첫 단계
 - harness-architect, qa-designer, orchestrator의 입력을 만든다
+
+역할 정체성과 handoff 기준은 \`.codex/agents/domain-analyst.md\`를 따른다.
 
 ## 협업 원칙
 
@@ -298,6 +472,8 @@ description: 저장소에 맞는 프로젝트 로컬 실행 하네스 구조와 
 
 - 구조 설계 담당
 - skill-scaffolder와 orchestrator의 기준점 역할
+
+역할 정체성과 handoff 기준은 \`.codex/agents/harness-architect.md\`를 따른다.
 
 ## 협업 원칙
 
@@ -350,6 +526,8 @@ description: 실행 하네스 구조를 바탕으로 프로젝트 로컬 역할 
 - 구조를 실제 파일로 만드는 역할
 - architect의 설계를 구현으로 옮긴다
 
+역할 정체성과 handoff 기준은 \`.codex/agents/skill-scaffolder.md\`를 따른다.
+
 ## 협업 원칙
 
 - 생성 결과는 validator가 점검하기 쉬운 구조여야 한다.
@@ -399,6 +577,8 @@ description: 프로젝트 실행 하네스에서 필요한 품질 기준, 검토
 
 - 역할 팀의 QA 기준 제공
 - validator와 orchestrator가 참고하는 품질 기준점
+
+역할 정체성과 handoff 기준은 \`.codex/agents/qa-designer.md\`를 따른다.
 
 ## 협업 원칙
 
@@ -452,6 +632,8 @@ description: 프로젝트 로컬 실행 하네스의 중심 역할입니다. 도
 - 실행 하네스의 조율 중심
 - 각 역할을 하나의 팀 흐름으로 묶는다
 - 프로젝트별 실행 하네스의 운영 기준점이 된다
+
+역할 정체성과 handoff 기준은 \`.codex/agents/orchestrator.md\`를 따른다.
 
 ## 협업 원칙
 
@@ -507,6 +689,8 @@ description: 생성된 프로젝트 로컬 실행 하네스가 최소 요건을 
 - 실행 하네스의 품질 점검 역할
 - 생성 이후 최소 품질 보장을 담당
 
+역할 정체성과 handoff 기준은 \`.codex/agents/validator.md\`를 따른다.
+
 ## 협업 원칙
 
 - 단순 존재 확인에 그치지 않는다.
@@ -542,7 +726,7 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 1. 현재 \`.harness/reports/*\`, \`.codex/skills/*\`, 로그 파일 상태를 읽는다.
 2. 요청이 기능 구현, 구조 정리, 공통 모듈 보강, 빌드/검증 보강 중 어디에 가까운지 먼저 분류한다.
 3. 변경 영향 범위가 단일 모듈인지, 여러 경계나 공통 계층까지 전파되는지 판단한다.
-4. 저장소 단서가 부족하거나 빈 프로젝트에 가까우면 사용자에게 먼저 확인할 질문을 정리한다.
+4. 탐색 근거가 부족하거나 빈 프로젝트에 가까우면 사용자에게 먼저 확인할 질문을 정리한다.
 5. domain-analysis가 비어 있거나 약하면 domain-analyst부터 시작한다.
 6. 구조 설계나 패키지 경계 판단이 부족하면 harness-architect를 우선한다.
 7. QA 기준이 약하면 qa-designer를 다시 호출할 수 있다.
@@ -569,10 +753,19 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 판단 근거는 1~3줄로 짧게 설명한다.
 - 세션을 시작했다면 session-log 반영 여부를 함께 남긴다.
 
+## 현재 상태별 진입 규칙
+
+- 신규 구축이면 \`harness-init.sh\` 기준으로 기본 팀 구조를 먼저 만든다.
+- 기존 확장 또는 운영 유지보수이면 \`harness-update.sh\`를 기본 진입점으로 사용한다.
+- 부분 구조만 남아 있거나 문서와 역할 구성이 크게 어긋나면 update로 봉합하지 말고 명시적 재구성을 먼저 제안한다.
+- 보고서 한 영역만 약하면 \`harness-update.sh --domain\`, \`--qa\`, \`--architecture\`, \`--orchestration\`, \`--team-structure\`, \`--team-playbook\` 같은 선택 갱신을 우선 고려한다.
+
 ## 역할 팀 내 위치
 
 - 실행 하네스 팀의 기동 엔트리포인트
 - 팀 전체를 실제로 움직이기 시작하게 만드는 역할
+
+역할 정체성과 handoff 기준은 \`.codex/agents/run-harness.md\`를 따른다.
 
 ## 협업 원칙
 
@@ -584,13 +777,17 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 ## 운영 규칙
 
 - 새 프로젝트라면 domain-analyst → harness-architect → skill-scaffolder → qa-designer → orchestrator → validator 순서를 기본으로 본다.
-- 이미 구조가 있는 프로젝트라면 부족한 역할만 다시 호출하는 쪽을 우선한다.
+- 이미 구조가 있는 프로젝트라면 \`harness-update.sh\`로 현재 상태를 다시 읽고 부족한 역할만 다시 호출하는 쪽을 우선한다.
+- 문서, 로그, handoff를 계속 유지해야 하는 중심 역할은 팀 구조로 유지하고, 입력과 출력이 좁은 보조 판단만 일회성 위임으로 다룬다.
+- 새 구조를 안정적으로 세울 때는 파이프라인을, 생성 직후 검증을 붙여야 할 때는 생성-검증을, 하위 경계가 독립적일 때만 팬아웃/팬인을, handoff와 재진입이 핵심이면 오케스트레이션 중심 구조를 우선한다.
 - 요청이 기능 구현, 구조 정리, 공통 모듈 보강, 빌드/검증 중 어디에 걸리는지 먼저 분류하고 그 결과를 orchestration-plan 판단의 입력으로 사용한다.
+- 요청이 추상적이거나 저장소 맥락이 약하면 질문과 탐색 보강을 먼저 두고, 저장소 고유 용어와 영향 범위를 정확히 말하면 더 직접적인 역할 시작을 허용한다.
 - 영향 범위가 공통 계층이나 다중 모듈로 번지면 domain-analyst와 qa-designer를 더 이른 순서에 배치한다.
-- 빈 저장소이거나 기술 스택/핵심 흐름 단서가 약하면, \`.harness/project-setup.md\`가 있는지 먼저 확인한다.
+- 빈 저장소이거나 탐색 근거가 부족하면, \`.harness/project-setup.md\`가 있는지 먼저 확인한다.
 - \`.harness/project-setup.md\`가 작성되어 있으면 그 내용을 domain-analyst의 시작 입력으로 연결한다.
-- 작성되어 있지 않으면 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인한 뒤, 파일이 없는 경우 템플릿 내용을 포함하여 \`.harness/project-setup.md\`에 채우도록 안내한다.
+- 작성되어 있지 않으면 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 먼저 확인한 뒤, 파일이 없는 경우 템플릿 내용을 포함하여 \`.harness/project-setup.md\`에 채우도록 안내한다.
 - 사용자 답변이 모이면 그 내용을 domain-analysis와 orchestration-plan의 입력으로 바로 연결한다.
+- 재구성이 필요한 상태라면 어떤 구조가 비어 있거나 어긋났는지 먼저 설명하고, 기존 하네스 정리 후 \`harness-init.sh\`로 다시 구성하도록 제안한다.
 - 리포트보다 실제 역할 팀 구조와 설명 품질을 더 중요하게 본다.
 - \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
 - 로그 운영 기준은 \`.harness/logging-policy.md\`를 먼저 확인한다.
@@ -601,8 +798,11 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 요청: "새 API 엔드포인트 추가" → 판단: 기능 구현, 단일 경계 → 시작: domain-analyst → qa-designer → orchestrator
 - 요청: "공통 유틸 함수 리팩터" → 판단: 공통 계층 영향, 다중 소비자 → 시작: domain-analyst → qa-designer → orchestrator
 - 요청: "하네스 역할 구조 재설계" → 판단: 경계 재정의, 구조 변경 → 시작: harness-architect → qa-designer → orchestrator
-- 요청: 저장소 단서 없음, project-setup.md 미작성 → 판단: 프로젝트 유형 불명 → 시작: project-setup.md 템플릿 제공 및 작성 안내 후 대기
-- 요청: 저장소 단서 없음, project-setup.md 작성됨 → 판단: 목표·유형 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)
+- 요청: "QA 문서만 보강" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --qa\` 검토 후 qa-designer
+- 요청: "domain-analysis만 오래됐음" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --domain\` 검토 후 domain-analyst
+- 요청: 역할 스킬은 있는데 보고서가 대부분 비어 있음 → 판단: 부분 구조 drift → 시작: 명시적 재구성 제안
+- 요청: 탐색 근거 부족, project-setup.md 미작성 → 판단: 프로젝트 성격 불명 → 시작: project-setup.md 템플릿 제공 및 작성 안내 후 대기
+- 요청: 탐색 근거 부족, project-setup.md 작성됨 → 판단: 목표·성격 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)
 "
 
 create_file_if_missing ".harness/reports/domain-analysis.md" \
@@ -738,7 +938,7 @@ create_file_if_missing ".harness/logs/latest-session-summary.md" \
 아직 종료된 세션 집계가 없습니다.
 "
 
-if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
+if optional_harness_assets_enabled "$EXPLORATION_NOTES_FILE"; then
   create_file_if_missing ".harness/logs/role-frequency.md" \
 "# 역할 호출 빈도
 

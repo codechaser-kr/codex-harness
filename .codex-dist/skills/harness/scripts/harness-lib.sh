@@ -1538,8 +1538,10 @@ build_team_playbook_report_block() {
 - 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
 - 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
 EOF
-      optional_harness_assets_enabled && printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다."
-      optional_harness_assets_enabled && printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다."
+      if optional_harness_assets_enabled; then
+        printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다."
+        printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다."
+      fi
       ;;
     *)
       cat <<EOF
@@ -1591,8 +1593,10 @@ EOF
 - 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
 - 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
 EOF
-      optional_harness_assets_enabled && printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다."
-      optional_harness_assets_enabled && printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다."
+      if optional_harness_assets_enabled; then
+        printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다."
+        printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다."
+      fi
       cat <<EOF
 
 ### 세션 종료 기준

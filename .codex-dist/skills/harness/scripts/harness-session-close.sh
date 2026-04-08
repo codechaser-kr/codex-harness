@@ -274,4 +274,6 @@ fi
 
 log "session summary updated: $SUMMARY_FILE"
 log "latest summary updated: $LATEST_SUMMARY_FILE"
-optional_harness_assets_enabled && log "template candidates updated"
+if optional_harness_assets_enabled; then
+  log "template candidates updated"
+fi

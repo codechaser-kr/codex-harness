@@ -232,14 +232,27 @@ audit_harness_drift() {
   local log_count="$4"
 
   if [ "$mode" = "기존 확장" ]; then
-    [ "$skill_count" -gt 0 ] && [ "$report_count" -eq 0 ] && warn "하네스 drift 가능성: 역할 스킬은 있으나 보고서가 비어 있습니다"
-    [ "$report_count" -gt 0 ] && [ "$skill_count" -eq 0 ] && warn "하네스 drift 가능성: 보고서는 있으나 역할 스킬이 비어 있습니다"
-    [ "$skill_count" -gt 0 ] && [ "$log_count" -eq 0 ] && warn "하네스 drift 가능성: 역할 스킬은 있으나 로그 구조가 비어 있습니다"
+    if [ "$skill_count" -gt 0 ] && [ "$report_count" -eq 0 ]; then
+      warn "하네스 drift 가능성: 역할 스킬은 있으나 보고서가 비어 있습니다"
+    fi
+
+    if [ "$report_count" -gt 0 ] && [ "$skill_count" -eq 0 ]; then
+      warn "하네스 drift 가능성: 보고서는 있으나 역할 스킬이 비어 있습니다"
+    fi
+
+    if [ "$skill_count" -gt 0 ] && [ "$log_count" -eq 0 ]; then
+      warn "하네스 drift 가능성: 역할 스킬은 있으나 로그 구조가 비어 있습니다"
+    fi
   fi
 
   if [ "$mode" = "운영 유지보수" ]; then
-    [ -f ".harness/reports/orchestration-plan.md" ] && ! grep -Eq 'run-harness|시작 역할|진입점' ".harness/reports/orchestration-plan.md" && warn "운영 drift 가능성: orchestration-plan이 run-harness 진입 규칙을 충분히 설명하지 않습니다"
-    [ -f ".harness/logging-policy.md" ] && [ -f ".harness/logs/role-frequency.md" ] && ! grep -Eq '선택 자산|호출 빈도|template-candidates|템플릿 후보' ".harness/logging-policy.md" && warn "운영 drift 가능성: 로그 정책이 선택 자산 운영 규칙을 충분히 설명하지 않습니다"
+    if [ -f ".harness/reports/orchestration-plan.md" ] && ! grep -Eq 'run-harness|시작 역할|진입점' ".harness/reports/orchestration-plan.md"; then
+      warn "운영 drift 가능성: orchestration-plan이 run-harness 진입 규칙을 충분히 설명하지 않습니다"
+    fi
+
+    if [ -f ".harness/logging-policy.md" ] && [ -f ".harness/logs/role-frequency.md" ] && ! grep -Eq '선택 자산|호출 빈도|template-candidates|템플릿 후보' ".harness/logging-policy.md"; then
+      warn "운영 drift 가능성: 로그 정책이 선택 자산 운영 규칙을 충분히 설명하지 않습니다"
+    fi
   fi
 }
 

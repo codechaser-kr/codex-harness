@@ -1082,7 +1082,7 @@ build_architecture_report_block() {
 
 ### domain-analyst
 - 저장소 목적과 도메인 파악
-- 기술 스택과 핵심 흐름 분석
+- 대표 진입점, 주요 경계, 핵심 흐름 분석
 - 하네스 관점의 주요 관심사 정리
 
 ### harness-architect

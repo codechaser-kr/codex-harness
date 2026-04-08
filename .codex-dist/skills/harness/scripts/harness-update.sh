@@ -148,7 +148,7 @@ NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$EXPLORATION_CONTEXT_LEVEL" "upda
 DISCOVERY_GUIDANCE="$(build_exploration_guidance "$EXPLORATION_NOTES_FILE" "$EXPLORATION_CONTEXT_LEVEL" "$STRUCTURE_HINT")"
 
 if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
-  DISCOVERY_GUIDANCE="현재 탐색 근거만으로는 방향 판단이 어렵습니다. run-harness는 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인해야 합니다."
+  DISCOVERY_GUIDANCE="현재 탐색 근거만으로는 방향 판단이 어렵습니다. run-harness는 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 먼저 확인해야 합니다."
   log "탐색 근거 부족: 사용자 확인 질문 우선"
 fi
 

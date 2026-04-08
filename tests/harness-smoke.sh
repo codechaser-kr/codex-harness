@@ -40,7 +40,7 @@ run_mode_check() {
   local expected="$1"
   local actual
 
-  actual="$(bash -lc ". \"$HARNESS_SCRIPT_DIR/harness-lib.sh\"; detect_harness_operation_mode" 2>/dev/null)"
+  actual="$(bash -c ". \"$HARNESS_SCRIPT_DIR/harness-lib.sh\"; detect_harness_operation_mode" 2>/dev/null)"
   [ "$actual" = "$expected" ] || fail "운영 모드 불일치: expected=$expected actual=$actual"
   log "운영 모드 확인: $expected"
 }

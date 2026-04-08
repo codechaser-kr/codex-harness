@@ -158,6 +158,16 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - `.codex/skills/validator/SKILL.md`
 - `.codex/skills/run-harness/SKILL.md`
 
+### 프로젝트 로컬 역할 정의
+
+- `.codex/agents/domain-analyst.md`
+- `.codex/agents/harness-architect.md`
+- `.codex/agents/skill-scaffolder.md`
+- `.codex/agents/qa-designer.md`
+- `.codex/agents/orchestrator.md`
+- `.codex/agents/validator.md`
+- `.codex/agents/run-harness.md`
+
 ### 보조 산출물
 
 - `.harness/reports/domain-analysis.md`
@@ -202,10 +212,12 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 ### Phase 3: 로컬 역할 스킬 생성
 
 1. 각 역할에 대한 로컬 SKILL.md를 생성한다.
-2. 각 역할은 명확한 입력/출력/책임 범위를 가져야 한다.
-3. description은 실제 요청에서 트리거될 수 있도록 구체적으로 작성한다.
-4. 역할 팀이 실제로 사용 가능한 수준의 스킬 구조를 만든다.
-5. run-harness가 팀의 실제 진입점으로 기능하도록 한다.
+2. 각 역할에 대한 로컬 agent 정의 파일을 함께 생성한다.
+3. agent 정의는 누가 어떤 책임과 경계를 갖는지 설명하고, SKILL.md는 어떻게 수행하는지 설명한다.
+4. 각 역할은 명확한 입력/출력/책임 범위를 가져야 한다.
+5. description은 실제 요청에서 트리거될 수 있도록 구체적으로 작성한다.
+6. 역할 팀이 실제로 사용 가능한 수준의 스킬 구조를 만든다.
+7. run-harness가 팀의 실제 진입점으로 기능하도록 한다.
 
 스킬 작성 기준은 `references/skill-writing-guide.md`를 참고한다.
 

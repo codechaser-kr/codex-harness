@@ -158,6 +158,7 @@ EMPTY_INIT_OUTPUT="$(
 assert_contains "$EMPTY_INIT_OUTPUT" "하네스 운영 모드: 신규 구축" "빈 프로젝트 init 로그"
 assert_contains "$EMPTY_INIT_OUTPUT" "탐색 근거 문서: .harness/reports/exploration-notes.md" "빈 프로젝트 init 탐색 로그"
 assert_dir "$TMP_ROOT/empty-project/.codex/skills/run-harness"
+assert_dir "$TMP_ROOT/empty-project/.codex/agents"
 assert_dir "$TMP_ROOT/empty-project/.harness/reports"
 assert_file "$TMP_ROOT/empty-project/.harness/project-setup.md"
 assert_file "$TMP_ROOT/empty-project/.harness/reports/exploration-notes.md"
@@ -172,6 +173,10 @@ assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "일회성 위임" "run-harness 보조 위임 판단"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "생성-검증" "run-harness 패턴 판단"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "저장소 고유 용어" "run-harness 사용자 맥락 판단"
+assert_file "$TMP_ROOT/empty-project/.codex/agents/run-harness.md"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/agents/run-harness.md")" "## 역할" "run-harness agent 역할"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/agents/run-harness.md")" "## handoff" "run-harness agent handoff"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/domain-analyst/SKILL.md")" ".codex/agents/domain-analyst.md" "domain skill agent 연결"
 (
   cd "$TMP_ROOT/empty-project"
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"

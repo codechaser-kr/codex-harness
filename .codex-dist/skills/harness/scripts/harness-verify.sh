@@ -266,6 +266,7 @@ check_agents_alignment "$HARNESS_OPERATION_MODE"
 
 # 필수 디렉토리
 check_dir ".codex/skills"
+check_dir ".codex/agents"
 check_dir ".codex/skills/domain-analyst"
 check_dir ".codex/skills/harness-architect"
 check_dir ".codex/skills/skill-scaffolder"
@@ -316,8 +317,32 @@ SKILL_FILES=(
   ".codex/skills/run-harness/SKILL.md"
 )
 
+AGENT_FILES=(
+  ".codex/agents/domain-analyst.md"
+  ".codex/agents/harness-architect.md"
+  ".codex/agents/skill-scaffolder.md"
+  ".codex/agents/qa-designer.md"
+  ".codex/agents/orchestrator.md"
+  ".codex/agents/validator.md"
+  ".codex/agents/run-harness.md"
+)
+
 for file in "${SKILL_FILES[@]}"; do
   check_file "$file"
+done
+
+for file in "${AGENT_FILES[@]}"; do
+  check_file "$file"
+done
+
+for file in "${AGENT_FILES[@]}"; do
+  if [ -f "$file" ]; then
+    check_contains_hint "$file" "## 역할" "agent 역할 섹션"
+    check_contains_hint "$file" "## 핵심 책임" "agent 책임 섹션"
+    check_contains_hint "$file" "## 입력" "agent 입력 섹션"
+    check_contains_hint "$file" "## 출력" "agent 출력 섹션"
+    check_contains_hint "$file" "## handoff" "agent handoff 섹션"
+  fi
 done
 
 # 로컬 역할 스킬 최소 품질 점검
@@ -333,6 +358,7 @@ for file in "${SKILL_FILES[@]}"; do
     check_contains_hint "$file" "## 역할 팀 내 위치" "역할 팀 위치 섹션"
     check_contains_hint "$file" "## 협업 원칙" "협업 원칙 섹션"
     check_contains_hint "$file" "## 운영 규칙" "운영 규칙 섹션"
+    check_contains_any_hint "$file" "\.codex/agents/" "agent 정의 연결"
   fi
 done
 

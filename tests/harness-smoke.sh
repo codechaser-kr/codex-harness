@@ -166,6 +166,16 @@ assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"
 )
 
+log "선택 갱신 범위 확인"
+rm -f "$TMP_ROOT/stack-project/.harness/reports/qa-strategy.md"
+SELECTIVE_UPDATE_OUTPUT="$(
+  cd "$TMP_ROOT/stack-project" && \
+  bash "$HARNESS_SCRIPT_DIR/harness-update.sh" --domain
+)"
+assert_contains "$SELECTIVE_UPDATE_OUTPUT" "선택 갱신 대상: domain" "선택 갱신 로그"
+assert_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
+[ ! -f "$TMP_ROOT/stack-project/.harness/reports/qa-strategy.md" ] || fail "선택 갱신이 qa 보고서를 재생성함"
+
 log "부분 구조 프로젝트 재구성 안내 확인"
 mkdir -p "$TMP_ROOT/partial-project/.codex/skills/existing"
 assert_command_fails_with \

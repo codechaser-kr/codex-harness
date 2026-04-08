@@ -54,7 +54,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 
 - 최초 하네스 구성 요청이면 반드시 `bash scripts/harness-init.sh`를 먼저 실행한다.
 - 하네스 구성이 끝났다고 판단하기 전에 반드시 `bash scripts/harness-verify.sh`를 실행한다.
-- `scripts/harness-update.sh`는 이미 하네스 구조가 있는 프로젝트에서 필요한 문서와 탐색 근거를 보강할 때 사용한다.
+- `scripts/harness-update.sh`는 이미 하네스 구조가 있는 프로젝트에서 필요한 문서와 탐색 근거를 보강할 때 사용한다. 필요하면 `--domain`, `--architecture`, `--qa`, `--orchestration`, `--team-structure`, `--team-playbook`으로 범위를 좁힌다.
 - `harness-init.sh` 또는 `harness-update.sh`가 만든 문서는 시작 산출물로 보고, 완료 전에 반드시 저장소 사실, 기존 도메인 언어, 운영 흐름에 맞게 역할 관점으로 다시 가공한다.
 - `.harness/reports/*` 문서 재가공 없이 스크립트 출력만으로 완료 처리하지 않는다.
 - `scripts/harness-init.sh` 대신 `.codex/skills/*`, `.harness/*`를 수동으로 직접 생성하는 방식은 사용하지 않는다.

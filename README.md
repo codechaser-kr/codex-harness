@@ -198,6 +198,7 @@ repo/
 
 - 최초 구성 요청이면 `harness-init.sh`를 먼저 실행합니다.
 - 기존 확장이나 운영 유지보수는 `harness-update.sh`를 우선 사용합니다.
+- `harness-update.sh`는 `--domain`, `--architecture`, `--qa`, `--orchestration`, `--team-structure`, `--team-playbook`으로 필요한 범위만 갱신할 수 있습니다.
 - 완료로 보기 전에 `harness-verify.sh`를 반드시 실행합니다.
 - `harness-verify.sh`가 실패하면 구성이 완료된 것으로 보지 않습니다.
 

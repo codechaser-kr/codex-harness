@@ -17,9 +17,79 @@ TEAM_PLAYBOOK_REPORT="$REPORT_DIR/team-playbook.md"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/harness-lib.sh"
 
+UPDATE_DOMAIN=0
+UPDATE_ARCHITECTURE=0
+UPDATE_QA=0
+UPDATE_ORCHESTRATION=0
+UPDATE_TEAM_STRUCTURE=0
+UPDATE_TEAM_PLAYBOOK=0
+
 log() {
   printf '[harness][update] %s\n' "$1"
 }
+
+set_update_all() {
+  UPDATE_DOMAIN=1
+  UPDATE_ARCHITECTURE=1
+  UPDATE_QA=1
+  UPDATE_ORCHESTRATION=1
+  UPDATE_TEAM_STRUCTURE=1
+  UPDATE_TEAM_PLAYBOOK=1
+}
+
+parse_update_targets() {
+  if [ "$#" -eq 0 ]; then
+    set_update_all
+    return
+  fi
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --all)
+        set_update_all
+        ;;
+      --domain)
+        UPDATE_DOMAIN=1
+        ;;
+      --architecture)
+        UPDATE_ARCHITECTURE=1
+        ;;
+      --qa)
+        UPDATE_QA=1
+        ;;
+      --orchestration)
+        UPDATE_ORCHESTRATION=1
+        ;;
+      --team-structure)
+        UPDATE_TEAM_STRUCTURE=1
+        ;;
+      --team-playbook)
+        UPDATE_TEAM_PLAYBOOK=1
+        ;;
+      *)
+        printf '[harness][update][error] 알 수 없는 옵션: %s\n' "$1" >&2
+        printf '%s\n' '사용법: bash scripts/harness-update.sh [--all] [--domain] [--architecture] [--qa] [--orchestration] [--team-structure] [--team-playbook]' >&2
+        exit 1
+        ;;
+    esac
+    shift
+  done
+}
+
+build_selected_target_summary() {
+  local targets=()
+
+  [ "$UPDATE_DOMAIN" -eq 1 ] && targets+=("domain")
+  [ "$UPDATE_ARCHITECTURE" -eq 1 ] && targets+=("architecture")
+  [ "$UPDATE_QA" -eq 1 ] && targets+=("qa")
+  [ "$UPDATE_ORCHESTRATION" -eq 1 ] && targets+=("orchestration")
+  [ "$UPDATE_TEAM_STRUCTURE" -eq 1 ] && targets+=("team-structure")
+  [ "$UPDATE_TEAM_PLAYBOOK" -eq 1 ] && targets+=("team-playbook")
+
+  join_by_comma "${targets[@]}"
+}
+
+parse_update_targets "$@"
 
 PROJECT_TYPE="$(detect_project_type)"
 STACK_HINT="$(detect_stack_hint)"
@@ -93,12 +163,14 @@ TEAM_PLAYBOOK_REPORT_BLOCK="$(build_team_playbook_report_block "$PROJECT_SIGNAL_
 log "하네스 업데이트 시작"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
 log "탐색 근거 문서: $EXPLORATION_NOTES_FILE"
+log "선택 갱신 대상: $(build_selected_target_summary)"
 while IFS= read -r audit_line; do
   [ -n "$audit_line" ] || continue
   log "하네스 감사: $audit_line"
 done <<< "$HARNESS_AUDIT_SUMMARY"
 
-cat > "$DOMAIN_REPORT" <<EOF_DOMAIN
+if [ "$UPDATE_DOMAIN" -eq 1 ]; then
+  cat > "$DOMAIN_REPORT" <<EOF_DOMAIN
 # 도메인 분석
 
 ## 저장소 요약
@@ -107,41 +179,52 @@ $DOMAIN_SUMMARY_BLOCK
 
 $DOMAIN_DETAIL_BLOCK
 EOF_DOMAIN
+  log "갱신됨: $DOMAIN_REPORT"
+fi
 
-cat > "$ARCH_REPORT" <<EOF_ARCH
+if [ "$UPDATE_ARCHITECTURE" -eq 1 ]; then
+  cat > "$ARCH_REPORT" <<EOF_ARCH
 # 하네스 아키텍처
 
 $ARCH_REPORT_BLOCK
 EOF_ARCH
+  log "갱신됨: $ARCH_REPORT"
+fi
 
-cat > "$QA_REPORT" <<EOF_QA
+if [ "$UPDATE_QA" -eq 1 ]; then
+  cat > "$QA_REPORT" <<EOF_QA
 # QA 전략
 
 $QA_REPORT_BLOCK
 EOF_QA
+  log "갱신됨: $QA_REPORT"
+fi
 
-cat > "$ORCH_REPORT" <<EOF_ORCH
+if [ "$UPDATE_ORCHESTRATION" -eq 1 ]; then
+  cat > "$ORCH_REPORT" <<EOF_ORCH
 # 오케스트레이션 계획
 
 $ORCH_REPORT_BLOCK
 EOF_ORCH
+  log "갱신됨: $ORCH_REPORT"
+fi
 
-cat > "$TEAM_STRUCTURE_REPORT" <<EOF_TEAM_STRUCTURE
+if [ "$UPDATE_TEAM_STRUCTURE" -eq 1 ]; then
+  cat > "$TEAM_STRUCTURE_REPORT" <<EOF_TEAM_STRUCTURE
 # 역할 팀 구조
 
 $TEAM_STRUCTURE_REPORT_BLOCK
 EOF_TEAM_STRUCTURE
+  log "갱신됨: $TEAM_STRUCTURE_REPORT"
+fi
 
-cat > "$TEAM_PLAYBOOK_REPORT" <<EOF_TEAM_PLAYBOOK
+if [ "$UPDATE_TEAM_PLAYBOOK" -eq 1 ]; then
+  cat > "$TEAM_PLAYBOOK_REPORT" <<EOF_TEAM_PLAYBOOK
 # 팀 운영 플레이북
 
 $TEAM_PLAYBOOK_REPORT_BLOCK
 EOF_TEAM_PLAYBOOK
+  log "갱신됨: $TEAM_PLAYBOOK_REPORT"
+fi
 
 log "하네스 업데이트 완료"
-log "갱신됨: $DOMAIN_REPORT"
-log "갱신됨: $ARCH_REPORT"
-log "갱신됨: $QA_REPORT"
-log "갱신됨: $ORCH_REPORT"
-log "갱신됨: $TEAM_STRUCTURE_REPORT"
-log "갱신됨: $TEAM_PLAYBOOK_REPORT"

@@ -1337,7 +1337,7 @@ build_next_step_line() {
       if [ "$context" = "update" ]; then
         echo "- domain-analyst가 실제 저장소 구조를 읽고 내용을 구체화합니다."
       else
-      echo "- 답변이 모이면 domain-analyst가 저장소 요약과 핵심 흐름을 구체화합니다."
+        echo "- 답변이 모이면 domain-analyst가 저장소 요약과 핵심 흐름을 구체화합니다."
       fi
       ;;
     *)

@@ -73,78 +73,6 @@ build_harness_audit_summary() {
   printf '%s\n' "기존 로그 파일 수: $log_count"
 }
 
-detect_project_type() {
-  if [ -f "package.json" ]; then
-    echo "node"
-    return
-  fi
-
-  if [ -f "Cargo.toml" ]; then
-    echo "rust"
-    return
-  fi
-
-  if [ -f "pyproject.toml" ] || [ -f "requirements.txt" ]; then
-    echo "python"
-    return
-  fi
-
-  if [ -f "go.mod" ]; then
-    echo "go"
-    return
-  fi
-
-  if [ -f "pom.xml" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ] || [ -f "settings.gradle" ] || [ -f "settings.gradle.kts" ]; then
-    echo "java"
-    return
-  fi
-
-  if [ -f "Makefile" ] || [ -f "CMakeLists.txt" ]; then
-    echo "cpp"
-    return
-  fi
-
-  if [ -f "composer.json" ]; then
-    echo "php"
-    return
-  fi
-
-  if [ -f "Gemfile" ]; then
-    echo "ruby"
-    return
-  fi
-
-  echo "unknown"
-}
-
-detect_stack_hint() {
-  local hints=()
-
-  [ -f "package.json" ] && hints+=("Node.js")
-  [ -f "Cargo.toml" ] && hints+=("Rust")
-  [ -f "pyproject.toml" ] && hints+=("Python")
-  [ -f "requirements.txt" ] && hints+=("Python")
-  [ -f "go.mod" ] && hints+=("Go")
-  ([ -f "pom.xml" ] || [ -f "build.gradle" ] || [ -f "build.gradle.kts" ] || [ -f "settings.gradle" ] || [ -f "settings.gradle.kts" ]) && hints+=("Java")
-  ([ -f "build.gradle" ] || [ -f "build.gradle.kts" ] || [ -f "settings.gradle" ] || [ -f "settings.gradle.kts" ]) && hints+=("Gradle")
-  [ -f "Makefile" ] && hints+=("Make")
-  [ -f "CMakeLists.txt" ] && hints+=("CMake")
-  [ -f "composer.json" ] && hints+=("PHP")
-  [ -f "Gemfile" ] && hints+=("Ruby")
-  [ -f "tsconfig.json" ] && hints+=("TypeScript")
-  [ -f "vite.config.ts" ] && hints+=("Vite")
-  [ -f "next.config.js" ] && hints+=("Next.js")
-  [ -f "next.config.mjs" ] && hints+=("Next.js")
-
-  if [ "${#hints[@]}" -eq 0 ]; then
-    echo "추정 불가"
-    return
-  fi
-
-  local IFS=", "
-  echo "${hints[*]}"
-}
-
 optional_harness_assets_enabled() {
   local exploration_file="${1:-$EXPLORATION_NOTES_DEFAULT_PATH}"
   local entrypoint_count=0
@@ -527,7 +455,7 @@ build_exploration_guidance() {
 
   if [ ! -f "$file" ]; then
     if [ "$exploration_context_level" = "초기" ] || [ "$exploration_context_level" = "제한적" ]; then
-      printf '%s\n' "저장소 단서와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
+      printf '%s\n' "탐색 근거와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
     else
       printf '%s\n' "현재 저장소는 실제 코드 경계와 대표 흐름을 먼저 읽고 후속 문서를 보강해야 합니다."
     fi
@@ -572,7 +500,8 @@ detect_config_hints() {
 
 build_project_type_label() {
   local exploration_context_level="$1"
-  local project_type="$2"
+  local structure_hint="$2"
+  local workspace_hint="$3"
 
   case "$exploration_context_level" in
     초기)
@@ -585,43 +514,17 @@ build_project_type_label() {
       ;;
   esac
 
-  case "$project_type" in
-    node)
-      if [ -d "packages" ] || [ -d "apps" ]; then
-        echo "Node 기반 모노레포"
-      else
-        echo "Node 기반 애플리케이션"
-      fi
-      ;;
-    rust)
-      echo "Rust 프로젝트"
-      ;;
-    python)
-      echo "Python 프로젝트"
-      ;;
-    go)
-      echo "Go 프로젝트"
-      ;;
-    java)
-      if [ -d "modules" ] || [ -d "services" ]; then
-        echo "Java 기반 멀티모듈 프로젝트"
-      else
-        echo "Java 기반 애플리케이션"
-      fi
-      ;;
-    cpp)
-      echo "C/C++ 프로젝트"
-      ;;
-    php)
-      echo "PHP 프로젝트"
-      ;;
-    ruby)
-      echo "Ruby 프로젝트"
-      ;;
-    *)
-      echo "구조 분석이 필요한 프로젝트"
-      ;;
-  esac
+  if [ "$workspace_hint" != "추정 불가" ]; then
+    echo "다중 경계 저장소"
+    return
+  fi
+
+  if printf '%s' "$structure_hint" | grep -q ','; then
+    echo "복수 경계 저장소"
+    return
+  fi
+
+  echo "단일 경계 중심 저장소"
 }
 
 build_key_axes_hint() {
@@ -661,35 +564,7 @@ build_core_flow_hint() {
       echo "탐색 근거가 제한적이므로 README, 핵심 디렉토리, 사용자 확인 질문을 함께 보며 첫 성공 흐름을 정리해야 합니다."
       ;;
     *)
-      case "$2" in
-        node)
-          echo "package.json과 $3 기준으로 애플리케이션 진입점, 주요 모듈, 실행 또는 빌드 흐름을 우선 정리해야 합니다."
-          ;;
-        rust)
-          echo "Cargo.toml과 $3 기준으로 크레이트 진입점, 명령 실행 흐름, 주요 모듈 연결을 우선 정리해야 합니다."
-          ;;
-        python)
-          echo "Python 설정 파일과 $3 기준으로 실행 진입점, 패키지 구조, 핵심 스크립트 흐름을 우선 정리해야 합니다."
-          ;;
-        go)
-          echo "go.mod와 $3 기준으로 main 패키지, 내부 패키지 연결, 실행 흐름을 우선 정리해야 합니다."
-          ;;
-        java)
-          echo "빌드 설정 파일과 $3 기준으로 애플리케이션 진입점, 모듈 경계, 실행 또는 테스트 흐름을 우선 정리해야 합니다."
-          ;;
-        cpp)
-          echo "빌드 스크립트와 $3 기준으로 바이너리 진입점, 라이브러리 경계, 컴파일 흐름을 우선 정리해야 합니다."
-          ;;
-        php)
-          echo "composer.json과 $3 기준으로 엔트리포인트, 프레임워크 구조, 의존성 경계를 우선 정리해야 합니다."
-          ;;
-        ruby)
-          echo "Gemfile과 $3 기준으로 애플리케이션 구조, 실행 태스크, 핵심 도메인 경계를 우선 정리해야 합니다."
-          ;;
-        *)
-          echo "$3 기준으로 저장소의 핵심 사용자 흐름과 주요 변경 영향 지점을 우선 정리해야 합니다."
-          ;;
-      esac
+      echo "$2 기준으로 저장소의 핵심 사용자 흐름과 주요 변경 영향 지점을 우선 정리해야 합니다."
       ;;
   esac
 }
@@ -719,16 +594,15 @@ build_initial_observation() {
 
 build_domain_report_detail_block() {
   local exploration_context_level="$1"
-  local project_type="$2"
-  local structure_hint="$3"
-  local package_manager_hint="$4"
-  local workspace_hint="$5"
-  local key_axes_hint="$6"
-  local config_hint="$7"
-  local core_flow_hint="$8"
-  local discovery_guidance="$9"
-  local initial_observation_line="${10}"
-  local next_step_detail_line="${11}"
+  local structure_hint="$2"
+  local package_manager_hint="$3"
+  local workspace_hint="$4"
+  local key_axes_hint="$5"
+  local config_hint="$6"
+  local core_flow_hint="$7"
+  local discovery_guidance="$8"
+  local initial_observation_line="${9}"
+  local next_step_detail_line="${10}"
   local workspace_path
   local workspace_name
   local found_exception_note=0
@@ -758,7 +632,7 @@ build_domain_report_detail_block() {
 
 ## 사용자 확인 질문
 
-저장소 단서가 부족합니다. 아래 질문에 답하면 domain-analyst가 구체적인 분석을 시작할 수 있습니다.
+탐색 근거가 아직 부족합니다. 아래 질문에 답하면 domain-analyst가 구체적인 분석을 시작할 수 있습니다.
 
 1. 이 프로젝트는 무엇을 만들려고 하나요? (애플리케이션, 라이브러리, CLI 도구, 서비스 등)
 2. 주요 사용자 또는 소비자는 누구인가요? (최종 사용자, 다른 개발자, 내부 팀 등)
@@ -776,7 +650,7 @@ $initial_observation_line
 
 ## 다음 단계
 
-- 저장소 단서가 약하면 run-harness가 위 질문부터 사용자에게 짧게 확인합니다.
+- 탐색 근거가 아직 부족하면 run-harness가 위 질문부터 사용자에게 짧게 확인합니다.
 $next_step_detail_line
 - 필요하면 디렉토리별 역할과 핵심 파일을 추가로 정리합니다.
 EOF
@@ -1134,42 +1008,9 @@ EOF
 
 ### 핵심 실행 흐름
 EOF
-      case "$project_type" in
-        node)
-          printf '%s\n' "- \`package.json\` 기반으로 실행, 빌드, 테스트 스크립트가 첫 진입점이 될 가능성이 높습니다."
-          [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 패키지 간 의존 관계를 따라가며 변경 영향 범위를 먼저 정리해야 합니다."
-          ;;
-        rust)
-          printf '%s\n' "- \`Cargo.toml\`과 \`src/\` 기준으로 바이너리 또는 라이브러리 진입점을 먼저 확인해야 합니다."
-          printf '%s\n' "- 크레이트 경계와 feature 조합이 실제 실행 흐름을 바꿀 수 있으므로 이를 함께 기록해야 합니다."
-          ;;
-        python)
-          printf '%s\n' "- Python 설정 파일과 패키지 디렉토리 기준으로 엔트리포인트 스크립트와 핵심 모듈을 먼저 확인해야 합니다."
-          printf '%s\n' "- CLI, 서비스, 배치 중 어떤 실행 모델인지 먼저 구분해야 분석 품질이 올라갑니다."
-          ;;
-        go)
-          printf '%s\n' "- \`go.mod\`와 \`cmd/\`, \`internal/\`, \`pkg/\` 구조를 기준으로 바이너리 진입점과 내부 패키지 경계를 먼저 읽어야 합니다."
-          ;;
-        java)
-          printf '%s\n' "- \`pom.xml\`, \`build.gradle\`, \`build.gradle.kts\` 같은 빌드 설정 파일을 기준으로 모듈 경계와 실행 태스크를 먼저 확인해야 합니다."
-          printf '%s\n' "- \`src/main\`, \`src/test\`, 멀티모듈 구조 여부가 실제 변경 영향 범위를 크게 좌우합니다."
-          ;;
-        cpp)
-          printf '%s\n' "- \`Makefile\` 또는 \`CMakeLists.txt\` 기준으로 바이너리 타깃, 라이브러리 구성, 컴파일 흐름을 먼저 확인해야 합니다."
-          printf '%s\n' "- 헤더와 구현 파일 경계, 빌드 옵션, 플랫폼별 조건부 빌드가 핵심 위험 지점이 됩니다."
-          ;;
-        php)
-          printf '%s\n' "- \`composer.json\` 기준으로 의존성, 오토로딩, 프레임워크 진입점을 먼저 확인해야 합니다."
-          printf '%s\n' "- 웹 요청 진입점과 CLI 태스크가 함께 있으면 두 흐름을 분리해 기록해야 합니다."
-          ;;
-        ruby)
-          printf '%s\n' "- \`Gemfile\` 기준으로 런타임 의존성과 실행 태스크를 먼저 확인해야 합니다."
-          printf '%s\n' "- Rails, Rack, 순수 Ruby 스크립트 중 어떤 실행 모델인지 구분해야 분석 품질이 올라갑니다."
-          ;;
-        *)
-          printf '%s\n' "- \`$structure_hint\` 단서를 따라 핵심 사용자 흐름과 주요 변경 경계를 먼저 정리해야 합니다."
-          ;;
-      esac
+      printf '%s\n' "- \`$core_flow_hint\`"
+      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- \`$config_hint\` 경로를 기준으로 실제 실행, 빌드, 검증 흐름이 어디서 갈라지는지 먼저 확인해야 합니다."
+      [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- \`$workspace_hint\` 경계를 따라 변경 영향 범위와 소비 관계를 먼저 정리해야 합니다."
 
       cat <<EOF
 
@@ -1294,7 +1135,7 @@ EOF
 - 이 문서는 현재 저장소의 실제 구조와 변경 경계를 바탕으로 실행 하네스 역할을 어떻게 배치할지 정리합니다.
 - 프로젝트 성격: $project_type_label
 - 핵심 작업 축: $key_axes_hint
-- 대표 흐름 가설: $core_flow_hint
+- 대표 흐름 해석: $core_flow_hint
 EOF
       [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스 단서: $workspace_hint"
       cat <<EOF
@@ -1395,7 +1236,7 @@ EOF
 
 - 역할은 저장소 구조보다 추상적이어야 하지만, 저장소 경계를 무시하면 안 됩니다.
 - 핵심 작업 축이 많은 저장소일수록 역할 수를 늘리기보다 역할 판단 기준을 선명하게 둡니다.
-- 자동 재생성 결과라도 실제 저장소 단서를 반영한 분석이 먼저 와야 합니다.
+- 자동 재생성 결과라도 실제 탐색 근거를 반영한 분석이 먼저 와야 합니다.
 - 프로젝트 특화 판단이 필요한 부분은 후속 역할이 보강할 수 있게 열어 둡니다.
 
 ## 다음 단계
@@ -1751,7 +1592,7 @@ build_team_playbook_report_block() {
 ## 세션 시작 절차
 
 1. 기본적으로는 run-harness를 실행 하네스 팀의 진입점으로 사용합니다.
-2. run-harness가 현재 상태를 보고, 저장소 단서가 약하면 사용자 확인 질문부터 정리하고, 단서가 충분하면 필요한 역할을 우선순위로 정합니다.
+2. run-harness가 현재 상태를 보고, 탐색 근거가 부족하면 사용자 확인 질문부터 정리하고, 근거가 충분하면 필요한 역할을 우선순위로 정합니다.
 3. 새 프로젝트라면 domain-analyst부터 시작하는 흐름을 우선합니다.
 4. 구조가 이미 있다면 orchestrator / validator 중심의 보강 루프를 우선합니다.
 
@@ -1765,7 +1606,7 @@ build_team_playbook_report_block() {
 
 - 문서보다 역할 팀을 본체로 봅니다.
 - \`.harness/reports\` 문서는 팀이 공유하는 보조 기준으로 사용합니다.
-- 빈 저장소이거나 저장소 단서가 약하면 역할 호출보다 사용자 확인 질문을 먼저 남깁니다.
+- 빈 저장소이거나 탐색 근거가 부족하면 역할 호출보다 사용자 확인 질문을 먼저 남깁니다.
 - validator 피드백이 나오면 architect / scaffolder / orchestrator가 다시 보강합니다.
 - QA 질문이 약하면 qa-designer를 다시 호출해 보강합니다.
 - 중요한 역할 호출이나 흐름 변경은 session-log에 남깁니다.
@@ -1856,32 +1697,32 @@ EOF
 build_domain_summary_block() {
   local exploration_context_level="$1"
   local project_type_label="$2"
-  local stack_hint="$3"
-  local structure_hint="$4"
-  local core_flow_hint="$5"
-  local package_manager_hint="$6"
-  local workspace_hint="$7"
-  local key_axes_hint="$8"
+  local structure_hint="$3"
+  local core_flow_hint="$4"
+  local package_manager_hint="$5"
+  local workspace_hint="$6"
+  local key_axes_hint="$7"
+  local config_hint="$8"
 
   case "$exploration_context_level" in
     초기)
       cat <<EOF
-- 프로젝트 유형: 미정
-- 주요 기술 스택: 미정
+- 프로젝트 성격: 미정
+- 설정 및 실행 단서: 미정
 - 핵심 흐름: 미정
 EOF
       ;;
     제한적)
       cat <<EOF
-- 프로젝트 유형: $project_type_label
-- 주요 기술 스택 추정: $stack_hint
+- 프로젝트 성격: $project_type_label
 - 주요 구조 단서: $structure_hint
+- 설정 및 실행 단서: $config_hint
 - 핵심 흐름: $core_flow_hint
 EOF
       ;;
     *)
-      printf '%s\n' "- 프로젝트 유형: $project_type_label"
-      printf '%s\n' "- 주요 기술 스택 추정: $stack_hint"
+      printf '%s\n' "- 프로젝트 성격: $project_type_label"
+      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- 설정 및 실행 단서: $config_hint"
       [ "$package_manager_hint" = "추정 불가" ] || printf '%s\n' "- 패키지 관리: $package_manager_hint"
       [ "$workspace_hint" = "추정 불가" ] || printf '%s\n' "- 워크스페이스/패키지 단서: $workspace_hint"
       printf '%s\n' "- 주요 구조 단서: $structure_hint"
@@ -1900,7 +1741,7 @@ build_next_step_line() {
       if [ "$context" = "update" ]; then
         echo "- domain-analyst가 실제 저장소 구조를 읽고 내용을 구체화합니다."
       else
-        echo "- 답변이 모이면 domain-analyst가 저장소 요약과 핵심 흐름을 구체화합니다."
+      echo "- 답변이 모이면 domain-analyst가 저장소 요약과 핵심 흐름을 구체화합니다."
       fi
       ;;
     *)

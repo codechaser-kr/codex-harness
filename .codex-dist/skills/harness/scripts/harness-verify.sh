@@ -363,8 +363,8 @@ if [ -f ".harness/reports/team-structure.md" ]; then
 fi
 
 if [ -f ".harness/reports/domain-analysis.md" ]; then
-  check_placeholder_state ".harness/reports/domain-analysis.md" "프로젝트 유형: (미정|unknown)" "프로젝트 유형 구체화"
-  check_placeholder_state ".harness/reports/domain-analysis.md" "주요 기술 스택( 추정)?: (미정|추정 불가)" "기술 스택 구체화"
+  check_placeholder_state ".harness/reports/domain-analysis.md" "프로젝트 성격: (미정|unknown)" "프로젝트 성격 구체화"
+  check_placeholder_state ".harness/reports/domain-analysis.md" "설정 및 실행 단서: (미정|추정 불가)" "설정 및 실행 단서 구체화"
   check_placeholder_state ".harness/reports/domain-analysis.md" "핵심 흐름: 미정" "핵심 흐름 구체화"
   check_placeholder_state ".harness/reports/domain-analysis.md" "저장소를 분석한 뒤 이 내용을 구체화하세요|domain-analyst가 실제 저장소 구조를 읽고 내용을 구체화합니다" "도메인 분석 초안 치환"
 fi
@@ -412,10 +412,10 @@ else
 fi
 
 if [ "$EXPLORATION_CONTEXT_LEVEL" = "초기" ]; then
-  warn "빈 프로젝트 또는 프로젝트 단서가 거의 없는 저장소로 판단됨: 구조 검증과 사용자 질문 유도 기본값 중심으로 확인합니다"
+  warn "빈 프로젝트 또는 탐색 근거가 거의 없는 저장소로 판단됨: 구조 검증과 사용자 질문 유도 기본값 중심으로 확인합니다"
 
   if [ -f ".harness/reports/domain-analysis.md" ]; then
-    check_contains_any_hint ".harness/reports/domain-analysis.md" "프로젝트 유형: (미정|unknown)" "빈 프로젝트용 프로젝트 유형 기본값"
+    check_contains_any_hint ".harness/reports/domain-analysis.md" "프로젝트 성격: (미정|unknown)" "빈 프로젝트용 프로젝트 성격 기본값"
     check_contains_any_hint ".harness/reports/domain-analysis.md" "가장 먼저 성공|첫 성공|핵심 흐름 한 가지|가장 먼저 동작해야 할 핵심 흐름" "빈 프로젝트용 첫 성공 흐름 질문"
   fi
 fi
@@ -433,7 +433,7 @@ if [ "$EXPLORATION_CONTEXT_LEVEL" = "제한적" ]; then
 fi
 
 if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
-  log "프로젝트 단서가 충분한 저장소로 판단됨: 프로젝트 특화 초안이 남아 있으면 실패로 처리합니다"
+  log "탐색 근거가 충분한 저장소로 판단됨: 프로젝트 특화 초안이 남아 있으면 실패로 처리합니다"
 
   if [ -f ".codex/skills/run-harness/SKILL.md" ]; then
     check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "기존 확장|운영 유지보수|harness-update|update.sh" "run-harness update 진입 규칙"

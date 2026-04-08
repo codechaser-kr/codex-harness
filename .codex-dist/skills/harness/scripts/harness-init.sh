@@ -52,8 +52,6 @@ ensure_gitignore_entry() {
   log "gitignore 추가: $entry"
 }
 
-PROJECT_TYPE="$(detect_project_type)"
-STACK_HINT="$(detect_stack_hint)"
 HARNESS_OPERATION_MODE="$(detect_harness_operation_mode)"
 HARNESS_AUDIT_SUMMARY="$(build_harness_audit_summary "$HARNESS_OPERATION_MODE")"
 EXPLORATION_NOTES_FILE="$EXPLORATION_NOTES_DEFAULT_PATH"
@@ -67,9 +65,9 @@ EXPLORATION_BOUNDARY_HINT="$(build_exploration_section_summary "$EXPLORATION_NOT
 EXPLORATION_TEST_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "테스트 및 검증 자산" "추정 불가")"
 EXPLORATION_CONFIG_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "설정 및 실행 경로" "추정 불가")"
 EXPLORATION_DOMAIN_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "저장소 고유 용어 단서" "추정 불가")"
-PROJECT_TYPE_LABEL="$(build_project_type_label "$EXPLORATION_CONTEXT_LEVEL" "$PROJECT_TYPE")"
-PACKAGE_MANAGER_HINT="$(detect_package_manager)"
 WORKSPACE_HINT="$(detect_workspace_packages)"
+PROJECT_TYPE_LABEL="$(build_project_type_label "$EXPLORATION_CONTEXT_LEVEL" "$STRUCTURE_HINT" "$WORKSPACE_HINT")"
+PACKAGE_MANAGER_HINT="$(detect_package_manager)"
 CONFIG_HINT="$(detect_config_hints)"
 if [ "$EXPLORATION_BOUNDARY_HINT" != "추정 불가" ]; then
   STRUCTURE_HINT="$EXPLORATION_BOUNDARY_HINT"
@@ -81,11 +79,11 @@ KEY_AXES_HINT="$(build_key_axes_hint "$EXPLORATION_CONTEXT_LEVEL" "$STRUCTURE_HI
 if [ "$EXPLORATION_TEST_HINT" != "추정 불가" ]; then
   KEY_AXES_HINT="$(join_by_comma "$STRUCTURE_HINT" "$EXPLORATION_TEST_HINT")"
 fi
-CORE_FLOW_HINT="$(build_core_flow_hint "$EXPLORATION_CONTEXT_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT")"
+CORE_FLOW_HINT="$(build_core_flow_hint "$EXPLORATION_CONTEXT_LEVEL" "$STRUCTURE_HINT")"
 if [ "$EXPLORATION_ENTRYPOINT_HINT" != "추정 불가" ]; then
   CORE_FLOW_HINT="\`$EXPLORATION_ENTRYPOINT_HINT\` 기준으로 실제 시작 흐름과 소비 경계를 먼저 정리해야 합니다."
 fi
-DOMAIN_SUMMARY_BLOCK="$(build_domain_summary_block "$EXPLORATION_CONTEXT_LEVEL" "$PROJECT_TYPE_LABEL" "$STACK_HINT" "$STRUCTURE_HINT" "$CORE_FLOW_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT")"
+DOMAIN_SUMMARY_BLOCK="$(build_domain_summary_block "$EXPLORATION_CONTEXT_LEVEL" "$PROJECT_TYPE_LABEL" "$STRUCTURE_HINT" "$CORE_FLOW_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT")"
 INITIAL_OBSERVATION_LINE="$(build_initial_observation "$EXPLORATION_CONTEXT_LEVEL" "$STRUCTURE_HINT" "$WORKSPACE_HINT" "$CONFIG_HINT")"
 if [ "$EXPLORATION_DOMAIN_HINT" != "추정 불가" ]; then
   INITIAL_OBSERVATION_LINE="- 탐색 문서에서 \`$EXPLORATION_DOMAIN_HINT\` 단서를 먼저 수집했습니다."
@@ -93,11 +91,11 @@ fi
 NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$EXPLORATION_CONTEXT_LEVEL" "init")"
 DISCOVERY_GUIDANCE="$(build_exploration_guidance "$EXPLORATION_NOTES_FILE" "$EXPLORATION_CONTEXT_LEVEL" "$STRUCTURE_HINT")"
 
-if [ "$PROJECT_TYPE" = "unknown" ] && [ "$STACK_HINT" = "추정 불가" ]; then
-  DISCOVERY_GUIDANCE="현재 저장소 단서만으로는 방향 판단이 어렵습니다. run-harness는 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인해야 합니다."
+if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
+  DISCOVERY_GUIDANCE="현재 탐색 근거만으로는 방향 판단이 어렵습니다. run-harness는 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인해야 합니다."
 fi
 
-DOMAIN_DETAIL_BLOCK="$(build_domain_report_detail_block "$EXPLORATION_CONTEXT_LEVEL" "$PROJECT_TYPE" "$STRUCTURE_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT" "$CORE_FLOW_HINT" "$DISCOVERY_GUIDANCE" "$INITIAL_OBSERVATION_LINE" "$NEXT_STEP_DETAIL_LINE")"
+DOMAIN_DETAIL_BLOCK="$(build_domain_report_detail_block "$EXPLORATION_CONTEXT_LEVEL" "$STRUCTURE_HINT" "$PACKAGE_MANAGER_HINT" "$WORKSPACE_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT" "$CORE_FLOW_HINT" "$DISCOVERY_GUIDANCE" "$INITIAL_OBSERVATION_LINE" "$NEXT_STEP_DETAIL_LINE")"
 ARCH_REPORT_BLOCK="$(build_architecture_report_block "$EXPLORATION_CONTEXT_LEVEL" "$PROJECT_TYPE_LABEL" "$KEY_AXES_HINT" "$WORKSPACE_HINT" "$CORE_FLOW_HINT")"
 QA_REPORT_BLOCK="$(build_qa_report_block "$EXPLORATION_CONTEXT_LEVEL" "$KEY_AXES_HINT" "$WORKSPACE_HINT")"
 ORCH_REPORT_BLOCK="$(build_orchestration_report_block "$EXPLORATION_CONTEXT_LEVEL" "$KEY_AXES_HINT")"
@@ -142,7 +140,7 @@ if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
 
 ## 작성 안내
 
-저장소 단서가 부족해 자동 분석이 제한적입니다.
+탐색 근거가 아직 부족해 자동 분석이 제한적입니다.
 아래 항목을 채운 뒤 AI에게 다음과 같이 요청하세요:
 
 > "project-setup.md 작성했어. 이걸 바탕으로 하네스 분석 시작해줘."
@@ -566,7 +564,7 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 1. 현재 \`.harness/reports/*\`, \`.codex/skills/*\`, 로그 파일 상태를 읽는다.
 2. 요청이 기능 구현, 구조 정리, 공통 모듈 보강, 빌드/검증 보강 중 어디에 가까운지 먼저 분류한다.
 3. 변경 영향 범위가 단일 모듈인지, 여러 경계나 공통 계층까지 전파되는지 판단한다.
-4. 저장소 단서가 부족하거나 빈 프로젝트에 가까우면 사용자에게 먼저 확인할 질문을 정리한다.
+4. 탐색 근거가 부족하거나 빈 프로젝트에 가까우면 사용자에게 먼저 확인할 질문을 정리한다.
 5. domain-analysis가 비어 있거나 약하면 domain-analyst부터 시작한다.
 6. 구조 설계나 패키지 경계 판단이 부족하면 harness-architect를 우선한다.
 7. QA 기준이 약하면 qa-designer를 다시 호출할 수 있다.
@@ -618,7 +616,7 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 이미 구조가 있는 프로젝트라면 \`harness-update.sh\`로 현재 상태를 다시 읽고 부족한 역할만 다시 호출하는 쪽을 우선한다.
 - 요청이 기능 구현, 구조 정리, 공통 모듈 보강, 빌드/검증 중 어디에 걸리는지 먼저 분류하고 그 결과를 orchestration-plan 판단의 입력으로 사용한다.
 - 영향 범위가 공통 계층이나 다중 모듈로 번지면 domain-analyst와 qa-designer를 더 이른 순서에 배치한다.
-- 빈 저장소이거나 기술 스택/핵심 흐름 단서가 약하면, \`.harness/project-setup.md\`가 있는지 먼저 확인한다.
+- 빈 저장소이거나 탐색 근거가 부족하면, \`.harness/project-setup.md\`가 있는지 먼저 확인한다.
 - \`.harness/project-setup.md\`가 작성되어 있으면 그 내용을 domain-analyst의 시작 입력으로 연결한다.
 - 작성되어 있지 않으면 사용자에게 프로젝트 유형, 핵심 사용자, 첫 성공 시나리오를 먼저 확인한 뒤, 파일이 없는 경우 템플릿 내용을 포함하여 \`.harness/project-setup.md\`에 채우도록 안내한다.
 - 사용자 답변이 모이면 그 내용을 domain-analysis와 orchestration-plan의 입력으로 바로 연결한다.
@@ -636,8 +634,8 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 요청: "QA 문서만 보강" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --qa\` 검토 후 qa-designer
 - 요청: "domain-analysis만 오래됐음" → 판단: 기존 확장, 단일 보고서 보강 → 시작: \`harness-update.sh --domain\` 검토 후 domain-analyst
 - 요청: 역할 스킬은 있는데 보고서가 대부분 비어 있음 → 판단: 부분 구조 drift → 시작: 명시적 재구성 제안
-- 요청: 저장소 단서 없음, project-setup.md 미작성 → 판단: 프로젝트 유형 불명 → 시작: project-setup.md 템플릿 제공 및 작성 안내 후 대기
-- 요청: 저장소 단서 없음, project-setup.md 작성됨 → 판단: 목표·유형 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)
+- 요청: 탐색 근거 부족, project-setup.md 미작성 → 판단: 프로젝트 유형 불명 → 시작: project-setup.md 템플릿 제공 및 작성 안내 후 대기
+- 요청: 탐색 근거 부족, project-setup.md 작성됨 → 판단: 목표·유형 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)
 "
 
 create_file_if_missing ".harness/reports/domain-analysis.md" \

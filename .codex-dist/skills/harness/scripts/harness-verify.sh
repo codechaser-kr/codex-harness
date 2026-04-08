@@ -153,7 +153,9 @@ count_markdown_bullets_under_h2() {
       printed = 1
       exit
     }
-    in_section && $0 ~ /^- / && $0 ~ /`/ {
+    in_section && $0 ~ /^- / \
+      && $0 !~ /^- 아직 자동으로 포착한/ \
+      && $0 !~ /^- 자동으로 포착한 .*보강해야 합니다\./ {
       count++
     }
     END {

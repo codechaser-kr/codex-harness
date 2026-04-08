@@ -162,31 +162,6 @@ detect_stack_hint() {
   echo "${hints[*]}"
 }
 
-detect_project_signal_level() {
-  if has_stack_manifest; then
-    echo "stack"
-    return
-  fi
-
-  local first_signal_path
-  first_signal_path="$(
-    find . -mindepth 1 -maxdepth 2 \
-      ! -path './.git' ! -path './.git/*' \
-      ! -path './.codex' ! -path './.codex/*' \
-      ! -path './.harness' ! -path './.harness/*' \
-      ! -name '.gitignore' \
-      ! -name '.DS_Store' \
-      -print -quit
-  )"
-
-  if [ -n "$first_signal_path" ]; then
-    echo "low"
-    return
-  fi
-
-  echo "empty"
-}
-
 optional_harness_assets_enabled() {
   local exploration_file="${1:-$EXPLORATION_NOTES_DEFAULT_PATH}"
   local entrypoint_count=0
@@ -564,11 +539,11 @@ build_exploration_section_summary() {
 
 build_exploration_guidance() {
   local file="$1"
-  local signal_level="$2"
+  local exploration_context_level="$2"
   local boundary_hint="$3"
 
   if [ ! -f "$file" ]; then
-    if [ "$signal_level" = "empty" ] || [ "$signal_level" = "low" ]; then
+    if [ "$exploration_context_level" = "초기" ] || [ "$exploration_context_level" = "제한적" ]; then
       printf '%s\n' "저장소 단서와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
     else
       printf '%s\n' "현재 저장소는 실제 코드 경계와 대표 흐름을 먼저 읽고 후속 문서를 보강해야 합니다."
@@ -576,7 +551,7 @@ build_exploration_guidance() {
     return
   fi
 
-  if [ "$signal_level" = "empty" ] || [ "$signal_level" = "low" ]; then
+  if [ "$exploration_context_level" = "초기" ] || [ "$exploration_context_level" = "제한적" ]; then
     printf '%s\n' "탐색 문서에 수집된 단서를 바탕으로, 부족한 부분만 사용자 질문으로 보강합니다."
     return
   fi
@@ -613,15 +588,15 @@ detect_config_hints() {
 }
 
 build_project_type_label() {
-  local signal_level="$1"
+  local exploration_context_level="$1"
   local project_type="$2"
 
-  case "$signal_level" in
-    empty)
+  case "$exploration_context_level" in
+    초기)
       echo "미정"
       return
       ;;
-    low)
+    제한적)
       echo "단서가 제한적인 프로젝트"
       return
       ;;
@@ -667,16 +642,16 @@ build_project_type_label() {
 }
 
 build_key_axes_hint() {
-  local signal_level="$1"
+  local exploration_context_level="$1"
   local structure_hint="$2"
   local axes=()
 
-  if [ "$signal_level" = "empty" ]; then
+  if [ "$exploration_context_level" = "초기" ]; then
     echo "미정"
     return
   fi
 
-  if [ "$signal_level" = "low" ]; then
+  if [ "$exploration_context_level" = "제한적" ]; then
     echo "$structure_hint"
     return
   fi
@@ -696,10 +671,10 @@ build_key_axes_hint() {
 
 build_core_flow_hint() {
   case "$1" in
-    empty)
+    초기)
       echo "미정"
       ;;
-    low)
+    제한적)
       echo "저장소 단서가 제한적이므로 README, 핵심 디렉토리, 사용자 확인 질문을 함께 보며 첫 성공 흐름을 정리해야 합니다."
       ;;
     *)
@@ -737,16 +712,16 @@ build_core_flow_hint() {
 }
 
 build_initial_observation() {
-  local signal_level="$1"
+  local exploration_context_level="$1"
   local structure_hint="$2"
   local workspace_hint="${3:-}"
   local config_hint="${4:-}"
 
-  case "$signal_level" in
-    empty)
+  case "$exploration_context_level" in
+    초기)
       echo "- 저장소를 분석한 뒤 이 내용을 구체화하세요."
       ;;
-    low)
+    제한적)
       echo "- 현재 저장소 단서가 제한적이므로 구조 단서와 사용자 응답을 함께 모아 초기 분석을 보강하세요."
       ;;
     *)
@@ -760,7 +735,7 @@ build_initial_observation() {
 }
 
 build_domain_report_detail_block() {
-  local signal_level="$1"
+  local exploration_context_level="$1"
   local project_type="$2"
   local structure_hint="$3"
   local package_manager_hint="$4"
@@ -777,8 +752,8 @@ build_domain_report_detail_block() {
   local notes=()
   local source_anchor_count=0
 
-  case "$signal_level" in
-    empty|low)
+  case "$exploration_context_level" in
+    초기|제한적)
       cat <<EOF
 ## 분석 관점
 
@@ -1257,14 +1232,14 @@ EOF
 }
 
 build_architecture_report_block() {
-  local signal_level="$1"
+  local exploration_context_level="$1"
   local project_type_label="$2"
   local key_axes_hint="$3"
   local workspace_hint="$4"
   local core_flow_hint="$5"
 
-  case "$signal_level" in
-    empty|low)
+  case "$exploration_context_level" in
+    초기|제한적)
       cat <<EOF
 ## 목적
 
@@ -1450,12 +1425,12 @@ EOF
 }
 
 build_qa_report_block() {
-  local signal_level="$1"
+  local exploration_context_level="$1"
   local key_axes_hint="$2"
   local workspace_hint="$3"
 
-  case "$signal_level" in
-    empty|low)
+  case "$exploration_context_level" in
+    초기|제한적)
       cat <<EOF
 ## 목적
 
@@ -1562,11 +1537,11 @@ EOF
 }
 
 build_orchestration_report_block() {
-  local signal_level="$1"
+  local exploration_context_level="$1"
   local key_axes_hint="$2"
 
-  case "$signal_level" in
-    empty|low)
+  case "$exploration_context_level" in
+    초기|제한적)
       cat <<EOF
 ## 목적
 
@@ -1695,11 +1670,11 @@ EOF
 }
 
 build_team_structure_report_block() {
-  local signal_level="$1"
+  local exploration_context_level="$1"
   local key_axes_hint="$2"
 
-  case "$signal_level" in
-    empty|low)
+  case "$exploration_context_level" in
+    초기|제한적)
       cat <<EOF
 ## 목적
 
@@ -1780,11 +1755,11 @@ EOF
 }
 
 build_team_playbook_report_block() {
-  local signal_level="$1"
+  local exploration_context_level="$1"
   local key_axes_hint="$2"
 
-  case "$signal_level" in
-    empty|low)
+  case "$exploration_context_level" in
+    초기|제한적)
       cat <<EOF
 ## 목적
 
@@ -1896,7 +1871,7 @@ EOF
 }
 
 build_domain_summary_block() {
-  local signal_level="$1"
+  local exploration_context_level="$1"
   local project_type_label="$2"
   local stack_hint="$3"
   local structure_hint="$4"
@@ -1905,15 +1880,15 @@ build_domain_summary_block() {
   local workspace_hint="$7"
   local key_axes_hint="$8"
 
-  case "$signal_level" in
-    empty)
+  case "$exploration_context_level" in
+    초기)
       cat <<EOF
 - 프로젝트 유형: 미정
 - 주요 기술 스택: 미정
 - 핵심 흐름: 미정
 EOF
       ;;
-    low)
+    제한적)
       cat <<EOF
 - 프로젝트 유형: $project_type_label
 - 주요 기술 스택 추정: $stack_hint
@@ -1934,11 +1909,11 @@ EOF
 }
 
 build_next_step_line() {
-  local signal_level="$1"
+  local exploration_context_level="$1"
   local context="${2:-init}"
 
-  case "$signal_level" in
-    empty|low)
+  case "$exploration_context_level" in
+    초기|제한적)
       if [ "$context" = "update" ]; then
         echo "- domain-analyst가 실제 저장소 구조를 읽고 내용을 구체화합니다."
       else
@@ -2062,7 +2037,7 @@ EOF
 EOF
   fi
 
-  if optional_harness_assets_enabled && [ ! -f "$role_frequency_file" ]; then
+  if optional_harness_assets_enabled "$EXPLORATION_NOTES_DEFAULT_PATH" && [ ! -f "$role_frequency_file" ]; then
     cat > "$role_frequency_file" <<'EOF'
 # 역할 호출 빈도
 

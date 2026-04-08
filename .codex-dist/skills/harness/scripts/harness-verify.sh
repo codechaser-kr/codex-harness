@@ -250,7 +250,7 @@ audit_harness_drift() {
       warn "운영 drift 가능성: orchestration-plan이 run-harness 진입 규칙을 충분히 설명하지 않습니다"
     fi
 
-    if [ -f ".harness/logging-policy.md" ] && [ -f ".harness/logs/role-frequency.md" ] && ! grep -Eq '선택 자산|호출 빈도|template-candidates|템플릿 후보' ".harness/logging-policy.md"; then
+    if [ -f ".harness/logging-policy.md" ] && { [ -f ".harness/logs/role-frequency.md" ] || [ -f ".harness/reports/template-candidates.md" ]; } && ! grep -Eq '선택 자산|호출 빈도|template-candidates|템플릿 후보' ".harness/logging-policy.md"; then
       warn "운영 drift 가능성: 로그 정책이 선택 자산 운영 규칙을 충분히 설명하지 않습니다"
     fi
   fi

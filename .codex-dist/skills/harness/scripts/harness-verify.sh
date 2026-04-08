@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HARNESS_HOME="$(cd "$SCRIPT_DIR/.." && pwd)"
 HARNESS_REFERENCE_DIR="$HARNESS_HOME/references"
 HARNESS_SCRIPT_DIR="$HARNESS_HOME/scripts"
+. "$SCRIPT_DIR/harness-lib.sh"
 
 FAILURES=0
 WARNINGS=0
@@ -207,24 +208,6 @@ count_harness_log_files() {
   find ".harness/logs" -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d '[:space:]'
 }
 
-detect_harness_operation_mode_from_counts() {
-  local skill_count="$1"
-  local report_count="$2"
-  local log_count="$3"
-
-  if [ "$skill_count" -eq 0 ] && [ "$report_count" -eq 0 ] && [ "$log_count" -eq 0 ]; then
-    printf '%s\n' "신규 구축"
-    return
-  fi
-
-  if [ "$skill_count" -gt 0 ] && [ "$report_count" -gt 0 ] && [ "$log_count" -gt 0 ]; then
-    printf '%s\n' "운영 유지보수"
-    return
-  fi
-
-  printf '%s\n' "기존 확장"
-}
-
 audit_harness_drift() {
   local mode="$1"
   local skill_count="$2"
@@ -285,7 +268,7 @@ PROJECT_SIGNAL_LEVEL="$(detect_project_signal_level)"
 HARNESS_SKILL_COUNT="$(count_harness_skill_dirs)"
 HARNESS_REPORT_COUNT="$(count_harness_report_files)"
 HARNESS_LOG_COUNT="$(count_harness_log_files)"
-HARNESS_OPERATION_MODE="$(detect_harness_operation_mode_from_counts "$HARNESS_SKILL_COUNT" "$HARNESS_REPORT_COUNT" "$HARNESS_LOG_COUNT")"
+HARNESS_OPERATION_MODE="$(detect_harness_operation_mode)"
 
 log "실행 하네스 팀 구조 검증 시작"
 log "harness 기준 경로: $HARNESS_HOME"

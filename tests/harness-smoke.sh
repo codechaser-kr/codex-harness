@@ -55,8 +55,12 @@ assert_command_fails_with() {
 
 log "내부 설계 레퍼런스 용어 확인"
 assert_contains "$(cat "$HARNESS_REF_DIR/agent-design-patterns.md")" "Agent Teams / Subagents" "agent-design-patterns 실행 단위 용어"
+assert_contains "$(cat "$HARNESS_REF_DIR/agent-design-patterns.md")" "## 핵심 전제" "agent-design-patterns 핵심 전제"
 assert_contains "$(cat "$HARNESS_REF_DIR/agent-design-patterns.md")" "## 6. 패턴 선택 기준" "agent-design-patterns 패턴 선택 기준"
+assert_contains "$(cat "$HARNESS_REF_DIR/agent-design-patterns.md")" "## 13. 다른 레퍼런스와의 연결" "agent-design-patterns 레퍼런스 연결"
 assert_contains "$(cat "$HARNESS_REF_DIR/orchestrator-template.md")" "## 6. 패턴 선택 기준" "orchestrator-template 패턴 선택 기준"
+assert_contains "$(cat "$HARNESS_REF_DIR/orchestrator-template.md")" "## 핵심 전제" "orchestrator-template 핵심 전제"
+assert_contains "$(cat "$HARNESS_REF_DIR/orchestrator-template.md")" "## 13. 다른 레퍼런스와의 연결" "orchestrator-template 레퍼런스 연결"
 assert_contains "$(cat "$HARNESS_REF_DIR/orchestrator-template.md")" "Agent Teams" "orchestrator-template agent teams 용어"
 assert_contains "$(cat "$HARNESS_REF_DIR/orchestrator-template.md")" "Subagents" "orchestrator-template subagents 용어"
 assert_file "$HARNESS_REF_DIR/reference-writing-guide.md"

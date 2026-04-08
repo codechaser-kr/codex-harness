@@ -11,6 +11,14 @@ orchestrator는 실행 하네스 팀의 중심 역할로서,
 
 ---
 
+## 핵심 전제
+
+- orchestrator의 판단은 반드시 탐색 결과와 앞선 역할 산출물을 입력으로 받아야 한다.
+- orchestrator는 리포트를 읽는 역할이 아니라, 리포트를 포함한 팀 구조를 다시 조율하는 역할이다.
+- orchestrator의 핵심 가치는 시작점 선정, handoff 연결, 재진입 판단, validator 피드백 루프 유지에 있다.
+
+---
+
 ## 1. orchestrator의 핵심 역할
 
 orchestrator는 다음을 담당한다.
@@ -238,3 +246,12 @@ orchestrator는 이런 판단을
 - QA와 validator의 결과를 구조 보완으로 연결한다
 - 본체는 역할 팀이고, 리포트는 보조다
 - 좋은 orchestrator는 팀을 더 단순하고 더 강하게 만든다
+
+---
+
+## 13. 다른 레퍼런스와의 연결
+
+- `agent-design-patterns.md`: 실행 단위, 패턴 선택 기준, 역할 분리 기준의 상위 설계 원칙을 제공한다.
+- `qa-agent-guide.md`: QA 질문을 흐름 보완으로 다시 연결해야 하는 지점을 보강한다.
+- `team-examples.md`: 어떤 저장소 예시에서 orchestrator가 어느 위치에서 중심 역할이 되는지 보여 준다.
+- `skill-writing-guide.md`: orchestrator 스킬이 입력/출력과 협업 규칙을 어떻게 드러내야 하는지 연결한다.

@@ -350,6 +350,7 @@ for file in "${LOG_FILES[@]}"; do
 done
 
 check_file ".harness/logging-policy.md"
+check_file ".harness/reports/exploration-notes.md"
 
 # 본체/보조 위계와 실행 팀 성격 힌트 확인
 if [ -f ".codex/skills/orchestrator/SKILL.md" ]; then
@@ -393,6 +394,14 @@ if [ -f ".harness/logging-policy.md" ]; then
   check_contains_hint ".harness/logging-policy.md" "harness-log.sh" "자동 append 도구"
   check_contains_hint ".harness/logging-policy.md" "세션 종료" "세션 종료 자동 집계"
   check_contains_hint ".harness/logging-policy.md" "호출 빈도" "역할 호출 빈도 통계"
+fi
+
+if [ -f ".harness/reports/exploration-notes.md" ]; then
+  check_contains_hint ".harness/reports/exploration-notes.md" "## 대표 진입점" "탐색 진입점 섹션"
+  check_contains_hint ".harness/reports/exploration-notes.md" "## 주요 코드 경계" "탐색 코드 경계 섹션"
+  check_contains_hint ".harness/reports/exploration-notes.md" "## 테스트 및 검증 자산" "탐색 테스트 자산 섹션"
+  check_contains_hint ".harness/reports/exploration-notes.md" "## 설정 및 실행 경로" "탐색 설정 경로 섹션"
+  check_contains_hint ".harness/reports/exploration-notes.md" "## 저장소 고유 용어 단서" "탐색 도메인 단서 섹션"
 fi
 
 if [ -f ".harness/logs/session-log.md" ]; then
@@ -439,6 +448,10 @@ fi
 
 if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
   log "프로젝트 단서가 충분한 저장소로 판단됨: 프로젝트 특화 초안이 남아 있으면 실패로 처리합니다"
+
+  if [ -f ".codex/skills/run-harness/SKILL.md" ]; then
+    check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "기존 확장|운영 유지보수|harness-update|update.sh" "run-harness update 진입 규칙"
+  fi
 
   if [ -f ".harness/reports/domain-analysis.md" ]; then
     check_required_any_hint ".harness/reports/domain-analysis.md" "저장소 고유 근거|소스 앵커" "도메인 분석 저장소 고유 근거"
@@ -490,6 +503,11 @@ if [ "$PROJECT_SIGNAL_LEVEL" = "stack" ]; then
     check_contains_any_hint ".harness/reports/team-playbook.md" "세션 시작 체크|세션 시작 절차|시작 체크|시작 순서" "플레이북 세션 시작 규칙"
     check_contains_any_hint ".harness/reports/team-playbook.md" "작업 유형별 빠른 운영 규칙|작업 유형별 운영 규칙|운영 규칙" "플레이북 작업 유형별 운영 규칙"
     check_contains_any_hint ".harness/reports/team-playbook.md" "세션 종료 기준|세션 종료|종료 기준" "플레이북 세션 종료 기준"
+  fi
+
+  if [ -f ".harness/reports/exploration-notes.md" ]; then
+    warn_if_anchor_count_below ".harness/reports/exploration-notes.md" "대표 진입점" 1 "탐색 대표 진입점"
+    warn_if_anchor_count_below ".harness/reports/exploration-notes.md" "주요 코드 경계" 1 "탐색 주요 코드 경계"
   fi
 fi
 

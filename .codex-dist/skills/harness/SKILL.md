@@ -250,8 +250,9 @@ QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 5. run-harness가 실제 기동 엔트리포인트처럼 읽히는지 확인한다.
 6. QA / validator가 형식적인 보조 역할이 아니라 실제 팀 일부처럼 보이는지 확인한다.
 7. 역할 팀 구조가 이후 프로젝트 특화 하네스로 확장 가능한지 본다.
+8. 가능하면 `without-skill` 기준선과 비교해 시작 역할 판단, 질문 절제, handoff, 저장소 근거 연결, 검증 가능성이 실제로 나아졌는지 본다.
 
-테스트/검증 관점은 `references/skill-testing-guide.md`를 참고한다.
+테스트/검증 관점은 `references/skill-testing-guide.md`, 품질 비교 기준은 `references/quality-evaluation-guide.md`를 참고한다.
 
 ---
 

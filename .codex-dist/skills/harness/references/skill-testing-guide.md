@@ -256,3 +256,4 @@
 - `skill-writing-guide.md`: 어떤 description과 본문이 테스트 대상이 되는지 연결한다.
 - `agent-design-patterns.md`: 역할 분리와 실행 단위 기준이 테스트에서 어떻게 검증되는지 연결한다.
 - `qa-agent-guide.md`: 품질 질문이 테스트 항목으로 어떻게 내려가는지 연결한다.
+- `quality-evaluation-guide.md`: 구조 검증을 넘어 판단 품질 차이를 어떤 항목으로 비교할지 연결한다.

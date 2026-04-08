@@ -90,6 +90,9 @@ assert_contains "$(cat "$HARNESS_REF_DIR/phase-selection-matrix.md")" "AGENTS.md
 log "내부 설계 레퍼런스 일관성 검사"
 bash "$ROOT_DIR/tests/reference-consistency.sh"
 
+log "품질 비교 기준 검사"
+bash "$ROOT_DIR/tests/quality-comparison.sh"
+
 run_mode_check() {
   local expected="$1"
   local actual

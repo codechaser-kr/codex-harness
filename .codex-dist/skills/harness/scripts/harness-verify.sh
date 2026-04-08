@@ -207,7 +207,7 @@ count_harness_log_files() {
   find ".harness/logs" -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d '[:space:]'
 }
 
-detect_harness_operation_mode() {
+detect_harness_operation_mode_from_counts() {
   local skill_count="$1"
   local report_count="$2"
   local log_count="$3"
@@ -285,7 +285,7 @@ PROJECT_SIGNAL_LEVEL="$(detect_project_signal_level)"
 HARNESS_SKILL_COUNT="$(count_harness_skill_dirs)"
 HARNESS_REPORT_COUNT="$(count_harness_report_files)"
 HARNESS_LOG_COUNT="$(count_harness_log_files)"
-HARNESS_OPERATION_MODE="$(detect_harness_operation_mode "$HARNESS_SKILL_COUNT" "$HARNESS_REPORT_COUNT" "$HARNESS_LOG_COUNT")"
+HARNESS_OPERATION_MODE="$(detect_harness_operation_mode_from_counts "$HARNESS_SKILL_COUNT" "$HARNESS_REPORT_COUNT" "$HARNESS_LOG_COUNT")"
 
 log "실행 하네스 팀 구조 검증 시작"
 log "harness 기준 경로: $HARNESS_HOME"

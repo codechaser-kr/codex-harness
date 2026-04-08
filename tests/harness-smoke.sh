@@ -247,10 +247,13 @@ assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" '`src/main.ts`' "생성된 탐색 문서 대표 진입점"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" "저장소 고유 근거" "스택 프로젝트 domain-analysis 저장소 근거"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/team-playbook.md")" "역할 호출 순서" "스택 프로젝트 team-playbook 상세 운영 규칙"
-(
-  cd "$TMP_ROOT/stack-project"
+STACK_VERIFY_OUTPUT="$(
+  cd "$TMP_ROOT/stack-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"
-)
+)"
+assert_contains "$STACK_VERIFY_OUTPUT" "탐색 상태: 충분" "스택 프로젝트 verify 충분 탐색 상태"
+assert_contains "$STACK_VERIFY_OUTPUT" "OK 도메인 분석 저장소 고유 근거" "스택 프로젝트 verify 도메인 근거 검사"
+assert_contains "$STACK_VERIFY_OUTPUT" "OK 탐색 대표 진입점 개수" "스택 프로젝트 verify 탐색 앵커 검사"
 
 log "선택 갱신 범위 확인"
 rm -f "$TMP_ROOT/stack-project/.harness/reports/qa-strategy.md"

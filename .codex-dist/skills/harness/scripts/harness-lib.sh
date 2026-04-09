@@ -193,16 +193,6 @@ find_exploration_paths() {
     "$@"
 }
 
-find_exploration_paths_under() {
-  local search_root="$1"
-  shift
-
-  find "$search_root" \
-    \( -path "$search_root/.git" -o -path "$search_root/.codex" -o -path "$search_root/.harness" -o -path "$search_root/.claude" -o -path "$search_root/.cursor" -o -path "$search_root/.agents" -o -name node_modules -o -path "$search_root/.yarn" -o -name dist -o -name build -o -name coverage \) -prune \
-    -o \
-    "$@"
-}
-
 list_source_group_boundary_roots() {
   find_exploration_paths \
     -type f \
@@ -220,10 +210,6 @@ list_source_group_boundary_roots() {
     ' | awk '!seen[$0]++'
 }
 
-list_execution_boundary_roots() {
-  list_source_group_boundary_roots | head -n 5
-}
-
 list_source_anchor_paths() {
   find_exploration_paths \
     -type f \
@@ -232,36 +218,6 @@ list_source_anchor_paths() {
 }
 
 list_entrypoint_anchor_paths() {
-  local boundary_root
-  local emitted=0
-  local search_root
-
-  while IFS= read -r boundary_root; do
-    [ -n "$boundary_root" ] || continue
-    search_root="./$boundary_root"
-
-    while IFS= read -r entrypoint_path; do
-      [ -n "$entrypoint_path" ] || continue
-      printf '%s\n' "$entrypoint_path"
-      emitted=$((emitted + 1))
-      [ "$emitted" -lt 5 ] || return
-      break
-    done < <(
-      find_exploration_paths_under "$search_root" \
-        -type f \
-        \( -name 'main.ts' -o -name 'main.tsx' -o -name 'main.js' -o -name 'main.jsx' -o -name 'main.rs' -o \
-           -name 'index.ts' -o -name 'index.tsx' -o -name 'index.js' -o -name 'index.jsx' -o \
-           -name 'app.ts' -o -name 'app.tsx' -o -name 'app.js' -o -name 'app.jsx' -o \
-           -name 'server.ts' -o -name 'server.tsx' -o -name 'server.js' -o -name 'server.jsx' -o \
-           -name 'cli.ts' -o -name 'cli.tsx' -o -name 'cli.js' -o -name 'cli.jsx' -o \
-           -name 'lib.ts' -o -name 'lib.tsx' -o -name 'lib.js' -o -name 'lib.jsx' -o \
-           -name 'mod.rs' \) \
-        -print | sed 's#^\./##' | head -n 3
-    )
-  done < <(list_execution_boundary_roots)
-
-  [ "$emitted" -gt 0 ] && return
-
   find_exploration_paths \
     -type f \
     \( -name 'main.ts' -o -name 'main.tsx' -o -name 'main.js' -o -name 'main.jsx' -o -name 'main.rs' -o \
@@ -275,7 +231,7 @@ list_entrypoint_anchor_paths() {
 }
 
 list_code_boundary_paths() {
-  list_execution_boundary_roots
+  list_source_group_boundary_roots | head -n 5
 }
 
 list_test_asset_paths() {
@@ -501,7 +457,7 @@ build_exploration_guidance() {
     if [ "$exploration_context_level" = "초기" ] || [ "$exploration_context_level" = "제한적" ]; then
       printf '%s\n' "탐색 근거와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
     else
-      printf '%s\n' "현재 저장소는 실제 코드 경계와 대표 흐름을 먼저 읽고 후속 문서를 보강해야 합니다."
+      printf '%s\n' "현재 저장소는 실제 코드 경계와 대표 흐름을 다시 읽어 후속 문서를 정리해야 합니다."
     fi
     return
   fi
@@ -511,7 +467,7 @@ build_exploration_guidance() {
     return
   fi
 
-  printf '%s\n' "현재 저장소는 탐색 문서의 대표 진입점과 코드 경계($boundary_hint)를 바탕으로 후속 문서를 보강합니다."
+  printf '%s\n' "현재 저장소는 탐색 문서의 대표 진입점과 코드 경계($boundary_hint)를 바탕으로 후속 문서를 다시 정리합니다."
 }
 
 build_project_type_label() {
@@ -529,12 +485,7 @@ build_project_type_label() {
       ;;
   esac
 
-  if [ "$boundary_hint" = "추정 불가" ]; then
-    echo "경계 해석이 더 필요한 저장소"
-    return
-  fi
-
-  echo "탐색 근거가 축적된 저장소"
+  echo "탐색 근거가 수집된 저장소"
 }
 
 build_key_axes_hint() {

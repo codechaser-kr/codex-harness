@@ -457,17 +457,17 @@ build_exploration_guidance() {
     if [ "$exploration_context_level" = "초기" ] || [ "$exploration_context_level" = "제한적" ]; then
       printf '%s\n' "탐색 근거와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
     else
-      printf '%s\n' "현재 저장소는 실제 코드 경계와 대표 흐름을 다시 읽어 후속 문서를 정리해야 합니다."
+      printf '%s\n' "현재 저장소는 실제 코드 경계와 대표 흐름을 다시 읽어 관련 문서를 정리해야 합니다."
     fi
     return
   fi
 
   if [ "$exploration_context_level" = "초기" ] || [ "$exploration_context_level" = "제한적" ]; then
-    printf '%s\n' "탐색 문서에 수집된 단서를 바탕으로, 부족한 부분만 사용자 질문으로 보강합니다."
+    printf '%s\n' "탐색 문서에 수집된 단서를 바탕으로, 부족한 부분만 사용자 질문으로 다시 확인합니다."
     return
   fi
 
-  printf '%s\n' "현재 저장소는 탐색 문서의 대표 진입점과 코드 경계($boundary_hint)를 바탕으로 후속 문서를 다시 정리합니다."
+  printf '%s\n' "현재 저장소는 탐색 문서의 대표 진입점과 코드 경계($boundary_hint)를 바탕으로 관련 문서를 다시 정리합니다."
 }
 
 build_project_type_label() {
@@ -549,16 +549,16 @@ build_initial_observation() {
 
   case "$exploration_context_level" in
     초기)
-      echo "- 저장소를 분석한 뒤 이 내용을 구체화하세요."
+      echo "- 저장소를 분석한 뒤 이 내용을 실제 결과 문장으로 다시 써주세요."
       ;;
     제한적)
-      echo "- 현재 탐색 근거가 제한적이므로 대표 경계와 사용자 응답을 함께 모아 초기 분석을 보강하세요."
+      echo "- 현재 탐색 근거가 제한적이므로 대표 경계와 사용자 응답을 함께 모아 초기 분석을 다시 써주세요."
       ;;
     *)
       if [ "$domain_hint" != "추정 불가" ]; then
-        echo "- $boundary_hint, $config_hint, $domain_hint 단서를 우선 확인했습니다."
+        echo "- $boundary_hint, $config_hint, $domain_hint 단서를 먼저 읽었습니다."
       else
-        echo "- $boundary_hint, $config_hint 단서를 우선 확인했습니다."
+        echo "- $boundary_hint, $config_hint 단서를 먼저 읽었습니다."
       fi
       ;;
   esac
@@ -598,7 +598,7 @@ build_domain_report_detail_block() {
 
 이 문서는 현재 저장소를 하네스 관점에서 이해하기 위한 출발점입니다.
 
-우선 다음을 정리해야 합니다.
+다음 질문이 먼저 열립니다.
 
 - 이 저장소가 해결하려는 문제는 무엇인가
 - 주요 사용자 또는 개발자 흐름은 무엇인가
@@ -656,9 +656,9 @@ EOF
       done < <(list_source_anchor_paths)
 
       if [ "$source_anchor_count" -eq 0 ]; then
-        printf '%s\n' "- 아직 자동으로 포착한 대표 소스 앵커가 충분하지 않습니다. 실제 프로젝트에서는 최소 3개 이상의 파일/경로 근거를 직접 보강해야 합니다."
+        printf '%s\n' "- 아직 자동으로 포착한 대표 소스 앵커가 충분하지 않습니다. 실제 프로젝트에서는 최소 3개 이상의 파일/경로 근거를 직접 다시 골라야 합니다."
       elif [ "$source_anchor_count" -lt 3 ]; then
-        printf '%s\n' "- 자동으로 포착한 소스 앵커가 3개 미만입니다. 실제 프로젝트에서는 대표 파일/경로 근거를 더 보강해야 합니다."
+        printf '%s\n' "- 자동으로 포착한 소스 앵커가 3개 미만입니다. 실제 프로젝트에서는 대표 파일/경로 근거를 더 다시 골라야 합니다."
       fi
 
       cat <<EOF
@@ -678,8 +678,8 @@ EOF
 ### 예외 및 운영 메모
 EOF
       printf '%s\n' "- 예외 판단은 자동 분류보다 탐색 문서와 실제 실행 로그를 우선합니다."
-      printf '%s\n' "- 루트 흐름과 다른 설치, 빌드, 검증 단계가 보이면 그 차이만 짧게 보강합니다."
-      printf '%s\n' "- validator는 예외가 빈칸인지보다 실제 경계 변화와 운영 비용이 설명되는지를 우선 확인합니다."
+      printf '%s\n' "- 루트 흐름과 다른 설치, 빌드, 검증 단계가 보이면 그 차이만 짧게 적습니다."
+      printf '%s\n' "- validator는 예외가 빈칸인지보다 실제 경계 변화와 운영 비용 설명이 남아 있는지를 먼저 봅니다."
 
       cat <<EOF
 
@@ -699,7 +699,7 @@ EOF
       if [ "$boundary_hint" != "추정 불가" ]; then
         print_boundary_interpretation_lines "$boundary_hint"
       else
-        printf '%s\n' "- 주요 경계의 책임은 후속 역할이 실제 파일과 소비 관계를 읽으며 보강해야 합니다."
+        printf '%s\n' "- 주요 경계의 책임은 실제 파일과 소비 관계를 다시 읽어 채워야 합니다."
       fi
 
       cat <<EOF
@@ -737,7 +737,7 @@ $initial_observation_line
 ## 아직 열려 있는 질문
 EOF
       printf '%s\n' "- 자동 분석만으로는 핵심 사용자 흐름과 실패 비용을 완전히 확정할 수 없습니다."
-      printf '%s\n' "- 대표 진입점 파일과 영향도가 큰 변경 경계는 후속 역할이 보강해야 합니다."
+      printf '%s\n' "- 대표 진입점 파일과 영향도가 큰 변경 경계는 역할 팀이 다시 읽어 확정해야 합니다."
       printf '%s\n' "- 이 저장소에서 하네스가 실제로 개입해야 하는 핵심 불확실성은 무엇인가."
       printf '%s\n' "- 어떤 실패 시나리오가 가장 비용이 크고, 현재 구조로 그것을 감지할 수 있는가."
 
@@ -746,7 +746,7 @@ EOF
 ## 다음 단계
 
 $next_step_detail_line
-- qa-designer와 orchestrator가 위 구조와 흐름을 기준으로 후속 문서를 구체화합니다.
+- qa-designer와 orchestrator가 위 구조와 흐름을 기준으로 관련 문서를 다시 씁니다.
 - 필요하면 대표 디렉토리와 핵심 파일 단위로 분석 해상도를 올립니다.
 EOF
       ;;
@@ -846,13 +846,13 @@ EOF
 
 ### 역할 배치
 
-- domain-analyst: 실제 코드 경로와 책임 경계를 구체화하고, 이후 역할이 공유할 사실 기반 입력을 만듭니다.
+- domain-analyst: 실제 코드 경로와 책임 경계를 다시 읽고, 역할 팀이 공유할 사실 기반 입력을 만듭니다.
 - harness-architect: $key_axes_hint 축을 기준으로 역할 책임과 핵심 문서 구조를 정렬합니다.
 - skill-scaffolder: 역할 정의와 구조 설계를 실제 로컬 스킬과 자산으로 반영합니다.
 - qa-designer: 영향도가 큰 경계와 고비용 검증 흐름을 검토 질문으로 번역합니다.
 - orchestrator: 작업 시작점, handoff, 재진입 루프를 하나의 운영 흐름으로 묶습니다.
 - validator: 프로젝트 특화 분석이 일반론으로 흐르지 않았는지 점검하고 되돌림 지점을 잡습니다.
-- run-harness: 현재 요청과 문서 상태를 읽고 시작 역할, 보강 역할, 질문 여부를 결정합니다.
+- run-harness: 현재 요청과 문서 상태를 읽고 시작 역할, 다음 역할, 질문 여부를 결정합니다.
 
 ### 역할 유지와 조정 기준
 
@@ -867,7 +867,7 @@ EOF
 
 - 신규 구축: domain-analyst -> harness-architect -> skill-scaffolder -> validator 중심의 기본 파이프라인이 기준이 됩니다.
 - 기존 확장: 전부 재생성하지 않고, 현재 요청과 맞닿은 문서와 역할에서 재진입합니다.
-- 운영 유지보수: 새 초안 생성보다 drift 감지, 피드백 루프, 로그 정합성 점검 비중이 커집니다.
+- 운영 유지보수: 새 문서 생성보다 drift 감지, 피드백 루프, 로그 정합성 점검 비중이 커집니다.
 - 팬아웃/팬인은 하위 영역이 실제로 독립적일 때만 쓰고, 최종적으로 다시 하나의 구조 설명으로 모읍니다.
 
 - fan-out 분석이 필요해도 최종 통합 책임은 항상 역할 팀으로 다시 모읍니다.
@@ -883,7 +883,7 @@ EOF
 - 역할은 저장소 구조보다 추상적이어야 하지만, 저장소 경계를 무시하면 안 됩니다.
 - 핵심 작업 축이 많은 저장소일수록 역할 수를 늘리기보다 역할 판단 기준을 선명하게 둡니다.
 - 자동 재생성 결과라도 실제 탐색 근거를 반영한 분석이 앞에 옵니다.
-- 프로젝트 특화 판단이 필요한 부분은 후속 역할이 보강할 수 있게 열어 둡니다.
+- 프로젝트 특화 판단이 필요한 부분은 역할 팀이 다시 쓸 수 있게 열어 둡니다.
 
 ## 다음 단계
 
@@ -936,19 +936,19 @@ EOF
 ## 요약
 
 - 이 문서는 현재 저장소에서 변경 영향이 큰 경계와 반복 검증이 필요한 흐름을 QA 관점으로 정리합니다.
-- 저장소 전용 질문은 구조 일반론이 아니라 실제 파일, 테스트 유틸, 진입점 단서를 기준으로 보강해야 합니다.
+- 저장소 전용 질문은 구조 일반론이 아니라 실제 파일, 테스트 유틸, 진입점 단서를 기준으로 다시 써야 합니다.
 
 ## 저장소 고유 확인 단서
 EOF
       source_anchor_count=0
       while IFS= read -r workspace_path; do
         [ -n "$workspace_path" ] || continue
-        printf '%s\n' "- \`$workspace_path\`: 이번 저장소에서 QA 질문을 구체화할 때 다시 확인할 대표 소스 앵커입니다."
+        printf '%s\n' "- \`$workspace_path\`: 이번 저장소에서 QA 질문을 다시 쓸 때 확인할 대표 소스 앵커입니다."
         source_anchor_count=$((source_anchor_count + 1))
       done < <(list_source_anchor_paths)
 
       if [ "$source_anchor_count" -eq 0 ]; then
-        printf '%s\n' "- 자동으로 포착한 소스 앵커가 부족하면, 테스트 유틸 위치나 대표 진입점 파일을 직접 찾아 QA 질문을 보강해야 합니다."
+        printf '%s\n' "- 자동으로 포착한 소스 앵커가 부족하면, 테스트 유틸 위치나 대표 진입점 파일을 직접 찾아 QA 질문을 다시 써야 합니다."
       fi
 
       cat <<EOF
@@ -987,9 +987,9 @@ EOF
 ### 실행 예시
 
 - 로컬 역할 구조와 보고서 정합성 확인: \`bash .codex-dist/skills/harness/scripts/harness-verify.sh\`
-- 최신 탐색 근거와 보고서 보강: \`bash .codex-dist/skills/harness/scripts/harness-update.sh --qa\`
+- 최신 탐색 근거와 보고서 갱신: \`bash .codex-dist/skills/harness/scripts/harness-update.sh --qa\`
 - 세션 로그와 최신 요약 재확인: \`tail -n 40 .harness/logs/session-log.md\` 와 \`cat .harness/logs/latest-session-summary.md\`
-- 저장소별 실제 테스트나 빌드 명령은 위 단서와 대표 진입점 파일을 다시 읽고 프로젝트 문맥에 맞게 직접 보강합니다.
+- 저장소별 실제 테스트나 빌드 명령은 위 단서와 대표 진입점 파일을 다시 읽고 프로젝트 문맥에 맞게 직접 적습니다.
 
 ### 추가 확인 관점
 
@@ -1001,13 +1001,13 @@ EOF
 
 - QA는 체크리스트 실행기가 아니라 변경 영향의 triage 도구로 작동합니다.
 - 매 요청마다 전체 질문 세트를 다 확인하지 않고, 이번 변경이 걸리는 축만 먼저 조이고 나머지는 위험 순위를 매깁니다.
-- QA 질문이 일반론에 머물면 의미가 없습니다. 저장소 고유 파일 이름, 경계, 실패 유형을 직접 참조하도록 계속 보강합니다.
+- QA 질문이 일반론에 머물면 의미가 없습니다. 저장소 고유 파일 이름, 경계, 실패 유형을 직접 참조하도록 계속 다시 씁니다.
 - 하네스 문서와 스킬 변경도 QA 범위에 포함합니다. 구조 정합성 역시 운영 품질입니다.
 - validator와 역할을 나누되, QA는 "무엇을 봐야 하는가"를 정의하고 validator는 "최소 구조가 갖춰졌는가"를 점검합니다.
 
 ## 다음 단계
 
-- 저장소 고유 확인 단서를 기준으로 QA 질문을 로컬 고유 명사와 실패 지점까지 더 구체화합니다.
+- 저장소 고유 확인 단서를 기준으로 QA 질문을 로컬 고유 명사와 실패 지점까지 더 직접 적습니다.
 - validator와 함께 실제 검증 경로가 문서 질문 세트와 어긋나지 않는지 확인합니다.
 EOF
       ;;
@@ -1072,7 +1072,7 @@ EOF
 
 ### 시작 분기
 
-1. run-harness는 요청을 기능 구현, 구조 정리, 공통 모듈 보강, 빌드/검증 보강 중 어디에 가까운지 분류합니다.
+1. run-harness는 요청을 기능 구현, 구조 정리, 공통 모듈 수정, 빌드/검증 변경 중 어디에 가까운지 분류합니다.
 2. 변경이 $key_axes_hint 중 어느 축에 걸리는지 판단합니다.
 3. 영향 범위가 넓거나 경계가 불명확한 요청은 domain-analyst와 qa-designer에서 시작하는 경우가 많습니다.
 4. 영향 범위가 좁고 구조 설명이 이미 충분한 요청은 skill-scaffolder 또는 orchestrator에서 시작할 수 있습니다.
@@ -1082,14 +1082,14 @@ EOF
 
 1. domain-analyst가 실제 코드 경로와 변경 경계를 재확인합니다.
 2. harness-architect가 현재 역할 구조가 이번 변경 유형을 충분히 설명하는지 봅니다.
-3. skill-scaffolder가 필요한 스킬 설명과 템플릿을 보강합니다.
-4. qa-designer가 이번 축에 맞는 검토 질문과 체크포인트를 보강합니다.
+3. skill-scaffolder가 필요한 스킬 설명과 템플릿을 갱신합니다.
+4. qa-designer가 이번 축에 맞는 검토 질문과 체크포인트를 다시 씁니다.
 5. orchestrator가 작업 시작 루프와 검증 루프를 정리합니다.
 6. validator가 산출물이 다시 일반론으로 흐르지 않았는지 확인합니다.
 
 ### 대표 요청별 루프
 
-- 기능 또는 사용자 흐름 보강: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
+- 기능 또는 사용자 흐름 수정: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
   - domain-analyst가 실제 코드 경로와 변경 경계를 확정하면 qa-designer의 검증 기준이 뒤따릅니다.
 - 구조 또는 문서 정비: run-harness -> skill-scaffolder -> orchestrator -> validator
   - 역할 설명과 템플릿 반영이 중심이라 domain 재분석 없이 scaffolder부터 시작하는 경우가 많습니다.
@@ -1105,7 +1105,7 @@ EOF
 - 운영 유지보수: validator와 session-log를 먼저 읽은 뒤, 되돌림 지점이 가장 짧은 루프가 선택됩니다.
 - 팬아웃/팬인은 하위 영역 간 비교 축이 이미 정리된 경우에만 어울립니다.
 - 문서와 로그에 남아야 하는 중심 역할은 팀 구조로 두고, 입력과 출력이 좁은 단발성 보조 판단만 별도 위임으로 고려합니다.
-- 요청이 추상적이거나 맥락이 약하면 사용자 확인 질문과 탐색 보강부터 두고, 구조 재설계인지 운영 점검인지에 따라 루프를 고릅니다.
+- 요청이 추상적이거나 맥락이 약하면 사용자 확인 질문과 탐색 재확인부터 두고, 구조 재설계인지 운영 점검인지에 따라 루프를 고릅니다.
 
 ### 순서 조정 및 재진입 기준
 
@@ -1242,7 +1242,7 @@ build_team_playbook_report_block() {
 1. 기본적으로는 run-harness를 실행 하네스 팀의 진입점으로 사용합니다.
 2. run-harness는 현재 상태를 보고, 탐색 근거가 부족하면 사용자 확인 질문으로 이어지고, 근거가 충분하면 필요한 역할 우선순위가 정리됩니다.
 3. 새 프로젝트에서는 domain-analyst부터 시작하는 흐름이 기본값에 가깝습니다.
-4. 구조가 이미 있으면 orchestrator / validator 중심의 보강 루프가 더 자주 열립니다.
+4. 구조가 이미 있으면 orchestrator / validator 중심의 점검 루프가 더 자주 열립니다.
 
 ## 세션 시작 체크
 
@@ -1255,8 +1255,8 @@ build_team_playbook_report_block() {
 - 문서보다 역할 팀을 본체로 봅니다.
 - \`.harness/reports\` 문서는 팀이 공유하는 보조 기준으로 사용합니다.
 - 빈 저장소이거나 탐색 근거가 부족하면 역할 호출보다 사용자 확인 질문이 앞에 옵니다.
-- validator 피드백이 나오면 architect / scaffolder / orchestrator 보강 루프가 다시 열립니다.
-- QA 질문이 약하면 qa-designer 보강이 다시 붙습니다.
+- validator 피드백이 나오면 architect / scaffolder / orchestrator 재작성 루프가 다시 열립니다.
+- QA 질문이 약하면 qa-designer 재작성 루프가 다시 붙습니다.
 - 중요한 역할 호출이나 흐름 변경은 session-log에 남습니다.
 
 ## 로그 운영
@@ -1297,15 +1297,15 @@ EOF
 
 1. run-harness는 요청을 받고 $key_axes_hint 중 어느 축을 건드리는지 먼저 분류합니다.
 2. 영향 범위가 넓거나 핵심 경계를 건드리는 요청에서는 domain-analyst와 qa-designer가 앞에 옵니다.
-3. 구조 보강이 필요하면 harness-architect와 skill-scaffolder를 붙여 역할 설명과 템플릿을 맞춥니다.
+3. 구조 재정리가 필요하면 harness-architect와 skill-scaffolder를 붙여 역할 설명과 템플릿을 맞춥니다.
 4. orchestrator가 작업 루프와 검증 루프를 묶고 validator가 최종 구조를 점검합니다.
 
 ### 작업 유형별 운영 규칙
 
-- 기능 또는 사용자 흐름 보강: domain-analysis와 qa-strategy가 먼저 읽히며 최소 회귀 범위가 고정됩니다.
+- 기능 또는 사용자 흐름 수정: domain-analysis와 qa-strategy가 먼저 읽히며 최소 회귀 범위가 고정됩니다.
 - 구조 또는 경계 수정: 바뀐 책임 경계와 영향 전파 범위가 먼저 적히고 architect/qa 투입 시점이 갈립니다.
 - 실행 또는 배포 경로 수정: 환경 차이와 최종 검증 경로를 분리해 기록합니다.
-- 여러 경계를 가로지르는 수정: 소비자 경로와 핵심 경계 보강 여부가 앞에서 확인됩니다.
+- 여러 경계를 가로지르는 수정: 소비자 경로와 핵심 경계 재정리 필요 여부가 앞에서 확인됩니다.
 - 문서 재생성 또는 하네스 정비: wording보다 저장소 사실, 이번 세션의 남은 약점, 다음 진입점 유지 여부가 앞에 옵니다.
 
 ### 로그 운영
@@ -1329,7 +1329,7 @@ EOF
 
 ## 다음 단계
 
-- 다음 세션이 바로 이어질 수 있게 시작 역할, 보강 역할, 남은 질문을 최신 요약에 반영합니다.
+- 다음 세션이 바로 이어질 수 있게 시작 역할, 다음 역할, 남은 질문을 최신 요약에 반영합니다.
 - 반복 업무가 누적되면 선택 자산을 활성화해 역할 빈도와 템플릿 후보를 함께 관리합니다.
 EOF
       ;;
@@ -1377,9 +1377,9 @@ build_next_step_line() {
   case "$exploration_context_level" in
     초기|제한적)
       if [ "$context" = "update" ]; then
-        echo "- domain-analyst가 실제 저장소 구조를 읽고 내용을 구체화합니다."
+        echo "- domain-analyst가 실제 저장소 구조를 읽고 내용을 다시 씁니다."
       else
-        echo "- 답변이 모이면 domain-analyst가 저장소 요약과 핵심 흐름을 구체화합니다."
+        echo "- 답변이 모이면 domain-analyst가 저장소 요약과 핵심 흐름을 다시 씁니다."
       fi
       ;;
     *)
@@ -1429,7 +1429,7 @@ ensure_harness_log_scaffold() {
 - run-harness로 팀을 시작했을 때
 - 특정 역할을 직접 호출했을 때
 - validator 피드백이 나왔을 때
-- QA 질문이 보강되었을 때
+- QA 질문이 다시 정리되었을 때
 - orchestrator가 흐름을 변경했을 때
 - 역할 팀 구조가 변경되었을 때
 

@@ -188,7 +188,7 @@ optional_harness_assets_enabled() {
 
 find_exploration_paths() {
   find . \
-    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './.claude' -o -path './.agents' -o -path './node_modules' -o -path './.yarn' -o -name dist -o -name build -o -name coverage \) -prune \
+    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './.claude' -o -path './.cursor' -o -path './.agents' -o -name node_modules -o -path './.yarn' -o -name dist -o -name build -o -name coverage \) -prune \
     -o \
     "$@"
 }
@@ -240,6 +240,8 @@ list_domain_context_paths() {
   find_exploration_paths -maxdepth 4 \
     -type f \
     \( -name 'README.md' -o -name '*.md' -o -name '*.mdx' -o -name '*.txt' \) \
+    ! -name 'AGENTS.md' \
+    ! -name 'CLAUDE.md' \
     -print | sed 's#^\./##' | head -n 8
 }
 

@@ -73,8 +73,22 @@ EOF
   cat > "$project_path/.claude/commands/branch.md" <<'EOF'
 # branch command
 EOF
+  mkdir -p "$project_path/.cursor/commands" "$project_path/.cursor/rules"
+  cat > "$project_path/.cursor/commands/propose-commit-message.md" <<'EOF'
+# commit command
+EOF
+  cat > "$project_path/.cursor/rules/user_rules.md" <<'EOF'
+# user rules
+EOF
+  cat > "$project_path/CLAUDE.md" <<'EOF'
+# claude contract
+EOF
   mkdir -p "$project_path/build/win/win-unpacked/resources"
   touch "$project_path/build/win/win-unpacked/resources/app.asar"
+  mkdir -p "$project_path/packages/app/node_modules/example/test"
+  cat > "$project_path/packages/app/node_modules/example/test/example.test.js" <<'EOF'
+test("example", () => true);
+EOF
 }
 
 log "내부 설계 레퍼런스 용어 확인"
@@ -256,6 +270,9 @@ assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/explora
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" '`src/main.ts`' "탐색 문서 대표 진입점 앵커"
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" '`tests/app.test.ts`' "탐색 문서 테스트 자산 앵커"
 assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" ".claude/" "탐색 문서 AI 설정 디렉토리 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" ".cursor/" "탐색 문서 cursor 디렉토리 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "CLAUDE.md" "탐색 문서 AI 컨텍스트 파일 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "node_modules/" "탐색 문서 의존성 테스트 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "app.asar" "탐색 문서 빌드 산출물 제외"
 STACK_INIT_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \
@@ -278,9 +295,14 @@ assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.codex/skills/run-harness/SKILL.md")" '요청: "새 API 엔드포인트 추가"' "run-harness 판단 예시 따옴표 유지"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" '`src/main.ts`' "생성된 탐색 문서 대표 진입점"
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" ".claude/" "생성된 탐색 문서 AI 설정 디렉토리 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" ".cursor/" "생성된 탐색 문서 cursor 디렉토리 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "CLAUDE.md" "생성된 탐색 문서 AI 컨텍스트 파일 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "node_modules/" "생성된 탐색 문서 의존성 테스트 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "app.asar" "생성된 탐색 문서 빌드 산출물 제외"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" "저장소 고유 근거" "스택 프로젝트 domain-analysis 저장소 근거"
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" ".claude/" "domain-analysis AI 설정 디렉토리 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" ".cursor/" "domain-analysis cursor 디렉토리 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" "node_modules/" "domain-analysis 의존성 테스트 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" "app.asar" "domain-analysis 빌드 산출물 제외"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/team-playbook.md")" "역할 호출 순서" "스택 프로젝트 team-playbook 상세 운영 규칙"
 STACK_VERIFY_OUTPUT="$(

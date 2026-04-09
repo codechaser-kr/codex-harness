@@ -802,7 +802,7 @@ EOF
       cat <<EOF
 ## 요약
 
-- 이 문서는 현재 저장소의 실제 구조와 변경 경계를 바탕으로 역할 배치 후보 메모를 남깁니다.
+- 이 문서는 현재 저장소의 실제 구조와 변경 경계를 바탕으로 어떤 역할 구성이 필요한지 정리합니다.
 - 탐색 상태 요약: $project_type_label
 - 관련 코드 경로 후보: $key_axes_hint
 - 대표 시작점 후보: $core_flow_hint
@@ -818,23 +818,23 @@ EOF
 
 ### 역할 메모
 
-- domain-analyst: 실제 코드 경로와 책임 경계를 다시 읽을 역할입니다.
-- harness-architect: $key_axes_hint 단서를 역할 책임과 문서 구조로 다시 정리할 역할입니다.
-- skill-scaffolder: 역할 정의와 구조 설계를 로컬 스킬과 자산으로 옮길 역할입니다.
-- qa-designer: 영향도가 큰 경계와 검증 비용이 큰 흐름을 질문 세트로 다시 쓸 역할입니다.
-- orchestrator: 작업 시작점, handoff, 재진입 루프를 하나의 운영 흐름 메모로 묶는 역할입니다.
-- validator: 일반론 회귀와 되돌림 지점을 점검할 역할입니다.
-- run-harness: 현재 요청과 문서 상태를 읽고 시작 흐름과 다음 역할 메모를 여는 역할입니다.
+- domain-analyst: 실제 코드 경계와 영향 전파를 분석합니다.
+- harness-architect: 분석 결과를 역할 배치와 재진입 기준으로 정리합니다.
+- qa-designer: 검증 비용과 핵심 질문을 정리합니다.
+- orchestrator: 시작 순서와 handoff를 정리합니다.
+- validator: 구조 누락과 일반론 회귀를 점검합니다.
+- run-harness: 현재 요청에 맞는 시작 역할을 고릅니다.
 
 ### 역할 유지와 조정 기준
 
-- 역할 수는 고정 답안보다 경계 종류, 검증 비용, 운영 복잡도를 함께 읽은 메모에 가깝습니다.
-- 중심 역할과 보조 역할 구분은 실제 저장소 읽기 이후 다시 적습니다.
+- 역할 수는 고정 답안보다 경계 종류, 검증 비용, 운영 복잡도를 함께 읽고 정합니다.
+- 공용 패키지, 별도 런타임, 무거운 검증 경계가 겹치면 기본 역할을 유지하는 편이 안전합니다.
+- 단일 문서 수정이나 좁은 범위 정리는 필요한 역할만 호출하는 편이 적합합니다.
 
 ### 흐름 메모
 
 - 신규 구축, 기존 확장, 운영 유지보수는 같은 역할 목록이라도 시작 역할과 재진입 지점이 달라집니다.
-- 팬아웃/팬인은 하위 영역이 실제로 독립적일 때만 쓰고, 최종 통합 책임은 항상 역할 팀으로 다시 모읍니다.
+- 웹, 공용 패키지, 별도 런타임이 동시에 얽힌 변경은 domain-analyst와 qa-designer를 앞에 두는 편이 안전합니다.
 
 ### 확장 메모
 
@@ -845,13 +845,13 @@ EOF
 
 - 역할은 저장소 구조보다 추상적이어야 하지만, 저장소 경계를 무시하면 안 됩니다.
 - 관련 코드 경로 후보가 많을수록 역할 수를 늘리기보다 역할 판단 기준을 선명하게 둡니다.
-- 자동 재생성 결과라도 실제 탐색 근거를 반영한 분석 메모가 앞에 놓입니다.
-- 프로젝트 특화 판단이 필요한 부분은 역할 팀 메모에서 따로 적힙니다.
+- 웹, 공용 패키지, 별도 런타임의 책임 경계는 문서마다 같은 기준으로 유지합니다.
+- 역할 설명보다 실제 저장소 경계와 운영 비용 설명이 앞에 놓여야 합니다.
 
 ## 이어서 볼 항목
 
-- domain-analysis와 qa-strategy에는 저장소 고유 명사와 실패 지점 메모가 이어집니다.
-- run-harness와 validator 메모는 현재 역할 구조를 함께 소비하는 흐름으로 이어집니다.
+- domain-analysis와 qa-strategy에는 저장소 고유 명사와 실패 지점 설명이 이어집니다.
+- orchestration-plan과 team-playbook에는 위 역할 배치를 실제 세션 순서로 옮긴 운영 기준이 이어집니다.
 EOF
       ;;
   esac
@@ -1006,8 +1006,8 @@ EOF
       cat <<EOF
 ## 요약
 
-- 이 문서는 현재 저장소에서 어떤 요청 흐름과 역할 순서를 함께 볼지 적어둔 운영 메모입니다.
-- 시작 분기와 재진입 기준은 현재 요청의 영향 범위와 검증 비용을 다시 읽을 때 참고할 운영 메모입니다.
+- 이 문서는 현재 저장소에서 어떤 요청 흐름과 역할 순서를 운영 기준으로 둘지 정리합니다.
+- 시작 분기와 재진입 기준은 현재 요청의 영향 범위와 검증 비용을 기준으로 적습니다.
 
 ## 저장소 고유 근거
 
@@ -1028,15 +1028,14 @@ EOF
 
 1. domain-analyst가 실제 코드 경로와 변경 경계를 다시 읽습니다.
 2. harness-architect가 현재 역할 구조와 문서 층을 다시 맞춥니다.
-3. skill-scaffolder가 필요한 스킬 설명과 템플릿을 갱신합니다.
-4. qa-designer가 이번 축에 맞는 질문과 체크포인트 메모를 남깁니다.
-5. orchestrator가 작업 시작 루프와 검증 루프 메모를 묶습니다.
-6. validator가 산출물이 일반론으로 흐르지 않았는지 보는 마지막 메모를 남깁니다.
+3. qa-designer가 이번 축에 맞는 질문과 체크포인트를 정리합니다.
+4. orchestrator가 작업 시작 루프와 검증 루프를 묶습니다.
+5. validator가 산출물이 일반론으로 흐르지 않았는지 마지막으로 점검합니다.
 
 ### 대표 요청별 루프
 
 - 기능 또는 사용자 흐름 수정: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
-- 구조 또는 문서 정비: run-harness -> skill-scaffolder -> orchestrator -> validator
+- 구조 또는 문서 정비: run-harness -> harness-architect -> orchestrator -> validator
 - 경계 재정의가 필요한 변경: run-harness -> domain-analyst -> harness-architect -> qa-designer -> orchestrator -> validator
 - 검증 비용이 큰 변경: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
 
@@ -1051,13 +1050,12 @@ EOF
 
 - 시작 분기에서 뒤쪽 역할이 진입점이 되더라도, 앞 단계 해석이 충분한지 보는 메모가 앞에 붙습니다.
 - 핵심 경계나 다중 모듈 영향이 보이면 qa-designer와 validator를 앞쪽에 두는 흐름을 다시 엽니다.
-- domain-analysis가 generic하거나 예외 메모가 비어 있으면 domain-analyst 재진입 메모가 앞에 열립니다.
-- 구조 설명, 체크리스트, handoff 중 어느 층이 가장 약한지에 따라 harness-architect, qa-designer, orchestrator 재진입을 고릅니다.
+- domain-analysis가 일반론에 머물거나 예외 설명이 약하면 domain-analyst 재진입이 앞에 놓입니다.
+- 구조 설명, QA 기준, handoff 중 어느 층이 가장 약한지에 따라 harness-architect, qa-designer, orchestrator 재진입을 고릅니다.
 
 ### 역할 간 handoff 규칙
 
 - domain-analyst -> harness-architect: 실제 경계, 예외, 핵심 흐름을 읽은 뒤 구조 책임으로 넘깁니다.
-- harness-architect -> skill-scaffolder: 역할 책임과 출력 문서 층을 맞춘 뒤 로컬 스킬 설명과 템플릿 반영으로 넘깁니다.
 - qa-designer -> orchestrator: 질문과 최소 체크 메모를 적은 뒤 어떤 루프로 이어질지 넘깁니다.
 - validator -> orchestrator: 회귀, 누락, 재진입 필요 지점을 찾으면 다시 어떤 역할부터 볼지 되돌립니다.
 
@@ -1075,7 +1073,7 @@ EOF
 ## 이어서 볼 항목
 
 - 반복적으로 등장하는 우회 흐름은 team-playbook과 함께 다시 적히는 루프 메모로 이어집니다.
-- run-harness 출력 계약과 실제 시작 분기 관계도 validator 메모와 함께 다시 읽힙니다.
+- run-harness 출력 계약과 실제 시작 분기 관계도 validator 점검과 함께 다시 읽힙니다.
 EOF
       ;;
   esac
@@ -1112,8 +1110,8 @@ EOF
       cat <<EOF
 ## 요약
 
-- 이 문서는 현재 저장소의 관련 코드 경로 후보를 어떤 역할 팀이 나눠 읽는지 적어둔 메모입니다.
-- 역할 팀 구성은 저장소의 경계 종류와 검증 비용을 나눠 읽기 위한 운영 메모입니다.
+- 이 문서는 현재 저장소의 관련 코드 경로와 운영 경계를 어떤 역할 구성이 다루는지 정리합니다.
+- 역할 팀 구성은 저장소의 경계 종류와 검증 비용을 나눠 읽기 위한 운영 기준입니다.
 
 ## 저장소 고유 근거
 
@@ -1127,7 +1125,6 @@ EOF
 
 - domain-analyst
 - harness-architect
-- skill-scaffolder
 - qa-designer
 - orchestrator
 - validator
@@ -1137,7 +1134,6 @@ EOF
 
 - domain-analyst: $key_axes_hint 축에서 사실 기준 분석을 적는 역할입니다.
 - harness-architect: 역할 경계와 구조 배치를 정리하는 역할입니다.
-- skill-scaffolder: 로컬 스킬과 템플릿 반영을 맡는 역할입니다.
 - qa-designer: 품질 질문과 기준 메모를 적는 역할입니다.
 - orchestrator: 역할 간 handoff와 재진입 흐름을 정리하는 역할입니다.
 - validator: 회귀와 누락을 점검하는 역할입니다.
@@ -1236,8 +1232,8 @@ EOF
 
 1. run-harness는 요청을 받고 $key_axes_hint 중 어느 축을 건드리는지 앞에 적어 둡니다.
 2. 영향 범위가 넓거나 핵심 경계를 건드리면 domain-analyst와 qa-designer를 앞에 두는 흐름 메모가 놓입니다.
-3. 구조 재정리가 필요하면 harness-architect와 skill-scaffolder를 붙여 역할 설명과 템플릿을 맞춥니다.
-4. orchestrator가 작업 루프와 검증 루프를 묶고 validator가 마지막 구조 메모를 남깁니다.
+3. 구조 재정리가 필요하면 harness-architect를 붙여 역할 배치와 재진입 기준을 다시 적습니다.
+4. orchestrator가 작업 루프와 검증 루프를 묶고 validator가 마지막 구조 점검을 남깁니다.
 
 ### 작업 유형별 메모
 
@@ -1245,7 +1241,7 @@ EOF
 - 구조 또는 경계 수정: 바뀐 책임 경계와 영향 전파 범위를 적고 architect/qa 투입 시점을 고릅니다.
 - 실행 또는 배포 경로 수정: 환경 차이와 최종 검증 경로를 분리해 기록합니다.
 - 여러 경계를 가로지르는 수정: 소비자 경로와 핵심 경계 재정리 필요 여부 메모가 앞에 놓입니다.
-- 문서 재생성 또는 하네스 정비: wording보다 저장소 사실, 이번 세션의 남은 약점, 다음 진입점 유지 여부가 앞에 옵니다.
+- 문서 재작성 또는 하네스 정비: wording보다 저장소 사실, 이번 세션의 남은 약점, 다음 진입점 유지 여부가 앞에 옵니다.
 
 ### 로그 운영
 
@@ -1264,7 +1260,7 @@ EOF
 
 - 이번 세션에서 시작 역할, handoff, 남은 약점은 session-log에 남습니다.
 - validator 피드백이 있으면 다음 진입점이 명시된 채 세션이 닫힙니다.
-- 재생성된 문서가 실제 저장소 분석을 잃지 않았는지 보는 마지막 메모가 남습니다.
+- 재작성된 문서가 실제 저장소 분석을 잃지 않았는지 보는 마지막 메모가 남습니다.
 
 ## 이어서 볼 항목
 

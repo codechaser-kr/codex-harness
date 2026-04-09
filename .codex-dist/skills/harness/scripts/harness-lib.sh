@@ -774,87 +774,22 @@ build_architecture_report_block() {
   local key_axes_hint="$3"
   local core_flow_hint="$4"
 
-  case "$exploration_context_level" in
-    초기|제한적)
-      cat <<EOF
-## 구조 메모
-
-이 문서는 현재 저장소에서 함께 읽을 역할 구조 후보를 적어 둡니다.
-
-## 역할 메모
-
-- domain-analyst
-- harness-architect
-- skill-scaffolder
-- qa-designer
-- orchestrator
-- validator
-
-## 설계 원칙
-
-- 특정 프레임워크에 과도하게 고정하지 않는다.
-- 사람이 읽고 수정할 수 있는 구조를 우선한다.
-- 생성기와 프로젝트 로컬 산출물을 분리한다.
-- 이후 프로젝트 특화 하네스로 확장할 수 있어야 한다.
-EOF
-      ;;
-    *)
-      cat <<EOF
+  cat <<EOF
 ## 요약
 
-- 이 문서는 현재 저장소의 실제 구조와 변경 경계를 바탕으로 어떤 역할 구성이 필요한지 정리합니다.
+- 최종 구조 설명은 harness-architect가 직접 작성합니다.
 - 탐색 상태 요약: $project_type_label
 - 관련 코드 경로 후보: $key_axes_hint
 - 대표 시작점 후보: $core_flow_hint
-EOF
-      cat <<EOF
 
 ## 저장소 고유 근거
 
-- 관련 코드 경로 후보: \`$key_axes_hint\`
-- 대표 시작점 후보: $core_flow_hint
+## 역할 배치
 
-## 구조 메모
+## 역할 유지와 조정 기준
 
-### 역할 메모
-
-- domain-analyst: 실제 코드 경계와 영향 전파를 분석합니다.
-- harness-architect: 분석 결과를 역할 배치와 재진입 기준으로 정리합니다.
-- qa-designer: 검증 비용과 핵심 질문을 정리합니다.
-- orchestrator: 시작 순서와 handoff를 정리합니다.
-- validator: 구조 누락과 일반론 회귀를 점검합니다.
-- run-harness: 현재 요청에 맞는 시작 역할을 고릅니다.
-
-### 역할 유지와 조정 기준
-
-- 역할 수는 고정 답안보다 경계 종류, 검증 비용, 운영 복잡도를 함께 읽고 정합니다.
-- 공용 패키지, 별도 런타임, 무거운 검증 경계가 겹치면 기본 역할을 유지하는 편이 안전합니다.
-- 단일 문서 수정이나 좁은 범위 정리는 필요한 역할만 호출하는 편이 적합합니다.
-
-### 흐름 메모
-
-- 신규 구축, 기존 확장, 운영 유지보수는 같은 역할 목록이라도 시작 역할과 재진입 지점이 달라집니다.
-- 웹, 공용 패키지, 별도 런타임이 동시에 얽힌 변경은 domain-analyst와 qa-designer를 앞에 두는 편이 안전합니다.
-
-### 확장 메모
-
-- templates/scenarios는 반복 handoff와 산출물 흐름이 실제로 누적될 때만 붙습니다.
-- role-frequency나 template-candidates는 운영 유지보수 단계에서 반복성 분석 가치가 생길 때만 붙습니다.
-
-### 설계 원칙
-
-- 역할은 저장소 구조보다 추상적이어야 하지만, 저장소 경계를 무시하면 안 됩니다.
-- 관련 코드 경로 후보가 많을수록 역할 수를 늘리기보다 역할 판단 기준을 선명하게 둡니다.
-- 웹, 공용 패키지, 별도 런타임의 책임 경계는 문서마다 같은 기준으로 유지합니다.
-- 역할 설명보다 실제 저장소 경계와 운영 비용 설명이 앞에 놓여야 합니다.
-
-## 이어서 볼 항목
-
-- domain-analysis와 qa-strategy에는 저장소 고유 명사와 실패 지점 설명이 이어집니다.
-- orchestration-plan과 team-playbook에는 위 역할 배치를 실제 세션 순서로 옮긴 운영 기준이 이어집니다.
+## 남아 있는 질문
 EOF
-      ;;
-  esac
 }
 
 build_qa_report_block() {
@@ -863,412 +798,87 @@ build_qa_report_block() {
   local boundary_hint="$3"
   local test_hint="$4"
 
-  case "$exploration_context_level" in
-    초기|제한적)
-      cat <<EOF
-## QA 메모
-
-이 문서는 저장소에서 함께 볼 품질 기준 후보 메모를 적어 둡니다.
-
-## 확인 메모 예시
-
-- 도메인 분석 리포트가 실제 저장소와 맞는가
-- 하네스 역할 정의가 과하거나 부족하지 않은가
-- 스킬 설명이 충분히 명확한가
-- 오케스트레이션 계획이 실제 작업 흐름과 연결되는가
-EOF
-      ;;
-    *)
-      cat <<EOF
+  cat <<EOF
 ## 요약
 
-- 이 문서는 현재 저장소에서 변경 영향이 큰 경계와 반복 검증 후보를 QA 관점 메모로 남깁니다.
-- 저장소 전용 질문은 구조 일반론보다 실제 파일, 테스트 유틸, 진입점 단서 쪽에 더 가깝게 붙습니다.
+- 최종 QA 전략은 qa-designer가 직접 작성합니다.
+- 관련 코드 경로 후보: $key_axes_hint
+EOF
+  [ "$test_hint" = "추정 불가" ] || printf '%s\n' "- 테스트 및 검증 자산 후보: $test_hint"
+  cat <<EOF
 
 ## 저장소 고유 단서
+
+## 핵심 품질 축
+
+## 핵심 질문
+
+## 변경 유형별 체크 메모
+
+## 남아 있는 질문
 EOF
-      source_anchor_count=0
-      while IFS= read -r workspace_path; do
-        [ -n "$workspace_path" ] || continue
-        printf '%s\n' "- \`$workspace_path\`: 이번 저장소에서 QA 질문을 적을 때 함께 읽을 대표 소스 앵커입니다."
-        source_anchor_count=$((source_anchor_count + 1))
-      done < <(list_source_anchor_paths)
-
-      if [ "$source_anchor_count" -eq 0 ]; then
-        printf '%s\n' "- 자동으로 포착한 소스 앵커가 부족하면, 테스트 유틸 위치나 대표 진입점 파일을 더 읽은 QA 메모가 필요합니다."
-      fi
-
-      cat <<EOF
-
-## QA 메모
-
-### 핵심 품질 축
-
-- $key_axes_hint
-EOF
-      [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- 실제 코드 경계와 소비 관계의 영향 전파"
-      [ "$test_hint" = "추정 불가" ] || printf '%s\n' "- 테스트 자산과 검증 유틸리티의 안정성"
-      printf '%s\n' "- 공용 계층, 진입점 설정, 소비 경로 사이의 영향 전파"
-      cat <<EOF
-
-### 핵심 질문
-
-- 이번 변경이 어떤 작업 축을 건드리는가
-- 변경 범위가 단일 영역인지, 여러 경계까지 전파되는가
-- 빌드/테스트/배포 중 어떤 검증 경로를 다시 읽어야 하는가
-- 자동화보다 사람이 직접 봐야 하는 결합 지점은 어디인가
-
-### 변경 유형별 체크 메모
-
-- 기능 변경: 영향받는 사용자 또는 호출 흐름, 핵심 진입점, 최소 회귀 메모 대상을 함께 적습니다.
-- 구조 변경: 역할 문서, 경계 설명, 오케스트레이션 계획이 새 구조와 맞물리는지 보는 메모가 붙습니다.
-- 빌드/설정 변경: 실행 명령, 검증 명령, 배포 또는 산출물 경로를 다시 읽는 메모가 붙습니다.
-- 경계 변경: 여러 모듈, 서비스, 패키지, 런타임 중 어디로 영향이 번지는지 실제 저장소 기준으로 다시 적습니다.
-
-### 테스트 설계 기준
-
-- 빠르게 실패를 잡는 얕은 체크와 실제 영향 경계를 읽는 깊은 체크를 나눕니다.
-- 빠른 검증과 느린 검증, 단일 경계 검증과 교차 경계 검증을 구분해 적습니다.
-
-### 실행 예시
-
-- 로컬 역할 구조와 보고서 정합성 메모: \`bash .codex-dist/skills/harness/scripts/harness-verify.sh\`
-- 최신 탐색 근거와 보고서 갱신: \`bash .codex-dist/skills/harness/scripts/harness-update.sh --qa\`
-- 세션 로그와 최신 요약 다시 읽기: \`tail -n 40 .harness/logs/session-log.md\` 와 \`cat .harness/logs/latest-session-summary.md\`
-- 저장소별 실제 테스트나 빌드 명령은 위 단서와 대표 진입점 파일을 다시 읽은 프로젝트 문맥 메모 위에 놓입니다.
-
-### 추가 메모 관점
-
-- 공개 인터페이스, 설정 진입점, 소비 경로가 함께 흔들리는지도 같이 보이는 메모가 남습니다.
-- 공용 계층과 검증 경로가 같은 변경 안에서 동시에 깨질 수 있는지 살핍니다.
-- 문서 정합성보다 실제 운영 리스크가 더 큰 지점이 앞에 놓이는 수동 메모가 남습니다.
-
-## QA 운영 메모
-
-- QA는 체크리스트 실행기가 아니라 변경 영향의 triage 도구로 작동합니다.
-- 매 요청마다 전체 질문 세트를 다 읽지 않고, 이번 변경이 걸리는 축을 앞에 적고 나머지는 위험 순위를 매깁니다.
-- QA 질문이 일반론에 머물면 의미가 없습니다. 저장소 고유 파일 이름, 경계, 실패 유형을 직접 참조해 적습니다.
-- 하네스 문서와 스킬 변경도 QA 범위에 포함합니다. 구조 정합성 역시 운영 품질입니다.
-- validator와 역할을 나누되, QA는 "무엇을 볼 것인가" 메모를 남기고 validator는 "최소 구조" 메모를 남깁니다.
-
-## 이어서 볼 항목
-
-- 저장소 고유 단서를 기준으로 QA 질문은 로컬 고유 명사와 실패 지점 메모로 이어집니다.
-- validator 메모와 실제 검증 경로가 문서 질문 세트와 얼마나 맞물리는지도 함께 남깁니다.
-EOF
-      ;;
-  esac
 }
 
 build_orchestration_report_block() {
   local exploration_context_level="$1"
   local key_axes_hint="$2"
 
-  case "$exploration_context_level" in
-    초기|제한적)
-      cat <<EOF
-## 흐름 메모
-
-이 문서는 여러 하네스 역할이 실제로 어떤 순서와 방식으로 협력하는지 적어 둔 메모입니다.
-
-## 기본 흐름 메모
-
-1. domain-analyst
-2. harness-architect
-3. skill-scaffolder
-4. qa-designer
-5. orchestrator
-6. validator
-
-## 운영 메모
-
-- 분석 메모가 앞에 놓이고, 그 위에 구조와 품질 문서가 이어집니다.
-- 구조 문서가 정리된 뒤 품질 관점과 운영 흐름이 함께 붙습니다.
-- 역할 간 책임이 겹치지 않게 한다.
-- 결과물은 사람이 쉽게 읽을 수 있어야 한다.
-
-## 확장 메모
-
-이 범용 하네스는 아래 방향 메모로 이어집니다.
-
-- 프로젝트 특화 하네스
-- expected-state 구조
-- diff 전략
-- 시나리오 실행 연결
-- 자동 검증 파이프라인
-
-## 메모
-
-이 문서는 현재 저장소의 실제 작업 흐름에 맞게 계속 수정되어야 합니다.
-EOF
-      ;;
-    *)
-      cat <<EOF
+  cat <<EOF
 ## 요약
 
-- 이 문서는 현재 저장소에서 어떤 요청 흐름과 역할 순서를 운영 기준으로 둘지 정리합니다.
-- 시작 분기와 재진입 기준은 현재 요청의 영향 범위와 검증 비용을 기준으로 적습니다.
+- 최종 오케스트레이션 계획은 orchestrator가 직접 작성합니다.
+- 관련 코드 경로 후보: $key_axes_hint
 
 ## 저장소 고유 근거
 
-- 현재 저장소에서 함께 읽을 관련 코드 경로 후보는 \`$key_axes_hint\` 입니다.
-- 시작 흐름과 재진입 지점은 사용자 요청 유형, 경계 영향 범위, 남은 검증 비용을 함께 읽는 메모로 남습니다.
+## 시작 분기
 
-## 흐름 메모
+## 표준 전체 시퀀스
 
-### 시작 분기
+## 역할 간 handoff 규칙
 
-1. run-harness
-2. domain-analyst
-3. qa-designer
-4. orchestrator
-5. validator
-
-### 표준 전체 시퀀스
-
-1. domain-analyst가 실제 코드 경로와 변경 경계를 다시 읽습니다.
-2. harness-architect가 현재 역할 구조와 문서 층을 다시 맞춥니다.
-3. qa-designer가 이번 축에 맞는 질문과 체크포인트를 정리합니다.
-4. orchestrator가 작업 시작 루프와 검증 루프를 묶습니다.
-5. validator가 산출물이 일반론으로 흐르지 않았는지 마지막으로 점검합니다.
-
-### 대표 요청별 루프
-
-- 기능 또는 사용자 흐름 수정: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
-- 구조 또는 문서 정비: run-harness -> harness-architect -> orchestrator -> validator
-- 경계 재정의가 필요한 변경: run-harness -> domain-analyst -> harness-architect -> qa-designer -> orchestrator -> validator
-- 검증 비용이 큰 변경: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
-
-### 운영 구조
-
-- 신규 구축, 기존 확장, 운영 유지보수는 같은 역할 목록이라도 다른 시작 흐름이 열릴 수 있습니다.
-- 팬아웃/팬인은 하위 영역 간 비교 축이 이미 정리된 경우에 가까운 메모로 남습니다.
-- 문서와 로그에 계속 남는 중심 역할과 단발성 보조 판단은 같은 방식으로 다루지 않습니다.
-- 요청이 추상적이거나 맥락이 약하면 사용자 질문과 탐색 재읽기가 앞에 오는 흐름 메모가 열립니다.
-
-### 순서 조정 및 재진입 기준
-
-- 시작 분기에서 뒤쪽 역할이 진입점이 되더라도, 앞 단계 해석이 충분한지 보는 메모가 앞에 붙습니다.
-- 핵심 경계나 다중 모듈 영향이 보이면 qa-designer와 validator를 앞쪽에 두는 흐름을 다시 엽니다.
-- domain-analysis가 일반론에 머물거나 예외 설명이 약하면 domain-analyst 재진입이 앞에 놓입니다.
-- 구조 설명, QA 기준, handoff 중 어느 층이 가장 약한지에 따라 harness-architect, qa-designer, orchestrator 재진입을 고릅니다.
-
-### 역할 간 handoff 규칙
-
-- domain-analyst -> harness-architect: 실제 경계, 예외, 핵심 흐름을 읽은 뒤 구조 책임으로 넘깁니다.
-- qa-designer -> orchestrator: 질문과 최소 체크 메모를 적은 뒤 어떤 루프로 이어질지 넘깁니다.
-- validator -> orchestrator: 회귀, 누락, 재진입 필요 지점을 찾으면 다시 어떤 역할부터 볼지 되돌립니다.
-
-### 피드백 루프
-
-- validator가 generic 회귀를 발견하면 domain-analyst 또는 harness-architect 재진입이 열립니다.
-- qa-designer가 새 위험 축을 찾거나 session-log에 반복 우회 흐름이 쌓이면 orchestrator가 시작 분기와 검증 루프를 다시 정리하고, 필요하면 team-playbook과 함께 갱신합니다.
-
-### 운영 메모
-
-- 작은 변경도 핵심 경계나 빌드 경계를 건드리면 별도 검증 루프 메모가 함께 붙습니다.
-- 문서 재생성에서는 기존 문장 보존보다 실제 저장소 분석 반영을 앞에 둡니다.
-- 역할 호출 순서는 고정보다 영향 범위와 검증 비용을 다시 읽으며 정합니다.
-
-## 이어서 볼 항목
-
-- 반복적으로 등장하는 우회 흐름은 team-playbook과 함께 다시 적히는 루프 메모로 이어집니다.
-- run-harness 출력 계약과 실제 시작 분기 관계도 validator 점검과 함께 다시 읽힙니다.
+## 남아 있는 질문
 EOF
-      ;;
-  esac
 }
 
 build_team_structure_report_block() {
   local exploration_context_level="$1"
   local key_axes_hint="$2"
 
-  case "$exploration_context_level" in
-    초기|제한적)
-      cat <<EOF
-## 팀 메모
-
-이 문서는 현재 프로젝트의 로컬 실행 하네스를 역할 팀 관점에서 설명합니다.
-
-## 팀 구성
-
-- domain-analyst
-- harness-architect
-- skill-scaffolder
-- qa-designer
-- orchestrator
-- validator
-- run-harness
-
-## 설명
-
-이 역할들은 각각 독립적인 판단 단위를 가지며,
-함께 프로젝트 실행 하네스를 구성합니다.
-EOF
-      ;;
-    *)
-      cat <<EOF
+  cat <<EOF
 ## 요약
 
-- 이 문서는 현재 저장소의 관련 코드 경로와 운영 경계를 어떤 역할 구성이 다루는지 정리합니다.
-- 역할 팀 구성은 저장소의 경계 종류와 검증 비용을 나눠 읽기 위한 운영 기준입니다.
+- 최종 팀 구조는 harness-architect가 직접 작성합니다.
+- 관련 코드 경로 후보: $key_axes_hint
 
 ## 저장소 고유 근거
 
-- QA는 \`$key_axes_hint\` 축이 동시에 흔들릴 때 함께 읽어야 할 역할입니다.
-- 경계 설명은 단일 수정처럼 보여도 여러 소비 경계나 호출 경로로 전파될 때 함께 보이는 메모가 남습니다.
-- orchestrator와 validator는 handoff 순서와 회귀 점검을 함께 붙잡는 역할입니다.
+## 팀 구성
 
-## 팀 메모
-
-### 팀 구성
-
-- domain-analyst
-- harness-architect
-- qa-designer
-- orchestrator
-- validator
-- run-harness
-
-### 역할별 책임 요약
-
-- domain-analyst: $key_axes_hint 축에서 사실 기준 분석을 적는 역할입니다.
-- harness-architect: 역할 경계와 구조 배치를 정리하는 역할입니다.
-- qa-designer: 품질 질문과 기준 메모를 적는 역할입니다.
-- orchestrator: 역할 간 handoff와 재진입 흐름을 정리하는 역할입니다.
-- validator: 회귀와 누락을 점검하는 역할입니다.
-- run-harness: 시작 흐름 메모와 사용자 질문을 여는 역할입니다.
-
-### 실전 분류 예시
-
-- 변경 중심은 사용자 진입점, 공용 계층, 별도 실행 환경 중 어디에 가까운지로 갈립니다.
-- 단일 수정처럼 보여도 소비 경로나 공용 계층까지 번지면 domain-analyst와 qa-designer를 앞에 두는 흐름 메모가 놓입니다.
-- 문서 정비 요청이라도 handoff나 다음 진입점이 바뀌면 orchestrator와 validator를 함께 붙이는 흐름 메모가 놓입니다.
-
-### 운영 기준
-
-- 역할 수는 많을수록 좋은 것이 아니라, 현재 저장소에서 실제로 구분이 필요한 책임 경계만큼만 둡니다.
-- 역할을 추가하거나 줄일 때는 각 역할의 산출물과 해석 기준이 실제로 어떻게 갈리는지 다시 읽습니다.
-- domain-analyst와 harness-architect는 각각 사실 기반 경계 분석과 역할 구조 설계를 맡는 다른 층입니다.
-- validator는 회귀와 누락 점검을 맡는 별도 역할로 유지합니다.
-
-## 이어서 볼 항목
-
-- 실제 저장소에서 자주 등장하는 변경 유형은 이 팀 구조 예시에 계속 누적합니다.
-- architecture와 orchestration 메모도 이 팀 구조 설명과 같은 경계를 가리키는 흐름으로 이어집니다.
+## 역할별 책임 요약
 EOF
-      ;;
-  esac
 }
 
 build_team_playbook_report_block() {
   local exploration_context_level="$1"
   local key_axes_hint="$2"
 
-  case "$exploration_context_level" in
-    초기|제한적)
-      cat <<EOF
-## 세션 메모
-
-이 문서는 프로젝트 로컬 실행 하네스 팀을 실제로 어떻게 시작하고 운용할지 요약합니다.
-
-## 시작 메모
-
-1. 기본적으로는 run-harness를 실행 하네스 팀의 진입점으로 사용합니다.
-2. run-harness는 현재 상태를 보고, 탐색 근거가 부족하면 사용자 질문으로 이어지고, 근거가 충분하면 필요한 역할 순서 메모가 열립니다.
-3. 새 프로젝트에서는 domain-analyst부터 시작하는 흐름이 기본값에 가깝습니다.
-4. 구조가 이미 있으면 orchestrator / validator 중심의 점검 루프가 더 자주 열립니다.
-
-## 시작 체크 메모
-
-- 현재 요청 한 줄 요약과 영향 범위가 앞에 기록됩니다.
-- 직전 session-log를 읽으면 미해결 항목 연결 여부가 드러납니다.
-- 이번 세션에서 앞에 놓을 문서는 1~2개로 좁혀집니다.
-
-## 기본 흐름 메모
-
-- 문서보다 역할 팀을 본체로 봅니다.
-- \`.harness/reports\` 문서는 팀이 공유하는 보조 기준으로 사용합니다.
-- 빈 저장소이거나 탐색 근거가 부족하면 역할 호출보다 사용자 질문이 앞에 놓입니다.
-- validator 피드백이 나오면 architect / scaffolder / orchestrator 재작성 루프가 다시 열립니다.
-- QA 질문이 약하면 qa-designer 재작성 루프가 다시 붙습니다.
-- 중요한 역할 호출이나 흐름 변경은 session-log에 남습니다.
-
-## 로그 운영
-
-- 로그 정책은 \`.harness/logging-policy.md\` 메모에서 이어집니다.
-- 역할별 누적 기록은 \`.harness/logs/session-log.md\`에 남깁니다.
-- 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
-- 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\` 메모에서 이어집니다.
-EOF
-      if optional_harness_assets_enabled; then
-        printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\` 메모에서 이어집니다."
-        printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\` 메모에서 이어집니다."
-      fi
-      ;;
-    *)
-      cat <<EOF
+  cat <<EOF
 ## 요약
 
-- 이 문서는 현재 저장소의 실제 변경 경계를 기준으로 실행 하네스 팀을 어떻게 시작하고 되돌릴지 요약합니다.
-- 빠른 체크리스트와 절차 문서는 세션 재진입 속도와 일관성을 위해 함께 둡니다.
+- 최종 운영 플레이북은 orchestrator가 직접 작성합니다.
+- 관련 코드 경로 후보: $key_axes_hint
 
 ## 저장소 고유 근거
 
-- 앞에 놓을 문서는 보통 domain-analysis, orchestration-plan, qa-strategy 중 현재 요청과 직접 연결되는 문서입니다.
-- 직전 session-log와 latest-session-summary는 현재 세션의 재진입 지점을 정할 때 함께 읽는 기본 근거입니다.
+## 세션 시작 체크
 
-## 세션 메모
+## 역할 호출 순서
 
-### 시작 체크 메모
+## 작업 유형별 메모
 
-- 직전 session-log와 latest-session-summary를 읽으면 미해결 항목과 재진입 지점이 보입니다.
-- domain-analysis, orchestration-plan, qa-strategy 중 이번 요청과 직접 연결되는 문서 쪽부터 읽는 흐름이 열립니다.
-- 현재 요청 요약과 영향 범위는 session-log 앞부분에 남습니다.
-- 직전 세션의 남은 약점이 이번 요청과 이어지는지 여부가 함께 보입니다.
-- 앞에 놓을 문서와 나중에 볼 문서를 구분해 시작하고, 역할 호출이나 전환 이유가 바뀌면 그 근거도 함께 남깁니다.
-
-### 역할 호출 순서
-
-1. run-harness는 요청을 받고 $key_axes_hint 중 어느 축을 건드리는지 앞에 적어 둡니다.
-2. 영향 범위가 넓거나 핵심 경계를 건드리면 domain-analyst와 qa-designer를 앞에 두는 흐름 메모가 놓입니다.
-3. 구조 재정리가 필요하면 harness-architect를 붙여 역할 배치와 재진입 기준을 다시 적습니다.
-4. orchestrator가 작업 루프와 검증 루프를 묶고 validator가 마지막 구조 점검을 남깁니다.
-
-### 작업 유형별 메모
-
-- 기능 또는 사용자 흐름 수정: domain-analysis와 qa-strategy부터 읽으며 최소 회귀 범위를 함께 적습니다.
-- 구조 또는 경계 수정: 바뀐 책임 경계와 영향 전파 범위를 적고 architect/qa 투입 시점을 고릅니다.
-- 실행 또는 배포 경로 수정: 환경 차이와 최종 검증 경로를 분리해 기록합니다.
-- 여러 경계를 가로지르는 수정: 소비자 경로와 핵심 경계 재정리 필요 여부 메모가 앞에 놓입니다.
-- 문서 재작성 또는 하네스 정비: wording보다 저장소 사실, 이번 세션의 남은 약점, 다음 진입점 유지 여부가 앞에 옵니다.
-
-### 로그 운영
-
-- 로그 정책은 \`.harness/logging-policy.md\` 메모에서 이어집니다.
-- 역할별 누적 기록은 \`.harness/logs/session-log.md\`에 남깁니다.
-- 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
-- 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\` 메모에서 이어집니다.
+## 종료 메모
 EOF
-      if optional_harness_assets_enabled; then
-        printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\` 메모에서 이어집니다."
-        printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\` 메모에서 이어집니다."
-      fi
-      cat <<EOF
-
-### 종료 메모
-
-- 이번 세션에서 시작 역할, handoff, 남은 약점은 session-log에 남습니다.
-- validator 피드백이 있으면 다음 진입점이 명시된 채 세션이 닫힙니다.
-- 재작성된 문서가 실제 저장소 분석을 잃지 않았는지 보는 마지막 메모가 남습니다.
-
-## 이어서 볼 항목
-
-- 다음 세션이 바로 이어질 수 있게 시작 흐름, 다음 역할, 남은 질문 메모가 최신 요약에 남습니다.
-- 반복 업무가 누적되면 선택 자산을 활성화해 역할 빈도와 템플릿 후보를 함께 관리합니다.
-EOF
-      ;;
-  esac
 }
 
 build_domain_summary_block() {

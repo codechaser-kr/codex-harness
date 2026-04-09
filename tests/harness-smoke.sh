@@ -83,6 +83,16 @@ EOF
   cat > "$project_path/CLAUDE.md" <<'EOF'
 # claude contract
 EOF
+  mkdir -p "$project_path/.github/ISSUE_TEMPLATE"
+  cat > "$project_path/.github/pull_request_template.md" <<'EOF'
+# pr template
+EOF
+  cat > "$project_path/.github/ISSUE_TEMPLATE/feature_template.md" <<'EOF'
+# feature template
+EOF
+  cat > "$project_path/.yarnrc.yml" <<'EOF'
+nodeLinker: node-modules
+EOF
   mkdir -p "$project_path/build/win/win-unpacked/resources"
   touch "$project_path/build/win/win-unpacked/resources/app.asar"
   mkdir -p "$project_path/packages/app/node_modules/example/test"
@@ -221,6 +231,8 @@ assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/explora
 assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" ".claude/" "탐색 문서 AI 설정 디렉토리 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" ".cursor/" "탐색 문서 cursor 디렉토리 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "CLAUDE.md" "탐색 문서 AI 컨텍스트 파일 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" ".github/" "탐색 문서 운영 메타 문서 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" ".yarnrc.yml" "탐색 문서 패키지 매니저 dotfile 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "node_modules/" "탐색 문서 의존성 테스트 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "app.asar" "탐색 문서 빌드 산출물 제외"
 STACK_INIT_OUTPUT="$(
@@ -237,6 +249,8 @@ assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-not
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" ".claude/" "생성된 탐색 문서 AI 설정 디렉토리 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" ".cursor/" "생성된 탐색 문서 cursor 디렉토리 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "CLAUDE.md" "생성된 탐색 문서 AI 컨텍스트 파일 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" ".github/" "생성된 탐색 문서 운영 메타 문서 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" ".yarnrc.yml" "생성된 탐색 문서 패키지 매니저 dotfile 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "node_modules/" "생성된 탐색 문서 의존성 테스트 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "app.asar" "생성된 탐색 문서 빌드 산출물 제외"
 STACK_VERIFY_OUTPUT="$(

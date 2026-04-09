@@ -218,16 +218,24 @@ list_source_anchor_paths() {
 }
 
 list_entrypoint_anchor_paths() {
-  find_exploration_paths \
-    -type f \
-    \( -name 'main.ts' -o -name 'main.tsx' -o -name 'main.js' -o -name 'main.jsx' -o -name 'main.rs' -o \
-       -name 'index.ts' -o -name 'index.tsx' -o -name 'index.js' -o -name 'index.jsx' -o \
-       -name 'app.ts' -o -name 'app.tsx' -o -name 'app.js' -o -name 'app.jsx' -o \
-       -name 'server.ts' -o -name 'server.tsx' -o -name 'server.js' -o -name 'server.jsx' -o \
-       -name 'cli.ts' -o -name 'cli.tsx' -o -name 'cli.js' -o -name 'cli.jsx' -o \
-       -name 'lib.ts' -o -name 'lib.tsx' -o -name 'lib.js' -o -name 'lib.jsx' -o \
-       -name 'mod.rs' \) \
-    -print | sed 's#^\./##' | head -n 5
+  local root
+  local printed=0
+
+  while IFS= read -r root; do
+    [ -n "$root" ] || continue
+
+    find "./$root" \
+      \( -path "./$root/node_modules" -o -name dist -o -name build -o -name coverage \) -prune \
+      -o -type f \
+      \( -name 'main.ts' -o -name 'main.tsx' -o -name 'main.js' -o -name 'main.jsx' -o -name 'main.rs' -o \
+         -name 'index.ts' -o -name 'index.tsx' -o -name 'index.js' -o -name 'index.jsx' -o \
+         -name 'app.ts' -o -name 'app.tsx' -o -name 'app.js' -o -name 'app.jsx' -o \
+         -name 'server.ts' -o -name 'server.tsx' -o -name 'server.js' -o -name 'server.jsx' -o \
+         -name 'cli.ts' -o -name 'cli.tsx' -o -name 'cli.js' -o -name 'cli.jsx' -o \
+         -name 'lib.ts' -o -name 'lib.tsx' -o -name 'lib.js' -o -name 'lib.jsx' -o \
+         -name 'mod.rs' \) \
+      -print | sed 's#^\./##' | head -n 1
+  done < <(list_source_group_boundary_roots) | awk '!seen[$0]++' | head -n 5
 }
 
 list_code_boundary_paths() {
@@ -244,7 +252,16 @@ list_config_asset_paths() {
   find_exploration_paths -maxdepth 3 \
     -type f \
     \( -name 'package.json' -o -name 'Cargo.toml' -o -name 'pyproject.toml' -o -name 'requirements.txt' -o -name 'go.mod' -o -name 'pom.xml' -o -name 'build.gradle' -o -name 'build.gradle.kts' -o -name 'settings.gradle' -o -name 'settings.gradle.kts' -o -name 'composer.json' -o -name 'Gemfile' -o -name 'Makefile' -o -name 'CMakeLists.txt' -o -name 'Dockerfile' -o -name '*.yml' -o -name '*.yaml' \) \
-    -print | sed 's#^\./##' | head -n 8
+    -print | sed 's#^\./##' | awk '
+      {
+        n = split($0, parts, "/")
+        base = parts[n]
+        if (base ~ /^\./) {
+          next
+        }
+        print
+      }
+    ' | head -n 8
 }
 
 list_domain_context_paths() {
@@ -253,7 +270,11 @@ list_domain_context_paths() {
     \( -name 'README.md' -o -name '*.md' -o -name '*.mdx' -o -name '*.txt' \) \
     ! -name 'AGENTS.md' \
     ! -name 'CLAUDE.md' \
-    -print | sed 's#^\./##' | head -n 8
+    -print | sed 's#^\./##' | awk '
+      /(^|\/)README\.md$/ { print; next }
+      /^docs\/.*\.(md|mdx|txt)$/ { print; next }
+      /^references\/.*\.(md|mdx|txt)$/ { print; next }
+    ' | awk '!seen[$0]++' | head -n 8
 }
 
 print_markdown_bullets_or_fallback() {

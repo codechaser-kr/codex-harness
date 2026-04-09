@@ -457,7 +457,7 @@ build_exploration_guidance() {
     if [ "$exploration_context_level" = "초기" ] || [ "$exploration_context_level" = "제한적" ]; then
       printf '%s\n' "탐색 근거와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
     else
-      printf '%s\n' "현재 저장소는 실제 코드 경계와 대표 흐름을 다시 읽어 관련 문서를 정리해야 합니다."
+      printf '%s\n' "현재 저장소는 실제 코드 경계와 대표 흐름을 다시 읽으며 관련 문서를 정리합니다."
     fi
     return
   fi
@@ -467,7 +467,7 @@ build_exploration_guidance() {
     return
   fi
 
-  printf '%s\n' "현재 저장소는 탐색 문서의 대표 진입점과 코드 경계($boundary_hint)를 바탕으로 관련 문서를 다시 정리합니다."
+  printf '%s\n' "현재 저장소는 탐색 문서의 대표 진입점과 코드 경계($boundary_hint)를 바탕으로 관련 문서를 다시 읽으며 정리합니다."
 }
 
 build_project_type_label() {
@@ -556,9 +556,9 @@ build_initial_observation() {
       ;;
     *)
       if [ "$domain_hint" != "추정 불가" ]; then
-        echo "- $boundary_hint, $config_hint, $domain_hint 단서를 먼저 읽었습니다."
+        echo "- $boundary_hint, $config_hint, $domain_hint 단서를 함께 읽었습니다."
       else
-        echo "- $boundary_hint, $config_hint 단서를 먼저 읽었습니다."
+        echo "- $boundary_hint, $config_hint 단서를 함께 읽었습니다."
       fi
       ;;
   esac

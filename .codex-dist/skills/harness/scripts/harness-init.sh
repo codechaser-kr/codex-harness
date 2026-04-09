@@ -76,13 +76,13 @@ fi
 DOMAIN_SUMMARY_BLOCK="$(build_domain_summary_block "$EXPLORATION_CONTEXT_LEVEL" "$PROJECT_TYPE_LABEL" "$BOUNDARY_HINT" "$CORE_FLOW_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT")"
 INITIAL_OBSERVATION_LINE="$(build_initial_observation "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT" "$CONFIG_HINT" "$EXPLORATION_DOMAIN_HINT")"
 if [ "$EXPLORATION_DOMAIN_HINT" != "추정 불가" ]; then
-  INITIAL_OBSERVATION_LINE="- 탐색 문서에서 \`$EXPLORATION_DOMAIN_HINT\` 단서를 먼저 수집했습니다."
+  INITIAL_OBSERVATION_LINE="- 탐색 문서에서 \`$EXPLORATION_DOMAIN_HINT\` 단서를 수집했습니다."
 fi
 NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$EXPLORATION_CONTEXT_LEVEL" "init")"
 DISCOVERY_GUIDANCE="$(build_exploration_guidance "$EXPLORATION_NOTES_FILE" "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT")"
 
 if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
-  DISCOVERY_GUIDANCE="현재 탐색 근거만으로는 방향 판단이 어렵습니다. run-harness는 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 먼저 확인해야 합니다."
+  DISCOVERY_GUIDANCE="현재 탐색 근거만으로는 방향을 좁히기 어렵습니다. run-harness는 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 확인합니다."
 fi
 
 DOMAIN_DETAIL_BLOCK="$(build_domain_report_detail_block "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT" "$CORE_FLOW_HINT" "$DISCOVERY_GUIDANCE" "$INITIAL_OBSERVATION_LINE" "$NEXT_STEP_DETAIL_LINE")"
@@ -787,18 +787,18 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 
 ## 목적
 
-현재 저장소 상태를 보고, 실행 하네스 팀이 어떤 순서로 움직여야 할지 결정하고 시작한다.
+현재 저장소 상태를 보고, 실행 하네스 팀이 어떤 순서로 움직일지 정리하고 시작한다.
 
 ## 주요 작업
 
 1. 현재 \`.harness/reports/*\`, \`.codex/skills/*\`, 로그 파일 상태를 읽는다.
-2. 요청이 기능 구현, 구조 정리, 공통 모듈 수정, 빌드/검증 변경 중 어디에 가까운지 먼저 분류한다.
-3. 변경 영향 범위가 단일 모듈인지, 여러 경계나 공통 계층까지 전파되는지 판단한다.
-4. 탐색 근거가 부족하거나 빈 프로젝트에 가까우면 사용자에게 먼저 확인할 질문을 정리한다.
-5. domain-analysis가 비어 있거나 약하면 domain-analyst부터 시작한다.
-6. 구조 설계나 패키지 경계 판단이 부족하면 harness-architect를 우선한다.
-7. QA 기준이 약하면 qa-designer를 다시 호출할 수 있다.
-8. 흐름 연결이 약하면 orchestrator를 중심으로 재정리한다.
+2. 요청이 기능 구현, 구조 정리, 공통 모듈 수정, 빌드/검증 변경 중 어디에 가까운지 분류한다.
+3. 변경 영향 범위가 단일 모듈인지, 여러 경계나 공통 계층까지 전파되는지 함께 읽는다.
+4. 탐색 근거가 부족하거나 빈 프로젝트에 가까우면 사용자 확인 질문을 정리한다.
+5. domain-analysis가 비어 있거나 약하면 domain-analyst로 여는 흐름을 검토한다.
+6. 구조 설계나 패키지 경계 설명이 약하면 harness-architect를 앞에 두는 흐름을 검토한다.
+7. QA 기준이 약하면 qa-designer 재호출을 검토한다.
+8. 흐름 연결이 약하면 orchestrator 중심 재정렬을 검토한다.
 9. 마지막에 validator 관점으로 최소 구조를 점검한다.
 10. 시작 역할을 정할 때 왜 그 역할부터 시작하는지, 무엇이 달라지면 다른 시작점이 맞는지도 짧게 남긴다.
 
@@ -825,10 +825,10 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 
 ## 현재 상태별 진입 규칙
 
-- 신규 구축이면 \`harness-init.sh\` 기준으로 기본 팀 구조를 먼저 만든다.
-- 기존 확장 또는 운영 유지보수이면 \`harness-update.sh\`를 기본 진입점으로 사용한다.
-- 부분 구조만 남아 있거나 문서와 역할 구성이 크게 어긋나면 update로 봉합하지 말고 명시적 재구성을 먼저 제안한다.
-- 보고서 한 영역만 약하면 \`harness-update.sh --domain\`, \`--qa\`, \`--architecture\`, \`--orchestration\`, \`--team-structure\`, \`--team-playbook\` 같은 선택 갱신을 우선 고려한다.
+- 신규 구축이면 \`harness-init.sh\` 기준의 기본 팀 구조를 연다.
+- 기존 확장 또는 운영 유지보수이면 \`harness-update.sh\`를 기본 진입점으로 둔다.
+- 부분 구조만 남아 있거나 문서와 역할 구성이 크게 어긋나면 update로 봉합하지 말고 명시적 재구성을 제안한다.
+- 보고서 한 영역만 약하면 \`harness-update.sh --domain\`, \`--qa\`, \`--architecture\`, \`--orchestration\`, \`--team-structure\`, \`--team-playbook\` 같은 선택 갱신부터 검토한다.
 
 ## 역할 팀 내 위치
 
@@ -842,26 +842,26 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 항상 모든 역할을 다 호출하려 하지 않는다.
 - 현재 상태에서 가장 약한 지점을 먼저 다시 쓴다.
 - orchestrator와 validator를 흐름의 중심 축으로 삼는다.
-- 판단 근거가 약하면 역할 호출을 단정하기 전에 사용자 확인 질문부터 짧게 제시한다.
+- 판단 근거가 약하면 역할 호출을 단정하기보다 사용자 확인 질문을 짧게 제시한다.
 - 시작 역할을 제시할 때는 저장소 맞춤 근거와 현재 약점을 같이 묶어 설명한다.
 
 ## 운영 규칙
 
-- 새 프로젝트라면 domain-analyst → harness-architect → skill-scaffolder → qa-designer → orchestrator → validator 순서를 기본으로 본다.
-- 이미 구조가 있는 프로젝트라면 \`harness-update.sh\`로 현재 상태를 다시 읽고 부족한 역할만 다시 호출하는 쪽을 우선한다.
+- 새 프로젝트라면 domain-analyst → harness-architect → skill-scaffolder → qa-designer → orchestrator → validator 순서를 기본 흐름으로 둔다.
+- 이미 구조가 있는 프로젝트라면 \`harness-update.sh\`로 현재 상태를 다시 읽고 부족한 역할만 다시 호출하는 흐름을 먼저 검토한다.
 - 문서, 로그, handoff를 계속 유지해야 하는 중심 역할은 팀 구조로 유지하고, 입력과 출력이 좁은 보조 판단만 일회성 위임으로 다룬다.
-- 새 구조를 안정적으로 세울 때는 파이프라인을, 생성 직후 검증을 붙여야 할 때는 생성-검증을, 하위 경계가 독립적일 때만 팬아웃/팬인을, handoff와 재진입이 핵심이면 오케스트레이션 중심 구조를 우선한다.
-- 요청이 기능 구현, 구조 정리, 공통 모듈 수정, 빌드/검증 변경 중 어디에 걸리는지 먼저 분류하고 그 결과를 orchestration-plan 판단의 입력으로 사용한다.
-- 요청이 추상적이거나 저장소 맥락이 약하면 질문과 탐색 재확인을 먼저 두고, 저장소 고유 용어와 영향 범위를 정확히 말하면 더 직접적인 역할 시작을 허용한다.
+- 새 구조를 안정적으로 세울 때는 파이프라인을, 생성 직후 검증을 붙일 때는 생성-검증을, 하위 경계가 독립적일 때만 팬아웃/팬인을, handoff와 재진입이 핵심이면 오케스트레이션 중심 구조를 먼저 검토한다.
+- 요청이 기능 구현, 구조 정리, 공통 모듈 수정, 빌드/검증 변경 중 어디에 걸리는지 분류하고 그 결과를 orchestration-plan 입력으로 사용한다.
+- 요청이 추상적이거나 저장소 맥락이 약하면 질문과 탐색 재확인을 앞에 두고, 저장소 고유 용어와 영향 범위를 정확히 말하면 더 직접적인 역할 시작 흐름을 연다.
 - 영향 범위가 공통 계층이나 다중 모듈로 번지면 domain-analyst와 qa-designer를 더 이른 순서에 배치한다.
 - 다른 역할이 저장소를 직접 읽더라도 domain-analyst의 근거 제외 규칙을 그대로 따른다.
 - 현재 보고서가 generic 문장으로 약해졌거나 저장소 고유 근거가 흐리면 domain-analyst 또는 validator를 더 이른 순서에 둔다.
 - 시작 역할을 정한 뒤에는 무엇이 바뀌면 다른 시작점이 더 적절해지는지도 짧게 남긴다.
-- 빈 저장소이거나 탐색 근거가 부족하면, \`.harness/project-setup.md\`가 있는지 먼저 확인한다.
+- 빈 저장소이거나 탐색 근거가 부족하면, \`.harness/project-setup.md\` 존재 여부부터 확인한다.
 - \`.harness/project-setup.md\`가 작성되어 있으면 그 내용을 domain-analyst의 시작 입력으로 연결한다.
 - 작성되어 있지 않으면 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 먼저 확인한 뒤, 파일이 없는 경우 템플릿 내용을 포함하여 \`.harness/project-setup.md\`에 채우도록 안내한다.
 - 사용자 답변이 모이면 그 내용을 domain-analysis와 orchestration-plan의 입력으로 바로 연결한다.
-- 재구성이 필요한 상태라면 어떤 구조가 비어 있거나 어긋났는지 먼저 설명하고, 기존 하네스 정리 후 \`harness-init.sh\`로 다시 구성하도록 제안한다.
+- 재구성이 필요한 상태라면 어떤 구조가 비어 있거나 어긋났는지 설명하고, 기존 하네스 정리 후 \`harness-init.sh\`로 다시 구성하도록 제안한다.
 - 리포트보다 실제 역할 팀 구조와 설명 품질을 더 중요하게 본다.
 - \`.harness/*\` 문서는 특별한 요청이 없으면 한글로 작성한다. 파일명은 기존 영문 이름을 유지한다.
 - 로그 운영 기준은 \`.harness/logging-policy.md\`를 먼저 확인한다.

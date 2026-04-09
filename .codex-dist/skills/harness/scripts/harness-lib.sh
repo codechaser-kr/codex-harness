@@ -193,27 +193,17 @@ find_exploration_paths() {
     "$@"
 }
 
-list_source_anchor_paths() {
-  find_exploration_paths \
-    -type f \
-    \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' -o -name '*.rs' -o -name '*.py' -o -name '*.go' -o -name '*.java' -o -name '*.kt' -o -name '*.swift' -o -name '*.php' -o -name '*.rb' -o -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.hpp' \) \
-    -print | sed 's#^\./##' | head -n 5
+find_exploration_paths_under() {
+  local search_root="$1"
+  shift
+
+  find "$search_root" \
+    \( -path "$search_root/.git" -o -path "$search_root/.codex" -o -path "$search_root/.harness" -o -path "$search_root/.claude" -o -path "$search_root/.cursor" -o -path "$search_root/.agents" -o -name node_modules -o -path "$search_root/.yarn" -o -name dist -o -name build -o -name coverage \) -prune \
+    -o \
+    "$@"
 }
 
-list_entrypoint_anchor_paths() {
-  find_exploration_paths \
-    -type f \
-    \( -name 'main.ts' -o -name 'main.tsx' -o -name 'main.js' -o -name 'main.jsx' -o -name 'main.rs' -o \
-       -name 'index.ts' -o -name 'index.tsx' -o -name 'index.js' -o -name 'index.jsx' -o \
-       -name 'app.ts' -o -name 'app.tsx' -o -name 'app.js' -o -name 'app.jsx' -o \
-       -name 'server.ts' -o -name 'server.tsx' -o -name 'server.js' -o -name 'server.jsx' -o \
-       -name 'cli.ts' -o -name 'cli.tsx' -o -name 'cli.js' -o -name 'cli.jsx' -o \
-       -name 'lib.ts' -o -name 'lib.tsx' -o -name 'lib.js' -o -name 'lib.jsx' -o \
-       -name 'mod.rs' \) \
-    -print | sed 's#^\./##' | head -n 5
-}
-
-list_code_boundary_paths() {
+list_source_group_boundary_roots() {
   find_exploration_paths \
     -type f \
     \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' -o -name '*.rs' -o -name '*.py' -o -name '*.go' -o -name '*.java' -o -name '*.kt' -o -name '*.swift' -o -name '*.php' -o -name '*.rb' -o -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.hpp' \) \
@@ -227,7 +217,65 @@ list_code_boundary_paths() {
         next
       }
       NF == 1 { print $1 }
-    ' | awk '!seen[$0]++' | head -n 5
+    ' | awk '!seen[$0]++'
+}
+
+list_execution_boundary_roots() {
+  list_source_group_boundary_roots | head -n 5
+}
+
+list_source_anchor_paths() {
+  find_exploration_paths \
+    -type f \
+    \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' -o -name '*.rs' -o -name '*.py' -o -name '*.go' -o -name '*.java' -o -name '*.kt' -o -name '*.swift' -o -name '*.php' -o -name '*.rb' -o -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.hpp' \) \
+    -print | sed 's#^\./##' | head -n 5
+}
+
+list_entrypoint_anchor_paths() {
+  local boundary_root
+  local emitted=0
+  local search_root
+
+  while IFS= read -r boundary_root; do
+    [ -n "$boundary_root" ] || continue
+    search_root="./$boundary_root"
+
+    while IFS= read -r entrypoint_path; do
+      [ -n "$entrypoint_path" ] || continue
+      printf '%s\n' "$entrypoint_path"
+      emitted=$((emitted + 1))
+      [ "$emitted" -lt 5 ] || return
+      break
+    done < <(
+      find_exploration_paths_under "$search_root" \
+        -type f \
+        \( -name 'main.ts' -o -name 'main.tsx' -o -name 'main.js' -o -name 'main.jsx' -o -name 'main.rs' -o \
+           -name 'index.ts' -o -name 'index.tsx' -o -name 'index.js' -o -name 'index.jsx' -o \
+           -name 'app.ts' -o -name 'app.tsx' -o -name 'app.js' -o -name 'app.jsx' -o \
+           -name 'server.ts' -o -name 'server.tsx' -o -name 'server.js' -o -name 'server.jsx' -o \
+           -name 'cli.ts' -o -name 'cli.tsx' -o -name 'cli.js' -o -name 'cli.jsx' -o \
+           -name 'lib.ts' -o -name 'lib.tsx' -o -name 'lib.js' -o -name 'lib.jsx' -o \
+           -name 'mod.rs' \) \
+        -print | sed 's#^\./##' | head -n 3
+    )
+  done < <(list_execution_boundary_roots)
+
+  [ "$emitted" -gt 0 ] && return
+
+  find_exploration_paths \
+    -type f \
+    \( -name 'main.ts' -o -name 'main.tsx' -o -name 'main.js' -o -name 'main.jsx' -o -name 'main.rs' -o \
+       -name 'index.ts' -o -name 'index.tsx' -o -name 'index.js' -o -name 'index.jsx' -o \
+       -name 'app.ts' -o -name 'app.tsx' -o -name 'app.js' -o -name 'app.jsx' -o \
+       -name 'server.ts' -o -name 'server.tsx' -o -name 'server.js' -o -name 'server.jsx' -o \
+       -name 'cli.ts' -o -name 'cli.tsx' -o -name 'cli.js' -o -name 'cli.jsx' -o \
+       -name 'lib.ts' -o -name 'lib.tsx' -o -name 'lib.js' -o -name 'lib.jsx' -o \
+       -name 'mod.rs' \) \
+    -print | sed 's#^\./##' | head -n 5
+}
+
+list_code_boundary_paths() {
+  list_execution_boundary_roots
 }
 
 list_test_asset_paths() {

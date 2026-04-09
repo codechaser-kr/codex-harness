@@ -3,7 +3,7 @@
 # 디렉토리, 로컬 역할 스킬, 보조 리포트를 최초 1회 생성합니다.
 # harness-update.sh와 차이:
 #   - harness-init.sh: 디렉토리/스킬/리포트 모두 생성 (기존 파일 유지)
-#   - harness-update.sh: 기존 하네스 구조를 감사한 뒤 필요한 보조 문서를 보강
+#   - harness-update.sh: 기존 하네스 구조를 감사한 뒤 필요한 보고서를 다시 정리
 # 사용 시점: 프로젝트에 처음 하네스를 구성할 때
 set -euo pipefail
 
@@ -939,7 +939,7 @@ create_file_if_missing ".harness/logging-policy.md" \
 - run-harness로 팀을 시작했을 때
 - 특정 역할을 직접 호출했을 때
 - validator 피드백이 나왔을 때
-- QA 질문이 보강되었을 때
+- QA 질문이 다시 정리되었을 때
 - orchestrator가 흐름을 변경했을 때
 - 역할 팀 구조가 변경되었을 때
 

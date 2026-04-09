@@ -226,20 +226,20 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 1. QA 역할을 포함해 품질 관점을 정의한다.
 2. validator를 포함해 최소 검증 구조를 만든다.
 3. orchestrator가 각 역할의 입력/출력을 연결할 수 있게 한다.
-4. QA와 validator의 피드백이 다시 구조 보완으로 이어질 수 있게 한다.
+4. QA와 validator의 피드백이 다시 구조 재작성으로 이어질 수 있게 한다.
 
 QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 
-### Phase 5: `.harness/reports/*` 문서 프로젝트 맞춤 가공
+### Phase 5: `.harness/reports/*` 문서 프로젝트 맞춤 작성
 
 1. `harness-init.sh` 또는 `harness-update.sh`가 만든 `.harness/reports/*` 문서를 최종본으로 간주하지 않는다.
-2. domain-analyst가 저장소 사실, 대표 흐름, 예외를 기준으로 `domain-analysis.md`를 먼저 보정한다.
+2. domain-analyst가 저장소 사실, 대표 흐름, 예외를 기준으로 `domain-analysis.md`를 직접 다시 쓴다.
 3. 이 단계에서 기존 README, 도메인 문서, 사용자 흐름 설명에 있던 업무 용어와 문제 정의를 하네스 운영 문구가 덮어쓰지 않게 유지한다.
-4. harness-architect와 qa-designer가 역할 경계, handoff, 검증 기준을 현재 저장소 운영 방식에 맞게 다시 정렬한다.
-5. orchestrator가 시작 분기, 재진입 루프, 세션 운영 규칙을 실제 요청 유형 기준으로 다듬는다.
+4. harness-architect와 qa-designer가 역할 경계, handoff, 검증 기준을 현재 저장소 운영 방식에 맞는 결과 문서로 다시 쓴다.
+5. orchestrator가 시작 분기, 재진입 루프, 세션 운영 규칙을 실제 요청 유형 기준의 운영 문서로 다시 쓴다.
 6. validator는 문서가 스키마만 맞춘 일반론에 머물지 않고 저장소 특화 근거와 도메인 밀도를 유지하는지 확인한다.
 
-이 단계의 목적은 스크립트 출력물을 그대로 유지하는 것이 아니라, 각 프로젝트의 구조, 운영 맥락, 기존 도메인 언어에 맞는 문서로 가공하는 것이다.
+이 단계의 목적은 스크립트 출력물을 그대로 유지하는 것이 아니라, 각 프로젝트의 구조, 운영 맥락, 기존 도메인 언어에 맞는 결과 문서를 직접 작성하는 것이다.
 
 ### Phase 6: 실행 하네스 팀 검증
 

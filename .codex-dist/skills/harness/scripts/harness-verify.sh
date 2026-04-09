@@ -401,6 +401,8 @@ fi
 
 if [ -f ".codex/skills/validator/SKILL.md" ]; then
   check_contains_hint ".codex/skills/validator/SKILL.md" "피드백" "피드백 루프 설명"
+  check_contains_any_hint ".codex/skills/validator/SKILL.md" "generic 회귀|저장소 맞춤성|저장소 고유 근거|일반론" "validator 저장소 맞춤 회귀 감지"
+  check_contains_any_hint ".codex/skills/validator/SKILL.md" "어느 역할에서 시작|보강 역할|누가 어떤 기준" "validator 보완 역할 지정"
 fi
 
 if [ -f ".codex/skills/run-harness/SKILL.md" ]; then
@@ -416,6 +418,8 @@ if [ -f ".codex/skills/run-harness/SKILL.md" ]; then
   check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "저장소 고유 용어|추상적|사용자 확인 질문|맥락이 약" "사용자 맥락 판단 규칙"
   check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "명시적 재구성|재구성" "재구성 판단 규칙"
   check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "--domain|--qa|--architecture|--orchestration|--team-structure|--team-playbook" "선택 갱신 예시"
+  check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "왜 이 시작 역할|왜 그 역할부터|왜 이 시작점" "run-harness 시작 역할 근거"
+  check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "무엇이 달라지면|다른 시작점|무엇이 바뀌면" "run-harness 시작점 변경 조건"
 fi
 
 if [ -f ".harness/reports/team-structure.md" ]; then

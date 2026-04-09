@@ -215,6 +215,8 @@ assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "생성-검증" "run-harness 패턴 판단"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "저장소 고유 용어" "run-harness 사용자 맥락 판단"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "domain-analyst의 근거 제외 규칙" "run-harness 근거 제외 규칙 위임"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "왜 이 시작 역할이 맞는지" "run-harness 시작 역할 근거"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "무엇이 달라지면 다른 시작점" "run-harness 시작점 변경 조건"
 assert_file "$TMP_ROOT/empty-project/.codex/agents/run-harness.md"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/agents/run-harness.md")" "## 역할" "run-harness agent 역할"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/agents/run-harness.md")" "## handoff" "run-harness agent handoff"
@@ -235,6 +237,9 @@ assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/qa-designer/SKILL.
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/orchestrator/SKILL.md")" "운영 근거로 설명" "orchestrator skill 재진입 근거 책임"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/orchestrator/SKILL.md")" "어떤 요청 유형에서 어디서 시작해야 하는가" "orchestrator skill 출력 구조 시작점"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/orchestrator/SKILL.md")" "왜 그 시작점이 맞는가" "orchestrator skill 시작점 설명 기준"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/validator/SKILL.md")" "generic 회귀" "validator skill generic 회귀 감지"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/validator/SKILL.md")" "저장소 맞춤성" "validator skill 저장소 맞춤성 감지"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/validator/SKILL.md")" "누가 어떤 기준으로 보강" "validator skill 보완 역할 지정"
 (
   cd "$TMP_ROOT/empty-project"
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"

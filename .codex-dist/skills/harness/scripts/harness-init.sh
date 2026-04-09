@@ -682,6 +682,10 @@ create_file_if_missing ".harness/reports/harness-architecture.md" \
 
 ## 저장소 운영 구조
 
+## 실행 모드 선택
+
+## 아키텍처 패턴 선택
+
 ## 역할별 개입 기준
 
 ## 경계별 handoff 기준
@@ -702,6 +706,8 @@ create_file_if_missing ".harness/reports/qa-strategy.md" \
 
 ## 핵심 품질 축
 
+## 자동/수동 검증 분리
+
 ## 핵심 질문
 
 ## 변경 유형별 체크 기준
@@ -719,6 +725,8 @@ create_file_if_missing ".harness/reports/orchestration-plan.md" \
 ## 저장소 고유 근거
 
 ## 요청 유형별 시작점
+
+## 시작점 선택 이유
 
 ## 표준 진행 흐름
 
@@ -738,6 +746,8 @@ create_file_if_missing ".harness/reports/team-structure.md" \
 
 ## 저장소 경계
 
+## 실행 경계와 검증 비용
+
 ## 경계별 역할 분담
 
 ## 역할 추가/축소 기준
@@ -755,6 +765,8 @@ create_file_if_missing ".harness/reports/team-playbook.md" \
 ## 시작 조건
 
 ## 작업 유형별 시작 흐름
+
+## 역할 팀 운영 원칙
 
 ## 검증과 종료 조건
 "

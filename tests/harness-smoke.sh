@@ -229,6 +229,12 @@ assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/harness-architect/
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/harness-architect/SKILL.md")" "어떤 경계와 위험 때문에 역할 분리가 필요한가" "architect skill 출력 구조 위험 기준"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/harness-architect/SKILL.md")" "왜 필요한지 저장소 경계와 위험을 기준으로 설명" "architect skill 역할 설명 기준"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/harness-architect/SKILL.md")" "역할 유지와 조정 기준" "architect skill 조정 기준 문구"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/qa-designer/SKILL.md")" "품질 질문으로 번역" "qa skill 품질 해석 책임"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/qa-designer/SKILL.md")" "어떤 경계와 흐름이 실패 비용이 큰가" "qa skill 출력 구조 실패 비용"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/qa-designer/SKILL.md")" "왜 그 질문이 필요한지" "qa skill 질문 근거 기준"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/orchestrator/SKILL.md")" "운영 근거로 설명" "orchestrator skill 재진입 근거 책임"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/orchestrator/SKILL.md")" "어떤 요청 유형에서 어디서 시작해야 하는가" "orchestrator skill 출력 구조 시작점"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/orchestrator/SKILL.md")" "왜 그 시작점이 맞는가" "orchestrator skill 시작점 설명 기준"
 (
   cd "$TMP_ROOT/empty-project"
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"

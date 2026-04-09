@@ -116,24 +116,6 @@ check_required_any_hint() {
   fi
 }
 
-check_placeholder_state() {
-  local file="$1"
-  local pattern="$2"
-  local label="$3"
-
-  if grep -Eq -- "$pattern" "$file"; then
-    if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
-      fail "$label 미해결: $file"
-    elif [ "$EXPLORATION_CONTEXT_LEVEL" = "초기" ]; then
-      log "OK $label 초기값 유지: $file"
-    else
-      warn "$label 미해결: $file"
-    fi
-  else
-    log "OK $label: $file"
-  fi
-}
-
 count_markdown_bullets_under_h2() {
   local file="$1"
   local heading="$2"
@@ -403,37 +385,54 @@ check_file ".harness/logging-policy.md"
 check_file ".harness/reports/exploration-notes.md"
 
 if [ -f ".harness/reports/domain-analysis.md" ]; then
-  check_placeholder_state ".harness/reports/domain-analysis.md" "프로젝트 성격: (미정|unknown)" "프로젝트 성격 구체화"
-  check_placeholder_state ".harness/reports/domain-analysis.md" "설정 및 실행 단서: (미정|추정 불가)" "설정 및 실행 단서 구체화"
-  check_placeholder_state ".harness/reports/domain-analysis.md" "핵심 흐름: 미정" "핵심 흐름 구체화"
-  check_placeholder_state ".harness/reports/domain-analysis.md" "저장소를 분석한 뒤 이 내용을 구체화하세요|domain-analyst가 실제 저장소 구조를 읽고 내용을 구체화합니다" "도메인 분석 초안 치환"
+  check_contains_hint ".harness/reports/domain-analysis.md" "## 저장소 고유 근거" "도메인 분석 저장소 고유 근거"
+  check_contains_hint ".harness/reports/domain-analysis.md" "## 사실 기준 구조" "도메인 분석 사실 기준 구조"
+  check_contains_hint ".harness/reports/domain-analysis.md" "## 핵심 실행 흐름" "도메인 분석 핵심 실행 흐름"
+  check_contains_hint ".harness/reports/domain-analysis.md" "## 반복적으로 위험한 변경 유형" "도메인 분석 위험 변경 유형"
+  check_contains_hint ".harness/reports/domain-analysis.md" "## 남아 있는 질문" "도메인 분석 남은 질문"
   fail_if_contains_literal ".harness/reports/domain-analysis.md" "최종 분석은 domain-analyst가 직접 작성합니다." "도메인 분석 역할 재작성 미수행"
   fail_if_contains_pattern ".harness/reports/domain-analysis.md" "후보로 수집되었습니다|자동 수집만으로는|직접 작성합니다\\.|다시 씁니다\\.|추가 읽기가 필요합니다" "도메인 분석 역할 재작성 미수행"
 fi
 
 if [ -f ".harness/reports/harness-architecture.md" ]; then
+  check_contains_hint ".harness/reports/harness-architecture.md" "## 저장소 고유 근거" "아키텍처 저장소 고유 근거"
+  check_contains_hint ".harness/reports/harness-architecture.md" "## 역할 배치" "아키텍처 역할 배치"
+  check_contains_hint ".harness/reports/harness-architecture.md" "## 역할 유지와 조정 기준" "아키텍처 역할 유지 기준"
+  check_contains_hint ".harness/reports/harness-architecture.md" "## 남아 있는 질문" "아키텍처 남은 질문"
   fail_if_contains_literal ".harness/reports/harness-architecture.md" "최종 구조 설명은 harness-architect가 직접 작성합니다." "아키텍처 역할 재작성 미수행"
-  fail_if_contains_pattern ".harness/reports/harness-architecture.md" "역할 메모|흐름 메모|확장 메모|직접 작성합니다\\." "아키텍처 역할 재작성 미수행"
 fi
 
 if [ -f ".harness/reports/qa-strategy.md" ]; then
+  check_contains_hint ".harness/reports/qa-strategy.md" "## 저장소 고유 단서" "QA 저장소 고유 단서"
+  check_contains_hint ".harness/reports/qa-strategy.md" "## 핵심 품질 축" "QA 핵심 품질 축"
+  check_contains_hint ".harness/reports/qa-strategy.md" "## 핵심 질문" "QA 핵심 질문"
+  check_contains_hint ".harness/reports/qa-strategy.md" "## 변경 유형별 체크" "QA 변경 유형별 체크"
   fail_if_contains_literal ".harness/reports/qa-strategy.md" "최종 QA 전략은 qa-designer가 직접 작성합니다." "QA 역할 재작성 미수행"
-  fail_if_contains_pattern ".harness/reports/qa-strategy.md" "대표 소스 앵커입니다|QA 메모|직접 작성합니다\\." "QA 역할 재작성 미수행"
 fi
 
 if [ -f ".harness/reports/orchestration-plan.md" ]; then
+  check_contains_hint ".harness/reports/orchestration-plan.md" "## 저장소 고유 근거" "오케스트레이션 저장소 고유 근거"
+  check_contains_hint ".harness/reports/orchestration-plan.md" "## 시작 분기" "오케스트레이션 시작 분기"
+  check_contains_hint ".harness/reports/orchestration-plan.md" "## 표준 전체 시퀀스" "오케스트레이션 표준 시퀀스"
+  check_contains_hint ".harness/reports/orchestration-plan.md" "## 역할 간 handoff 규칙" "오케스트레이션 handoff 규칙"
+  check_contains_hint ".harness/reports/orchestration-plan.md" "## 남아 있는 질문" "오케스트레이션 남은 질문"
   fail_if_contains_literal ".harness/reports/orchestration-plan.md" "최종 오케스트레이션 계획은 orchestrator가 직접 작성합니다." "오케스트레이션 역할 재작성 미수행"
-  fail_if_contains_pattern ".harness/reports/orchestration-plan.md" "운영 메모|흐름 메모|직접 작성합니다\\." "오케스트레이션 역할 재작성 미수행"
 fi
 
 if [ -f ".harness/reports/team-structure.md" ]; then
+  check_contains_hint ".harness/reports/team-structure.md" "## 저장소 고유 근거" "팀 구조 저장소 고유 근거"
+  check_contains_hint ".harness/reports/team-structure.md" "## 팀 구성" "팀 구조 팀 구성"
+  check_contains_hint ".harness/reports/team-structure.md" "## 역할별 책임 요약" "팀 구조 역할 책임"
   fail_if_contains_literal ".harness/reports/team-structure.md" "최종 팀 구조는 harness-architect가 직접 작성합니다." "팀 구조 역할 재작성 미수행"
-  fail_if_contains_pattern ".harness/reports/team-structure.md" "팀 메모|직접 작성합니다\\." "팀 구조 역할 재작성 미수행"
 fi
 
 if [ -f ".harness/reports/team-playbook.md" ]; then
+  check_contains_hint ".harness/reports/team-playbook.md" "## 저장소 고유 근거" "플레이북 저장소 고유 근거"
+  check_contains_hint ".harness/reports/team-playbook.md" "## 시작 체크" "플레이북 시작 체크"
+  check_contains_hint ".harness/reports/team-playbook.md" "## 역할 호출 순서" "플레이북 역할 호출 순서"
+  check_contains_hint ".harness/reports/team-playbook.md" "## 작업 유형별" "플레이북 작업 유형별 섹션"
+  check_contains_hint ".harness/reports/team-playbook.md" "## 종료" "플레이북 종료 섹션"
   fail_if_contains_literal ".harness/reports/team-playbook.md" "최종 운영 플레이북은 orchestrator가 직접 작성합니다." "플레이북 역할 재작성 미수행"
-  fail_if_contains_pattern ".harness/reports/team-playbook.md" "세션 메모|직접 작성합니다\\." "플레이북 역할 재작성 미수행"
 fi
 
 if [ -f ".harness/reports/exploration-notes.md" ]; then
@@ -465,29 +464,8 @@ else
   log "선택 자산 생략: .harness/logs/role-frequency.md"
 fi
 
-if [ "$EXPLORATION_CONTEXT_LEVEL" = "초기" ]; then
-  warn "빈 프로젝트 또는 탐색 근거가 거의 없는 저장소로 판단됨: 구조 검증과 사용자 질문 유도 기본값 중심으로 확인합니다"
-
-  if [ -f ".harness/reports/domain-analysis.md" ]; then
-    check_contains_any_hint ".harness/reports/domain-analysis.md" "프로젝트 성격: (미정|unknown)" "빈 프로젝트용 프로젝트 성격 기본값"
-    check_contains_any_hint ".harness/reports/domain-analysis.md" "가장 먼저 성공|첫 성공|핵심 흐름 한 가지|가장 먼저 동작해야 할 핵심 흐름" "빈 프로젝트용 첫 성공 흐름 질문"
-  fi
-fi
-
-if [ "$EXPLORATION_CONTEXT_LEVEL" = "제한적" ]; then
-  warn "탐색 근거가 제한적입니다: 역할 추천 전에 사용자 질문 유도 흐름이 중요합니다"
-
-  if [ -f ".harness/reports/domain-analysis.md" ]; then
-    check_contains_hint ".harness/reports/domain-analysis.md" "사용자 확인 질문" "탐색 제한 상태 질문 섹션"
-  fi
-
-  if [ -f ".harness/reports/team-playbook.md" ]; then
-    check_contains_hint ".harness/reports/team-playbook.md" "사용자 확인 질문" "탐색 제한 상태 사용자 질문 우선 흐름"
-  fi
-fi
-
 if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
-  log "탐색 근거가 충분한 저장소로 판단됨: 프로젝트 특화 초안이 남아 있으면 실패로 처리합니다"
+  log "탐색 근거가 충분한 저장소로 판단됨: 최소 구조와 골격 잔존 여부를 함께 확인합니다"
 
   if [ -f ".harness/reports/domain-analysis.md" ]; then
     check_required_any_hint ".harness/reports/domain-analysis.md" "저장소 고유 근거|소스 앵커" "도메인 분석 저장소 고유 근거"
@@ -497,23 +475,6 @@ if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
     check_contains_any_hint ".harness/reports/domain-analysis.md" "반복적으로 위험한 변경 유형|위험 변경 유형|위험 축" "도메인 분석 위험 요약"
     warn_if_anchor_count_below ".harness/reports/domain-analysis.md" "저장소 고유 근거" 3 "도메인 분석 소스 앵커"
     warn_if_contains_literal ".harness/reports/domain-analysis.md" "이 경계가 어떤 책임을 맡고, 어디로 영향이 번지는지 먼저 설명합니다." "도메인 분석 책임 해석"
-  fi
-
-  if [ -f ".harness/reports/harness-architecture.md" ]; then
-    check_contains_any_hint ".harness/reports/harness-architecture.md" "역할별 초점|권장 역할|역할별 책임|역할 메모" "아키텍처 역할 배치"
-    warn_if_contains_literal ".harness/reports/harness-architecture.md" "이 경계가 어떤 책임을 맡고, 어디로 영향이 번지는지 먼저 설명합니다." "아키텍처 경계 해석"
-  fi
-
-  if [ -f ".harness/reports/qa-strategy.md" ]; then
-    check_contains_any_hint ".harness/reports/qa-strategy.md" "핵심 품질 축|품질 축" "QA 핵심 품질 축"
-  fi
-
-  if [ -f ".harness/reports/orchestration-plan.md" ]; then
-    check_contains_any_hint ".harness/reports/orchestration-plan.md" "시작 분기|진입점 규칙|시작점" "오케스트레이션 시작 분기"
-  fi
-
-  if [ -f ".harness/reports/team-playbook.md" ]; then
-    check_contains_any_hint ".harness/reports/team-playbook.md" "세션 시작 체크|세션 시작 절차|시작 체크|시작 순서|시작 메모|시작 체크 메모" "플레이북 세션 시작 규칙"
   fi
 
   if [ -f ".harness/reports/exploration-notes.md" ]; then

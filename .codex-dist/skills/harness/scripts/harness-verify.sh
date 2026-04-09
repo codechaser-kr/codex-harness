@@ -187,6 +187,18 @@ warn_if_anchor_count_below() {
   fi
 }
 
+warn_if_contains_literal() {
+  local file="$1"
+  local literal="$2"
+  local label="$3"
+
+  [ -f "$file" ] || return
+
+  if grep -Fq -- "$literal" "$file"; then
+    warn "$label: 기본 템플릿 문구가 그대로 남아 있습니다"
+  fi
+}
+
 audit_harness_drift() {
   local mode="$1"
   local skill_count="$2"
@@ -512,6 +524,7 @@ if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
     check_contains_any_hint ".harness/reports/domain-analysis.md" "사용자 흐름|상태 전파|소비 관계|영향 전파|운영 비용" "도메인 분석 흐름 해석"
     check_contains_any_hint ".harness/reports/domain-analysis.md" "반복적으로 위험한 변경 유형|위험 변경 유형|위험 축" "도메인 분석 위험 요약"
     warn_if_anchor_count_below ".harness/reports/domain-analysis.md" "저장소 고유 근거" 3 "도메인 분석 소스 앵커"
+    warn_if_contains_literal ".harness/reports/domain-analysis.md" "이 경계가 어떤 책임을 맡고, 어디로 영향이 번지는지 먼저 설명합니다." "도메인 분석 책임 해석"
   fi
 
   if [ -f ".harness/reports/harness-architecture.md" ]; then
@@ -524,6 +537,7 @@ if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
     check_contains_any_hint ".harness/reports/harness-architecture.md" "역할 분리|입력과 출력|위임 비용" "아키텍처 역할 분리 기준"
     check_contains_any_hint ".harness/reports/harness-architecture.md" "축소/확장 판단|축소|확장" "아키텍처 축소 확장 기준"
     check_contains_any_hint ".harness/reports/harness-architecture.md" "설계 원칙|원칙" "아키텍처 설계 원칙"
+    warn_if_contains_literal ".harness/reports/harness-architecture.md" "이 경계가 어떤 책임을 맡고, 어디로 영향이 번지는지 먼저 설명합니다." "아키텍처 경계 해석"
   fi
 
   if [ -f ".harness/reports/qa-strategy.md" ]; then

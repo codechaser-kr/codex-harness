@@ -344,6 +344,7 @@ STACK_VERIFY_OUTPUT="$(
 assert_contains "$STACK_VERIFY_OUTPUT" "탐색 상태: 충분" "스택 프로젝트 verify 충분 탐색 상태"
 assert_contains "$STACK_VERIFY_OUTPUT" "OK 도메인 분석 저장소 고유 근거" "스택 프로젝트 verify 도메인 근거 검사"
 assert_contains "$STACK_VERIFY_OUTPUT" "OK 탐색 대표 진입점 개수" "스택 프로젝트 verify 탐색 앵커 검사"
+assert_contains "$STACK_VERIFY_OUTPUT" "도메인 분석 책임 해석: 기본 템플릿 문구가 그대로 남아 있습니다" "스택 프로젝트 verify 템플릿 책임 해석 경고"
 
 log "선택 갱신 범위 확인"
 rm -f "$TMP_ROOT/stack-project/.harness/reports/qa-strategy.md"

@@ -594,45 +594,67 @@ build_domain_report_detail_block() {
   case "$exploration_context_level" in
     초기|제한적)
       cat <<EOF
-## 분석 관점
+## 요약
 
-이 문서는 현재 저장소를 하네스 관점에서 읽기 위한 초기 메모입니다.
-
-현재 단계에서 함께 적어둘 질문은 아래와 같습니다.
-
-- 이 저장소가 해결하려는 문제는 무엇인가
-- 주요 사용자 또는 개발자 흐름은 무엇인가
-- 어떤 품질 문제가 반복적으로 발생할 수 있는가
-- 하네스가 함께 읽을 핵심 축은 무엇인가
-
-## 함께 볼 질문
-
-- 이 프로젝트는 애플리케이션인가, 라이브러리인가, 도구인가
-- 핵심 기능은 어디에 모여 있는가
-- 변경 시 영향이 큰 영역은 어디인가
-- 자동화하거나 구조화할 가치가 큰 흐름은 무엇인가
-
-## 공유 질문
-
-탐색 근거가 아직 부족합니다. 아래 질문에 답하면 domain-analyst가 실제 저장소 기준의 분석 문장을 적기 쉬워집니다.
-
-1. 이 프로젝트는 무엇을 만들려고 하나요? (애플리케이션, 라이브러리, CLI 도구, 서비스 등)
-2. 주요 사용자 또는 소비자는 누구인가요? (최종 사용자, 다른 개발자, 내부 팀 등)
-3. 가장 앞에 놓을 핵심 흐름 한 가지는 무엇인가요?
-4. 사용할 언어나 프레임워크가 정해져 있나요?
-5. 이 저장소에서 실패 비용이 가장 큰 영역은 어디라고 생각하나요?
-
-## 참고 메모
-
-$discovery_guidance
+- 탐색 상태: $exploration_context_level
+- 대표 시작점 후보: $core_flow_hint
+- 관련 코드 경로 후보: $key_axes_hint
+- 설정 및 실행 단서: $config_hint
+- 참고 메모: $discovery_guidance
 
 ## 초기 관찰 내용
 
 $initial_observation_line
 
-## 다음 단계
+## 저장소 고유 근거
+EOF
+      while IFS= read -r source_anchor; do
+        [ -n "$source_anchor" ] || continue
+        printf '%s\n' "- \`$source_anchor\`"
+        source_anchor_count=$((source_anchor_count + 1))
+      done < <(list_source_anchor_paths)
 
-- 탐색 근거가 아직 부족하면 run-harness 메모는 위 질문을 바탕으로 필요한 항목 메모 쪽으로 이어집니다.
+      if [ "$source_anchor_count" -eq 0 ]; then
+        printf '%s\n' "- 자동으로 포착한 대표 소스 앵커가 아직 충분하지 않습니다."
+      fi
+
+      cat <<EOF
+
+### 사실 기준 구조
+EOF
+      if [ "$boundary_hint" != "추정 불가" ]; then
+        while IFS= read -r item; do
+          item="$(trim_text "$item")"
+          [ -n "$item" ] || continue
+          printf '%s\n' "- \`$item\`"
+        done < <(printf '%s\n' "$boundary_hint" | tr ',' '\n')
+      else
+        printf '%s\n' "- 주요 코드 경계 후보가 아직 충분하지 않습니다."
+      fi
+
+      cat <<EOF
+
+### 예외 및 운영 메모
+
+- 예외 메모가 아직 충분하지 않습니다.
+- 설치, 빌드, 검증 차이는 실제 저장소 읽기 이후 다시 적습니다.
+
+### 핵심 실행 흐름
+
+- $core_flow_hint
+
+### 반복적으로 위험한 변경 유형
+
+- 진입점 설정 파일과 빌드 설정 변경
+- 공용 모듈, 공개 인터페이스, 소비 경로 변경
+
+## 남아 있는 질문
+
+- 이 저장소의 실제 사용자 또는 운영 흐름은 어디서 시작되는가.
+- 어떤 경계가 가장 큰 실패 비용을 만드는가.
+
+## 이어서 볼 항목
+
 $next_step_detail_line
 - 필요하면 디렉토리별 역할과 핵심 파일 메모가 더해집니다.
 EOF
@@ -641,9 +663,10 @@ EOF
       cat <<EOF
 ## 요약
 EOF
-      printf '%s\n' "- 이 저장소에서 함께 읽어야 할 주요 구조 단서는 \`$boundary_hint\` 입니다."
+      printf '%s\n' "- 탐색 상태: $exploration_context_level"
       printf '%s\n' "- 대표 시작점 후보: $core_flow_hint"
-      printf '%s\n' "- 하네스 문서는 위 단서를 바탕으로 역할 팀 메모가 이어집니다."
+      printf '%s\n' "- 관련 코드 경로 후보: $key_axes_hint"
+      printf '%s\n' "- 설정 및 실행 단서: $config_hint"
 
       cat <<EOF
 
@@ -666,58 +689,29 @@ EOF
 ### 사실 기준 구조
 EOF
       if [ "$boundary_hint" != "추정 불가" ]; then
-        printf '%s\n' "- 아래 항목은 저장소의 책임 경계를 보여주는 구조 요약입니다."
-        print_boundary_interpretation_lines "$boundary_hint"
+        while IFS= read -r item; do
+          item="$(trim_text "$item")"
+          [ -n "$item" ] || continue
+          printf '%s\n' "- \`$item\`"
+        done < <(printf '%s\n' "$boundary_hint" | tr ',' '\n')
       else
-        printf '%s\n' "- 주요 코드 경계 근거가 아직 부족해 대표 경계 해석이 더 필요합니다."
+        printf '%s\n' "- 주요 코드 경계 후보가 아직 충분하지 않습니다."
       fi
-      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- \`$config_hint\`: 실제 실행, 빌드, 검증 경로를 해석할 때 함께 볼 설정 단서입니다."
+      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- \`$config_hint\`"
 
       cat <<EOF
 
 ### 예외 및 운영 메모
 EOF
-      printf '%s\n' "- 예외 메모는 자동 분류보다 탐색 문서와 실제 실행 로그 쪽에 더 가깝습니다."
-      printf '%s\n' "- 루트 흐름과 다른 설치, 빌드, 검증 단계가 보이면 그 차이만 짧게 적습니다."
-      printf '%s\n' "- validator 메모는 예외 공란 여부보다 실제 경계 변화와 운영 비용 설명이 남아 있는 쪽을 더 가깝게 봅니다."
-
-      cat <<EOF
-
-## 해석 메모
-
-### 핵심 도메인 흐름과 위험 축
-EOF
-      printf '%s\n' "- 대표 사용자 흐름과 운영 흐름은 실제 시작점과 종료 지점이 보이는 경계에서 다시 읽습니다."
-      printf '%s\n' "- \`$boundary_hint\` 경계 중 실제 업무 가치나 운영 비용이 크게 걸린 영역을 주요 위험 단서로 함께 봅니다."
-      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- 설정·실행 경로는 실제 사용자 흐름이나 운영 리스크와 연결되는 경우에만 같이 적습니다."
-      printf '%s\n' "- 구조 변경 위험과 기능 흐름 단절 위험은 같은 변경 안에서도 나눠 적습니다."
-
-      cat <<EOF
-
-### 핵심 경계와 책임
-EOF
-      if [ "$boundary_hint" != "추정 불가" ]; then
-        print_boundary_interpretation_lines "$boundary_hint"
-      else
-        printf '%s\n' "- 주요 경계의 책임은 실제 파일과 소비 관계를 다시 읽어 채워야 합니다."
-      fi
+      printf '%s\n' "- 설치, 빌드, 검증 경로 차이는 실제 저장소 읽기 이후 다시 적습니다."
+      printf '%s\n' "- 운영 로그와 탐색 문서 사이 차이가 있으면 그 차이만 남깁니다."
 
       cat <<EOF
 
 ### 핵심 실행 흐름
 EOF
       printf '%s\n' "- $core_flow_hint"
-      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- \`$config_hint\` 경로는 실제 실행, 빌드, 검증 흐름이 갈라지는 지점을 다시 읽을 때 함께 봅니다."
-      [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- \`$boundary_hint\` 경계는 변경 영향 범위와 소비 관계를 연결해 읽는 단서입니다."
-
-      cat <<EOF
-
-### 하네스 관점 핵심 관심사
-EOF
-      [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- 실제 코드 경계를 흐리지 않게 변경 범위를 적는 것"
-      [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- \`$boundary_hint\` 경계 중 영향도가 큰 영역을 다시 읽는 것"
-      printf '%s\n' "- 실행 흐름, 설정 파일, 공용 계층 중 변경 출발점이 달라질 수 있다는 점"
-      printf '%s\n' "- 검증 비용이 큰 경계와 수동 메모가 필요한 결합 지점을 역할 관점으로 나눠 보는 것"
+      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- \`$config_hint\`"
 
       cat <<EOF
 
@@ -736,8 +730,8 @@ $initial_observation_line
 
 ## 남아 있는 질문
 EOF
-      printf '%s\n' "- 자동 분석만으로는 핵심 사용자 흐름과 실패 비용을 완전히 확정할 수 없습니다."
-      printf '%s\n' "- 대표 진입점 파일과 영향도가 큰 변경 경계는 역할 팀이 함께 읽는 메모로 남습니다."
+      printf '%s\n' "- 자동 수집만으로는 핵심 사용자 흐름과 실패 비용을 완전히 확정할 수 없습니다."
+      printf '%s\n' "- 대표 진입점 파일과 영향도가 큰 변경 경계는 추가 읽기가 필요합니다."
       printf '%s\n' "- 이 저장소에서 하네스가 실제로 개입해야 하는 핵심 불확실성은 무엇인가."
       printf '%s\n' "- 어떤 실패 시나리오가 가장 비용이 크고, 현재 구조로 그것을 감지할 수 있는가."
 
@@ -764,9 +758,9 @@ build_architecture_report_block() {
       cat <<EOF
 ## 구조 메모
 
-이 문서는 현재 저장소에 놓일 범용 하네스 구조 메모를 적어 둡니다.
+이 문서는 현재 저장소에서 함께 읽을 역할 구조 후보를 적어 둡니다.
 
-## 권장 역할
+## 역할 메모
 
 - domain-analyst
 - harness-architect
@@ -774,48 +768,6 @@ build_architecture_report_block() {
 - qa-designer
 - orchestrator
 - validator
-
-## 역할별 책임
-
-### domain-analyst
-- 저장소 목적과 도메인 파악
-- 대표 진입점, 주요 경계, 핵심 흐름 분석
-- 하네스 관점의 주요 관심사 정리
-
-### harness-architect
-- 로컬 하네스 구조 설계
-- 역할 분리와 확장 방향 정리
-- 스킬/리포트/시나리오 구성 제안
-
-### skill-scaffolder
-- 로컬 스킬 생성 및 보완
-- 구조와 스킬의 일관성 유지
-
-### qa-designer
-- 품질 기준과 관점 메모
-- 체크포인트와 흐름 메모
-
-### orchestrator
-- 여러 역할을 실제 작업 순서로 연결
-- 반복 가능한 작업 흐름 정리
-
-### validator
-- 현재 하네스 구조의 최소 요건 충족 여부 메모
-
-## 보조 구조
-
-- \`.harness/reports\`는 역할 판단 근거와 저장소 분석 결과를 공유하는 보조 레이어입니다.
-- \`.harness/logs\`는 실제 세션 흐름과 역할 호출 이력을 남기는 운영 레이어입니다.
-- templates/scenarios 같은 반복 자산은 역할 팀이 함께 보는 실행 보조 메모 층으로 이어질 수 있습니다.
-
-## 입력/출력 표
-
-- domain-analyst: 저장소 구조와 핵심 단서를 입력으로 받아 \`.harness/reports/domain-analysis.md\`로 이어집니다.
-- harness-architect: domain-analysis를 입력으로 받아 \`.harness/reports/harness-architecture.md\`로 이어집니다.
-- skill-scaffolder: architecture와 역할 정의를 입력으로 받아 \`.codex/skills/*\`로 이어집니다.
-- qa-designer: domain-analysis와 architecture를 입력으로 받아 \`.harness/reports/qa-strategy.md\`로 이어집니다.
-- orchestrator: 주요 보고서를 입력으로 받아 \`.harness/reports/orchestration-plan.md\`로 이어집니다.
-- validator: 전체 구조를 입력으로 받아 회귀 지점과 다시 볼 역할을 남깁니다.
 
 ## 설계 원칙
 
@@ -829,7 +781,7 @@ EOF
       cat <<EOF
 ## 요약
 
-- 이 문서는 현재 저장소의 실제 구조와 변경 경계를 바탕으로 실행 하네스 역할 배치 메모를 남깁니다.
+- 이 문서는 현재 저장소의 실제 구조와 변경 경계를 바탕으로 역할 배치 후보 메모를 남깁니다.
 - 탐색 상태 요약: $project_type_label
 - 관련 코드 경로 후보: $key_axes_hint
 - 대표 시작점 후보: $core_flow_hint
@@ -838,9 +790,8 @@ EOF
 
 ## 저장소 고유 근거
 
-- 저장소 사실, 구조 설계, 스킬 반영, QA 설계, 흐름 조율, 최종 검증, 기동 진입점이 이 문서에서 함께 놓일 후보 층입니다.
-- templates/scenarios 같은 반복 자산은 저장소에 반복 패턴이 축적될 때만 함께 볼 확장 자산 후보입니다.
-- run-harness는 현재 상태 흐름과 실제 작업 역할 호출이 갈라지는 지점을 보여주는 역할입니다.
+- 관련 코드 경로 후보: \`$key_axes_hint\`
+- 대표 시작점 후보: $core_flow_hint
 
 ## 구조 메모
 
@@ -857,9 +808,7 @@ EOF
 ### 역할 유지와 조정 기준
 
 - 역할 수는 고정 답안보다 경계 종류, 검증 비용, 운영 복잡도를 함께 읽은 메모에 가깝습니다.
-- 흐름이 단순하면 일부 역할 책임을 묶을 여지가 생기고, 여러 경계를 넘는 영향이 보이면 역할 분리가 더 필요해집니다.
-- 문서, 로그, handoff를 계속 유지해야 하는 중심 역할과 입력/출력이 좁은 보조 판단은 같은 방식으로 다루지 않습니다.
-- 역할을 줄이거나 늘릴 때는 각 역할의 산출물과 해석 기준이 실제로 겹치는지부터 다시 읽습니다.
+- 중심 역할과 보조 역할 구분은 실제 저장소 읽기 이후 다시 적습니다.
 
 ### 흐름 메모
 
@@ -868,9 +817,8 @@ EOF
 
 ### 확장 메모
 
-- templates/scenarios는 반복 handoff와 산출물 흐름이 실제로 누적될 때만 붙입니다.
-- role-frequency나 template-candidates는 운영 유지보수 단계에서 반복성 분석 가치가 생길 때 활성화합니다.
-- 확장 자산은 기본값이 아니라, 팀이 반복 작업을 학습하기 시작했을 때 추가하는 보조 구조입니다.
+- templates/scenarios는 반복 handoff와 산출물 흐름이 실제로 누적될 때만 붙습니다.
+- role-frequency나 template-candidates는 운영 유지보수 단계에서 반복성 분석 가치가 생길 때만 붙습니다.
 
 ### 설계 원칙
 
@@ -899,23 +847,7 @@ build_qa_report_block() {
       cat <<EOF
 ## QA 메모
 
-이 문서는 저장소에서 중요하게 볼 품질 기준과 지점 메모를 적어 둡니다.
-
-## 기본 메모
-
-범용 하네스 1차 단계에서는 아래 항목이 앞에 놓입니다.
-
-- 저장소 구조를 이해할 수 있는가
-- 역할이 분리되어 있는가
-- 생성된 하네스 산출물이 사람이 읽기 쉬운가
-- 로컬 스킬 구성이 반복 사용에 적합한가
-
-## 공유 질문
-
-- 이 저장소에서 가장 중요한 실패 유형은 무엇인가
-- 어떤 영역은 변경 영향도가 큰가
-- 어떤 흐름은 반복적으로 점검할 가치가 있는가
-- 어떤 산출물이 있으면 팀이 더 쉽게 읽을 수 있는가
+이 문서는 저장소에서 함께 볼 품질 기준 후보 메모를 적어 둡니다.
 
 ## 확인 메모 예시
 
@@ -929,7 +861,7 @@ EOF
       cat <<EOF
 ## 요약
 
-- 이 문서는 현재 저장소에서 변경 영향이 큰 경계와 반복 검증이 필요한 흐름을 QA 관점 메모로 남깁니다.
+- 이 문서는 현재 저장소에서 변경 영향이 큰 경계와 반복 검증 후보를 QA 관점 메모로 남깁니다.
 - 저장소 전용 질문은 구조 일반론보다 실제 파일, 테스트 유틸, 진입점 단서 쪽에 더 가깝게 붙습니다.
 
 ## 저장소 고유 단서
@@ -976,7 +908,6 @@ EOF
 
 - 빠르게 실패를 잡는 얕은 체크와 실제 영향 경계를 읽는 깊은 체크를 나눕니다.
 - 빠른 검증과 느린 검증, 단일 경계 검증과 교차 경계 검증을 구분해 적습니다.
-- 문서나 하네스 변경이라도 verify가 잡지 못하는 운영 공백이 없는지 수동 질문 메모를 남깁니다.
 
 ### 실행 예시
 
@@ -1021,12 +952,12 @@ build_orchestration_report_block() {
 
 ## 기본 흐름 메모
 
-1. domain-analyst가 저장소를 분석한다.
-2. harness-architect가 하네스 구조를 설계한다.
-3. skill-scaffolder가 로컬 스킬과 기본 산출물을 정리한다.
-4. qa-designer가 품질 전략과 지점 메모를 남긴다.
-5. orchestrator가 반복 가능한 작업 흐름을 정리한다.
-6. validator가 현재 구성의 최소 요건 메모를 남긴다.
+1. domain-analyst
+2. harness-architect
+3. skill-scaffolder
+4. qa-designer
+5. orchestrator
+6. validator
 
 ## 운영 메모
 
@@ -1066,11 +997,11 @@ EOF
 
 ### 시작 분기
 
-1. run-harness는 요청을 기능 구현, 구조 정리, 공통 모듈 수정, 빌드/검증 변경 중 어디에 가까운지 적어 둡니다.
-2. 변경이 $key_axes_hint 중 어느 축과 맞닿아 있는지 함께 봅니다.
-3. 영향 범위가 넓거나 경계가 불명확하면 domain-analyst와 qa-designer를 앞에 두는 시작 흐름 메모가 놓입니다.
-4. 영향 범위가 좁고 구조 설명이 충분하면 skill-scaffolder 또는 orchestrator부터 시작하는 흐름도 열어 둡니다.
-5. 시작 분기는 어떤 역할이 첫 판단을 맡을지 정리하는 운영 메모입니다.
+1. run-harness
+2. domain-analyst
+3. qa-designer
+4. orchestrator
+5. validator
 
 ### 표준 전체 시퀀스
 
@@ -1084,13 +1015,9 @@ EOF
 ### 대표 요청별 루프
 
 - 기능 또는 사용자 흐름 수정: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
-  - 실제 코드 경로와 변경 경계를 읽은 뒤 QA 질문과 검증 루프를 정리하는 흐름 후보입니다.
 - 구조 또는 문서 정비: run-harness -> skill-scaffolder -> orchestrator -> validator
-  - 역할 설명과 템플릿 반영이 중심일 때 함께 볼 수 있는 흐름 후보입니다.
 - 경계 재정의가 필요한 변경: run-harness -> domain-analyst -> harness-architect -> qa-designer -> orchestrator -> validator
-  - 기존 경계 가정이 바뀌는 경우 구조 재정렬과 QA 질문이 함께 열리는 흐름 후보입니다.
 - 검증 비용이 큰 변경: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
-  - 경계는 비교적 보이지만 회귀 비용이 높을 때 QA 질문을 일찍 붙여 보는 흐름 후보입니다.
 
 ### 운영 구조
 

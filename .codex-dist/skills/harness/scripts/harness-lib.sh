@@ -520,11 +520,11 @@ build_core_flow_summary() {
   local entrypoint_hint="${1:-추정 불가}"
 
   if [ -z "$entrypoint_hint" ] || [ "$entrypoint_hint" = "추정 불가" ]; then
-    printf '%s\n' "대표 진입점 근거가 아직 부족해 실제 시작 흐름과 소비 경계는 추가 해석이 필요합니다."
+    printf '%s\n' "대표 진입점 후보가 아직 충분하지 않습니다."
     return
   fi
 
-  printf '%s\n' "\`$entrypoint_hint\` 부근에서 실제 시작 흐름과 소비 경계가 드러납니다."
+  printf '%s\n' "\`$entrypoint_hint\` 부근이 시작 흐름 후보로 수집되었습니다."
 }
 
 build_core_flow_hint() {
@@ -533,10 +533,10 @@ build_core_flow_hint() {
       echo "미정"
       ;;
     제한적)
-      echo "탐색 근거가 제한적이어서 README, 핵심 디렉토리, 사용자 확인 질문이 함께 있어야 첫 성공 흐름이 드러납니다."
+      echo "README, 핵심 디렉토리, 사용자 확인 질문을 함께 읽어야 시작 흐름을 확정할 수 있습니다."
       ;;
     *)
-      echo "$2 주변에서 저장소의 핵심 사용자 흐름과 주요 변경 영향 지점이 드러납니다."
+      echo "$2 주변이 시작 흐름과 영향 전파를 다시 읽을 후보로 수집되었습니다."
       ;;
   esac
 }
@@ -641,9 +641,9 @@ EOF
       cat <<EOF
 ## 요약
 EOF
-      printf '%s\n' "- 이 저장소는 \`$boundary_hint\` 단서에서 대표 사용자 흐름과 운영 경계가 드러납니다."
-      printf '%s\n' "- 대표 흐름 요약: $core_flow_hint"
-      printf '%s\n' "- 하네스 운영 구조는 위 흐름과 실패 비용을 보조하는 방식으로만 붙입니다."
+      printf '%s\n' "- 이 저장소에서 함께 읽어야 할 주요 구조 단서는 \`$boundary_hint\` 입니다."
+      printf '%s\n' "- 대표 시작점 후보: $core_flow_hint"
+      printf '%s\n' "- 하네스 문서는 위 단서를 바탕으로 역할 팀이 직접 다시 씁니다."
 
       cat <<EOF
 
@@ -687,10 +687,10 @@ EOF
 
 ### 핵심 도메인 흐름과 위험 축
 EOF
-      printf '%s\n' "- 대표 사용자 흐름과 운영 흐름은 실제 시작점과 종료 지점이 보이는 경계에서 드러납니다."
-      printf '%s\n' "- \`$boundary_hint\` 경계 중 실제 업무 가치나 운영 비용이 크게 걸린 영역이 핵심 위험 축을 이룹니다."
-      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- 설정·실행 경로는 실제 사용자 흐름이나 운영 리스크에 직접 연결될 때만 함께 다룹니다."
-      printf '%s\n' "- 구조 변경 위험과 기능 흐름 단절 위험은 같은 변경 안에서도 따로 나타날 수 있습니다."
+      printf '%s\n' "- 대표 사용자 흐름과 운영 흐름은 실제 시작점과 종료 지점이 보이는 경계에서 다시 읽어야 합니다."
+      printf '%s\n' "- \`$boundary_hint\` 경계 중 실제 업무 가치나 운영 비용이 크게 걸린 영역이 주요 위험 단서가 됩니다."
+      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- 설정·실행 경로는 실제 사용자 흐름이나 운영 리스크와 연결되는 경우에만 함께 남깁니다."
+      printf '%s\n' "- 구조 변경 위험과 기능 흐름 단절 위험은 같은 변경 안에서도 분리해 적습니다."
 
       cat <<EOF
 
@@ -830,9 +830,9 @@ EOF
 ## 요약
 
 - 이 문서는 현재 저장소의 실제 구조와 변경 경계를 바탕으로 실행 하네스 역할을 어떻게 배치할지 정리합니다.
-- 프로젝트 성격: $project_type_label
-- 핵심 작업 축: $key_axes_hint
-- 대표 흐름 해석: $core_flow_hint
+- 탐색 상태 요약: $project_type_label
+- 관련 코드 경로 후보: $key_axes_hint
+- 대표 시작점 후보: $core_flow_hint
 EOF
       cat <<EOF
 
@@ -1347,25 +1347,25 @@ build_domain_summary_block() {
   case "$exploration_context_level" in
     초기)
       cat <<EOF
-- 프로젝트 성격: 미정
+- 탐색 상태 요약: 미정
 - 설정 및 실행 단서: 미정
-- 핵심 흐름: 미정
+- 대표 시작점 후보: 미정
 EOF
       ;;
     제한적)
       cat <<EOF
-- 프로젝트 성격: $project_type_label
+- 탐색 상태 요약: $project_type_label
  - 주요 구조 단서: $boundary_hint
 - 설정 및 실행 단서: $config_hint
-- 핵심 흐름: $core_flow_hint
+- 대표 시작점 후보: $core_flow_hint
 EOF
       ;;
     *)
-      printf '%s\n' "- 프로젝트 성격: $project_type_label"
+      printf '%s\n' "- 탐색 상태 요약: $project_type_label"
       [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- 설정 및 실행 단서: $config_hint"
       printf '%s\n' "- 주요 구조 단서: $boundary_hint"
-      [ "$key_axes_hint" = "$boundary_hint" ] || printf '%s\n' "- 핵심 작업 축: $key_axes_hint"
-      printf '%s\n' "- 핵심 흐름: $core_flow_hint"
+      [ "$key_axes_hint" = "$boundary_hint" ] || printf '%s\n' "- 관련 코드 경로 후보: $key_axes_hint"
+      printf '%s\n' "- 대표 시작점 후보: $core_flow_hint"
       ;;
   esac
 }
@@ -1383,7 +1383,7 @@ build_next_step_line() {
       fi
       ;;
     *)
-      echo "- domain-analyst가 자동 관찰 결과를 바탕으로 실제 코드 경로와 사용자 흐름 기준으로 분석을 보정합니다."
+      echo "- domain-analyst가 자동 관찰 결과를 다시 읽고 실제 코드 경로와 사용자 흐름 기준의 분석 결과를 다시 씁니다."
       ;;
   esac
 }

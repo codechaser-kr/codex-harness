@@ -455,19 +455,19 @@ build_exploration_guidance() {
 
   if [ ! -f "$file" ]; then
     if [ "$exploration_context_level" = "초기" ] || [ "$exploration_context_level" = "제한적" ]; then
-      printf '%s\n' "탐색 근거와 사용자 응답을 함께 참고해 초기 방향을 정리합니다."
+      printf '%s\n' "탐색 근거와 사용자 응답을 함께 참고한 초기 방향 메모가 놓입니다."
     else
-      printf '%s\n' "현재 저장소는 실제 코드 경계와 대표 흐름을 다시 읽으며 관련 문서를 정리합니다."
+      printf '%s\n' "현재 저장소는 실제 코드 경계와 대표 흐름을 다시 읽는 관련 문서 메모로 이어집니다."
     fi
     return
   fi
 
   if [ "$exploration_context_level" = "초기" ] || [ "$exploration_context_level" = "제한적" ]; then
-    printf '%s\n' "탐색 문서에 수집된 단서를 바탕으로, 부족한 부분만 사용자 질문으로 다시 확인합니다."
+    printf '%s\n' "탐색 문서에 수집된 단서를 바탕으로, 부족한 부분은 사용자 질문 메모로 이어집니다."
     return
   fi
 
-  printf '%s\n' "현재 저장소는 탐색 문서의 대표 진입점과 코드 경계($boundary_hint)를 바탕으로 관련 문서를 다시 읽으며 정리합니다."
+  printf '%s\n' "현재 저장소는 탐색 문서의 대표 진입점과 코드 경계($boundary_hint)를 바탕으로 관련 문서 메모가 이어집니다."
 }
 
 build_project_type_label() {
@@ -764,7 +764,7 @@ build_architecture_report_block() {
       cat <<EOF
 ## 구조 메모
 
-이 문서는 현재 저장소에 놓일 범용 하네스 구조 메모를 정리합니다.
+이 문서는 현재 저장소에 놓일 범용 하네스 구조 메모를 적어 둡니다.
 
 ## 권장 역할
 
@@ -810,11 +810,11 @@ build_architecture_report_block() {
 
 ## 입력/출력 표
 
-- domain-analyst: 저장소 구조와 핵심 단서를 입력으로 받아 \`.harness/reports/domain-analysis.md\`를 출력합니다.
-- harness-architect: domain-analysis를 입력으로 받아 \`.harness/reports/harness-architecture.md\`를 출력합니다.
-- skill-scaffolder: architecture와 역할 정의를 입력으로 받아 \`.codex/skills/*\`를 출력합니다.
-- qa-designer: domain-analysis와 architecture를 입력으로 받아 \`.harness/reports/qa-strategy.md\`를 출력합니다.
-- orchestrator: 주요 보고서를 입력으로 받아 \`.harness/reports/orchestration-plan.md\`를 출력합니다.
+- domain-analyst: 저장소 구조와 핵심 단서를 입력으로 받아 \`.harness/reports/domain-analysis.md\`로 이어집니다.
+- harness-architect: domain-analysis를 입력으로 받아 \`.harness/reports/harness-architecture.md\`로 이어집니다.
+- skill-scaffolder: architecture와 역할 정의를 입력으로 받아 \`.codex/skills/*\`로 이어집니다.
+- qa-designer: domain-analysis와 architecture를 입력으로 받아 \`.harness/reports/qa-strategy.md\`로 이어집니다.
+- orchestrator: 주요 보고서를 입력으로 받아 \`.harness/reports/orchestration-plan.md\`로 이어집니다.
 - validator: 전체 구조를 입력으로 받아 회귀 지점과 다시 볼 역할을 남깁니다.
 
 ## 설계 원칙
@@ -899,7 +899,7 @@ build_qa_report_block() {
       cat <<EOF
 ## QA 메모
 
-이 문서는 저장소에서 중요하게 볼 품질 기준과 검토 지점 메모를 정리합니다.
+이 문서는 저장소에서 중요하게 볼 품질 기준과 검토 지점 메모를 적어 둡니다.
 
 ## 기본 메모
 
@@ -942,7 +942,7 @@ EOF
       done < <(list_source_anchor_paths)
 
       if [ "$source_anchor_count" -eq 0 ]; then
-        printf '%s\n' "- 자동으로 포착한 소스 앵커가 부족하면, 테스트 유틸 위치나 대표 진입점 파일을 직접 찾아 QA 질문을 적어야 합니다."
+        printf '%s\n' "- 자동으로 포착한 소스 앵커가 부족하면, 테스트 유틸 위치나 대표 진입점 파일을 더 읽은 QA 메모가 필요합니다."
       fi
 
       cat <<EOF
@@ -1017,7 +1017,7 @@ build_orchestration_report_block() {
       cat <<EOF
 ## 흐름 메모
 
-이 문서는 여러 하네스 역할이 실제로 어떤 순서와 방식으로 협력해야 하는지 정리합니다.
+이 문서는 여러 하네스 역할이 실제로 어떤 순서와 방식으로 협력하는지 적어 둔 메모입니다.
 
 ## 기본 흐름 메모
 
@@ -1396,7 +1396,7 @@ ensure_harness_log_scaffold() {
 
 ## 로그 메모
 
-이 문서는 실행 하네스 팀을 실제로 운용할 때 남는 로그 메모를 정리합니다.
+이 문서는 실행 하네스 팀을 실제로 운용할 때 남는 로그 메모를 적어 둡니다.
 
 ## 자동화 도구
 
@@ -1413,7 +1413,7 @@ ensure_harness_log_scaffold() {
 
 - 선택 자산이 활성화된 프로젝트에서는 `harness-session-close.sh`가 역할 호출 빈도 통계와 템플릿 후보 분석까지 함께 갱신합니다.
 - `harness-role-stats.sh`는 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
-- `harness-template-candidates.sh`는 누적 로그를 분석해 반복 업무 템플릿 후보를 `.harness/reports/template-candidates.md`로 정리합니다.
+- `harness-template-candidates.sh`는 누적 로그를 분석한 반복 업무 템플릿 후보 메모를 `.harness/reports/template-candidates.md`로 남깁니다.
 
 ## 로그를 남겨야 하는 상황
 

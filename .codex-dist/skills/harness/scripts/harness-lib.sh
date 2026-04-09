@@ -569,11 +569,11 @@ build_core_flow_summary() {
   local entrypoint_hint="${1:-추정 불가}"
 
   if [ -z "$entrypoint_hint" ] || [ "$entrypoint_hint" = "추정 불가" ]; then
-    printf '%s\n' "대표 진입점 기준으로 실제 시작 흐름과 소비 경계를 먼저 정리해야 합니다."
+    printf '%s\n' "대표 진입점 근거가 아직 부족해 실제 시작 흐름과 소비 경계는 추가 해석이 필요합니다."
     return
   fi
 
-  printf '%s\n' "\`$entrypoint_hint\` 등 대표 진입점 기준으로 실제 시작 흐름과 소비 경계를 먼저 정리해야 합니다."
+  printf '%s\n' "\`$entrypoint_hint\` 부근에서 실제 시작 흐름과 소비 경계가 드러납니다."
 }
 
 build_core_flow_hint() {
@@ -582,10 +582,10 @@ build_core_flow_hint() {
       echo "미정"
       ;;
     제한적)
-      echo "탐색 근거가 제한적이므로 README, 핵심 디렉토리, 사용자 확인 질문을 함께 보며 첫 성공 흐름을 정리해야 합니다."
+      echo "탐색 근거가 제한적이어서 README, 핵심 디렉토리, 사용자 확인 질문이 함께 있어야 첫 성공 흐름이 드러납니다."
       ;;
     *)
-      echo "$2 기준으로 저장소의 핵심 사용자 흐름과 주요 변경 영향 지점을 우선 정리해야 합니다."
+      echo "$2 주변에서 저장소의 핵심 사용자 흐름과 주요 변경 영향 지점이 드러납니다."
       ;;
   esac
 }
@@ -624,7 +624,7 @@ print_boundary_interpretation_lines() {
   while IFS= read -r item; do
     trimmed_item="$(trim_text "$item")"
     [ -n "$trimmed_item" ] || continue
-    printf '%s\n' "- \`$trimmed_item\`: 이 경계가 어떤 책임을 맡고, 어디로 영향이 번지는지 먼저 설명합니다."
+    printf '%s\n' "- \`$trimmed_item\`: 독립 책임과 영향 전파가 나타나는 핵심 경계입니다."
   done < <(printf '%s\n' "$boundary_hint" | tr ',' '\n')
 }
 
@@ -690,7 +690,7 @@ EOF
       cat <<EOF
 ## 요약
 EOF
-      printf '%s\n' "- 이 저장소는 \`$boundary_hint\` 단서를 기준으로 대표 사용자 흐름과 운영 경계를 먼저 읽어야 합니다."
+      printf '%s\n' "- 이 저장소는 \`$boundary_hint\` 단서에서 대표 사용자 흐름과 운영 경계가 드러납니다."
       printf '%s\n' "- 대표 흐름 요약: $core_flow_hint"
       printf '%s\n' "- 하네스 운영 구조는 위 흐름과 실패 비용을 보조하는 방식으로만 붙입니다."
 
@@ -715,10 +715,10 @@ EOF
 ### 사실 기준 구조
 EOF
       if [ "$boundary_hint" != "추정 불가" ]; then
-        printf '%s\n' "- 아래 항목은 저장소를 어떤 책임 경계로 읽어야 하는지 정리한 구조 요약입니다."
+        printf '%s\n' "- 아래 항목은 저장소의 책임 경계를 보여주는 구조 요약입니다."
         print_boundary_interpretation_lines "$boundary_hint"
       else
-        printf '%s\n' "- 주요 코드 경계가 아직 충분히 정리되지 않았습니다. 후속 역할이 대표 경계를 직접 보강해야 합니다."
+        printf '%s\n' "- 주요 코드 경계 근거가 아직 부족해 대표 경계 해석이 더 필요합니다."
       fi
       [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- \`$config_hint\`: 실제 실행, 빌드, 검증 경로를 해석할 때 다시 확인할 설정 단서입니다."
 
@@ -736,10 +736,10 @@ EOF
 
 ### 핵심 도메인 흐름과 위험 축
 EOF
-      printf '%s\n' "- 대표 사용자 흐름 또는 운영 흐름이 어디서 시작되고 어디서 끝나는지 먼저 고정합니다."
-      printf '%s\n' "- \`$boundary_hint\` 경계 중 실제 업무 가치나 운영 비용이 크게 걸린 영역을 우선 식별합니다."
+      printf '%s\n' "- 대표 사용자 흐름과 운영 흐름은 실제 시작점과 종료 지점이 보이는 경계에서 드러납니다."
+      printf '%s\n' "- \`$boundary_hint\` 경계 중 실제 업무 가치나 운영 비용이 크게 걸린 영역이 핵심 위험 축을 이룹니다."
       [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- 설정·실행 경로는 실제 사용자 흐름이나 운영 리스크에 직접 연결될 때만 함께 다룹니다."
-      printf '%s\n' "- 구조 변경이 기능 회귀보다 더 위험한지, 반대로 기능 흐름 단절이 더 위험한지 구분해 적습니다."
+      printf '%s\n' "- 구조 변경 위험과 기능 흐름 단절 위험은 같은 변경 안에서도 따로 나타날 수 있습니다."
 
       cat <<EOF
 
@@ -756,8 +756,8 @@ EOF
 ### 핵심 실행 흐름
 EOF
       printf '%s\n' "- $core_flow_hint"
-      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- \`$config_hint\` 경로를 기준으로 실제 실행, 빌드, 검증 흐름이 어디서 갈라지는지 먼저 확인해야 합니다."
-      [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- \`$boundary_hint\` 경계를 따라 변경 영향 범위와 소비 관계를 정리합니다."
+      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- \`$config_hint\` 경로에서 실제 실행, 빌드, 검증 흐름이 갈라지는 지점이 나타납니다."
+      [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- \`$boundary_hint\` 경계를 따라 변경 영향 범위와 소비 관계가 연결됩니다."
 
       cat <<EOF
 
@@ -765,7 +765,7 @@ EOF
 EOF
       [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- 실제 코드 경계를 흐리지 않는 변경 분류"
       [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- \`$boundary_hint\` 경계에서 영향도가 큰 영역 식별"
-      printf '%s\n' "- 실행 흐름, 설정 파일, 공용 계층 중 어디서 변경이 시작되는지 먼저 구분"
+      printf '%s\n' "- 실행 흐름, 설정 파일, 공용 계층 중 변경 출발점이 달라질 수 있다는 점"
       printf '%s\n' "- 검증 비용이 큰 경계와 수동 확인이 필요한 결합 지점을 역할 관점으로 분리"
 
       cat <<EOF
@@ -1121,11 +1121,11 @@ EOF
 
 ### 시작 분기
 
-1. run-harness가 요청이 기능 구현, 구조 정리, 공통 모듈 보강, 빌드/검증 보강 중 어디에 가까운지 먼저 분류합니다.
+1. run-harness는 요청을 기능 구현, 구조 정리, 공통 모듈 보강, 빌드/검증 보강 중 어디에 가까운지 분류합니다.
 2. 변경이 $key_axes_hint 중 어느 축에 걸리는지 판단합니다.
-3. 영향 범위가 넓거나 경계가 불명확하면 domain-analyst와 qa-designer부터 시작합니다.
-4. 영향 범위가 좁고 구조 설명이 이미 충분하면 skill-scaffolder 또는 orchestrator부터 시작할 수 있습니다.
-5. 시작 분기는 단계를 건너뛰는 규칙이 아니라, 어느 역할을 진입점으로 먼저 세울지 정하는 규칙입니다.
+3. 영향 범위가 넓거나 경계가 불명확한 요청은 domain-analyst와 qa-designer에서 시작하는 경우가 많습니다.
+4. 영향 범위가 좁고 구조 설명이 이미 충분한 요청은 skill-scaffolder 또는 orchestrator에서 시작할 수 있습니다.
+5. 시작 분기는 단계를 건너뛰는 규칙이 아니라, 어떤 역할이 첫 판단을 맡는지 보여주는 운영 규칙입니다.
 
 ### 표준 전체 시퀀스
 
@@ -1139,7 +1139,7 @@ EOF
 ### 대표 요청별 루프
 
 - 기능 또는 사용자 흐름 보강: run-harness -> domain-analyst -> qa-designer -> orchestrator -> validator
-  - domain-analyst가 실제 코드 경로와 변경 경계를 먼저 확정해야 qa-designer가 올바른 검증 기준을 잡을 수 있습니다.
+  - domain-analyst가 실제 코드 경로와 변경 경계를 먼저 확정한 뒤 qa-designer가 검증 기준을 세웁니다.
 - 구조 또는 문서 정비: run-harness -> skill-scaffolder -> orchestrator -> validator
   - 역할 설명과 템플릿 반영이 중심이므로 domain 재분석 없이 scaffolder부터 시작해도 됩니다.
 - 경계 재정의가 필요한 변경: run-harness -> domain-analyst -> harness-architect -> qa-designer -> orchestrator -> validator

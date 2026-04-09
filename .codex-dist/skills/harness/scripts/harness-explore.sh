@@ -28,30 +28,40 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
 - 탐색은 대표 시작점 후보, 관련 코드 경로, 검증 자산, 실행/설정 경로, 저장소 용어 단서를 우선 수집합니다.
 
 ## 대표 진입점
+
+이 목록은 자동으로 포착한 시작점 후보이며, 실제 사용자 흐름의 출발점은 후속 역할이 다시 확인합니다.
 EOF
   print_markdown_bullets_or_fallback list_entrypoint_anchor_paths "아직 자동으로 포착한 대표 진입점이 없습니다."
 
   cat <<'EOF'
 
 ## 주요 코드 경계
+
+이 목록은 함께 읽어야 할 관련 코드 경로 후보이며, 최종 경계 판단은 후속 역할이 실제 책임과 소비 관계를 보고 정리합니다.
 EOF
   print_markdown_bullets_or_fallback list_code_boundary_paths "아직 자동으로 포착한 주요 코드 경계가 없습니다."
 
   cat <<'EOF'
 
 ## 테스트 및 검증 자산
+
+이 목록은 자동으로 포착한 검증 자산 후보이며, 실제 핵심 흐름을 덮는지 여부는 후속 역할이 다시 판단합니다.
 EOF
   print_markdown_bullets_or_fallback list_test_asset_paths "아직 자동으로 포착한 테스트 또는 검증 자산이 없습니다."
 
   cat <<'EOF'
 
 ## 설정 및 실행 경로
+
+이 목록은 실행, 빌드, 배포, 검증에 연결될 수 있는 설정 후보이며, 실제 운영 경로인지 여부는 후속 역할이 다시 확인합니다.
 EOF
   print_markdown_bullets_or_fallback list_config_asset_paths "아직 자동으로 포착한 설정 또는 실행 경로가 없습니다."
 
   cat <<'EOF'
 
 ## 저장소 고유 용어 단서
+
+이 목록은 문서에서 포착한 용어 후보이며, 실제 도메인 설명에 쓸 용어는 코드와 함께 다시 검토합니다.
 EOF
   print_markdown_bullets_or_fallback list_domain_context_paths "아직 자동으로 포착한 문서 기반 용어 단서가 없습니다."
 

@@ -565,6 +565,21 @@ build_initial_observation() {
   esac
 }
 
+print_boundary_interpretation_lines() {
+  local boundary_hint="$1"
+  local item
+  local trimmed_item
+
+  [ -n "$boundary_hint" ] || return
+  [ "$boundary_hint" = "추정 불가" ] && return
+
+  while IFS= read -r item; do
+    trimmed_item="$(trim_text "$item")"
+    [ -n "$trimmed_item" ] || continue
+    printf '%s\n' "- \`$trimmed_item\`: 이 경계가 어떤 책임을 맡고, 어디로 영향이 번지는지 먼저 설명합니다."
+  done < <(printf '%s\n' "$boundary_hint" | tr ',' '\n')
+}
+
 build_domain_report_detail_block() {
   local exploration_context_level="$1"
   local boundary_hint="$2"
@@ -652,11 +667,8 @@ EOF
 ### 사실 기준 구조
 EOF
       if [ "$boundary_hint" != "추정 불가" ]; then
-        printf '%s\n' "- 아래 항목은 저장소를 어떤 경계로 읽어야 하는지 정리한 구조 요약입니다."
-        while IFS= read -r source_anchor; do
-          [ -n "$source_anchor" ] || continue
-          printf '%s\n' "- \`$source_anchor\`"
-        done < <(list_markdown_bullets_under_heading "$EXPLORATION_NOTES_DEFAULT_PATH" "주요 코드 경계")
+        printf '%s\n' "- 아래 항목은 저장소를 어떤 책임 경계로 읽어야 하는지 정리한 구조 요약입니다."
+        print_boundary_interpretation_lines "$boundary_hint"
       else
         printf '%s\n' "- 주요 코드 경계가 아직 충분히 정리되지 않았습니다. 후속 역할이 대표 경계를 직접 보강해야 합니다."
       fi
@@ -680,6 +692,16 @@ EOF
       printf '%s\n' "- \`$boundary_hint\` 경계 중 실제 업무 가치나 운영 비용이 크게 걸린 영역을 우선 식별합니다."
       [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- 설정·실행 경로는 실제 사용자 흐름이나 운영 리스크에 직접 연결될 때만 함께 다룹니다."
       printf '%s\n' "- 구조 변경이 기능 회귀보다 더 위험한지, 반대로 기능 흐름 단절이 더 위험한지 구분해 적습니다."
+
+      cat <<EOF
+
+### 핵심 경계와 책임
+EOF
+      if [ "$boundary_hint" != "추정 불가" ]; then
+        print_boundary_interpretation_lines "$boundary_hint"
+      else
+        printf '%s\n' "- 주요 경계의 책임은 후속 역할이 실제 파일과 소비 관계를 읽으며 보강해야 합니다."
+      fi
 
       cat <<EOF
 

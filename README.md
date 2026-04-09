@@ -16,7 +16,7 @@
 ## 설계 원칙
 
 - 하네스의 본체는 문서가 아니라 역할 팀입니다.
-- `.harness/reports` 문서는 프로젝트 담당자가 구조를 이해하고 수정하기 위한 보조 산출물입니다.
+- `.harness/reports` 문서는 프로젝트 운영 기준을 고정하고 수정하기 위한 핵심 산출물입니다.
 - QA와 validator는 실행 하네스의 일부입니다.
 - 특정 프레임워크에 과하게 고정하지 않습니다.
 - 프로젝트별로 확장 가능한 구조를 기본값으로 둡니다.
@@ -68,12 +68,7 @@ repo/
 │       └── run-harness/
 └── .harness/
     ├── reports/
-    │   ├── domain-analysis.md
-    │   ├── harness-architecture.md
-    │   ├── qa-strategy.md
-    │   ├── orchestration-plan.md
-    │   ├── team-structure.md
-    │   └── team-playbook.md
+    │   └── exploration-notes.md
     ├── logs/
     │   ├── session-log.md
     │   ├── session-events.tsv
@@ -84,12 +79,12 @@ repo/
     └── logging-policy.md
 ```
 
-핵심 산출물은 `.codex/skills/*` 아래의 로컬 역할 팀입니다. `.harness/reports/*`는 `harness-init.sh` 직후에는 골격만 놓이는 문서 묶음이고, 역할 팀이 직접 다시 쓴 뒤에야 최종 결과 문서가 됩니다. `.harness/logs/*`와 `.harness/logging-policy.md`는 실제 운영 기록과 로그 규칙을 위한 기본 산출물입니다.
+핵심 산출물은 `.codex/skills/*` 아래의 로컬 역할 스킬과, 그 스킬이 직접 쓰는 `.harness/reports/*` 운영 문서입니다. `harness-init.sh`는 `exploration-notes.md`와 로그 구조만 준비하고, 최종 보고서는 역할 스킬이 직접 작성합니다. `.harness/logs/*`와 `.harness/logging-policy.md`는 실제 운영 기록과 로그 규칙을 위한 기본 산출물입니다.
 
 운영을 시작하면 초기 생성물 중 일부가 계속 다시 쓰이거나 갱신되고, 운영 결과에 따라 새 파일이 추가될 수도 있습니다. 대표적인 범위는 다음과 같습니다.
 
 - `.codex/skills/*`: 역할 정의와 운영 규칙 갱신
-- `.harness/reports/*`: init 직후 골격만 생성되고, 이후 역할 팀이 직접 작성
+- `.harness/reports/*`: `exploration-notes.md`를 시작으로, 이후 역할 스킬이 직접 작성
 - `.harness/logs/*`: 세션 로그, 이벤트, 요약, 역할 빈도 갱신
 - `.harness/templates/*.md`: 반복 작업 흐름을 재사용할 수 있게 정리한 템플릿 파일
 - `.harness/reports/template-candidates.md`: 반복 작업 흐름 중 템플릿으로 정리할 만한 후보 분석 결과
@@ -108,14 +103,14 @@ repo/
 실행 하네스 팀 만들어줘
 ```
 
-그러면 전역 `harness` 스킬이 현재 저장소를 분석하고, 프로젝트 내부에 로컬 실행 하네스 팀과 보고서 골격을 생성합니다.
+그러면 전역 `harness` 스킬이 현재 저장소를 분석하고, 프로젝트 내부에 로컬 실행 하네스 스킬과 탐색 입력 구조를 생성합니다.
 
-초기화 직후 보고서는 아직 미완료 상태입니다. 기본 흐름은 `harness-init.sh`로 골격을 만든 뒤, `run-harness`와 역할 스킬이 각 보고서를 직접 작성하고, 마지막에 `harness-verify.sh`로 확인하는 순서입니다.
+초기화 직후에는 `exploration-notes.md`와 역할 스킬만 준비된 상태입니다. 기본 흐름은 `harness-init.sh`로 탐색 입력을 준비한 뒤, `run-harness`와 역할 스킬이 각 보고서를 직접 작성하고, 마지막에 `harness-verify.sh`로 확인하는 순서입니다.
 
 완료로 보기 위한 최소 기준은 아래와 같습니다.
 
 - `exploration-notes.md`가 후보 단서 문서로 존재함
-- 핵심 보고서 6종이 골격 문구 없이 최종 결과 문서로 다시 써짐
+- 핵심 보고서 6종이 실제 저장소 운영 문서로 직접 작성됨
 - `run-harness`가 시작 역할과 다음 역할을 분명히 제시함
 - `harness-verify.sh`가 구조 누락과 골격 잔존 없이 통과함
 
@@ -127,11 +122,11 @@ repo/
 
 - `domain-analyst`: 저장소 분석과 핵심 흐름 파악
 - `harness-architect`: 로컬 실행 하네스 구조와 역할 경계 설계
-- `skill-scaffolder`: 설계된 구조를 실제 로컬 스킬 파일로 생성
-- `qa-designer`: 품질 기준과 반복 질문 메모 정리
-- `orchestrator`: 역할 간 흐름과 입력/출력 연결 조율
-- `validator`: 구조 누락과 설명 약점을 읽는 역할
-- `run-harness`: 현재 상태를 보고 어떤 역할부터 움직일지 결정하는 진입점
+- `skill-scaffolder`: 로컬 스킬 설명 drift가 생겼을 때만 보조적으로 정렬
+- `qa-designer`: 저장소 기준의 QA 전략과 승격 기준 작성
+- `orchestrator`: 요청 유형별 시작점, 재진입 기준, 종료 조건 작성
+- `validator`: 문서 누락, generic 회귀, 구조 약점을 읽는 역할
+- `run-harness`: 현재 상태를 보고 어떤 문서부터 다시 써야 하는지 정하는 진입점
 
 `orchestrator`는 팀 흐름의 중심이고, `run-harness`는 팀을 실제로 시작하는 엔트리포인트입니다.
 
@@ -140,12 +135,12 @@ repo/
 이 시스템은 보통 다음 순서로 동작합니다.
 
 0. 현재 하네스 현황을 먼저 감사합니다.
-1. `harness-init.sh`로 로컬 역할 스킬, 탐색 문서, 보고서 골격을 생성합니다.
+1. `harness-init.sh`로 로컬 역할 스킬, 탐색 문서, 로그 구조를 생성합니다.
 2. 저장소를 탐색하고 근거를 수집합니다.
 3. `run-harness`가 현재 상태를 읽고 어느 Phase부터 다시 시작할지 정합니다.
 4. `domain-analyst`, `harness-architect`, `qa-designer`, `orchestrator`가 각 보고서를 직접 최종 문서로 작성합니다.
 5. 필요할 때만 `skill-scaffolder`가 로컬 스킬 설명 drift를 정렬합니다.
-6. 마지막에 `validator`와 `harness-verify.sh`로 골격 잔존과 구조 누락을 확인합니다.
+6. 마지막에 `validator`와 `harness-verify.sh`로 구조 누락과 generic 회귀를 확인합니다.
 
 탐색 근거가 아직 부족하면, 위 흐름에 들어가기 전에 `run-harness`가 짧은 사용자 질문을 만들고 그 답을 `domain-analysis`와 이후 오케스트레이션의 입력으로 사용합니다.
 
@@ -157,7 +152,7 @@ repo/
 
 - `package.json`, `Cargo.toml`, 디렉토리명 같은 단서는 탐색을 시작하는 참고 정보로만 사용합니다.
 - 실제 해석은 대표 시작점 후보, 핵심 모듈·패키지·런타임 경계, 테스트 자산, 설정/배포 경로, 저장소 고유 용어를 읽고 적습니다.
-- `.harness/reports/*` 문서는 init 직후에는 탐색 결과를 받아 적을 골격만 생성되고, 이후 역할 팀이 실제 저장소 해석 결과로 직접 작성합니다.
+- `.harness/reports/*` 문서는 init가 쓰지 않고, `exploration-notes.md`를 입력으로 역할 스킬이 직접 작성합니다.
 
 탐색 기반 분석이 의미하는 핵심 입력은 다음과 같습니다.
 
@@ -216,7 +211,7 @@ repo/
 기본 동작 원칙은 다음과 같습니다.
 
 - 최초 구성 요청이면 `harness-init.sh`를 앞에 실행합니다.
-- `harness-init.sh` 직후 상태는 완료가 아니라 골격 생성 상태로 봅니다.
+- `harness-init.sh` 직후 상태는 완료가 아니라 탐색 입력만 준비된 상태로 봅니다.
 - `run-harness`와 역할 스킬이 `.harness/reports/*`를 직접 작성한 뒤에만 완료 흐름으로 봅니다.
 - 기존 확장이나 운영 유지보수는 `harness-update.sh`를 기본 진입점으로 둡니다.
 - `harness-update.sh`는 `--domain`, `--architecture`, `--qa`, `--orchestration`, `--team-structure`, `--team-playbook`으로 필요한 범위만 갱신할 수 있습니다.

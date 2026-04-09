@@ -34,7 +34,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 5. 역할 팀은 로컬 스킬과 orchestrator 중심 흐름으로 구성한다.
 6. QA와 validator는 실행 하네스 팀의 필수 일부로 다룬다.
 7. `run-harness`는 로컬 역할 팀을 실제로 기동하는 진입점으로 다룬다.
-8. 리포트와 보조 문서는 사람이 구조를 이해하고 수정할 수 있게 돕는 **보조 레이어**로만 다룬다.
+8. 리포트는 사람이 구조를 이해하고 수정할 수 있게 돕는 동시에, 실제 저장소 운영 기준을 고정하는 핵심 산출물로 다룬다.
 9. 역할 수는 많을수록 좋은 것이 아니라, 실제 프로젝트에 맞는 운영 가능한 팀 크기가 중요하다.
 10. 탐색 근거가 아직 부족하면, `run-harness`가 사용자 확인 질문부터 제시하고 그 답을 다음 단계 입력으로 연결한다.
 11. 언어, 구조, 경계 해석은 **코드베이스 탐색 결과**를 기준으로 한다.
@@ -54,8 +54,8 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 전역 설치 후 기본 위치는 `$HOME/.codex/skills/harness/scripts/*.sh`이다.
 
 - 최초 하네스 구성 요청이면 반드시 `bash scripts/harness-init.sh`를 앞에 실행한다.
-- `harness-init.sh` 직후 상태는 완료가 아니라 골격 생성 상태로 본다.
-- `harness-init.sh` 다음에는 역할 팀이 `.harness/reports/*`를 직접 작성해야 한다.
+- `harness-init.sh` 직후 상태는 완료가 아니라 탐색 입력만 준비된 상태로 본다.
+- `harness-init.sh` 다음에는 역할 스킬이 `.harness/reports/*`를 직접 작성해야 한다.
 - 하네스 구성이 끝났다고 판단하기 전에 반드시 `bash scripts/harness-verify.sh`를 실행한다.
 - 역할 재작성 없이 `harness-verify.sh`를 먼저 실행해 통과시키려 하지 않는다.
 - `scripts/harness-update.sh`는 이미 하네스 구조가 있는 프로젝트에서 필요한 문서와 탐색 근거를 다시 정리할 때 사용한다. 필요하면 `--domain`, `--architecture`, `--qa`, `--orchestration`, `--team-structure`, `--team-playbook`으로 범위를 좁힌다.
@@ -71,11 +71,11 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 하네스 구성이 끝났다고 말하려면 아래가 모두 만족돼야 한다.
 
 1. `exploration-notes.md`가 후보 단서 문서로 존재한다.
-2. `domain-analysis.md`, `harness-architecture.md`, `qa-strategy.md`, `orchestration-plan.md`, `team-structure.md`, `team-playbook.md`가 골격 문구 없이 역할별 최종 결과 문서로 다시 써져 있다.
+2. `domain-analysis.md`, `harness-architecture.md`, `qa-strategy.md`, `orchestration-plan.md`, `team-structure.md`, `team-playbook.md`가 역할별 최종 결과 문서로 작성돼 있다.
 3. `run-harness`가 현재 상태를 읽고 시작 역할, 다음 역할, 미해결 질문을 분명히 제시할 수 있다.
 4. `scripts/harness-verify.sh`가 구조 누락과 골격 잔존 없이 통과한다.
 
-즉 `harness-init.sh`가 끝난 상태는 완료가 아니라 **골격이 준비된 상태**다.
+즉 `harness-init.sh`가 끝난 상태는 완료가 아니라 **탐색 입력이 준비된 상태**다.
 
 ## 탐색 우선 원칙
 
@@ -172,17 +172,13 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - `.codex/skills/validator/SKILL.md`
 - `.codex/skills/run-harness/SKILL.md`
 
-### 보조 산출물
+### 운영 문서
 
-- `.harness/reports/domain-analysis.md`
-- `.harness/reports/harness-architecture.md`
-- `.harness/reports/qa-strategy.md`
-- `.harness/reports/orchestration-plan.md`
-- `.harness/reports/team-structure.md`
-- `.harness/reports/team-playbook.md`
+- `.harness/reports/exploration-notes.md`
+- 역할 스킬이 직접 생성하는 `.harness/reports/*.md`
 
-핵심은 역할 팀이며,  
-리포트는 역할 팀이 직접 작성하는 결과 문서이며, init 직후에는 골격만 놓인다.
+핵심은 역할 스킬과 운영 문서이며,  
+init는 탐색 입력만 만들고 최종 리포트는 역할 스킬이 직접 작성한다.
 
 ---
 
@@ -238,14 +234,14 @@ QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 
 ### Phase 5: `.harness/reports/*` 문서 프로젝트 맞춤 작성
 
-1. `harness-init.sh` 또는 `harness-update.sh`가 만든 `.harness/reports/*` 문서는 골격 상태로 보고, 최종본으로 간주하지 않는다.
+1. `harness-init.sh` 또는 `harness-update.sh`가 최종 보고서를 대신 쓰지 않는다.
 2. domain-analyst가 저장소 사실, 대표 흐름, 예외를 기준으로 `domain-analysis.md`를 직접 다시 쓴다.
 3. 이 단계에서 기존 README, 도메인 문서, 사용자 흐름 설명에 있던 업무 용어와 문제 정의를 하네스 운영 문구가 덮어쓰지 않게 유지한다.
 4. harness-architect와 qa-designer가 역할 경계, handoff, 검증 기준을 현재 저장소 운영 방식에 맞는 결과 문서로 다시 쓴다.
 5. orchestrator가 시작 분기, 재진입 루프, 세션 운영 규칙을 실제 요청 유형 기준의 운영 문서로 다시 쓴다.
 6. validator는 문서가 스키마만 맞춘 일반론에 머물지 않고 저장소 특화 근거와 도메인 밀도를 유지하는지 확인한다.
 
-이 단계의 목적은 스크립트 골격을 남겨 두는 것이 아니라, 각 프로젝트의 구조, 운영 맥락, 기존 도메인 언어에 맞는 결과 문서를 직접 작성하는 것이다.
+이 단계의 목적은 스크립트가 아니라 역할 스킬이 각 프로젝트의 구조, 운영 맥락, 기존 도메인 언어에 맞는 결과 문서를 직접 작성하는 것이다.
 
 ### Phase 6: 실행 하네스 팀 검증
 
@@ -339,24 +335,18 @@ QA와 validator는 비슷해 보여도 다르다.
 
 ## 리포트의 위치
 
-리포트는 중요하지만 본체는 아니다.
+리포트는 보조 설명서가 아니라, 역할 스킬이 남기는 실제 운영 문서다.
 
-이 스킬에서 본체는:
+이 스킬에서 중심은:
 
-- 역할 팀
-- 로컬 스킬
+- 로컬 역할 스킬
 - run-harness 진입점
 - 오케스트레이션 구조
 - QA/검증 구조
+- 역할 스킬이 직접 작성한 운영 문서
 
-리포트는:
-
-- 사람이 팀 구조를 이해하게 하고
-- 역할 간 합의를 남기고
-- 이후 수정과 확장을 쉽게 하도록 돕는 보조 산출물이다
-
-즉 리포트는 중심이 아니라  
-👉 **실행 하네스 팀을 지원하는 문서 레이어**이다.
+즉 리포트는 주변 설명이 아니라  
+👉 **저장소 운영 기준을 고정하는 핵심 산출물**이다.
 
 ---
 
@@ -378,10 +368,10 @@ QA와 validator는 비슷해 보여도 다르다.
 - team-structure
 - team-playbook
 
-같은 보조 문서 레이어에 반영된다.
+같은 운영 문서에 반영된다.
 
 즉 사람 개입은 본체를 대신하는 것이 아니라,  
-👉 **실행 하네스 팀이 더 정확해지도록 보조 문서에 결과가 반영되는 구조**이다.
+👉 **실행 하네스 팀이 더 정확해지도록 운영 문서에 결과가 반영되는 구조**이다.
 
 ---
 
@@ -389,9 +379,9 @@ QA와 validator는 비슷해 보여도 다르다.
 
 - 이 스킬은 현재 단계에서 **프로젝트별 실행 하네스 팀 생성기**를 만드는 데 집중한다.
 - expected-state, diff, scenario runner는 이후 프로젝트 특화 실행 하네스로 확장할 수 있다.
-- 역할 팀의 본체와 보조 문서를 혼동하지 말라.
+- 역할 스킬이 직접 작성하는 운영 문서를 하네스 자기설명서로 흐리지 말라.
 - 역할을 과도하게 늘리지 말고, 실제로 의미 있는 팀 구조를 앞에 둔다.
-- 리포트가 역할 팀보다 더 커지는 구조를 경계하라.
+- 리포트가 역할 카드 소개보다 저장소 운영 기준을 더 강하게 말하게 유지하라.
 
 ---
 
@@ -404,7 +394,7 @@ QA와 validator는 비슷해 보여도 다르다.
 - [ ] run-harness가 포함되어 있다.
 - [ ] QA와 validator가 포함되어 있다.
 - [ ] 실행 하네스 팀이 프로젝트에 맞게 구성되어 있다.
-- [ ] 역할 팀이 본체처럼 읽히고, 리포트는 보조 문서로 존재한다.
+- [ ] 운영 문서가 하네스 자기설명보다 저장소 운영 기준을 더 강하게 말한다.
 - [ ] 이후 프로젝트 특화 실행 하네스로 확장 가능한 구조다.
 
 ---

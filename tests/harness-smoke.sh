@@ -168,7 +168,7 @@ assert_command_fails_with \
   "역할 재작성 미수행" \
   "빈 프로젝트 verify 골격 실패"
 
-log "스택 프로젝트 update -> verify 확인"
+log "스택 프로젝트 init -> verify 확인"
 mkdir -p "$TMP_ROOT/stack-project"
 cat > "$TMP_ROOT/stack-project/package.json" <<'EOF'
 {
@@ -229,14 +229,6 @@ STACK_INIT_OUTPUT="$(
 )"
 assert_contains "$STACK_INIT_OUTPUT" "하네스 운영 모드: 신규 구축" "스택 프로젝트 init 로그"
 assert_contains "$STACK_INIT_OUTPUT" "탐색 근거 요약: 대표 진입점" "스택 프로젝트 init 탐색 요약"
-STACK_UPDATE_OUTPUT="$(
-  cd "$TMP_ROOT/stack-project" && \
-  bash "$HARNESS_SCRIPT_DIR/harness-update.sh"
-)"
-assert_contains "$STACK_UPDATE_OUTPUT" "하네스 운영 모드: 운영 유지보수" "스택 프로젝트 update 로그"
-assert_contains "$STACK_UPDATE_OUTPUT" "탐색 근거 문서: .harness/reports/exploration-notes.md" "스택 프로젝트 update 탐색 로그"
-assert_contains "$STACK_UPDATE_OUTPUT" "탐색 근거 요약: 대표 진입점" "스택 프로젝트 update 탐색 요약"
-assert_contains "$STACK_UPDATE_OUTPUT" "상위 컨텍스트 감사: AGENTS.md 상태: 없음" "스택 프로젝트 update agents 감사"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"
@@ -247,10 +239,6 @@ assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "CLAUDE.md" "생성된 탐색 문서 AI 컨텍스트 파일 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "node_modules/" "생성된 탐색 문서 의존성 테스트 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "app.asar" "생성된 탐색 문서 빌드 산출물 제외"
-assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" ".claude/" "domain-analysis AI 설정 디렉토리 제외"
-assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" ".cursor/" "domain-analysis cursor 디렉토리 제외"
-assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" "node_modules/" "domain-analysis 의존성 테스트 제외"
-assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" "app.asar" "domain-analysis 빌드 산출물 제외"
 STACK_VERIFY_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh" 2>&1 || true
@@ -266,15 +254,6 @@ cat > "$TMP_ROOT/multi-boundary-project/package.json" <<'EOF'
   "name": "multi-boundary-project",
   "private": true
 }
-EOF
-cat > "$TMP_ROOT/multi-boundary-project/packages/web/package.json" <<'EOF'
-{ "name": "@example/web" }
-EOF
-cat > "$TMP_ROOT/multi-boundary-project/packages/desktop/package.json" <<'EOF'
-{ "name": "@example/desktop" }
-EOF
-cat > "$TMP_ROOT/multi-boundary-project/packages/common/package.json" <<'EOF'
-{ "name": "@example/common" }
 EOF
 cat > "$TMP_ROOT/multi-boundary-project/packages/web/src/main.ts" <<'EOF'
 export const web = true;

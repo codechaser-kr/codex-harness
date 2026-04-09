@@ -65,33 +65,6 @@ EXPLORATION_BOUNDARY_HINT="$(build_exploration_section_summary "$EXPLORATION_NOT
 EXPLORATION_TEST_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "테스트 및 검증 자산" "추정 불가")"
 EXPLORATION_CONFIG_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "설정 및 실행 경로" "추정 불가")"
 EXPLORATION_DOMAIN_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "저장소 고유 용어 단서" "추정 불가")"
-BOUNDARY_HINT="$EXPLORATION_BOUNDARY_HINT"
-CONFIG_HINT="$EXPLORATION_CONFIG_HINT"
-PROJECT_TYPE_LABEL="$(build_project_type_label "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT")"
-KEY_AXES_HINT="$(build_key_axes_hint "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT" "$EXPLORATION_TEST_HINT" "$CONFIG_HINT")"
-CORE_FLOW_HINT="$(build_core_flow_hint "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT")"
-if [ "$EXPLORATION_ENTRYPOINT_HINT" != "추정 불가" ]; then
-  CORE_FLOW_HINT="$(build_core_flow_summary "$EXPLORATION_ENTRYPOINT_HINT")"
-fi
-DOMAIN_SUMMARY_BLOCK="$(build_domain_summary_block "$EXPLORATION_CONTEXT_LEVEL" "$PROJECT_TYPE_LABEL" "$BOUNDARY_HINT" "$CORE_FLOW_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT")"
-INITIAL_OBSERVATION_LINE="$(build_initial_observation "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT" "$CONFIG_HINT" "$EXPLORATION_DOMAIN_HINT")"
-if [ "$EXPLORATION_DOMAIN_HINT" != "추정 불가" ]; then
-  INITIAL_OBSERVATION_LINE="- 탐색 문서에서 \`$EXPLORATION_DOMAIN_HINT\` 단서를 수집했습니다."
-fi
-NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$EXPLORATION_CONTEXT_LEVEL" "init")"
-DISCOVERY_GUIDANCE="$(build_exploration_guidance "$EXPLORATION_NOTES_FILE" "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT")"
-
-if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
-  DISCOVERY_GUIDANCE="현재 탐색 근거만으로는 방향을 좁히기 어렵습니다. run-harness는 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오 질문을 남깁니다."
-fi
-
-DOMAIN_DETAIL_BLOCK="$(build_domain_report_detail_block "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT" "$CORE_FLOW_HINT" "$DISCOVERY_GUIDANCE" "$INITIAL_OBSERVATION_LINE" "$NEXT_STEP_DETAIL_LINE")"
-ARCH_REPORT_BLOCK="$(build_architecture_report_block "$EXPLORATION_CONTEXT_LEVEL" "$PROJECT_TYPE_LABEL" "$KEY_AXES_HINT" "$CORE_FLOW_HINT")"
-QA_REPORT_BLOCK="$(build_qa_report_block "$EXPLORATION_CONTEXT_LEVEL" "$KEY_AXES_HINT" "$BOUNDARY_HINT" "$EXPLORATION_TEST_HINT")"
-ORCH_REPORT_BLOCK="$(build_orchestration_report_block "$EXPLORATION_CONTEXT_LEVEL" "$KEY_AXES_HINT")"
-TEAM_STRUCTURE_REPORT_BLOCK="$(build_team_structure_report_block "$EXPLORATION_CONTEXT_LEVEL" "$KEY_AXES_HINT")"
-TEAM_PLAYBOOK_REPORT_BLOCK="$(build_team_playbook_report_block "$EXPLORATION_CONTEXT_LEVEL" "$KEY_AXES_HINT")"
-
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
 log "탐색 근거 문서: $EXPLORATION_NOTES_FILE"
@@ -107,7 +80,6 @@ while IFS= read -r agents_line; do
 done <<< "$AGENTS_AUDIT_SUMMARY"
 
 create_dir ".codex"
-create_dir ".codex/agents"
 create_dir ".codex/skills"
 create_dir ".codex/skills/domain-analyst"
 create_dir ".codex/skills/harness-architect"
@@ -116,206 +88,6 @@ create_dir ".codex/skills/qa-designer"
 create_dir ".codex/skills/orchestrator"
 create_dir ".codex/skills/validator"
 create_dir ".codex/skills/run-harness"
-
-create_file_if_missing ".codex/agents/domain-analyst.md" \
-"# domain-analyst
-
-## 역할
-
-- 저장소 탐색의 출발점을 맡는 분석 역할
-
-## 핵심 책임
-
-- 대표 진입점, 주요 코드 경계, 실행·검증 경로 메모를 남긴다.
-- 역할 팀 전체가 공통으로 참조할 분석 결과를 만든다.
-
-## 입력
-
-- 저장소 루트
-- 탐색 결과
-
-## 출력
-
-- \`.harness/reports/domain-analysis.md\`
-
-## handoff
-
-- \`harness-architect\`
-- \`qa-designer\`
-- \`orchestrator\`
-"
-
-create_file_if_missing ".codex/agents/harness-architect.md" \
-"# harness-architect
-
-## 역할
-
-- 역할 팀 구조와 경계를 설계하는 구조 설계 역할
-
-## 핵심 책임
-
-- 분석 결과를 역할 팀 구조로 번역한다.
-- 어떤 역할을 유지·축소·확장할지 정한다.
-
-## 입력
-
-- \`.harness/reports/domain-analysis.md\`
-
-## 출력
-
-- \`.harness/reports/harness-architecture.md\`
-
-## handoff
-
-- \`skill-scaffolder\`
-- \`orchestrator\`
-"
-
-create_file_if_missing ".codex/agents/skill-scaffolder.md" \
-"# skill-scaffolder
-
-## 역할
-
-- 역할 정의와 구조 설계를 실제 로컬 파일로 옮기는 구현 역할
-
-## 핵심 책임
-
-- 역할 팀 구조를 \`.codex/skills/*\`와 선택 자산으로 반영한다.
-- validator 메모가 붙기 쉬운 구조를 유지한다.
-
-## 입력
-
-- \`.harness/reports/harness-architecture.md\`
-
-## 출력
-
-- \`.codex/skills/*\`
-- 필요 시 \`.harness/templates/*\`
-- 필요 시 \`.harness/scenarios/*\`
-
-## handoff
-
-- \`orchestrator\`
-- \`validator\`
-"
-
-create_file_if_missing ".codex/agents/qa-designer.md" \
-"# qa-designer
-
-## 역할
-
-- 품질 축과 반복 질문 메모를 설계하는 QA 역할
-
-## 핵심 책임
-
-- 프로젝트의 반복 위험을 품질 질문 메모로 남긴다.
-- validator와 orchestrator가 참조할 QA 기준을 만든다.
-
-## 입력
-
-- \`.harness/reports/domain-analysis.md\`
-- \`.harness/reports/harness-architecture.md\`
-
-## 출력
-
-- \`.harness/reports/qa-strategy.md\`
-
-## handoff
-
-- \`orchestrator\`
-- \`validator\`
-"
-
-create_file_if_missing ".codex/agents/orchestrator.md" \
-"# orchestrator
-
-## 역할
-
-- 역할 팀 전체 흐름과 handoff를 조율하는 중심 역할
-
-## 핵심 책임
-
-- 역할 호출 순서와 재진입 기준을 정리한다.
-- 산출물 연결과 피드백 루프를 유지한다.
-
-## 입력
-
-- \`.harness/reports/domain-analysis.md\`
-- \`.harness/reports/harness-architecture.md\`
-- \`.harness/reports/qa-strategy.md\`
-
-## 출력
-
-- \`.harness/reports/orchestration-plan.md\`
-
-## handoff
-
-- \`validator\`
-- 필요 시 앞선 역할 재호출
-"
-
-create_file_if_missing ".codex/agents/validator.md" \
-"# validator
-
-## 역할
-
-- 실행 하네스 구조와 연결성을 점검하는 검증 역할
-
-## 핵심 책임
-
-- 누락, 충돌, 약한 설명, 잘못된 연결을 식별한다.
-- 다시 써야 할 위치를 역할 팀에 돌려보낸다.
-
-## 입력
-
-- \`.codex/skills/*\`
-- \`.harness/reports/*\`
-
-## 출력
-
-- 검증 로그
-- 재작성 제안
-
-## handoff
-
-- \`harness-architect\`
-- \`skill-scaffolder\`
-- \`qa-designer\`
-- \`orchestrator\`
-"
-
-create_file_if_missing ".codex/agents/run-harness.md" \
-"# run-harness
-
-## 역할
-
-- 현재 상태를 읽고 시작 역할과 다음 역할을 정하는 팀 기동 역할
-
-## 핵심 책임
-
-- 신규 구축, 기존 확장, 운영 유지보수, 재구성 여부를 판단한다.
-- 현재 시작 역할과 다음 handoff를 제안한다.
-
-## 입력
-
-- 현재 저장소 상태
-- \`.codex/skills/*\`
-- \`.harness/reports/*\`
-
-## 출력
-
-- 시작 역할 1개
-- 다음 역할 0~2개
-- 추가 질문 0~2개
-
-## handoff
-
-- \`domain-analyst\`
-- \`harness-architect\`
-- \`qa-designer\`
-- \`orchestrator\`
-- \`validator\`
-"
 
 create_dir ".harness"
 create_dir ".harness/reports"
@@ -433,8 +205,6 @@ description: 저장소의 목적, 대표 진입점 후보, 관련 코드 경로,
 - 실행 하네스의 첫 단계
 - harness-architect, qa-designer, orchestrator의 입력을 만든다
 
-역할 정체성과 handoff 기준은 \`.codex/agents/domain-analyst.md\`를 따른다.
-
 ## 협업 원칙
 
 - 이후 역할이 사용할 수 있도록 구조적이고 요약된 결과를 남긴다.
@@ -504,8 +274,6 @@ description: 저장소에 맞는 프로젝트 로컬 실행 하네스 구조와 
 - 구조 설계 담당
 - skill-scaffolder와 orchestrator의 기준점 역할
 
-역할 정체성과 handoff 기준은 \`.codex/agents/harness-architect.md\`를 따른다.
-
 ## 협업 원칙
 
 - domain-analyst의 결과를 단순 요약하지 말고, 역할 팀 구조로 번역한다.
@@ -560,8 +328,6 @@ description: 실행 하네스 구조를 바탕으로 프로젝트 로컬 역할 
 
 - 구조를 실제 파일로 만드는 역할
 - architect의 설계를 구현으로 옮긴다
-
-역할 정체성과 handoff 기준은 \`.codex/agents/skill-scaffolder.md\`를 따른다.
 
 ## 협업 원칙
 
@@ -620,8 +386,6 @@ description: 프로젝트 실행 하네스에서 필요한 품질 기준, 질문
 
 - 역할 팀의 QA 기준 제공
 - validator와 orchestrator가 참고하는 품질 기준점
-
-역할 정체성과 handoff 기준은 \`.codex/agents/qa-designer.md\`를 따른다.
 
 ## 협업 원칙
 
@@ -687,8 +451,6 @@ description: 프로젝트 로컬 실행 하네스의 중심 역할입니다. 도
 - 각 역할을 하나의 팀 흐름으로 묶는다
 - 프로젝트별 실행 하네스의 운영 기준점이 된다
 
-역할 정체성과 handoff 기준은 \`.codex/agents/orchestrator.md\`를 따른다.
-
 ## 협업 원칙
 
 - 모든 일을 직접 대신하지 않는다.
@@ -753,8 +515,6 @@ description: 생성된 프로젝트 로컬 실행 하네스가 최소 요건을 
 
 - 실행 하네스의 품질 점검 역할
 - 생성 이후 최소 품질 보장을 담당
-
-역할 정체성과 handoff 기준은 \`.codex/agents/validator.md\`를 따른다.
 
 ## 협업 원칙
 
@@ -835,8 +595,6 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 실행 하네스 팀의 기동 엔트리포인트
 - 팀 전체를 실제로 움직이기 시작하게 만드는 역할
 
-역할 정체성과 handoff 기준은 \`.codex/agents/run-harness.md\`를 따른다.
-
 ## 협업 원칙
 
 - 항상 모든 역할을 다 호출하려 하지 않는다.
@@ -884,39 +642,101 @@ create_file_if_missing ".harness/reports/domain-analysis.md" \
 
 ## 저장소 요약
 
-$DOMAIN_SUMMARY_BLOCK
+- 최종 분석은 domain-analyst가 직접 작성합니다.
 
-$DOMAIN_DETAIL_BLOCK
+## 저장소 고유 근거
+
+## 사실 기준 구조
+
+## 핵심 실행 흐름
+
+## 반복적으로 위험한 변경 유형
+
+## 남아 있는 질문
 "
 
 create_file_if_missing ".harness/reports/harness-architecture.md" \
 "# 실행 하네스 아키텍처
 
-$ARCH_REPORT_BLOCK
+## 요약
+
+- 최종 구조 설명은 harness-architect가 직접 작성합니다.
+
+## 저장소 고유 근거
+
+## 역할 배치
+
+## 역할 유지와 조정 기준
+
+## 남아 있는 질문
 "
 
 create_file_if_missing ".harness/reports/qa-strategy.md" \
 "# QA 전략
 
-$QA_REPORT_BLOCK
+## 요약
+
+- 최종 QA 전략은 qa-designer가 직접 작성합니다.
+
+## 저장소 고유 단서
+
+## 핵심 품질 축
+
+## 핵심 질문
+
+## 변경 유형별 체크 메모
+
+## 남아 있는 질문
 "
 
 create_file_if_missing ".harness/reports/orchestration-plan.md" \
 "# 실행 하네스 오케스트레이션 계획
 
-$ORCH_REPORT_BLOCK
+## 요약
+
+- 최종 오케스트레이션 계획은 orchestrator가 직접 작성합니다.
+
+## 저장소 고유 근거
+
+## 시작 분기
+
+## 표준 전체 시퀀스
+
+## 역할 간 handoff 규칙
+
+## 남아 있는 질문
 "
 
 create_file_if_missing ".harness/reports/team-structure.md" \
 "# 역할 팀 구조
 
-$TEAM_STRUCTURE_REPORT_BLOCK
+## 요약
+
+- 최종 팀 구조는 harness-architect가 직접 작성합니다.
+
+## 저장소 고유 근거
+
+## 팀 구성
+
+## 역할별 책임 요약
 "
 
 create_file_if_missing ".harness/reports/team-playbook.md" \
 "# 팀 운영 플레이북
 
-$TEAM_PLAYBOOK_REPORT_BLOCK
+## 요약
+
+- 최종 운영 플레이북은 orchestrator가 직접 작성합니다.
+
+## 저장소 고유 근거
+
+## 시작 체크 메모
+
+## 역할 호출 순서
+
+## 작업 유형별 메모
+
+## 종료 메모
 "
 
 create_file_if_missing ".harness/logging-policy.md" \

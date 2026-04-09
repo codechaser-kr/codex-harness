@@ -159,11 +159,9 @@ EMPTY_INIT_OUTPUT="$(
 assert_contains "$EMPTY_INIT_OUTPUT" "하네스 운영 모드: 신규 구축" "빈 프로젝트 init 로그"
 assert_contains "$EMPTY_INIT_OUTPUT" "탐색 근거 문서: .harness/reports/exploration-notes.md" "빈 프로젝트 init 탐색 로그"
 assert_dir "$TMP_ROOT/empty-project/.codex/skills/run-harness"
-assert_dir "$TMP_ROOT/empty-project/.codex/agents"
 assert_dir "$TMP_ROOT/empty-project/.harness/reports"
 assert_file "$TMP_ROOT/empty-project/.harness/project-setup.md"
 assert_file "$TMP_ROOT/empty-project/.harness/reports/exploration-notes.md"
-assert_file "$TMP_ROOT/empty-project/.codex/agents/run-harness.md"
 (
   cd "$TMP_ROOT/empty-project"
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"

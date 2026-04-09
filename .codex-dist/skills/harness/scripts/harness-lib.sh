@@ -218,12 +218,12 @@ list_code_boundary_paths() {
     -type f \
     \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' -o -name '*.rs' -o -name '*.py' -o -name '*.go' -o -name '*.java' -o -name '*.kt' -o -name '*.swift' -o -name '*.php' -o -name '*.rb' -o -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.hpp' \) \
     -print | sed 's#^\./##' | awk -F/ '
-      NF >= 2 {
-        if ($2 ~ /\./) {
-          print $1
-        } else {
-          print $1 "/" $2
-        }
+      NF >= 3 {
+        print $1 "/" $2
+        next
+      }
+      NF == 2 {
+        print $1
         next
       }
       NF == 1 { print $1 }

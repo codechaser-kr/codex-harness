@@ -605,14 +605,14 @@ build_domain_report_detail_block() {
 - 어떤 품질 문제가 반복적으로 발생할 수 있는가
 - 하네스가 함께 읽을 핵심 축은 무엇인가
 
-## 초기 질문
+## 함께 볼 질문
 
 - 이 프로젝트는 애플리케이션인가, 라이브러리인가, 도구인가
 - 핵심 기능은 어디에 모여 있는가
 - 변경 시 영향이 큰 영역은 어디인가
 - 검토를 자동화하거나 구조화할 가치가 큰 흐름은 무엇인가
 
-## 사용자 확인 질문
+## 공유 질문
 
 탐색 근거가 아직 부족합니다. 아래 질문에 답하면 domain-analyst가 실제 저장소 기준의 분석 문장을 적기 쉬워집니다.
 
@@ -762,7 +762,7 @@ build_architecture_report_block() {
   case "$exploration_context_level" in
     초기|제한적)
       cat <<EOF
-## 목적
+## 구조 메모
 
 이 문서는 현재 저장소에 놓일 범용 하네스 구조 메모를 정리합니다.
 
@@ -897,7 +897,7 @@ build_qa_report_block() {
   case "$exploration_context_level" in
     초기|제한적)
       cat <<EOF
-## 목적
+## QA 메모
 
 이 문서는 저장소에서 중요하게 볼 품질 기준과 검토 지점 메모를 정리합니다.
 
@@ -1015,7 +1015,7 @@ build_orchestration_report_block() {
   case "$exploration_context_level" in
     초기|제한적)
       cat <<EOF
-## 목적
+## 흐름 메모
 
 이 문서는 여러 하네스 역할이 실제로 어떤 순서와 방식으로 협력해야 하는지 정리합니다.
 
@@ -1054,7 +1054,7 @@ EOF
       cat <<EOF
 ## 요약
 
-- 이 문서는 현재 저장소에서 어떤 요청이 들어왔을 때 어떤 역할 순서를 검토할지 운영 단서로 정리합니다.
+- 이 문서는 현재 저장소에서 어떤 요청 흐름과 역할 순서를 함께 볼지 적어둔 운영 메모입니다.
 - 시작 분기와 재진입 기준은 현재 요청의 영향 범위와 검증 비용을 다시 읽을 때 참고할 운영 메모입니다.
 
 ## 저장소 고유 근거
@@ -1140,7 +1140,7 @@ build_team_structure_report_block() {
   case "$exploration_context_level" in
     초기|제한적)
       cat <<EOF
-## 목적
+## 팀 메모
 
 이 문서는 현재 프로젝트의 로컬 실행 하네스를 역할 팀 관점에서 설명합니다.
 
@@ -1224,7 +1224,7 @@ build_team_playbook_report_block() {
   case "$exploration_context_level" in
     초기|제한적)
       cat <<EOF
-## 목적
+## 세션 메모
 
 이 문서는 프로젝트 로컬 실행 하네스 팀을 실제로 어떻게 시작하고 운용할지 요약합니다.
 
@@ -1241,7 +1241,7 @@ build_team_playbook_report_block() {
 - 직전 session-log를 읽으면 미해결 항목 연결 여부가 드러납니다.
 - 이번 세션에서 먼저 읽을 문서는 1~2개로 좁혀집니다.
 
-## 기본 운영 원칙
+## 기본 흐름 메모
 
 - 문서보다 역할 팀을 본체로 봅니다.
 - \`.harness/reports\` 문서는 팀이 공유하는 보조 기준으로 사용합니다.
@@ -1394,7 +1394,7 @@ ensure_harness_log_scaffold() {
     cat > "$logging_policy_file" <<'EOF'
 # 로그 정책
 
-## 목적
+## 로그 메모
 
 이 문서는 실행 하네스 팀을 실제로 운용할 때 남는 로그 메모를 정리합니다.
 

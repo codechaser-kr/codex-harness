@@ -447,7 +447,7 @@ fi
 
 if [ -f ".harness/reports/team-playbook.md" ]; then
   check_contains_any_hint ".harness/reports/team-playbook.md" "세션 시작 절차|세션 시작 체크|시작 체크|시작 순서" "운영 시작 순서"
-  check_contains_hint ".harness/reports/team-playbook.md" "운영 원칙" "운영 원칙"
+  check_contains_any_hint ".harness/reports/team-playbook.md" "운영 원칙|기본 흐름 메모|운영 규칙" "운영 원칙"
 fi
 
 if [ -f ".harness/logging-policy.md" ]; then

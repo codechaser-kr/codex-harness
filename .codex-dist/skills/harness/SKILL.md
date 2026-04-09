@@ -54,7 +54,10 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 전역 설치 후 기본 위치는 `$HOME/.codex/skills/harness/scripts/*.sh`이다.
 
 - 최초 하네스 구성 요청이면 반드시 `bash scripts/harness-init.sh`를 앞에 실행한다.
+- `harness-init.sh` 직후 상태는 완료가 아니라 골격 생성 상태로 본다.
+- `harness-init.sh` 다음에는 역할 팀이 `.harness/reports/*`를 직접 작성해야 한다.
 - 하네스 구성이 끝났다고 판단하기 전에 반드시 `bash scripts/harness-verify.sh`를 실행한다.
+- 역할 재작성 없이 `harness-verify.sh`를 먼저 실행해 통과시키려 하지 않는다.
 - `scripts/harness-update.sh`는 이미 하네스 구조가 있는 프로젝트에서 필요한 문서와 탐색 근거를 다시 정리할 때 사용한다. 필요하면 `--domain`, `--architecture`, `--qa`, `--orchestration`, `--team-structure`, `--team-playbook`으로 범위를 좁힌다.
 - `초기` 탐색 상태에서는 질문과 탐색 재읽기를 앞에 두고, `제한적` 상태에서는 필요한 문서만 선택 갱신하며, `충분` 상태에서는 더 구체적인 구조와 검증을 적용한다.
 - `harness-init.sh` 또는 `harness-update.sh`가 만든 문서는 완성본으로 간주하지 않고, 완료 전에 반드시 저장소 사실, 기존 도메인 언어, 운영 흐름에 맞게 역할 관점으로 다시 작성한다.
@@ -158,16 +161,6 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - `.codex/skills/validator/SKILL.md`
 - `.codex/skills/run-harness/SKILL.md`
 
-### 프로젝트 로컬 역할 정의
-
-- `.codex/agents/domain-analyst.md`
-- `.codex/agents/harness-architect.md`
-- `.codex/agents/skill-scaffolder.md`
-- `.codex/agents/qa-designer.md`
-- `.codex/agents/orchestrator.md`
-- `.codex/agents/validator.md`
-- `.codex/agents/run-harness.md`
-
 ### 보조 산출물
 
 - `.harness/reports/domain-analysis.md`
@@ -178,7 +171,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - `.harness/reports/team-playbook.md`
 
 핵심은 역할 팀이며,  
-리포트는 역할 팀이 공유하고 사람이 수정할 수 있도록 돕는 보조 자료이다.
+리포트는 역할 팀이 직접 작성하는 결과 문서이며, init 직후에는 골격만 놓인다.
 
 ---
 
@@ -212,8 +205,8 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 ### Phase 3: 로컬 역할 스킬 생성
 
 1. 각 역할에 대한 로컬 SKILL.md를 생성한다.
-2. 각 역할에 대한 로컬 agent 정의 파일을 함께 생성한다.
-3. agent 정의는 누가 어떤 책임과 경계를 갖는지 설명하고, SKILL.md는 어떻게 수행하는지 설명한다.
+2. 각 역할은 SKILL.md 하나로 실행 계약과 책임 범위를 함께 설명한다.
+3. 보조 역할 정의 문서를 따로 만들지 않는다.
 4. 각 역할은 명확한 입력/출력/책임 범위를 가져야 한다.
 5. description은 실제 요청에서 트리거될 수 있도록 구체적으로 작성한다.
 6. 역할 팀이 실제로 사용 가능한 수준의 스킬 구조를 만든다.
@@ -232,14 +225,14 @@ QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 
 ### Phase 5: `.harness/reports/*` 문서 프로젝트 맞춤 작성
 
-1. `harness-init.sh` 또는 `harness-update.sh`가 만든 `.harness/reports/*` 문서를 최종본으로 간주하지 않는다.
+1. `harness-init.sh` 또는 `harness-update.sh`가 만든 `.harness/reports/*` 문서는 골격 상태로 보고, 최종본으로 간주하지 않는다.
 2. domain-analyst가 저장소 사실, 대표 흐름, 예외를 기준으로 `domain-analysis.md`를 직접 다시 쓴다.
 3. 이 단계에서 기존 README, 도메인 문서, 사용자 흐름 설명에 있던 업무 용어와 문제 정의를 하네스 운영 문구가 덮어쓰지 않게 유지한다.
 4. harness-architect와 qa-designer가 역할 경계, handoff, 검증 기준을 현재 저장소 운영 방식에 맞는 결과 문서로 다시 쓴다.
 5. orchestrator가 시작 분기, 재진입 루프, 세션 운영 규칙을 실제 요청 유형 기준의 운영 문서로 다시 쓴다.
 6. validator는 문서가 스키마만 맞춘 일반론에 머물지 않고 저장소 특화 근거와 도메인 밀도를 유지하는지 확인한다.
 
-이 단계의 목적은 스크립트 출력물을 그대로 유지하는 것이 아니라, 각 프로젝트의 구조, 운영 맥락, 기존 도메인 언어에 맞는 결과 문서를 직접 작성하는 것이다.
+이 단계의 목적은 스크립트 골격을 남겨 두는 것이 아니라, 각 프로젝트의 구조, 운영 맥락, 기존 도메인 언어에 맞는 결과 문서를 직접 작성하는 것이다.
 
 ### Phase 6: 실행 하네스 팀 검증
 

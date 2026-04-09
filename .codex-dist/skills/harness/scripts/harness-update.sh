@@ -1,19 +1,13 @@
 #!/usr/bin/env bash
 # harness-update.sh
-# 기존 하네스 구조를 감사한 뒤 필요한 보고서와 탐색 근거를 다시 정리합니다.
+# 기존 하네스 구조를 감사한 뒤 탐색 근거와 재작성 대상 역할을 다시 정리합니다.
 # 사용 시점:
 #   - 기존 하네스 구조 확장
-#   - 운영 유지보수 중 문서/근거 재정렬
+#   - 운영 유지보수 중 탐색 근거 재정렬
 #   - 명시적 재구성 전, 현재 구조를 다시 쓸 수 있는지 점검
 set -euo pipefail
 
 REPORT_DIR=".harness/reports"
-DOMAIN_REPORT="$REPORT_DIR/domain-analysis.md"
-ARCH_REPORT="$REPORT_DIR/harness-architecture.md"
-QA_REPORT="$REPORT_DIR/qa-strategy.md"
-ORCH_REPORT="$REPORT_DIR/orchestration-plan.md"
-TEAM_STRUCTURE_REPORT="$REPORT_DIR/team-structure.md"
-TEAM_PLAYBOOK_REPORT="$REPORT_DIR/team-playbook.md"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/harness-lib.sh"
 
@@ -89,6 +83,19 @@ build_selected_target_summary() {
   join_by_comma "${targets[@]}"
 }
 
+build_selected_role_summary() {
+  local roles=()
+
+  [ "$UPDATE_DOMAIN" -eq 1 ] && roles+=("domain-analyst")
+  [ "$UPDATE_ARCHITECTURE" -eq 1 ] && roles+=("harness-architect")
+  [ "$UPDATE_QA" -eq 1 ] && roles+=("qa-designer")
+  [ "$UPDATE_ORCHESTRATION" -eq 1 ] && roles+=("orchestrator")
+  [ "$UPDATE_TEAM_STRUCTURE" -eq 1 ] && roles+=("harness-architect")
+  [ "$UPDATE_TEAM_PLAYBOOK" -eq 1 ] && roles+=("orchestrator")
+
+  join_by_comma "${roles[@]}"
+}
+
 parse_update_targets "$@"
 
 HARNESS_OPERATION_MODE="$(detect_harness_operation_mode)"
@@ -153,19 +160,13 @@ if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
   log "탐색 근거 부족: 사용자 확인 질문부터 정리"
 fi
 
-DOMAIN_DETAIL_BLOCK="$(build_domain_report_detail_block "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT" "$CORE_FLOW_HINT" "$DISCOVERY_GUIDANCE" "$INITIAL_OBSERVATION_LINE" "$NEXT_STEP_DETAIL_LINE")"
-ARCH_REPORT_BLOCK="$(build_architecture_report_block "$EXPLORATION_CONTEXT_LEVEL" "$PROJECT_TYPE_LABEL" "$KEY_AXES_HINT" "$CORE_FLOW_HINT")"
-QA_REPORT_BLOCK="$(build_qa_report_block "$EXPLORATION_CONTEXT_LEVEL" "$KEY_AXES_HINT" "$BOUNDARY_HINT" "$EXPLORATION_TEST_HINT")"
-ORCH_REPORT_BLOCK="$(build_orchestration_report_block "$EXPLORATION_CONTEXT_LEVEL" "$KEY_AXES_HINT")"
-TEAM_STRUCTURE_REPORT_BLOCK="$(build_team_structure_report_block "$EXPLORATION_CONTEXT_LEVEL" "$KEY_AXES_HINT")"
-TEAM_PLAYBOOK_REPORT_BLOCK="$(build_team_playbook_report_block "$EXPLORATION_CONTEXT_LEVEL" "$KEY_AXES_HINT")"
-
 log "하네스 업데이트 시작"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
 log "탐색 근거 문서: $EXPLORATION_NOTES_FILE"
 log "탐색 상태: $EXPLORATION_CONTEXT_LEVEL"
 log "탐색 근거 요약: $EXPLORATION_ANCHOR_SUMMARY"
 log "선택 갱신 대상: $(build_selected_target_summary)"
+log "다시 호출할 역할: $(build_selected_role_summary)"
 while IFS= read -r audit_line; do
   [ -n "$audit_line" ] || continue
   log "하네스 감사: $audit_line"
@@ -175,62 +176,6 @@ while IFS= read -r agents_line; do
   log "상위 컨텍스트 감사: $agents_line"
 done <<< "$AGENTS_AUDIT_SUMMARY"
 
-if [ "$UPDATE_DOMAIN" -eq 1 ]; then
-  cat > "$DOMAIN_REPORT" <<EOF_DOMAIN
-# 도메인 분석
-
-## 저장소 요약
-
-$DOMAIN_SUMMARY_BLOCK
-
-$DOMAIN_DETAIL_BLOCK
-EOF_DOMAIN
-  log "갱신됨: $DOMAIN_REPORT"
-fi
-
-if [ "$UPDATE_ARCHITECTURE" -eq 1 ]; then
-  cat > "$ARCH_REPORT" <<EOF_ARCH
-# 하네스 아키텍처
-
-$ARCH_REPORT_BLOCK
-EOF_ARCH
-  log "갱신됨: $ARCH_REPORT"
-fi
-
-if [ "$UPDATE_QA" -eq 1 ]; then
-  cat > "$QA_REPORT" <<EOF_QA
-# QA 전략
-
-$QA_REPORT_BLOCK
-EOF_QA
-  log "갱신됨: $QA_REPORT"
-fi
-
-if [ "$UPDATE_ORCHESTRATION" -eq 1 ]; then
-  cat > "$ORCH_REPORT" <<EOF_ORCH
-# 오케스트레이션 계획
-
-$ORCH_REPORT_BLOCK
-EOF_ORCH
-  log "갱신됨: $ORCH_REPORT"
-fi
-
-if [ "$UPDATE_TEAM_STRUCTURE" -eq 1 ]; then
-  cat > "$TEAM_STRUCTURE_REPORT" <<EOF_TEAM_STRUCTURE
-# 역할 팀 구조
-
-$TEAM_STRUCTURE_REPORT_BLOCK
-EOF_TEAM_STRUCTURE
-  log "갱신됨: $TEAM_STRUCTURE_REPORT"
-fi
-
-if [ "$UPDATE_TEAM_PLAYBOOK" -eq 1 ]; then
-  cat > "$TEAM_PLAYBOOK_REPORT" <<EOF_TEAM_PLAYBOOK
-# 팀 운영 플레이북
-
-$TEAM_PLAYBOOK_REPORT_BLOCK
-EOF_TEAM_PLAYBOOK
-  log "갱신됨: $TEAM_PLAYBOOK_REPORT"
-fi
-
 log "하네스 업데이트 완료"
+log "exploration-notes만 다시 정리되었습니다."
+log "선택된 보고서는 위 역할이 직접 다시 작성해야 합니다."

@@ -53,6 +53,12 @@ assert_not_dir() {
   [ ! -d "$path" ] || fail "디렉토리가 없어야 함: $path"
 }
 
+assert_not_file() {
+  local path="$1"
+
+  [ ! -f "$path" ] || fail "파일이 없어야 함: $path"
+}
+
 assert_command_fails_with() {
   local workdir="$1"
   local cmd="$2"
@@ -179,11 +185,12 @@ assert_not_dir "$TMP_ROOT/empty-project/.codex/agents"
 assert_dir "$TMP_ROOT/empty-project/.harness/reports"
 assert_file "$TMP_ROOT/empty-project/.harness/project-setup.md"
 assert_file "$TMP_ROOT/empty-project/.harness/reports/exploration-notes.md"
+assert_not_file "$TMP_ROOT/empty-project/.harness/reports/domain-analysis.md"
 assert_command_fails_with \
   "$TMP_ROOT/empty-project" \
   "bash \"$HARNESS_SCRIPT_DIR/harness-verify.sh\"" \
-  "역할 재작성 미수행" \
-  "빈 프로젝트 verify 골격 실패"
+  "문서 누락: 역할 재작성 미수행" \
+  "빈 프로젝트 verify 최종 문서 누락 실패"
 
 log "스택 프로젝트 init -> verify 확인"
 mkdir -p "$TMP_ROOT/stack-project"
@@ -249,9 +256,9 @@ STACK_INIT_OUTPUT="$(
 assert_contains "$STACK_INIT_OUTPUT" "하네스 운영 모드: 신규 구축" "스택 프로젝트 init 로그"
 assert_contains "$STACK_INIT_OUTPUT" "탐색 근거 요약: 대표 진입점" "스택 프로젝트 init 탐색 요약"
 assert_not_dir "$TMP_ROOT/stack-project/.codex/agents"
-assert_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
-assert_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"
+assert_not_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
+assert_not_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" '`src/main.ts`' "생성된 탐색 문서 대표 진입점"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" '`src/com.example`' "생성된 탐색 문서 점 포함 디렉토리 경계"
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" ".claude/" "생성된 탐색 문서 AI 설정 디렉토리 제외"
@@ -265,7 +272,7 @@ STACK_VERIFY_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh" 2>&1 || true
 )"
-assert_contains "$STACK_VERIFY_OUTPUT" "역할 재작성 미수행" "스택 프로젝트 verify 골격 실패"
+assert_contains "$STACK_VERIFY_OUTPUT" "문서 누락: 역할 재작성 미수행" "스택 프로젝트 verify 최종 문서 누락 실패"
 
 log "다중 실행 경계 탐색 확인"
 mkdir -p "$TMP_ROOT/multi-boundary-project/packages/web/src" \

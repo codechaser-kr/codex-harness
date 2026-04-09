@@ -181,6 +181,17 @@ fail_if_contains_pattern() {
   fi
 }
 
+check_final_report() {
+  local file="$1"
+  local label="$2"
+
+  if [ -f "$file" ]; then
+    log "OK 파일: $file"
+  else
+    fail "$label: 역할 재작성 미수행"
+  fi
+}
+
 audit_harness_drift() {
   local mode="$1"
   local skill_count="$2"
@@ -326,20 +337,6 @@ for file in "${SKILL_FILES[@]}"; do
   fi
 done
 
-# 실행 하네스 팀 보조 리포트
-REPORT_FILES=(
-  ".harness/reports/domain-analysis.md"
-  ".harness/reports/harness-architecture.md"
-  ".harness/reports/qa-strategy.md"
-  ".harness/reports/orchestration-plan.md"
-  ".harness/reports/team-structure.md"
-  ".harness/reports/team-playbook.md"
-)
-
-for file in "${REPORT_FILES[@]}"; do
-  check_file "$file"
-done
-
 # 로그 구조
 LOG_FILES=(
   ".harness/logs/session-log.md"
@@ -354,14 +351,20 @@ done
 check_file ".harness/logging-policy.md"
 check_file ".harness/reports/exploration-notes.md"
 
+check_final_report ".harness/reports/domain-analysis.md" "도메인 분석 문서 누락"
+check_final_report ".harness/reports/harness-architecture.md" "하네스 아키텍처 문서 누락"
+check_final_report ".harness/reports/qa-strategy.md" "QA 전략 문서 누락"
+check_final_report ".harness/reports/orchestration-plan.md" "오케스트레이션 계획 문서 누락"
+check_final_report ".harness/reports/team-structure.md" "팀 구조 문서 누락"
+check_final_report ".harness/reports/team-playbook.md" "팀 플레이북 문서 누락"
+
 if [ -f ".harness/reports/domain-analysis.md" ]; then
   check_contains_hint ".harness/reports/domain-analysis.md" "## 저장소 고유 근거" "도메인 분석 저장소 고유 근거"
   check_contains_hint ".harness/reports/domain-analysis.md" "## 사실 기준 구조" "도메인 분석 사실 기준 구조"
   check_contains_hint ".harness/reports/domain-analysis.md" "## 핵심 실행 흐름" "도메인 분석 핵심 실행 흐름"
   check_contains_hint ".harness/reports/domain-analysis.md" "## 반복적으로 위험한 변경 유형" "도메인 분석 위험 변경 유형"
   check_contains_hint ".harness/reports/domain-analysis.md" "## 남아 있는 질문" "도메인 분석 남은 질문"
-  fail_if_contains_literal ".harness/reports/domain-analysis.md" "최종 분석은 domain-analyst가 직접 작성합니다." "도메인 분석 역할 재작성 미수행"
-  fail_if_contains_pattern ".harness/reports/domain-analysis.md" "후보로 수집되었습니다|자동 수집만으로는|직접 작성합니다\\.|다시 씁니다\\.|추가 읽기가 필요합니다" "도메인 분석 역할 재작성 미수행"
+  fail_if_contains_pattern ".harness/reports/domain-analysis.md" "후보로 수집되었습니다|자동 수집만으로는|최종 분석은 domain-analyst가 직접 작성합니다\\.|직접 작성합니다\\.|다시 씁니다\\.|추가 읽기가 필요합니다" "도메인 분석 역할 재작성 미수행"
 fi
 
 if [ -f ".harness/reports/harness-architecture.md" ]; then
@@ -373,7 +376,7 @@ if [ -f ".harness/reports/harness-architecture.md" ]; then
   check_contains_hint ".harness/reports/harness-architecture.md" "## 경계별 handoff 기준" "아키텍처 handoff 기준"
   check_contains_hint ".harness/reports/harness-architecture.md" "## 역할 유지와 조정 기준" "아키텍처 역할 유지 기준"
   check_contains_hint ".harness/reports/harness-architecture.md" "## 남아 있는 질문" "아키텍처 남은 질문"
-  fail_if_contains_literal ".harness/reports/harness-architecture.md" "최종 구조 설명은 harness-architect가 직접 작성합니다." "아키텍처 역할 재작성 미수행"
+  fail_if_contains_pattern ".harness/reports/harness-architecture.md" "최종 구조 설명은 harness-architect가 직접 작성합니다\\.|직접 작성합니다\\." "아키텍처 역할 재작성 미수행"
   fail_if_contains_pattern ".harness/reports/harness-architecture.md" "skill-scaffolder" "아키텍처 자기설명 회귀"
 fi
 
@@ -383,7 +386,7 @@ if [ -f ".harness/reports/qa-strategy.md" ]; then
   check_contains_hint ".harness/reports/qa-strategy.md" "## 자동/수동 검증 분리" "QA 자동 수동 검증 분리"
   check_contains_hint ".harness/reports/qa-strategy.md" "## 핵심 질문" "QA 핵심 질문"
   check_contains_hint ".harness/reports/qa-strategy.md" "## 변경 유형별 체크 기준" "QA 변경 유형별 체크 기준"
-  fail_if_contains_literal ".harness/reports/qa-strategy.md" "최종 QA 전략은 qa-designer가 직접 작성합니다." "QA 역할 재작성 미수행"
+  fail_if_contains_pattern ".harness/reports/qa-strategy.md" "최종 QA 전략은 qa-designer가 직접 작성합니다\\.|직접 작성합니다\\." "QA 역할 재작성 미수행"
 fi
 
 if [ -f ".harness/reports/orchestration-plan.md" ]; then
@@ -393,7 +396,7 @@ if [ -f ".harness/reports/orchestration-plan.md" ]; then
   check_contains_hint ".harness/reports/orchestration-plan.md" "## 표준 진행 흐름" "오케스트레이션 표준 진행 흐름"
   check_contains_hint ".harness/reports/orchestration-plan.md" "## 재진입 및 handoff 기준" "오케스트레이션 재진입 및 handoff 기준"
   check_contains_hint ".harness/reports/orchestration-plan.md" "## 남아 있는 질문" "오케스트레이션 남은 질문"
-  fail_if_contains_literal ".harness/reports/orchestration-plan.md" "최종 오케스트레이션 계획은 orchestrator가 직접 작성합니다." "오케스트레이션 역할 재작성 미수행"
+  fail_if_contains_pattern ".harness/reports/orchestration-plan.md" "최종 오케스트레이션 계획은 orchestrator가 직접 작성합니다\\.|직접 작성합니다\\." "오케스트레이션 역할 재작성 미수행"
   fail_if_contains_pattern ".harness/reports/orchestration-plan.md" "skill-scaffolder" "오케스트레이션 자기설명 회귀"
 fi
 
@@ -403,7 +406,7 @@ if [ -f ".harness/reports/team-structure.md" ]; then
   check_contains_hint ".harness/reports/team-structure.md" "## 실행 경계와 검증 비용" "팀 구조 실행 경계와 검증 비용"
   check_contains_hint ".harness/reports/team-structure.md" "## 경계별 역할 분담" "팀 구조 경계별 역할 분담"
   check_contains_hint ".harness/reports/team-structure.md" "## 역할 추가/축소 기준" "팀 구조 역할 추가 축소 기준"
-  fail_if_contains_literal ".harness/reports/team-structure.md" "최종 팀 구조는 harness-architect가 직접 작성합니다." "팀 구조 역할 재작성 미수행"
+  fail_if_contains_pattern ".harness/reports/team-structure.md" "최종 팀 구조는 harness-architect가 직접 작성합니다\\.|직접 작성합니다\\." "팀 구조 역할 재작성 미수행"
   fail_if_contains_pattern ".harness/reports/team-structure.md" "skill-scaffolder" "팀 구조 자기설명 회귀"
 fi
 
@@ -413,7 +416,7 @@ if [ -f ".harness/reports/team-playbook.md" ]; then
   check_contains_hint ".harness/reports/team-playbook.md" "## 작업 유형별 시작 흐름" "플레이북 작업 유형별 시작 흐름"
   check_contains_hint ".harness/reports/team-playbook.md" "## 역할 팀 운영 원칙" "플레이북 역할 팀 운영 원칙"
   check_contains_hint ".harness/reports/team-playbook.md" "## 검증과 종료 조건" "플레이북 검증과 종료 조건"
-  fail_if_contains_literal ".harness/reports/team-playbook.md" "최종 운영 플레이북은 orchestrator가 직접 작성합니다." "플레이북 역할 재작성 미수행"
+  fail_if_contains_pattern ".harness/reports/team-playbook.md" "최종 운영 플레이북은 orchestrator가 직접 작성합니다\\.|직접 작성합니다\\." "플레이북 역할 재작성 미수행"
   fail_if_contains_pattern ".harness/reports/team-playbook.md" "skill-scaffolder" "플레이북 자기설명 회귀"
 fi
 

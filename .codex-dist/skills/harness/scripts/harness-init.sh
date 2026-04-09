@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # harness-init.sh
-# 디렉토리, 로컬 역할 스킬, 보조 리포트를 최초 1회 생성합니다.
+# 디렉토리, 로컬 역할 스킬, 탐색 문서를 최초 1회 생성합니다.
 # harness-update.sh와 차이:
-#   - harness-init.sh: 디렉토리/스킬/리포트 모두 생성 (기존 파일 유지)
-#   - harness-update.sh: 기존 하네스 구조를 감사한 뒤 필요한 보고서를 다시 정리
+#   - harness-init.sh: 디렉토리/스킬/탐색 문서 생성 (기존 파일 유지)
+#   - harness-update.sh: 기존 하네스 구조를 감사한 뒤 탐색 근거를 다시 정리
 # 사용 시점: 프로젝트에 처음 하네스를 구성할 때
 set -euo pipefail
 
@@ -653,124 +653,6 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 요청: 탐색 근거 부족, project-setup.md 작성됨 → 흐름: 목표·성격 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)
 "
 
-create_file_if_missing ".harness/reports/domain-analysis.md" \
-"# 도메인 분석
-
-## 저장소 요약
-
-- 최종 분석은 domain-analyst가 직접 작성합니다.
-
-## 저장소 고유 근거
-
-## 사실 기준 구조
-
-## 핵심 실행 흐름
-
-## 반복적으로 위험한 변경 유형
-
-## 남아 있는 질문
-"
-
-create_file_if_missing ".harness/reports/harness-architecture.md" \
-"# 실행 하네스 아키텍처
-
-## 요약
-
-- 최종 구조 설명은 harness-architect가 직접 작성합니다.
-
-## 저장소 고유 근거
-
-## 저장소 운영 구조
-
-## 실행 모드 선택
-
-## 아키텍처 패턴 선택
-
-## 역할별 개입 기준
-
-## 경계별 handoff 기준
-
-## 역할 유지와 조정 기준
-
-## 남아 있는 질문
-"
-
-create_file_if_missing ".harness/reports/qa-strategy.md" \
-"# QA 전략
-
-## 요약
-
-- 최종 QA 전략은 qa-designer가 직접 작성합니다.
-
-## 저장소 고유 단서
-
-## 핵심 품질 축
-
-## 자동/수동 검증 분리
-
-## 핵심 질문
-
-## 변경 유형별 체크 기준
-
-## 남아 있는 질문
-"
-
-create_file_if_missing ".harness/reports/orchestration-plan.md" \
-"# 실행 하네스 오케스트레이션 계획
-
-## 요약
-
-- 최종 오케스트레이션 계획은 orchestrator가 직접 작성합니다.
-
-## 저장소 고유 근거
-
-## 요청 유형별 시작점
-
-## 시작점 선택 이유
-
-## 표준 진행 흐름
-
-## 재진입 및 handoff 기준
-
-## 남아 있는 질문
-"
-
-create_file_if_missing ".harness/reports/team-structure.md" \
-"# 역할 팀 구조
-
-## 요약
-
-- 최종 팀 구조는 harness-architect가 직접 작성합니다.
-
-## 저장소 고유 근거
-
-## 저장소 경계
-
-## 실행 경계와 검증 비용
-
-## 경계별 역할 분담
-
-## 역할 추가/축소 기준
-"
-
-create_file_if_missing ".harness/reports/team-playbook.md" \
-"# 팀 운영 플레이북
-
-## 요약
-
-- 최종 운영 플레이북은 orchestrator가 직접 작성합니다.
-
-## 저장소 고유 근거
-
-## 시작 조건
-
-## 작업 유형별 시작 흐름
-
-## 역할 팀 운영 원칙
-
-## 검증과 종료 조건
-"
-
 create_file_if_missing ".harness/logging-policy.md" \
 "# 로그 정책
 
@@ -873,5 +755,6 @@ if optional_harness_assets_enabled "$EXPLORATION_NOTES_FILE"; then
 fi
 
 log "프로젝트 로컬 실행 하네스 초기화 완료"
-log "현재 .harness/reports/* 는 골격만 생성된 상태입니다."
-log "다음 단계: run-harness 또는 역할 스킬로 보고서를 직접 작성한 뒤 harness-verify.sh 를 실행하세요."
+log "exploration-notes와 로컬 역할 스킬이 준비되었습니다."
+log "최종 보고서는 run-harness 또는 역할 스킬이 직접 작성해야 합니다."
+log "다음 단계: 역할이 보고서를 작성한 뒤 harness-verify.sh 를 실행하세요."

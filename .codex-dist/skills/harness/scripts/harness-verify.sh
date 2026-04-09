@@ -526,14 +526,14 @@ if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
   fi
 
   if [ -f ".harness/reports/harness-architecture.md" ]; then
-    check_contains_any_hint ".harness/reports/harness-architecture.md" "역할별 초점|권장 역할|역할별 책임" "아키텍처 역할 배치"
-    check_contains_any_hint ".harness/reports/harness-architecture.md" "설계 원칙|원칙" "아키텍처 설계 원칙"
+    check_contains_any_hint ".harness/reports/harness-architecture.md" "역할별 초점|권장 역할|역할별 책임|역할 메모" "아키텍처 역할 배치"
+    check_contains_any_hint ".harness/reports/harness-architecture.md" "설계 원칙|원칙|구조 메모|확장 메모|흐름 메모" "아키텍처 설계 원칙"
     warn_if_contains_literal ".harness/reports/harness-architecture.md" "이 경계가 어떤 책임을 맡고, 어디로 영향이 번지는지 먼저 설명합니다." "아키텍처 경계 해석"
   fi
 
   if [ -f ".harness/reports/qa-strategy.md" ]; then
     check_contains_any_hint ".harness/reports/qa-strategy.md" "핵심 품질 축|품질 축" "QA 핵심 품질 축"
-    check_contains_any_hint ".harness/reports/qa-strategy.md" "우선 검토 질문|검토 질문|핵심 질문" "QA 검토 질문"
+    check_contains_any_hint ".harness/reports/qa-strategy.md" "우선 검토 질문|검토 질문|핵심 질문|QA 메모" "QA 검토 질문"
     check_contains_any_hint ".harness/reports/qa-strategy.md" "실행 예시|검증 명령|verify.sh|harness-update.sh --qa" "QA 실행 예시"
   fi
 
@@ -549,9 +549,9 @@ if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
   fi
 
   if [ -f ".harness/reports/team-playbook.md" ]; then
-    check_contains_any_hint ".harness/reports/team-playbook.md" "세션 시작 체크|세션 시작 절차|시작 체크|시작 순서" "플레이북 세션 시작 규칙"
-    check_contains_any_hint ".harness/reports/team-playbook.md" "작업 유형별 빠른 운영 규칙|작업 유형별 운영 규칙|운영 규칙" "플레이북 작업 유형별 운영 규칙"
-    check_contains_any_hint ".harness/reports/team-playbook.md" "세션 종료 기준|세션 종료|종료 기준" "플레이북 세션 종료 기준"
+    check_contains_any_hint ".harness/reports/team-playbook.md" "세션 시작 체크|세션 시작 절차|시작 체크|시작 순서|시작 메모|시작 체크 메모" "플레이북 세션 시작 규칙"
+    check_contains_any_hint ".harness/reports/team-playbook.md" "작업 유형별 빠른 운영 규칙|작업 유형별 운영 규칙|운영 규칙|작업 유형별 메모|세션 메모" "플레이북 작업 유형별 운영 규칙"
+    check_contains_any_hint ".harness/reports/team-playbook.md" "세션 종료 기준|세션 종료|종료 기준|종료 메모" "플레이북 세션 종료 기준"
   fi
 
   if [ -f ".harness/reports/exploration-notes.md" ]; then

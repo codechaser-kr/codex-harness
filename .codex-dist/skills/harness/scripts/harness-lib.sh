@@ -188,7 +188,7 @@ optional_harness_assets_enabled() {
 
 find_exploration_paths() {
   find . \
-    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './.claude' -o -path './.agents' -o -path './node_modules' -o -path './.yarn' -o -name dist -o -name build -o -name coverage \) -prune \
+    \( -path './.git' -o -path './.codex' -o -path './.harness' -o -path './.claude' -o -path './.cursor' -o -path './.agents' -o -name node_modules -o -path './.yarn' -o -name dist -o -name build -o -name coverage \) -prune \
     -o \
     "$@"
 }
@@ -218,7 +218,14 @@ list_code_boundary_paths() {
     -type f \
     \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' -o -name '*.rs' -o -name '*.py' -o -name '*.go' -o -name '*.java' -o -name '*.kt' -o -name '*.swift' -o -name '*.php' -o -name '*.rb' -o -name '*.cpp' -o -name '*.c' -o -name '*.h' -o -name '*.hpp' \) \
     -print | sed 's#^\./##' | awk -F/ '
-      NF >= 2 { print $1 "/" $2; next }
+      NF >= 3 {
+        print $1 "/" $2
+        next
+      }
+      NF == 2 {
+        print $1
+        next
+      }
       NF == 1 { print $1 }
     ' | awk '!seen[$0]++' | head -n 5
 }
@@ -240,6 +247,8 @@ list_domain_context_paths() {
   find_exploration_paths -maxdepth 4 \
     -type f \
     \( -name 'README.md' -o -name '*.md' -o -name '*.mdx' -o -name '*.txt' \) \
+    ! -name 'AGENTS.md' \
+    ! -name 'CLAUDE.md' \
     -print | sed 's#^\./##' | head -n 8
 }
 
@@ -498,7 +507,6 @@ build_key_axes_hint() {
   fi
 
   [ "$boundary_hint" = "추정 불가" ] || axes+=("$boundary_hint")
-  [ "$test_hint" = "추정 불가" ] || axes+=("$test_hint")
   [ "$config_hint" = "추정 불가" ] || axes+=("$config_hint")
 
   if [ "${#axes[@]}" -eq 0 ]; then
@@ -507,6 +515,17 @@ build_key_axes_hint() {
   fi
 
   join_by_comma "${axes[@]}"
+}
+
+build_core_flow_summary() {
+  local entrypoint_hint="${1:-추정 불가}"
+
+  if [ -z "$entrypoint_hint" ] || [ "$entrypoint_hint" = "추정 불가" ]; then
+    printf '%s\n' "대표 진입점 기준으로 실제 시작 흐름과 소비 경계를 먼저 정리해야 합니다."
+    return
+  fi
+
+  printf '%s\n' "\`$entrypoint_hint\` 등 대표 진입점 기준으로 실제 시작 흐름과 소비 경계를 먼저 정리해야 합니다."
 }
 
 build_core_flow_hint() {
@@ -544,6 +563,21 @@ build_initial_observation() {
       fi
       ;;
   esac
+}
+
+print_boundary_interpretation_lines() {
+  local boundary_hint="$1"
+  local item
+  local trimmed_item
+
+  [ -n "$boundary_hint" ] || return
+  [ "$boundary_hint" = "추정 불가" ] && return
+
+  while IFS= read -r item; do
+    trimmed_item="$(trim_text "$item")"
+    [ -n "$trimmed_item" ] || continue
+    printf '%s\n' "- \`$trimmed_item\`: 이 경계가 어떤 책임을 맡고, 어디로 영향이 번지는지 먼저 설명합니다."
+  done < <(printf '%s\n' "$boundary_hint" | tr ',' '\n')
 }
 
 build_domain_report_detail_block() {
@@ -609,7 +643,7 @@ EOF
 ## 요약
 EOF
       printf '%s\n' "- 이 저장소는 \`$boundary_hint\` 단서를 기준으로 대표 사용자 흐름과 운영 경계를 먼저 읽어야 합니다."
-      printf '%s\n' "- 대표 흐름 요약: \`$core_flow_hint\`"
+      printf '%s\n' "- 대표 흐름 요약: $core_flow_hint"
       printf '%s\n' "- 하네스 운영 구조는 위 흐름과 실패 비용을 보조하는 방식으로만 붙입니다."
 
       cat <<EOF
@@ -633,11 +667,8 @@ EOF
 ### 사실 기준 구조
 EOF
       if [ "$boundary_hint" != "추정 불가" ]; then
-        printf '%s\n' "- 아래 항목은 저장소를 어떤 경계로 읽어야 하는지 정리한 구조 요약입니다."
-        while IFS= read -r source_anchor; do
-          [ -n "$source_anchor" ] || continue
-          printf '%s\n' "- \`$source_anchor\`"
-        done < <(list_markdown_bullets_under_heading "$EXPLORATION_NOTES_DEFAULT_PATH" "주요 코드 경계")
+        printf '%s\n' "- 아래 항목은 저장소를 어떤 책임 경계로 읽어야 하는지 정리한 구조 요약입니다."
+        print_boundary_interpretation_lines "$boundary_hint"
       else
         printf '%s\n' "- 주요 코드 경계가 아직 충분히 정리되지 않았습니다. 후속 역할이 대표 경계를 직접 보강해야 합니다."
       fi
@@ -658,14 +689,25 @@ EOF
 ### 핵심 도메인 흐름과 위험 축
 EOF
       printf '%s\n' "- 대표 사용자 흐름 또는 운영 흐름이 어디서 시작되고 어디서 끝나는지 먼저 고정합니다."
-      printf '%s\n' "- \`$key_axes_hint\` 축 중 실제 업무 가치나 운영 비용이 크게 걸린 경계를 우선 식별합니다."
+      printf '%s\n' "- \`$boundary_hint\` 경계 중 실제 업무 가치나 운영 비용이 크게 걸린 영역을 우선 식별합니다."
+      [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- 설정·실행 경로는 실제 사용자 흐름이나 운영 리스크에 직접 연결될 때만 함께 다룹니다."
       printf '%s\n' "- 구조 변경이 기능 회귀보다 더 위험한지, 반대로 기능 흐름 단절이 더 위험한지 구분해 적습니다."
+
+      cat <<EOF
+
+### 핵심 경계와 책임
+EOF
+      if [ "$boundary_hint" != "추정 불가" ]; then
+        print_boundary_interpretation_lines "$boundary_hint"
+      else
+        printf '%s\n' "- 주요 경계의 책임은 후속 역할이 실제 파일과 소비 관계를 읽으며 보강해야 합니다."
+      fi
 
       cat <<EOF
 
 ### 핵심 실행 흐름
 EOF
-      printf '%s\n' "- \`$core_flow_hint\`"
+      printf '%s\n' "- $core_flow_hint"
       [ "$config_hint" = "추정 불가" ] || printf '%s\n' "- \`$config_hint\` 경로를 기준으로 실제 실행, 빌드, 검증 흐름이 어디서 갈라지는지 먼저 확인해야 합니다."
       [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- \`$boundary_hint\` 경계를 따라 변경 영향 범위와 소비 관계를 정리합니다."
 
@@ -674,7 +716,7 @@ EOF
 ### 하네스 관점 핵심 관심사
 EOF
       [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- 실제 코드 경계를 흐리지 않는 변경 분류"
-      printf '%s\n' "- \`$key_axes_hint\` 축에서 영향도가 큰 영역 식별"
+      [ "$boundary_hint" = "추정 불가" ] || printf '%s\n' "- \`$boundary_hint\` 경계에서 영향도가 큰 영역 식별"
       printf '%s\n' "- 실행 흐름, 설정 파일, 공용 계층 중 어디서 변경이 시작되는지 먼저 구분"
       printf '%s\n' "- 검증 비용이 큰 경계와 수동 확인이 필요한 결합 지점을 역할 관점으로 분리"
 

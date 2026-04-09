@@ -187,6 +187,18 @@ warn_if_anchor_count_below() {
   fi
 }
 
+warn_if_contains_literal() {
+  local file="$1"
+  local literal="$2"
+  local label="$3"
+
+  [ -f "$file" ] || return
+
+  if grep -Fq -- "$literal" "$file"; then
+    warn "$label: 기본 템플릿 문구가 그대로 남아 있습니다"
+  fi
+}
+
 audit_harness_drift() {
   local mode="$1"
   local skill_count="$2"
@@ -401,6 +413,8 @@ fi
 
 if [ -f ".codex/skills/validator/SKILL.md" ]; then
   check_contains_hint ".codex/skills/validator/SKILL.md" "피드백" "피드백 루프 설명"
+  check_contains_any_hint ".codex/skills/validator/SKILL.md" "generic 회귀|저장소 맞춤성|저장소 고유 근거|일반론" "validator 저장소 맞춤 회귀 감지"
+  check_contains_any_hint ".codex/skills/validator/SKILL.md" "어느 역할에서 시작|보강 역할|누가 어떤 기준" "validator 보완 역할 지정"
 fi
 
 if [ -f ".codex/skills/run-harness/SKILL.md" ]; then
@@ -416,6 +430,8 @@ if [ -f ".codex/skills/run-harness/SKILL.md" ]; then
   check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "저장소 고유 용어|추상적|사용자 확인 질문|맥락이 약" "사용자 맥락 판단 규칙"
   check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "명시적 재구성|재구성" "재구성 판단 규칙"
   check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "--domain|--qa|--architecture|--orchestration|--team-structure|--team-playbook" "선택 갱신 예시"
+  check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "왜 이 시작 역할|왜 그 역할부터|왜 이 시작점" "run-harness 시작 역할 근거"
+  check_contains_any_hint ".codex/skills/run-harness/SKILL.md" "무엇이 달라지면|다른 시작점|무엇이 바뀌면" "run-harness 시작점 변경 조건"
 fi
 
 if [ -f ".harness/reports/team-structure.md" ]; then
@@ -503,9 +519,12 @@ if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
     check_required_any_hint ".harness/reports/domain-analysis.md" "저장소 고유 근거|소스 앵커" "도메인 분석 저장소 고유 근거"
     check_contains_any_hint ".harness/reports/domain-analysis.md" "사실 기준 구조|주요 구조 단서|구조 단서" "도메인 분석 구조 요약"
     check_contains_any_hint ".harness/reports/domain-analysis.md" "예외 및 운영 메모|예외 메모|운영 메모" "도메인 분석 예외 메모"
+    check_contains_any_hint ".harness/reports/domain-analysis.md" "핵심 경계와 책임|어떤 책임|영향이 번지는지|책임을 맡고" "도메인 분석 책임 해석"
     check_contains_any_hint ".harness/reports/domain-analysis.md" "핵심 실행 흐름|핵심 흐름|실행 흐름" "도메인 분석 핵심 흐름"
+    check_contains_any_hint ".harness/reports/domain-analysis.md" "사용자 흐름|상태 전파|소비 관계|영향 전파|운영 비용" "도메인 분석 흐름 해석"
     check_contains_any_hint ".harness/reports/domain-analysis.md" "반복적으로 위험한 변경 유형|위험 변경 유형|위험 축" "도메인 분석 위험 요약"
     warn_if_anchor_count_below ".harness/reports/domain-analysis.md" "저장소 고유 근거" 3 "도메인 분석 소스 앵커"
+    warn_if_contains_literal ".harness/reports/domain-analysis.md" "이 경계가 어떤 책임을 맡고, 어디로 영향이 번지는지 먼저 설명합니다." "도메인 분석 책임 해석"
   fi
 
   if [ -f ".harness/reports/harness-architecture.md" ]; then
@@ -518,6 +537,7 @@ if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
     check_contains_any_hint ".harness/reports/harness-architecture.md" "역할 분리|입력과 출력|위임 비용" "아키텍처 역할 분리 기준"
     check_contains_any_hint ".harness/reports/harness-architecture.md" "축소/확장 판단|축소|확장" "아키텍처 축소 확장 기준"
     check_contains_any_hint ".harness/reports/harness-architecture.md" "설계 원칙|원칙" "아키텍처 설계 원칙"
+    warn_if_contains_literal ".harness/reports/harness-architecture.md" "이 경계가 어떤 책임을 맡고, 어디로 영향이 번지는지 먼저 설명합니다." "아키텍처 경계 해석"
   fi
 
   if [ -f ".harness/reports/qa-strategy.md" ]; then

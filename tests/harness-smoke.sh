@@ -47,6 +47,12 @@ assert_dir() {
   [ -d "$path" ] || fail "디렉토리 누락: $path"
 }
 
+assert_not_dir() {
+  local path="$1"
+
+  [ ! -d "$path" ] || fail "디렉토리가 없어야 함: $path"
+}
+
 assert_command_fails_with() {
   local workdir="$1"
   local cmd="$2"
@@ -169,6 +175,7 @@ EMPTY_INIT_OUTPUT="$(
 assert_contains "$EMPTY_INIT_OUTPUT" "하네스 운영 모드: 신규 구축" "빈 프로젝트 init 로그"
 assert_contains "$EMPTY_INIT_OUTPUT" "탐색 근거 문서: .harness/reports/exploration-notes.md" "빈 프로젝트 init 탐색 로그"
 assert_dir "$TMP_ROOT/empty-project/.codex/skills/run-harness"
+assert_not_dir "$TMP_ROOT/empty-project/.codex/agents"
 assert_dir "$TMP_ROOT/empty-project/.harness/reports"
 assert_file "$TMP_ROOT/empty-project/.harness/project-setup.md"
 assert_file "$TMP_ROOT/empty-project/.harness/reports/exploration-notes.md"
@@ -241,6 +248,7 @@ STACK_INIT_OUTPUT="$(
 )"
 assert_contains "$STACK_INIT_OUTPUT" "하네스 운영 모드: 신규 구축" "스택 프로젝트 init 로그"
 assert_contains "$STACK_INIT_OUTPUT" "탐색 근거 요약: 대표 진입점" "스택 프로젝트 init 탐색 요약"
+assert_not_dir "$TMP_ROOT/stack-project/.codex/agents"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"

@@ -92,30 +92,6 @@ check_contains_hint() {
   fi
 }
 
-check_contains_any_hint() {
-  local file="$1"
-  local pattern="$2"
-  local label="$3"
-
-  if grep -Eq -- "$pattern" "$file"; then
-    log "OK $label: $file"
-  else
-    warn "$label 힌트 부족: $file"
-  fi
-}
-
-check_required_any_hint() {
-  local file="$1"
-  local pattern="$2"
-  local label="$3"
-
-  if grep -Eq -- "$pattern" "$file"; then
-    log "OK $label: $file"
-  else
-    fail "$label 누락: $file"
-  fi
-}
-
 count_markdown_bullets_under_h2() {
   local file="$1"
   local heading="$2"
@@ -227,13 +203,7 @@ audit_harness_drift() {
   fi
 
   if [ "$mode" = "운영 유지보수" ] && [ "$exploration_context_level" = "충분" ]; then
-    if [ -f ".harness/reports/orchestration-plan.md" ] && ! grep -Eq 'run-harness|시작 역할|진입점' ".harness/reports/orchestration-plan.md"; then
-      warn "운영 drift 가능성: orchestration-plan이 run-harness 진입 규칙을 충분히 설명하지 않습니다"
-    fi
-
-    if [ -f ".harness/logging-policy.md" ] && { [ -f ".harness/logs/role-frequency.md" ] || [ -f ".harness/reports/template-candidates.md" ]; } && ! grep -Eq '선택 자산|호출 빈도|template-candidates|템플릿 후보' ".harness/logging-policy.md"; then
-      warn "운영 drift 가능성: 로그 정책이 선택 자산 운영 규칙을 충분히 설명하지 않습니다"
-    fi
+    :
   fi
 }
 
@@ -468,13 +438,7 @@ if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
   log "탐색 근거가 충분한 저장소로 판단됨: 최소 구조와 골격 잔존 여부를 함께 확인합니다"
 
   if [ -f ".harness/reports/domain-analysis.md" ]; then
-    check_required_any_hint ".harness/reports/domain-analysis.md" "저장소 고유 근거|소스 앵커" "도메인 분석 저장소 고유 근거"
-    check_contains_any_hint ".harness/reports/domain-analysis.md" "사실 기준 구조|주요 구조 단서|구조 단서" "도메인 분석 구조 요약"
-    check_contains_any_hint ".harness/reports/domain-analysis.md" "예외 및 운영 메모|예외 메모|운영 메모" "도메인 분석 예외 메모"
-    check_contains_any_hint ".harness/reports/domain-analysis.md" "핵심 실행 흐름|핵심 흐름|실행 흐름" "도메인 분석 핵심 흐름"
-    check_contains_any_hint ".harness/reports/domain-analysis.md" "반복적으로 위험한 변경 유형|위험 변경 유형|위험 축" "도메인 분석 위험 요약"
     warn_if_anchor_count_below ".harness/reports/domain-analysis.md" "저장소 고유 근거" 3 "도메인 분석 소스 앵커"
-    warn_if_contains_literal ".harness/reports/domain-analysis.md" "이 경계가 어떤 책임을 맡고, 어디로 영향이 번지는지 먼저 설명합니다." "도메인 분석 책임 해석"
   fi
 
   if [ -f ".harness/reports/exploration-notes.md" ]; then

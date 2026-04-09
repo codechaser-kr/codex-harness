@@ -366,7 +366,9 @@ fi
 
 if [ -f ".harness/reports/harness-architecture.md" ]; then
   check_contains_hint ".harness/reports/harness-architecture.md" "## 저장소 고유 근거" "아키텍처 저장소 고유 근거"
-  check_contains_hint ".harness/reports/harness-architecture.md" "## 역할 배치" "아키텍처 역할 배치"
+  check_contains_hint ".harness/reports/harness-architecture.md" "## 저장소 운영 구조" "아키텍처 저장소 운영 구조"
+  check_contains_hint ".harness/reports/harness-architecture.md" "## 역할별 개입 기준" "아키텍처 역할 개입 기준"
+  check_contains_hint ".harness/reports/harness-architecture.md" "## 경계별 handoff 기준" "아키텍처 handoff 기준"
   check_contains_hint ".harness/reports/harness-architecture.md" "## 역할 유지와 조정 기준" "아키텍처 역할 유지 기준"
   check_contains_hint ".harness/reports/harness-architecture.md" "## 남아 있는 질문" "아키텍처 남은 질문"
   fail_if_contains_literal ".harness/reports/harness-architecture.md" "최종 구조 설명은 harness-architect가 직접 작성합니다." "아키텍처 역할 재작성 미수행"
@@ -376,32 +378,32 @@ if [ -f ".harness/reports/qa-strategy.md" ]; then
   check_contains_hint ".harness/reports/qa-strategy.md" "## 저장소 고유 단서" "QA 저장소 고유 단서"
   check_contains_hint ".harness/reports/qa-strategy.md" "## 핵심 품질 축" "QA 핵심 품질 축"
   check_contains_hint ".harness/reports/qa-strategy.md" "## 핵심 질문" "QA 핵심 질문"
-  check_contains_hint ".harness/reports/qa-strategy.md" "## 변경 유형별 체크" "QA 변경 유형별 체크"
+  check_contains_hint ".harness/reports/qa-strategy.md" "## 변경 유형별 체크 기준" "QA 변경 유형별 체크 기준"
   fail_if_contains_literal ".harness/reports/qa-strategy.md" "최종 QA 전략은 qa-designer가 직접 작성합니다." "QA 역할 재작성 미수행"
 fi
 
 if [ -f ".harness/reports/orchestration-plan.md" ]; then
   check_contains_hint ".harness/reports/orchestration-plan.md" "## 저장소 고유 근거" "오케스트레이션 저장소 고유 근거"
-  check_contains_hint ".harness/reports/orchestration-plan.md" "## 시작 분기" "오케스트레이션 시작 분기"
-  check_contains_hint ".harness/reports/orchestration-plan.md" "## 표준 전체 시퀀스" "오케스트레이션 표준 시퀀스"
-  check_contains_hint ".harness/reports/orchestration-plan.md" "## 역할 간 handoff 규칙" "오케스트레이션 handoff 규칙"
+  check_contains_hint ".harness/reports/orchestration-plan.md" "## 요청 유형별 시작점" "오케스트레이션 요청 유형별 시작점"
+  check_contains_hint ".harness/reports/orchestration-plan.md" "## 표준 진행 흐름" "오케스트레이션 표준 진행 흐름"
+  check_contains_hint ".harness/reports/orchestration-plan.md" "## 재진입 및 handoff 기준" "오케스트레이션 재진입 및 handoff 기준"
   check_contains_hint ".harness/reports/orchestration-plan.md" "## 남아 있는 질문" "오케스트레이션 남은 질문"
   fail_if_contains_literal ".harness/reports/orchestration-plan.md" "최종 오케스트레이션 계획은 orchestrator가 직접 작성합니다." "오케스트레이션 역할 재작성 미수행"
 fi
 
 if [ -f ".harness/reports/team-structure.md" ]; then
   check_contains_hint ".harness/reports/team-structure.md" "## 저장소 고유 근거" "팀 구조 저장소 고유 근거"
-  check_contains_hint ".harness/reports/team-structure.md" "## 팀 구성" "팀 구조 팀 구성"
-  check_contains_hint ".harness/reports/team-structure.md" "## 역할별 책임 요약" "팀 구조 역할 책임"
+  check_contains_hint ".harness/reports/team-structure.md" "## 저장소 경계" "팀 구조 저장소 경계"
+  check_contains_hint ".harness/reports/team-structure.md" "## 경계별 역할 분담" "팀 구조 경계별 역할 분담"
+  check_contains_hint ".harness/reports/team-structure.md" "## 역할 추가/축소 기준" "팀 구조 역할 추가 축소 기준"
   fail_if_contains_literal ".harness/reports/team-structure.md" "최종 팀 구조는 harness-architect가 직접 작성합니다." "팀 구조 역할 재작성 미수행"
 fi
 
 if [ -f ".harness/reports/team-playbook.md" ]; then
   check_contains_hint ".harness/reports/team-playbook.md" "## 저장소 고유 근거" "플레이북 저장소 고유 근거"
-  check_contains_hint ".harness/reports/team-playbook.md" "## 시작 체크" "플레이북 시작 체크"
-  check_contains_hint ".harness/reports/team-playbook.md" "## 역할 호출 순서" "플레이북 역할 호출 순서"
-  check_contains_hint ".harness/reports/team-playbook.md" "## 작업 유형별" "플레이북 작업 유형별 섹션"
-  check_contains_hint ".harness/reports/team-playbook.md" "## 종료" "플레이북 종료 섹션"
+  check_contains_hint ".harness/reports/team-playbook.md" "## 시작 조건" "플레이북 시작 조건"
+  check_contains_hint ".harness/reports/team-playbook.md" "## 작업 유형별 시작 흐름" "플레이북 작업 유형별 시작 흐름"
+  check_contains_hint ".harness/reports/team-playbook.md" "## 검증과 종료 조건" "플레이북 검증과 종료 조건"
   fail_if_contains_literal ".harness/reports/team-playbook.md" "최종 운영 플레이북은 orchestrator가 직접 작성합니다." "플레이북 역할 재작성 미수행"
 fi
 

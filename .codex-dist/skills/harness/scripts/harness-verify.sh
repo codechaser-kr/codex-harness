@@ -503,7 +503,9 @@ if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
     check_required_any_hint ".harness/reports/domain-analysis.md" "저장소 고유 근거|소스 앵커" "도메인 분석 저장소 고유 근거"
     check_contains_any_hint ".harness/reports/domain-analysis.md" "사실 기준 구조|주요 구조 단서|구조 단서" "도메인 분석 구조 요약"
     check_contains_any_hint ".harness/reports/domain-analysis.md" "예외 및 운영 메모|예외 메모|운영 메모" "도메인 분석 예외 메모"
+    check_contains_any_hint ".harness/reports/domain-analysis.md" "핵심 경계와 책임|어떤 책임|영향이 번지는지|책임을 맡고" "도메인 분석 책임 해석"
     check_contains_any_hint ".harness/reports/domain-analysis.md" "핵심 실행 흐름|핵심 흐름|실행 흐름" "도메인 분석 핵심 흐름"
+    check_contains_any_hint ".harness/reports/domain-analysis.md" "사용자 흐름|상태 전파|소비 관계|영향 전파|운영 비용" "도메인 분석 흐름 해석"
     check_contains_any_hint ".harness/reports/domain-analysis.md" "반복적으로 위험한 변경 유형|위험 변경 유형|위험 축" "도메인 분석 위험 요약"
     warn_if_anchor_count_below ".harness/reports/domain-analysis.md" "저장소 고유 근거" 3 "도메인 분석 소스 앵커"
   fi

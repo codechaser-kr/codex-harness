@@ -112,6 +112,13 @@ repo/
 
 초기화 직후 보고서는 아직 미완료 상태입니다. 기본 흐름은 `harness-init.sh`로 골격을 만든 뒤, `run-harness`와 역할 스킬이 각 보고서를 직접 작성하고, 마지막에 `harness-verify.sh`로 확인하는 순서입니다.
 
+완료로 보기 위한 최소 기준은 아래와 같습니다.
+
+- `exploration-notes.md`가 후보 단서 문서로 존재함
+- 핵심 보고서 6종이 골격 문구 없이 최종 결과 문서로 다시 써짐
+- `run-harness`가 시작 역할과 다음 역할을 분명히 제시함
+- `harness-verify.sh`가 구조 누락과 골격 잔존 없이 통과함
+
 탐색 근거가 아직 부족한 경우에는 바로 역할을 단정하지 않고, `run-harness`가 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오 같은 사용자 질문을 남긴 뒤 다음 역할 흐름으로 넘어가도록 설계되어 있습니다.
 
 ## 기본 역할 팀
@@ -135,10 +142,10 @@ repo/
 0. 현재 하네스 현황을 먼저 감사합니다.
 1. `harness-init.sh`로 로컬 역할 스킬, 탐색 문서, 보고서 골격을 생성합니다.
 2. 저장소를 탐색하고 근거를 수집합니다.
-3. `run-harness`가 현재 상태를 읽고 어떤 역할부터 시작할지 정합니다.
-4. 각 역할 스킬이 `.harness/reports/*`를 직접 작성합니다.
-5. QA와 validator를 포함한 읽기 구조를 이어 붙입니다.
-6. 마지막에 `harness-verify.sh`로 골격 잔존과 구조 누락을 확인합니다.
+3. `run-harness`가 현재 상태를 읽고 어느 Phase부터 다시 시작할지 정합니다.
+4. `domain-analyst`, `harness-architect`, `qa-designer`, `orchestrator`가 각 보고서를 직접 최종 문서로 작성합니다.
+5. 필요할 때만 `skill-scaffolder`가 로컬 스킬 설명 drift를 정렬합니다.
+6. 마지막에 `validator`와 `harness-verify.sh`로 골격 잔존과 구조 누락을 확인합니다.
 
 탐색 근거가 아직 부족하면, 위 흐름에 들어가기 전에 `run-harness`가 짧은 사용자 질문을 만들고 그 답을 `domain-analysis`와 이후 오케스트레이션의 입력으로 사용합니다.
 

@@ -548,21 +548,17 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 
 ## 목적
 
-현재 저장소 상태를 보고, 실행 하네스 팀이 어떤 순서로 움직일지 결정하고 시작한다. \`harness-init.sh\` 직후에는 보고서가 아직 골격 상태라는 점을 전제로 한다.
+현재 저장소 상태를 보고, 실행 하네스 팀이 어느 Phase부터 다시 시작해야 하는지 결정하고 시작한다. \`harness-init.sh\` 직후에는 보고서가 아직 골격 상태라는 점을 전제로 한다.
 
 ## 주요 작업
 
 1. 현재 \`.harness/reports/*\`, \`.codex/skills/*\`, 로그 파일 상태를 읽는다.
-2. 보고서가 골격 상태인지, 이미 역할이 직접 작성한 결과 문서인지 먼저 가른다.
+2. 보고서가 골격 상태인지, 이미 역할이 직접 작성한 최종 문서인지 먼저 가른다.
 3. 요청이 기능 구현, 구조 정리, 공통 모듈 수정, 빌드/검증 변경 중 어디에 가까운지 가른다.
 4. 변경 영향 범위가 단일 모듈인지, 여러 경계나 공통 계층까지 전파되는지 함께 읽는다.
 5. 탐색 근거가 부족하거나 빈 프로젝트에 가까우면 사용자 질문을 남긴다.
-6. domain-analysis가 비어 있거나 골격 상태면 domain-analyst부터 시작한다.
-7. 구조 설계나 패키지 경계 설명이 비어 있거나 골격 상태면 harness-architect를 앞에 둔다.
-8. QA 기준이 비어 있거나 골격 상태면 qa-designer를 다시 호출한다.
-9. 흐름 연결이 비어 있거나 골격 상태면 orchestrator 중심으로 재정렬한다.
-10. 마지막에 validator 관점의 최소 구조 확인을 남긴다.
-11. 시작 역할을 정할 때 왜 그 역할부터 시작하는지, 무엇이 달라지면 다른 시작점이 맞는지도 짧게 남긴다.
+6. 아래 Phase 중 어디서부터 다시 시작해야 하는지 정한다.
+7. 마지막에 validator 관점의 최소 구조 확인을 남긴다.
 
 ## 입력
 
@@ -586,6 +582,15 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - init 직후라면 보고서가 아직 골격 상태이며, verify 전에 역할 작성이 필요하다는 점을 함께 적는다.
 - 세션을 시작했다면 session-log 반영 여부를 함께 남긴다.
 
+## Phase 기준
+
+- Phase 0 감사: 기존 하네스 구조, 탐색 상태, 골격 잔존 여부를 읽는다.
+- Phase 1 도메인 분석: \`domain-analysis.md\`가 비어 있거나 약하면 \`domain-analyst\`부터 시작한다.
+- Phase 2 팀 아키텍처 설계: 구조 문서가 약하면 \`harness-architect\`를 앞에 둔다.
+- Phase 3 QA 전략 정렬: 검증 비용 분리나 체크 기준이 약하면 \`qa-designer\`를 앞에 둔다.
+- Phase 4 운영 흐름 정렬: 시작점, 재진입 기준, 종료 조건이 약하면 \`orchestrator\`를 앞에 둔다.
+- Phase 5 검증: 위 문서가 다 써진 뒤에만 \`validator\`와 \`harness-verify.sh\`를 둔다.
+
 ## 현재 상태별 진입 규칙
 
 - 신규 구축이면 \`harness-init.sh\` 기준의 기본 팀 구조를 연다.
@@ -603,15 +608,16 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 
 - 항상 모든 역할을 다 호출하려 하지 않는다.
 - 현재 상태에서 가장 약한 지점을 먼저 다시 쓴다.
-- orchestrator와 validator를 흐름의 중심 축으로 삼는다.
+- orchestrator와 validator는 Phase를 마무리하는 역할이지, 모든 문서의 대리 작성자가 아니다.
 - 시작 근거가 약하면 역할 호출을 단정하기보다 사용자 확인 질문을 짧게 제시한다.
 - 시작 역할을 제시할 때는 저장소 맞춤 근거와 현재 약점을 같이 묶어 설명한다.
 
 ## 운영 규칙
 
-- 새 프로젝트라면 domain-analyst → harness-architect → skill-scaffolder → qa-designer → orchestrator → validator 순서를 기본 흐름으로 둔다.
+- 새 프로젝트라면 domain-analyst → harness-architect → qa-designer → orchestrator → validator 순서를 기본 흐름으로 둔다.
 - 새 프로젝트에서 \`harness-init.sh\`만 끝난 상태라면 domain-analyst → harness-architect → qa-designer → orchestrator 순서로 보고서를 먼저 작성하고, 그 다음 validator와 \`harness-verify.sh\`를 둔다.
 - 이미 구조가 있는 프로젝트라면 \`harness-update.sh\`로 현재 상태를 다시 읽고 부족한 역할만 다시 호출하는 흐름을 앞에서 연다.
+- \`skill-scaffolder\`는 로컬 스킬 설명 drift, 구조 문구 불일치, 스킬 계약 재정렬이 필요할 때만 보조적으로 둔다.
 - 문서, 로그, handoff를 계속 유지해야 하는 중심 역할은 팀 구조로 유지하고, 입력과 출력이 좁은 보조 판단만 일회성 위임으로 다룬다.
 - 새 구조를 안정적으로 세울 때는 파이프라인을, 생성 직후 검증을 붙일 때는 생성-검증을, 하위 경계가 독립적일 때만 팬아웃/팬인을, handoff와 재진입이 핵심이면 오케스트레이션 중심 구조를 앞에서 연다.
 - 요청이 기능 구현, 구조 정리, 공통 모듈 수정, 빌드/검증 변경 중 어디에 걸리는지 분류하고 그 결과를 orchestration-plan 입력으로 사용한다.

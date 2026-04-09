@@ -66,6 +66,17 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - `scripts/harness-verify.sh`가 실패하면 완료로 간주하지 말고, 누락된 구조를 앞에서 다시 쓴다.
 - 생성 문서와 예시 명령에 사용자 홈 디렉토리나 절대경로를 하드코딩하지 않는다. 실행 예시는 상대경로나 스킬 기준 경로를 사용한다.
 
+### 완료 기준
+
+하네스 구성이 끝났다고 말하려면 아래가 모두 만족돼야 한다.
+
+1. `exploration-notes.md`가 후보 단서 문서로 존재한다.
+2. `domain-analysis.md`, `harness-architecture.md`, `qa-strategy.md`, `orchestration-plan.md`, `team-structure.md`, `team-playbook.md`가 골격 문구 없이 역할별 최종 결과 문서로 다시 써져 있다.
+3. `run-harness`가 현재 상태를 읽고 시작 역할, 다음 역할, 미해결 질문을 분명히 제시할 수 있다.
+4. `scripts/harness-verify.sh`가 구조 누락과 골격 잔존 없이 통과한다.
+
+즉 `harness-init.sh`가 끝난 상태는 완료가 아니라 **골격이 준비된 상태**다.
+
 ## 탐색 우선 원칙
 
 이 스킬은 탐색 기반 메타 프레임워크로 동작한다.
@@ -212,6 +223,8 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 6. 역할 팀이 실제로 사용 가능한 수준의 스킬 구조를 만든다.
 7. run-harness가 팀의 실제 진입점으로 기능하도록 한다.
 
+`skill-scaffolder`는 핵심 보고서 작성 흐름의 기본 단계가 아니다. 이 역할은 로컬 스킬 설명 drift, 구조 문구 불일치, 스킬 계약 재정렬이 필요할 때만 보조적으로 사용한다.
+
 스킬 작성 기준은 `references/skill-writing-guide.md`를 참고한다.
 
 ### Phase 4: QA 및 검증 구조 포함
@@ -261,15 +274,15 @@ QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 
 ### skill-scaffolder
 
-설계된 구조를 실제 로컬 스킬과 파일로 옮긴다.
+로컬 스킬 설명 drift가 생겼을 때만 보조적으로 정렬한다.
 
 ### qa-designer
 
-품질 기준과 반복 질문 메모를 적는다.
+저장소 기준의 최종 QA 전략 문서를 작성한다.
 
 ### orchestrator
 
-역할 팀의 중심으로서 흐름과 연결 구조 메모를 남긴다.
+요청 유형별 시작점과 재진입 기준이 보이는 최종 운영 계획 문서를 작성한다.
 
 ### validator
 

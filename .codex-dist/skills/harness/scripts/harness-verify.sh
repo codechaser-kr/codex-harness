@@ -199,6 +199,30 @@ warn_if_contains_literal() {
   fi
 }
 
+fail_if_contains_literal() {
+  local file="$1"
+  local literal="$2"
+  local label="$3"
+
+  [ -f "$file" ] || return
+
+  if grep -Fq -- "$literal" "$file"; then
+    fail "$label: 골격 상태가 그대로 남아 있습니다"
+  fi
+}
+
+fail_if_contains_pattern() {
+  local file="$1"
+  local pattern="$2"
+  local label="$3"
+
+  [ -f "$file" ] || return
+
+  if grep -Eq -- "$pattern" "$file"; then
+    fail "$label: 중간 산출물 문구가 그대로 남아 있습니다"
+  fi
+}
+
 audit_harness_drift() {
   local mode="$1"
   local skill_count="$2"
@@ -383,6 +407,33 @@ if [ -f ".harness/reports/domain-analysis.md" ]; then
   check_placeholder_state ".harness/reports/domain-analysis.md" "설정 및 실행 단서: (미정|추정 불가)" "설정 및 실행 단서 구체화"
   check_placeholder_state ".harness/reports/domain-analysis.md" "핵심 흐름: 미정" "핵심 흐름 구체화"
   check_placeholder_state ".harness/reports/domain-analysis.md" "저장소를 분석한 뒤 이 내용을 구체화하세요|domain-analyst가 실제 저장소 구조를 읽고 내용을 구체화합니다" "도메인 분석 초안 치환"
+  fail_if_contains_literal ".harness/reports/domain-analysis.md" "최종 분석은 domain-analyst가 직접 작성합니다." "도메인 분석 역할 재작성 미수행"
+  fail_if_contains_pattern ".harness/reports/domain-analysis.md" "후보로 수집되었습니다|자동 수집만으로는|직접 작성합니다\\.|다시 씁니다\\.|추가 읽기가 필요합니다" "도메인 분석 역할 재작성 미수행"
+fi
+
+if [ -f ".harness/reports/harness-architecture.md" ]; then
+  fail_if_contains_literal ".harness/reports/harness-architecture.md" "최종 구조 설명은 harness-architect가 직접 작성합니다." "아키텍처 역할 재작성 미수행"
+  fail_if_contains_pattern ".harness/reports/harness-architecture.md" "역할 메모|흐름 메모|확장 메모|직접 작성합니다\\." "아키텍처 역할 재작성 미수행"
+fi
+
+if [ -f ".harness/reports/qa-strategy.md" ]; then
+  fail_if_contains_literal ".harness/reports/qa-strategy.md" "최종 QA 전략은 qa-designer가 직접 작성합니다." "QA 역할 재작성 미수행"
+  fail_if_contains_pattern ".harness/reports/qa-strategy.md" "대표 소스 앵커입니다|QA 메모|직접 작성합니다\\." "QA 역할 재작성 미수행"
+fi
+
+if [ -f ".harness/reports/orchestration-plan.md" ]; then
+  fail_if_contains_literal ".harness/reports/orchestration-plan.md" "최종 오케스트레이션 계획은 orchestrator가 직접 작성합니다." "오케스트레이션 역할 재작성 미수행"
+  fail_if_contains_pattern ".harness/reports/orchestration-plan.md" "운영 메모|흐름 메모|직접 작성합니다\\." "오케스트레이션 역할 재작성 미수행"
+fi
+
+if [ -f ".harness/reports/team-structure.md" ]; then
+  fail_if_contains_literal ".harness/reports/team-structure.md" "최종 팀 구조는 harness-architect가 직접 작성합니다." "팀 구조 역할 재작성 미수행"
+  fail_if_contains_pattern ".harness/reports/team-structure.md" "팀 메모|직접 작성합니다\\." "팀 구조 역할 재작성 미수행"
+fi
+
+if [ -f ".harness/reports/team-playbook.md" ]; then
+  fail_if_contains_literal ".harness/reports/team-playbook.md" "최종 운영 플레이북은 orchestrator가 직접 작성합니다." "플레이북 역할 재작성 미수행"
+  fail_if_contains_pattern ".harness/reports/team-playbook.md" "세션 메모|직접 작성합니다\\." "플레이북 역할 재작성 미수행"
 fi
 
 if [ -f ".harness/reports/exploration-notes.md" ]; then

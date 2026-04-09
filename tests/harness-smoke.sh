@@ -162,10 +162,11 @@ assert_dir "$TMP_ROOT/empty-project/.codex/skills/run-harness"
 assert_dir "$TMP_ROOT/empty-project/.harness/reports"
 assert_file "$TMP_ROOT/empty-project/.harness/project-setup.md"
 assert_file "$TMP_ROOT/empty-project/.harness/reports/exploration-notes.md"
-(
-  cd "$TMP_ROOT/empty-project"
-  bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"
-)
+assert_command_fails_with \
+  "$TMP_ROOT/empty-project" \
+  "bash \"$HARNESS_SCRIPT_DIR/harness-verify.sh\"" \
+  "역할 재작성 미수행" \
+  "빈 프로젝트 verify 골격 실패"
 
 log "스택 프로젝트 update -> verify 확인"
 mkdir -p "$TMP_ROOT/stack-project"
@@ -252,8 +253,9 @@ assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-anal
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md")" "app.asar" "domain-analysis 빌드 산출물 제외"
 STACK_VERIFY_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \
-  bash "$HARNESS_SCRIPT_DIR/harness-verify.sh"
+  bash "$HARNESS_SCRIPT_DIR/harness-verify.sh" 2>&1 || true
 )"
+assert_contains "$STACK_VERIFY_OUTPUT" "역할 재작성 미수행" "스택 프로젝트 verify 골격 실패"
 
 log "다중 실행 경계 탐색 확인"
 mkdir -p "$TMP_ROOT/multi-boundary-project/packages/web/src" \

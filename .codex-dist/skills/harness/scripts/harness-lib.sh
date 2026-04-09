@@ -632,9 +632,9 @@ $initial_observation_line
 
 ## 다음 단계
 
-- 탐색 근거가 아직 부족하면 run-harness가 위 질문을 바탕으로 필요한 확인 항목을 짧게 정리합니다.
+- 탐색 근거가 아직 부족하면 run-harness 메모는 위 질문을 바탕으로 필요한 확인 항목 쪽으로 이어집니다.
 $next_step_detail_line
-- 필요하면 디렉토리별 역할과 핵심 파일을 추가로 정리합니다.
+- 필요하면 디렉토리별 역할과 핵심 파일 메모가 더해집니다.
 EOF
       ;;
     *)
@@ -800,7 +800,7 @@ build_architecture_report_block() {
 - 반복 가능한 작업 흐름 정리
 
 ### validator
-- 현재 하네스 구조의 최소 요건 충족 여부 확인
+- 현재 하네스 구조의 최소 요건 충족 여부 메모
 
 ## 보조 구조
 
@@ -968,8 +968,8 @@ EOF
 ### 변경 유형별 체크 메모
 
 - 기능 변경: 영향받는 사용자 또는 호출 흐름, 핵심 진입점, 최소 회귀 확인 대상을 함께 적습니다.
-- 구조 변경: 역할 문서, 경계 설명, 오케스트레이션 계획이 새 구조를 반영하는지 확인합니다.
-- 빌드/설정 변경: 실행 명령, 검증 명령, 배포 또는 산출물 경로를 다시 확인합니다.
+- 구조 변경: 역할 문서, 경계 설명, 오케스트레이션 계획이 새 구조와 맞물리는지 보는 메모가 붙습니다.
+- 빌드/설정 변경: 실행 명령, 검증 명령, 배포 또는 산출물 경로를 다시 읽는 메모가 붙습니다.
 - 경계 변경: 여러 모듈, 서비스, 패키지, 런타임 중 어디로 영향이 번지는지 실제 저장소 기준으로 다시 적습니다.
 
 ### 테스트 설계 기준
@@ -983,13 +983,13 @@ EOF
 - 로컬 역할 구조와 보고서 정합성 확인: \`bash .codex-dist/skills/harness/scripts/harness-verify.sh\`
 - 최신 탐색 근거와 보고서 갱신: \`bash .codex-dist/skills/harness/scripts/harness-update.sh --qa\`
 - 세션 로그와 최신 요약 재확인: \`tail -n 40 .harness/logs/session-log.md\` 와 \`cat .harness/logs/latest-session-summary.md\`
-- 저장소별 실제 테스트나 빌드 명령은 위 단서와 대표 진입점 파일을 다시 읽고 프로젝트 문맥에 맞게 직접 정리합니다.
+- 저장소별 실제 테스트나 빌드 명령은 위 단서와 대표 진입점 파일을 다시 읽은 프로젝트 문맥 메모 위에 놓입니다.
 
 ### 추가 확인 관점
 
-- 공개 인터페이스, 설정 진입점, 소비 경로가 함께 흔들리는지 확인합니다.
+- 공개 인터페이스, 설정 진입점, 소비 경로가 함께 흔들리는지도 같이 보이는 메모가 남습니다.
 - 공용 계층과 검증 경로가 같은 변경 안에서 동시에 깨질 수 있는지 살핍니다.
-- 문서 정합성보다 실제 운영 리스크가 더 큰 지점을 우선 수동 확인합니다.
+- 문서 정합성보다 실제 운영 리스크가 더 큰 지점이 앞에 놓이는 수동 확인 메모가 남습니다.
 
 ## QA 운영 메모
 
@@ -1066,7 +1066,7 @@ EOF
 
 ### 시작 분기
 
-1. run-harness는 요청을 기능 구현, 구조 정리, 공통 모듈 수정, 빌드/검증 변경 중 어디에 가까운지 분류합니다.
+1. run-harness는 요청을 기능 구현, 구조 정리, 공통 모듈 수정, 빌드/검증 변경 중 어디에 가까운지 적어 둡니다.
 2. 변경이 $key_axes_hint 중 어느 축과 맞닿아 있는지 함께 봅니다.
 3. 영향 범위가 넓거나 경계가 불명확하면 domain-analyst와 qa-designer를 앞에 두는 시작 흐름을 검토합니다.
 4. 영향 범위가 좁고 구조 설명이 충분하면 skill-scaffolder 또는 orchestrator부터 시작하는 흐름도 열어 둡니다.
@@ -1095,15 +1095,15 @@ EOF
 ### 운영 구조
 
 - 신규 구축, 기존 확장, 운영 유지보수는 같은 역할 목록이라도 다른 시작 흐름이 열릴 수 있습니다.
-- 팬아웃/팬인은 하위 영역 간 비교 축이 이미 정리된 경우에만 검토합니다.
+- 팬아웃/팬인은 하위 영역 간 비교 축이 이미 정리된 경우에 가까운 메모로 남습니다.
 - 문서와 로그에 계속 남는 중심 역할과 단발성 보조 판단은 같은 방식으로 다루지 않습니다.
-- 요청이 추상적이거나 맥락이 약하면 사용자 확인 질문과 탐색 재확인부터 두는 흐름을 먼저 검토합니다.
+- 요청이 추상적이거나 맥락이 약하면 사용자 확인 질문과 탐색 재확인이 앞에 오는 흐름 메모가 열립니다.
 
 ### 순서 조정 및 재진입 기준
 
-- 시작 분기에서 뒤쪽 역할이 진입점이 되더라도, 앞 단계 판단이 충분한지 먼저 확인합니다.
+- 시작 분기에서 뒤쪽 역할이 진입점이 되더라도, 앞 단계 판단이 충분한지 보는 메모가 먼저 붙습니다.
 - 핵심 경계나 다중 모듈 영향이 보이면 qa-designer와 validator를 앞쪽에 두는 흐름을 다시 엽니다.
-- domain-analysis가 generic하거나 예외 메모가 비어 있으면 domain-analyst 재진입을 먼저 검토합니다.
+- domain-analysis가 generic하거나 예외 메모가 비어 있으면 domain-analyst 재진입 메모가 먼저 열립니다.
 - 구조 설명, 체크리스트, handoff 중 어느 층이 가장 약한지에 따라 harness-architect, qa-designer, orchestrator 재진입을 고릅니다.
 
 ### 역할 간 handoff 규칙
@@ -1120,7 +1120,7 @@ EOF
 
 ### 운영 메모
 
-- 작은 변경도 핵심 경계나 빌드 경계를 건드리면 별도 검증 루프를 함께 검토합니다.
+- 작은 변경도 핵심 경계나 빌드 경계를 건드리면 별도 검증 루프 메모가 함께 붙습니다.
 - 문서 재생성에서는 기존 문장 보존보다 실제 저장소 분석 반영을 앞에 둡니다.
 - 역할 호출 순서는 고정보다 영향 범위와 검증 비용을 다시 읽으며 정합니다.
 
@@ -1170,7 +1170,7 @@ EOF
 ## 저장소 고유 근거
 
 - QA는 \`$key_axes_hint\` 축이 동시에 흔들릴 때 함께 읽어야 할 역할입니다.
-- 경계 설명은 단일 수정처럼 보여도 여러 소비 경계나 호출 경로로 전파될 때 함께 확인합니다.
+- 경계 설명은 단일 수정처럼 보여도 여러 소비 경계나 호출 경로로 전파될 때 함께 보이는 메모가 남습니다.
 - orchestrator와 validator는 handoff 순서와 회귀 점검을 함께 붙잡는 역할입니다.
 
 ## 팀 메모
@@ -1252,14 +1252,14 @@ build_team_playbook_report_block() {
 
 ## 로그 운영
 
-- 로그 정책은 \`.harness/logging-policy.md\`에서 확인합니다.
+- 로그 정책은 \`.harness/logging-policy.md\` 메모에서 이어집니다.
 - 역할별 누적 기록은 \`.harness/logs/session-log.md\`에 남깁니다.
 - 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
-- 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
+- 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\` 메모에서 이어집니다.
 EOF
       if optional_harness_assets_enabled; then
-        printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다."
-        printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다."
+        printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\` 메모에서 이어집니다."
+        printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\` 메모에서 이어집니다."
       fi
       ;;
     *)
@@ -1279,14 +1279,14 @@ EOF
 ### 시작 체크 메모
 
 - 직전 session-log와 latest-session-summary를 읽으면 미해결 항목과 재진입 지점이 보입니다.
-- domain-analysis, orchestration-plan, qa-strategy 중 이번 요청과 직접 연결되는 문서부터 읽습니다.
+- domain-analysis, orchestration-plan, qa-strategy 중 이번 요청과 직접 연결되는 문서 쪽부터 읽는 흐름이 열립니다.
 - 현재 요청 요약과 영향 범위는 session-log 앞부분에 남습니다.
 - 직전 세션의 남은 약점이 이번 요청과 이어지는지 여부가 함께 보입니다.
 - 먼저 읽을 문서와 나중에 볼 문서를 구분해 시작하고, 역할 호출이나 전환 이유가 바뀌면 그 근거도 함께 남깁니다.
 
 ### 역할 호출 순서
 
-1. run-harness는 요청을 받고 $key_axes_hint 중 어느 축을 건드리는지 먼저 분류합니다.
+1. run-harness는 요청을 받고 $key_axes_hint 중 어느 축을 건드리는지 먼저 적어 둡니다.
 2. 영향 범위가 넓거나 핵심 경계를 건드리면 domain-analyst와 qa-designer를 앞에 두는 흐름을 검토합니다.
 3. 구조 재정리가 필요하면 harness-architect와 skill-scaffolder를 붙여 역할 설명과 템플릿을 맞춥니다.
 4. orchestrator가 작업 루프와 검증 루프를 묶고 validator가 마지막 구조 메모를 남깁니다.
@@ -1301,14 +1301,14 @@ EOF
 
 ### 로그 운영
 
-- 로그 정책은 \`.harness/logging-policy.md\`에서 확인합니다.
+- 로그 정책은 \`.harness/logging-policy.md\` 메모에서 이어집니다.
 - 역할별 누적 기록은 \`.harness/logs/session-log.md\`에 남깁니다.
 - 구조화된 이벤트 원장은 \`.harness/logs/session-events.tsv\`를 사용합니다.
-- 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\`에서 확인합니다.
+- 최신 세션 요약은 \`.harness/logs/latest-session-summary.md\` 메모에서 이어집니다.
 EOF
       if optional_harness_assets_enabled; then
-        printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\`에서 확인합니다."
-        printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\`에서 확인합니다."
+        printf '%s\n' "- 역할 호출 빈도 집계는 \`.harness/logs/role-frequency.md\` 메모에서 이어집니다."
+        printf '%s\n' "- 반복 업무 템플릿 후보 분석 결과는 \`.harness/reports/template-candidates.md\` 메모에서 이어집니다."
       fi
       cat <<EOF
 
@@ -1441,7 +1441,7 @@ ensure_harness_log_scaffold() {
 - 사람이 읽을 수 있어야 합니다.
 - 역할 흐름과 피드백 루프가 보이도록 남깁니다.
 - 각 역할은 자신이 수행한 주요 변경과 다음 권장 단계를 남길 책임이 있습니다.
-- 가능하면 수동 편집보다 자동 append 스크립트를 우선 사용합니다.
+- 가능하면 수동 편집보다 자동 append 스크립트 쪽에 더 가깝게 둡니다.
 EOF
   fi
 

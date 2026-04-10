@@ -67,6 +67,19 @@ is_generic_framework_role() {
   esac
 }
 
+is_generic_framework_name() {
+  local value="$1"
+
+  case "$value" in
+    domain-analyst|harness-architect|skill-scaffolder|qa-designer|orchestrator|validator|run-harness)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 check_frontmatter_name() {
   local file="$1"
   if grep -q '^name:' "$file"; then
@@ -249,6 +262,14 @@ check_team_spec_asset_alignment() {
 
     if is_generic_framework_role "$role_id"; then
       fail "team-spec 최종 역할 인벤토리에 추상 역할명이 남아 있음: ${role_id}"
+    fi
+
+    if is_generic_framework_name "$display_name"; then
+      fail "team-spec 최종 역할 인벤토리에 추상 표시 이름이 남아 있음: ${display_name}"
+    fi
+
+    if is_generic_framework_name "$agent_file"; then
+      fail "team-spec 최종 역할 인벤토리에 추상 agent 파일명이 남아 있음: ${agent_file}"
     fi
 
     config_section="^\\[agents\\.${role_id}\\]$"

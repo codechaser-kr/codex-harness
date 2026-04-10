@@ -329,6 +329,8 @@ assert_not_contains "$CUSTOM_VERIFY_OUTPUT" "누락된 파일: .codex/agents/pay
 assert_not_contains "$CUSTOM_VERIFY_OUTPUT" "누락된 파일: .codex/skills/payment-dev/SKILL.md" "custom 역할 verify skill 누락 없음"
 assert_not_contains "$CUSTOM_VERIFY_OUTPUT" "team-spec 최종 역할 인벤토리 미작성" "custom 역할 verify team-spec 작성 완료"
 assert_not_contains "$CUSTOM_VERIFY_OUTPUT" "추상 역할명이 남아 있음" "custom 역할 verify seed 역할 없음"
+assert_not_contains "$CUSTOM_VERIFY_OUTPUT" "추상 표시 이름이 남아 있음" "custom 역할 verify generic display name 없음"
+assert_not_contains "$CUSTOM_VERIFY_OUTPUT" "추상 agent 파일명이 남아 있음" "custom 역할 verify generic agent file 없음"
 assert_contains "$CUSTOM_VERIFY_OUTPUT" "문서 누락: 역할 재작성 미수행" "custom 역할 verify는 최종 보고서 누락만 실패"
 
 cat > "$TMP_ROOT/stack-project/.harness/project-setup.md" <<'EOF'

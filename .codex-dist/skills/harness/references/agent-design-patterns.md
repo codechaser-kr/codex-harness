@@ -376,13 +376,13 @@ Codex의 서브에이전트 활용 관점에서,
 
 권장 연결은 다음과 같다.
 
-- domain-analyst → domain-analysis.md
-- harness-architect ← domain-analysis.md
-- harness-architect → harness-architecture.md
-- skill-scaffolder ← 로컬 스킬 설명 drift 또는 계약 불일치
-- qa-designer ← domain-analysis.md + harness-architecture.md
-- orchestrator ← 주요 리포트 전체
-- validator ← 전체 구조와 리포트
+- 저장소 입력 문서 담당 역할 → domain-analysis.md
+- 구조 설계 담당 역할 ← domain-analysis.md
+- 구조 설계 담당 역할 → harness-architecture.md
+- 스킬 계약 정렬 역할 ← 로컬 스킬 설명 drift 또는 계약 불일치
+- 품질 전략 담당 역할 ← domain-analysis.md + harness-architecture.md
+- 흐름 조율 담당 역할 ← 주요 리포트 전체
+- 운영 감사 담당 역할 ← 전체 구조와 리포트
 
 즉 역할 분리는 파일 기반 연결과 함께 가야 한다.
 

@@ -178,14 +178,25 @@ project_setup_has_answers() {
   [ -f "$file" ] || return 1
 
   awk '
+    BEGIN { in_answers = 0; found = 0 }
+    /^[[:space:]]*---[[:space:]]*$/ {
+      if (in_answers == 0) {
+        in_answers = 1
+        next
+      }
+      next
+    }
+    in_answers == 0 { next }
     /^[[:space:]]*$/ { next }
     /^[[:space:]]*#/ { next }
+    /^[[:space:]]*>/ { next }
     /^[[:space:]]*<!--/ { next }
     /^[[:space:]]*-->/ { next }
     {
-      print
-      exit
+      found = 1
+      exit 0
     }
+    END { exit(found ? 0 : 1) }
   ' "$file" >/dev/null
 }
 

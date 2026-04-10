@@ -122,6 +122,12 @@ run_mode_check() {
   log "운영 모드 확인: $expected"
 }
 
+project_setup_has_answers_check() {
+  local file="$1"
+
+  bash -c ". \"$HARNESS_SCRIPT_DIR/harness-lib.sh\"; project_setup_has_answers \"$1\"" bash "$file"
+}
+
 rm -rf "$TMP_ROOT"
 mkdir -p "$TMP_ROOT"
 
@@ -203,6 +209,12 @@ assert_contains "$(cat "$HARNESS_REF_DIR/team-examples.md")" "기본 5역할 팀
 assert_contains "$(cat "$HARNESS_REF_DIR/team-examples.md")" $'- domain-analyst\n- harness-architect\n- qa-designer\n- orchestrator\n- validator' "팀 예시 기본 역할 목록"
 assert_dir "$TMP_ROOT/empty-project/.harness/reports"
 assert_file "$TMP_ROOT/empty-project/.harness/project-setup.md"
+if (
+  cd "$TMP_ROOT/empty-project" && \
+  project_setup_has_answers_check ".harness/project-setup.md"
+); then
+  fail "빈 프로젝트 project-setup 템플릿은 답변이 없는 상태여야 함"
+fi
 assert_file "$TMP_ROOT/empty-project/.harness/reports/exploration-notes.md"
 assert_not_file "$TMP_ROOT/empty-project/.harness/reports/domain-analysis.md"
 assert_command_fails_with \
@@ -288,6 +300,25 @@ assert_not_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
 assert_not_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "이 메모는 초기 입력 상태만 전달하며, 최종 판단 근거는 아닙니다." "생성된 탐색 문서 약한 입력 전제"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "## 다음 확인 질문" "생성된 탐색 문서 확인 질문"
+cat > "$TMP_ROOT/stack-project/.harness/project-setup.md" <<'EOF'
+# 프로젝트 설정
+
+## 작성 안내
+
+입력 정보가 아직 부족해 자동 판단을 보류합니다.
+
+---
+
+## 프로젝트 목표
+
+ERP 관리 화면과 데스크톱 운영 경로를 함께 정리한다.
+EOF
+if ! (
+  cd "$TMP_ROOT/stack-project" && \
+  project_setup_has_answers_check ".harness/project-setup.md"
+); then
+  fail "작성된 project-setup 답변은 감지되어야 함"
+fi
 STACK_VERIFY_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh" 2>&1 || true

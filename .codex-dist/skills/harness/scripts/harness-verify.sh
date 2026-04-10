@@ -407,6 +407,7 @@ done
 
 check_file ".harness/logging-policy.md"
 check_file ".harness/reports/exploration-notes.md"
+check_file ".harness/reports/team-spec.md"
 
 check_final_report ".harness/reports/domain-analysis.md" "도메인 분석 문서 누락"
 check_final_report ".harness/reports/harness-architecture.md" "하네스 아키텍처 문서 누락"
@@ -483,6 +484,14 @@ if [ -f ".harness/reports/exploration-notes.md" ]; then
   check_contains_hint ".harness/reports/exploration-notes.md" "## 역할 팀 메모" "역할 팀 메모 섹션"
   check_contains_hint ".harness/reports/exploration-notes.md" "## 다음 확인 질문" "다음 확인 질문 섹션"
   check_contains_hint ".harness/reports/exploration-notes.md" "역할 팀은 이 문서를 출발점 정도로만 보고" "약한 메모 전제"
+fi
+
+if [ -f ".harness/reports/team-spec.md" ]; then
+  check_contains_hint ".harness/reports/team-spec.md" "## 팀 메타데이터" "team-spec 메타데이터 섹션"
+  check_contains_hint ".harness/reports/team-spec.md" "## 역할 스펙 초안" "team-spec 역할 스펙 섹션"
+  check_contains_hint ".harness/reports/team-spec.md" "## 운영 계약" "team-spec 운영 계약 섹션"
+  check_contains_hint ".harness/reports/team-spec.md" "agent 파일명" "team-spec agent 파일명 힌트"
+  check_contains_hint ".harness/reports/team-spec.md" "skill 디렉토리명" "team-spec skill 디렉토리명 힌트"
 fi
 
 if [ -f ".harness/logs/session-log.md" ]; then

@@ -99,7 +99,7 @@ fi
 
 # 빈/약한 프로젝트: 사용자 입력 유도 파일 생성
 if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
-  create_file_if_missing ".harness/project-setup.md" \
+create_file_if_missing ".harness/project-setup.md" \
 "# 프로젝트 설정
 
 ## 작성 안내
@@ -146,6 +146,51 @@ if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
 <!-- 이 프로젝트에서 잘못되면 가장 큰 문제가 생기는 부분은 어디인가요? -->
 "
 fi
+
+create_file_if_missing ".harness/reports/team-spec.md" \
+"# 팀 스펙
+
+이 문서는 \`Phase 2 프로젝트 맞춤 에이전트 팀 설계\`의 산출물을 정리하기 위한 작업 스펙입니다.
+현재 상태에서는 완성된 팀 정의가 아니라, \`Phase 3\` 동적 agent/skill 생성으로 이어질 입력 문서를 준비하는 단계로 봅니다.
+
+## 상태
+
+- 현재 상태: team-spec 초안 필요
+- 다음 단계: domain-analysis.md와 harness-architecture.md를 바탕으로 프로젝트 맞춤 역할 팀 스펙 작성
+
+## 팀 메타데이터
+
+- 저장소 요약:
+- 상태 모드:
+- 실행 모드:
+- 실행 패턴:
+- 팀 설계 이유:
+
+## 역할 스펙 초안
+
+- 역할 id:
+  - 역할 표시 이름:
+  - 역할 목적:
+  - 주요 입력:
+  - 주요 출력:
+  - handoff 대상:
+  - agent 파일명:
+  - skill 디렉토리명:
+  - sandbox 정책:
+
+## 운영 계약
+
+- 기본 시작 역할:
+- 요청 유형별 시작 역할:
+- 재진입 규칙:
+- validator 개입 시점:
+- 재구성 조건:
+
+## 작성 메모
+
+- 고정 seed 역할 이름을 그대로 유지할지, 프로젝트 도메인에 맞는 새 역할명을 만들지 여기서 결정합니다.
+- 이 문서가 정리된 뒤 \`Phase 3\`이 \`.codex/config.toml\`, \`.codex/agents/*.toml\`, \`.codex/skills/*\` 생성 결과를 다시 맞춥니다.
+"
 
 ensure_gitignore_entry ".harness/logs/.current-session"
 ensure_gitignore_entry ".harness/logs/session-log.md"
@@ -196,6 +241,7 @@ create_file_if_missing "AGENTS.md" \
 - \`exploration-notes.md\`는 자동 판단 보류를 위한 약한 메모로 사용합니다.
 - \`domain-analysis.md\`, \`qa-strategy.md\`는 저장소 입력 문서입니다.
 - \`harness-architecture.md\`, \`orchestration-plan.md\`, \`team-structure.md\`, \`team-playbook.md\`는 하네스 메타시스템 문서입니다.
+- \`team-spec.md\`는 프로젝트 맞춤 에이전트 팀과 동적 생성 결과를 연결하는 스펙 문서입니다.
 - \`harness-init.sh\` 직후 상태는 완료가 아니라 자동 판단 보류 메모와 역할 정의가 준비된 상태입니다.
 - 최종 문서는 역할 스킬과 에이전트 팀이 직접 작성한 뒤 검증합니다.
 - drift / sync / evolve는 운영 유지보수의 기본 루프입니다.

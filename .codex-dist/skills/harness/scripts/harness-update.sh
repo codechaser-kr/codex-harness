@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # harness-update.sh
-# 기존 하네스 구조를 감사한 뒤 입력 메모와 재작성 대상 역할을 다시 정리합니다.
+# 기존 하네스 구조를 감사한 뒤 입력 메모, team-spec, 재작성 대상 역할을 다시 정리합니다.
 # 사용 시점:
 #   - 기존 하네스 구조 확장
 #   - 운영 유지보수 중 입력 메모 재정렬
@@ -177,7 +177,7 @@ log "입력 메모 요약: $EXPLORATION_ANCHOR_SUMMARY"
 log "입력 메모 안내: $DISCOVERY_GUIDANCE"
 log "선택 갱신 대상: $(build_selected_target_summary)"
 log "다시 호출할 역할: $(build_selected_role_summary)"
-log "update 수행 범위: Phase 0 감사와 입력 메모 재정리"
+log "update 수행 범위: Phase 0 감사와 입력 메모/team-spec 재정리"
 while IFS= read -r phase_line; do
   [ -n "$phase_line" ] || continue
   log "권장 재진입: $phase_line"
@@ -193,5 +193,5 @@ while IFS= read -r agents_line; do
 done <<< "$AGENTS_AUDIT_SUMMARY"
 
 log "하네스 업데이트 완료"
-log "루트 기준 AI 입력 메모와 재진입 안내만 다시 정리되었습니다."
+log "루트 기준 AI 입력 메모, team-spec 준비 상태, 재진입 안내만 다시 정리되었습니다."
 log "선택된 Phase와 역할이 실제 문서를 직접 다시 작성해야 합니다."

@@ -85,7 +85,22 @@
 
 ---
 
-## 6. validator 감사 기준
+## 6. 메타시스템 성숙도 평가
+
+다음 질문에 답해야 할 때 먼저 읽는다.
+
+- 지금 생성된 하네스가 실제 운영 가능한 수준인가
+- `revfactory`와 대등한 수준의 메타시스템 축을 갖췄는가
+- 부족한 점이 입력 문서 품질 문제인지, 역할 계약 문제인지, 운영 계약 문제인지
+
+주요 문서:
+
+- `meta-system-maturity-guide.md`
+- `quality-evaluation-guide.md`
+
+---
+
+## 7. validator 감사 기준
 
 다음 질문에 답해야 할 때 먼저 읽는다.
 
@@ -97,11 +112,12 @@
 
 - `qa-agent-guide.md`
 - `quality-evaluation-guide.md`
+- `meta-system-maturity-guide.md`
 - `skill-testing-guide.md`
 
 ---
 
-## 7. 문서 작성 기준
+## 8. 문서 작성 기준
 
 다음 질문에 답해야 할 때 먼저 읽는다.
 
@@ -136,6 +152,10 @@
   - `reference-map.md`
   - `qa-agent-guide.md`
   - `quality-evaluation-guide.md`
+- 메타시스템 성숙도 평가:
+  - `reference-map.md`
+  - `meta-system-maturity-guide.md`
+  - 필요 시 `quality-evaluation-guide.md`
 
 ---
 

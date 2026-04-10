@@ -88,6 +88,7 @@
 - `run-harness` 출력 계약 점검
 - `validator` 피드백 문구 점검
 - 회귀 테스트에서 최소 품질 비교 기준 점검
+- 메타시스템 성숙도 회고 시 `meta-system-maturity-guide.md`와 함께 비교 기준으로 사용
 
 ---
 
@@ -96,3 +97,4 @@
 - `agents-sync-guide.md`: 상위 컨텍스트 정렬이 품질 비교에서 어떤 차이를 만드는지 연결한다.
 - `phase-selection-matrix.md`: 재진입 기준이 with-skill 상태에서 더 선명해지는지 비교할 때 사용한다.
 - `skill-testing-guide.md`: 구조 검증 외에 어떤 품질 비교를 자동화할지 연결한다.
+- `meta-system-maturity-guide.md`: 구조 존재를 넘어 운영 가능한 메타시스템 수준인지 판정할 때 연결한다.

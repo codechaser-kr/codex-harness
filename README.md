@@ -344,6 +344,7 @@ repo/
 - 아키텍처 패턴 선택
 - 에이전트 정의와 상위 계약 정렬
 - 스킬 정의와 테스트
+- 메타시스템 성숙도 평가
 - drift / sync / evolve 운영 루프
 - validator 감사 기준
 
@@ -362,11 +363,14 @@ repo/
 
 즉 현재 단계의 `harness`는 완성된 프로젝트 전용 실행기라기보다, 그런 특화 하네스를 각 저장소 안에서 만들어 갈 수 있게 출발점을 제공하는 메타 하네스에 가깝습니다.
 
+`revfactory`와 대등한 수준을 목표로 볼 때도 기준은 “문서가 많아졌는가”가 아니라 “에이전트 팀 / 실행 패턴 / 운영 계약이 실제로 살아 있는가”입니다. 이 판단은 `references/meta-system-maturity-guide.md` 기준으로 합니다.
+
 ## references
 
 전역 `harness` 스킬은 다음 참고 문서를 함께 사용합니다.
 
 - `references/agent-design-patterns.md`
+- `references/meta-system-maturity-guide.md`
 - `references/orchestrator-template.md`
 - `references/skill-writing-guide.md`
 - `references/skill-testing-guide.md`

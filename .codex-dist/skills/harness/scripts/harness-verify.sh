@@ -213,9 +213,6 @@ audit_harness_drift() {
     fi
   fi
 
-  if [ "$mode" = "운영 유지보수" ] && [ "$exploration_context_level" = "충분" ]; then
-    :
-  fi
 }
 
 check_agents_alignment() {

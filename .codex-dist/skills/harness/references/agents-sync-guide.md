@@ -47,7 +47,7 @@
 ### 정렬됨
 
 - 현재 `AGENTS.md`가 하네스 운영 방향과 크게 충돌하지 않는다.
-- 필요한 경우 `run-harness`, `init/update/verify` 진입 규칙만 보강한다.
+- 필요한 경우 시작 진입 역할, `init/update/verify` 진입 규칙만 보강한다.
 
 ### 보강 필요
 

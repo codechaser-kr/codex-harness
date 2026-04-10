@@ -65,21 +65,19 @@ repo/
 ├── .codex/
 │   ├── config.toml
 │   ├── agents/
-│   │   ├── domain-analyst.toml
-│   │   ├── harness-architect.toml
-│   │   ├── skill-scaffolder.toml
-│   │   ├── qa-designer.toml
-│   │   ├── orchestrator.toml
-│   │   ├── validator.toml
-│   │   └── run-harness.toml
+│   │   ├── intake-router.toml
+│   │   ├── workspace-map-analyst.toml
+│   │   ├── boundary-architect.toml
+│   │   ├── interaction-qa.toml
+│   │   ├── release-auditor.toml
+│   │   └── team-orchestrator.toml
 │   └── skills/
-│       ├── domain-analyst/
-│       ├── harness-architect/
-│       ├── skill-scaffolder/
-│       ├── qa-designer/
-│       ├── orchestrator/
-│       ├── validator/
-│       └── run-harness/
+│       ├── intake-router/
+│       ├── workspace-map-analyst/
+│       ├── boundary-architect/
+│       ├── interaction-qa/
+│       ├── release-auditor/
+│       └── team-orchestrator/
 └── .harness/
     ├── reports/
     │   └── exploration-notes.md
@@ -135,10 +133,10 @@ repo/
 - `exploration-notes.md`가 자동 판단 보류를 위한 약한 메모로 존재함
 - `domain-analysis.md`, `qa-strategy.md`가 저장소 입력 문서로 직접 작성됨
 - 비-domain 문서 4종이 하네스 메타시스템 문서로 직접 작성됨
-- `run-harness`가 시작 역할과 다음 역할을 분명히 제시함
+- 시작 진입 역할이 시작 역할과 다음 역할을 분명히 제시함
 - `harness-verify.sh`가 구조 누락과 골격 잔존 없이 통과함
 
-입력 정보가 아직 부족한 경우에는 바로 역할을 단정하지 않고, `run-harness`가 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오 같은 사용자 질문을 남긴 뒤 다음 역할 흐름으로 넘어가도록 설계되어 있습니다.
+입력 정보가 아직 부족한 경우에는 바로 역할을 단정하지 않고, 시작 진입 역할이 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오 같은 사용자 질문을 남긴 뒤 다음 역할 흐름으로 넘어가도록 설계되어 있습니다.
 
 ## 프로젝트 특화 에이전트 팀
 
@@ -169,7 +167,7 @@ repo/
 3. `Phase 1`과 `Phase 2`가 저장소를 읽고 `domain-analysis.md`, `team-spec.md`, 메타시스템 문서를 작성합니다.
 4. `Phase 3`이 `team-spec`의 최종 역할 인벤토리를 바탕으로 역할 정의와 로컬 스킬을 동적으로 생성합니다.
 5. 생성된 팀이 QA/운영 계약 문서를 완성합니다.
-6. `validator`와 `harness-verify.sh`가 구조/운영 계약을 검증합니다.
+6. 운영 감사 역할과 `harness-verify.sh`가 구조/운영 계약을 검증합니다.
 7. 마지막에 품질 비교와 성숙도 평가를 통해 다음 재진입 지점을 정리합니다.
 
 ## Phase 게이트
@@ -194,22 +192,22 @@ repo/
   - 다음 단계 조건: team-spec과 생성 결과가 일치하고, 누가 하는가와 어떻게 하는가가 분리됨
 - `Phase 4 QA 및 검증 구조`
   - 입력: 저장소 입력 문서와 팀 구조
-  - 산출: `qa-strategy.md`, validator 감사 기준, verify 최소 구조 기준
-  - 다음 단계 조건: 자동/수동 검증 분리와 승격 기준이 고정되고 validator가 운영 계약 감사 기준을 가짐
+  - 산출: `qa-strategy.md`, 운영 감사 기준, verify 최소 구조 기준
+  - 다음 단계 조건: 자동/수동 검증 분리와 승격 기준이 고정되고 운영 감사 역할이 운영 계약 감사 기준을 가짐
 - `Phase 5 역할별 최종 산출물 작성`
   - 입력: 입력 문서, 메타시스템 문서, QA 기준, 현재 실행 모드와 패턴
   - 산출: 역할별 최종 보고서 본문
   - 다음 단계 조건: 문서 부재, 골격 잔존, 목적 혼합이 없어야 함
 - `Phase 6 검증`
   - 입력: 최종 문서, 에이전트 정의, 역할 스킬, 로그 상태
-  - 산출: validator 감사 결과, verify 통과 여부, 재작성 대상 역할
-  - 다음 단계 조건: `run-harness`가 다음 재진입 지점을 다시 제시할 수 있음
+  - 산출: 운영 감사 결과, verify 통과 여부, 재작성 대상 역할
+  - 다음 단계 조건: 시작 진입 역할이 다음 재진입 지점을 다시 제시할 수 있음
 - `Phase 7 품질 비교와 성숙도 평가`
   - 입력: 검증 완료 상태, `with-skill` / `without-skill` 비교 관찰, 운영 로그
   - 산출: 품질 비교 메모, 성숙도 판단, 다음 개선 대상
   - 다음 단계 조건: 현재 하네스를 `운영 가능 / 재작성 필요 / 재구성 필요` 중 하나로 설명할 수 있음
 
-입력 정보가 아직 부족하면, 위 흐름에 들어가기 전에 `run-harness`가 짧은 사용자 질문을 만들고 그 답을 `domain-analysis`와 이후 오케스트레이션의 입력으로 사용합니다.
+입력 정보가 아직 부족하면, 위 흐름에 들어가기 전에 시작 진입 역할이 짧은 사용자 질문을 만들고 그 답을 `domain-analysis`와 이후 오케스트레이션의 입력으로 사용합니다.
 
 즉, 단순 저장소 운영 문서를 만드는 것이 아니라 `저장소 감사 -> 도메인/작업 분석 -> team-spec 설계 -> team-spec 기반 에이전트/스킬 생성 -> QA/검증 구조 -> 역할별 최종 작성 -> 검증 -> 품질 비교와 성숙도 평가` 흐름을 갖춘 실행 하네스 기반을 만드는 것이 목적입니다.
 

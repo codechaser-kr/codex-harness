@@ -119,10 +119,10 @@
 
 ### 좋은 분리 예
 
-- domain-analyst: 저장소 분석
-- harness-architect: 구조 설계
-- qa-designer: 품질 질문 설계
-- validator: 최소 구조 점검
+- workspace-map-analyst: 저장소 분석
+- boundary-architect: 구조 설계
+- interaction-qa: 품질 질문 설계
+- release-auditor: 최소 구조 점검
 
 ### 나쁜 분리 예
 
@@ -141,8 +141,8 @@
 
 ### 확인할 것
 
-- domain-analysis.md가 architecture의 실제 입력으로 기능하는가
-- architecture.md가 scaffolding의 실제 기준이 되는가
+- domain-analysis.md가 구조 설계 문서의 실제 입력으로 기능하는가
+- 구조 설계 문서가 역할 생성과 운영 규칙의 실제 기준이 되는가
 - qa-strategy.md가 흐름과 검증 관점에 연결되는가
 - orchestration-plan.md가 실제 협업 순서를 설명하는가
 

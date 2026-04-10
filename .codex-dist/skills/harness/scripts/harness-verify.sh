@@ -54,6 +54,19 @@ each_team_spec_role() {
   ' "$team_spec_file"
 }
 
+is_generic_framework_role() {
+  local role_id="$1"
+
+  case "$role_id" in
+    domain_analyst|harness_architect|skill_scaffolder|qa_designer|orchestrator|validator|run_harness)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 check_frontmatter_name() {
   local file="$1"
   if grep -q '^name:' "$file"; then
@@ -233,6 +246,11 @@ check_team_spec_asset_alignment() {
   while IFS='|' read -r role_id display_name agent_file model reasoning sandbox description; do
     [ -n "${role_id:-}" ] || continue
     parsed=1
+
+    if is_generic_framework_role "$role_id"; then
+      fail "team-spec 최종 역할 인벤토리에 추상 역할명이 남아 있음: ${role_id}"
+    fi
+
     config_section="^\\[agents\\.${role_id}\\]$"
     config_line="config_file = \"agents/${agent_file}.toml\""
     agent_path=".codex/agents/${agent_file}.toml"

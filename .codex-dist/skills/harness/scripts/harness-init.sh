@@ -159,14 +159,14 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 - 실패 비용이 큰 경계:
 - 핵심 코드/문서 근거:
 - 이 팀이 먼저 다뤄야 할 요청 유형:
-- seed 역할 이름을 그대로 쓰기 어려운 이유:
+- 역할명이 저장소 고유 용어와 실패 경계를 어떻게 드러내는지:
 
 ## 역할명 설계 메모
 
 - 역할명은 도메인 명사 + 책임 동사/역할 조합을 우선합니다.
 - 예: \`payment-dev\`, \`billing-reviewer\`, \`checkout-qa\`, \`desktop-runtime-dev\`, \`ipc-reviewer\`
-- seed 이름을 유지한다면 왜 범용 이름이 더 적절한지 적습니다.
-- 새 역할명을 만들었다면 어떤 기존 역할 개념을 대체하는지 함께 적습니다.
+- 추상적인 프레임워크 역할명보다 저장소 고유 용어와 변경 위험을 드러내는 이름을 우선합니다.
+- 새 역할명은 실제 요청 분류, 주요 경계, handoff 지점을 설명할 수 있어야 합니다.
 - \`role_id\`는 snake_case, 표시 이름과 파일/디렉토리명은 kebab-case를 기본으로 둡니다.
 
 ## 팀 설계 결정
@@ -204,13 +204,13 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 - \`.codex/agents/*.toml\`은 역할 식별, 모델, sandbox, 짧은 실행 설명을 담습니다.
 - \`.codex/skills/*\`는 역할별 절차, 입력/출력, handoff, 완료 기준을 담습니다.
 - 생성기보다 team-spec이 우선하며, 파일명/역할명/책임 범위가 다르면 team-spec 기준으로 다시 생성합니다.
-- 프로젝트 특화 역할을 만들 때는 seed 이름보다 저장소 고유 용어를 우선합니다.
+- 최종 역할 인벤토리는 저장소 고유 용어와 실제 운영 경계를 반영해야 합니다.
 - 같은 역할을 서로 다른 표기로 중복 정의하지 않습니다. 예: \`payment_dev\`, \`payment-dev\`, \`payments-dev\`
 
 ## 최종 역할 인벤토리
 
 아래 블록은 \`Phase 2\`가 직접 채워야 하는 최종 역할 인벤토리입니다.
-\`harness-init.sh\`는 seed 역할을 넣지 않습니다.
+\`harness-init.sh\`는 역할 이름을 미리 넣지 않습니다.
 \`Phase 3\`은 이 블록만 입력으로 \`.codex/config.toml\`, \`.codex/agents/*.toml\`, \`.codex/skills/*\`를 생성합니다.
 줄 형식은 \`role_id|display_name|agent_file|model|reasoning|sandbox|description\` 입니다.
 
@@ -224,8 +224,8 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 
 ## 작성 메모
 
-- 고정 seed 역할 이름을 그대로 유지할지, 프로젝트 도메인에 맞는 새 역할명을 만들지 여기서 결정합니다.
-- 역할 이름을 바꾸면 seed 흔적을 남기지 말고, 그 이유와 대체 관계를 팀 메타데이터 또는 역할 책임에 적습니다.
+- 최종 역할 인벤토리는 프레임워크 범용 역할명이 아니라 현재 저장소의 도메인과 운영 경계를 설명해야 합니다.
+- 역할 이름은 실제 요청을 어디로 보낼지 판단할 수 있을 정도로 구체적이어야 합니다.
 - 최종 역할 인벤토리가 비어 있으면 \`Phase 2\`가 끝나지 않은 상태로 봅니다.
 - 이 문서가 정리되기 전에는 \`.codex/config.toml\`, \`.codex/agents/*.toml\`, \`.codex/skills/*\`를 만들지 않습니다.
 - \`Phase 2\`가 역할 인벤토리를 실제로 작성한 뒤에만 \`Phase 3\` 생성기를 실행합니다.

@@ -161,6 +161,35 @@ repo/
 6. 필요할 때만 `skill-scaffolder`가 로컬 스킬 설명 drift를 정렬합니다.
 7. 마지막에 `validator`와 `harness-verify.sh`로 구조 누락과 generic 회귀를 확인합니다.
 
+## Phase 게이트
+
+하네스는 Phase 이름만 나열하지 않고, 각 Phase가 다음 단계로 넘어갈 최소 조건을 가집니다.
+
+- `Phase 1 저장소 분석`
+  - 입력: `exploration-notes.md`, 탐색 상태, `project-setup.md` 또는 사용자 답변
+  - 산출: `domain-analysis.md`
+  - 다음 단계 조건: 대표 시작점 후보, 주요 경계, 실패 비용이 최소한 문서로 고정됨
+- `Phase 2 실행 하네스 팀 설계`
+  - 입력: `domain-analysis.md`, 상태 모드, 실행 모드, 실행 패턴 후보
+  - 산출: `harness-architecture.md`, `team-structure.md`
+  - 다음 단계 조건: 역할 경계, handoff 기준, 패턴 선택 이유가 고정됨
+- `Phase 3 로컬 역할 스킬 생성`
+  - 입력: 선택된 팀 구조와 패턴
+  - 산출: `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`
+  - 다음 단계 조건: 누가 하는가와 어떻게 하는가가 분리됨
+- `Phase 4 QA 및 검증 구조`
+  - 입력: 저장소 입력 문서와 팀 구조
+  - 산출: `qa-strategy.md`, validator 감사 기준
+  - 다음 단계 조건: 자동/수동 검증 분리와 승격 기준이 고정됨
+- `Phase 5 문서 최종 작성`
+  - 입력: 입력 문서, 메타시스템 문서, QA 기준, 현재 실행 모드와 패턴
+  - 산출: 최종 문서 본문
+  - 다음 단계 조건: 문서 부재, 골격 잔존, 목적 혼합이 없어야 함
+- `Phase 6 검증`
+  - 입력: 최종 문서, 에이전트 정의, 역할 스킬, 로그 상태
+  - 산출: verify 통과 또는 재작성 대상 역할
+  - 다음 단계 조건: `run-harness`가 다음 재진입 지점을 다시 제시할 수 있음
+
 탐색 근거가 아직 부족하면, 위 흐름에 들어가기 전에 `run-harness`가 짧은 사용자 질문을 만들고 그 답을 `domain-analysis`와 이후 오케스트레이션의 입력으로 사용합니다.
 
 즉, 단순 저장소 운영 문서를 만드는 것이 아니라 `탐색 -> 저장소 입력 문서 -> 하네스 메타시스템 문서 -> 스킬/오케스트레이션 -> QA/검증 -> 로그 운영` 흐름을 갖춘 실행 하네스 기반을 만드는 것이 목적입니다.

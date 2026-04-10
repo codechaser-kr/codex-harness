@@ -644,11 +644,11 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 ## Phase 기준
 
 - Phase 0 감사: 기존 하네스 구조, 탐색 상태, 문서 부재 여부를 읽는다.
-- Phase 1 도메인 분석: \`domain-analysis.md\`가 비어 있거나 약하면 \`domain-analyst\`부터 시작한다.
-- Phase 2 팀 아키텍처 설계: 메타시스템 구조 문서가 약하면 \`harness-architect\`를 앞에 둔다.
-- Phase 3 QA 전략 정렬: 검증 비용 분리나 체크 기준이 약하면 \`qa-designer\`를 앞에 둔다.
-- Phase 4 운영 흐름 정렬: 시작점, 재진입 기준, 종료 조건이 약한 메타시스템 문서가 있으면 \`orchestrator\`를 앞에 둔다.
-- Phase 5 검증: 위 문서가 다 써진 뒤에만 \`validator\`와 \`harness-verify.sh\`를 둔다.
+- Phase 1 도메인 분석: 입력은 \`exploration-notes.md\`, 탐색 상태, \`project-setup.md\` 또는 사용자 답변이다. 산출은 \`domain-analysis.md\`다. 다음 단계 조건은 대표 시작점 후보, 주요 경계, 실패 비용이 문서로 고정되는 것이다.
+- Phase 2 팀 아키텍처 설계: 입력은 \`domain-analysis.md\`, 상태 모드, 실행 모드, 실행 패턴 후보다. 산출은 \`harness-architecture.md\`, \`team-structure.md\`다. 다음 단계 조건은 역할 경계, handoff 기준, 패턴 선택 이유가 문서에 고정되는 것이다.
+- Phase 3 QA 전략 정렬: 입력은 저장소 입력 문서와 현재 팀 구조다. 산출은 \`qa-strategy.md\`와 검증 승격 기준이다. 다음 단계 조건은 자동/수동 검증 분리와 체크 기준이 문서로 고정되는 것이다.
+- Phase 4 운영 흐름 정렬: 입력은 저장소 입력 문서, 메타시스템 구조 문서, 현재 실행 모드와 패턴이다. 산출은 \`orchestration-plan.md\`, \`team-playbook.md\`다. 다음 단계 조건은 시작점, 재진입 기준, 종료 조건이 문서에 고정되는 것이다.
+- Phase 5 검증: 입력은 최종 문서, 에이전트 정의, 역할 스킬, 로그 상태다. 산출은 validator 판단과 \`harness-verify.sh\` 결과다. 다음 단계 조건은 run-harness가 다시 읽을 수 있는 정상 상태 또는 재작성 대상 역할이 분명한 상태다.
 
 ## 실행 패턴 기준
 

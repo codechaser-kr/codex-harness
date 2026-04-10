@@ -226,6 +226,10 @@ init는 탐색 입력만 만들고, 나머지 문서는 역할 스킬이 직접 
 
 ### Phase 1: 저장소 분석
 
+- 입력: `exploration-notes.md`, 탐색 상태, `project-setup.md` 또는 사용자 답변
+- 산출: `domain-analysis.md`, 저장소 고유 근거, 남아 있는 질문
+- 다음 단계 조건: 대표 시작점 후보, 주요 경계, 실패 비용이 최소한 문서로 고정됨
+
 1. 현재 저장소의 목적, 실행 모델, 대표 진입점 후보와 관련 코드 근거를 **코드베이스 탐색**으로 수집한다.
 2. 대표 진입점 후보, 관련 코드 경로, 테스트 자산, 설정/배포 경로, 저장소 고유 용어를 수집한다.
 3. Phase 0 감사 결과를 기준으로 기존 로컬 하네스 구조와 충돌을 피한다.
@@ -235,6 +239,10 @@ init는 탐색 입력만 만들고, 나머지 문서는 역할 스킬이 직접 
 분석 기준은 `references/agent-design-patterns.md`, 탐색 결과 형식은 `references/exploration-model.md`, 상위 컨텍스트 정렬 기준은 `references/agents-sync-guide.md`, 기존 확장 재진입 기준은 `references/phase-selection-matrix.md`를 참고한다.
 
 ### Phase 2: 실행 하네스 팀 설계
+
+- 입력: `domain-analysis.md`, 탐색 상태, 상태 모드, 실행 모드, 실행 패턴 후보
+- 산출: `harness-architecture.md`, `team-structure.md`, 선택된 실행 패턴과 역할 경계
+- 다음 단계 조건: 역할 경계, handoff 기준, 패턴 선택 이유가 메타시스템 문서에 고정됨
 
 1. 이 프로젝트에 필요한 역할 팀 구성을 결정한다.
 2. 기본 역할 구성을 유지할지, 축소/확장할지 적는다.
@@ -251,6 +259,10 @@ init는 탐색 입력만 만들고, 나머지 문서는 역할 스킬이 직접 
 
 ### Phase 3: 로컬 역할 스킬 생성
 
+- 입력: 선택된 역할 팀 구조, `harness-architecture.md`, `team-structure.md`
+- 산출: `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`
+- 다음 단계 조건: 누가 하는가와 어떻게 하는가가 분리되고, `run-harness`가 실제 진입점으로 읽힘
+
 1. 각 역할에 대한 로컬 SKILL.md를 생성한다.
 2. 각 역할은 SKILL.md 하나로 실행 계약과 책임 범위를 함께 설명한다.
 3. 보조 역할 정의 문서를 따로 만들지 않는다.
@@ -265,6 +277,10 @@ init는 탐색 입력만 만들고, 나머지 문서는 역할 스킬이 직접 
 
 ### Phase 4: QA 및 검증 구조 포함
 
+- 입력: `domain-analysis.md`, 역할 팀 구조, 현재 실행 패턴
+- 산출: `qa-strategy.md`, validator 감사 기준, verify로 넘길 최소 검증 구조
+- 다음 단계 조건: 자동/수동 검증 분리와 승격 기준이 문서화되고 validator가 감사 기준을 가짐
+
 1. QA 역할을 포함해 품질 관점을 적는다.
 2. validator를 포함해 최소 검증 구조를 만든다.
 3. orchestrator가 각 역할의 입력/출력을 연결할 수 있게 한다.
@@ -273,6 +289,10 @@ init는 탐색 입력만 만들고, 나머지 문서는 역할 스킬이 직접 
 QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 
 ### Phase 5: `.harness/reports/*` 문서 프로젝트 맞춤 작성
+
+- 입력: 저장소 입력 문서, 메타시스템 구조 문서, QA 기준, 현재 실행 모드와 패턴
+- 산출: 입력 문서와 메타시스템 문서의 최종 본문
+- 다음 단계 조건: 문서 부재, 골격 잔존, 목적 혼합 없이 validator가 읽을 수 있는 상태
 
 1. `harness-init.sh` 또는 `harness-update.sh`가 최종 보고서를 대신 쓰지 않는다.
 2. domain-analyst가 저장소 사실, 대표 흐름, 예외를 기준으로 `domain-analysis.md`를 직접 다시 쓴다.
@@ -284,6 +304,10 @@ QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 이 단계의 목적은 스크립트가 아니라 역할 스킬이 각 프로젝트의 구조와 운영 맥락에 맞는 입력 문서와 메타시스템 문서를 직접 작성하는 것이다.
 
 ### Phase 6: 실행 하네스 팀 검증
+
+- 입력: 최종 입력 문서, 메타시스템 문서, 에이전트 정의, 역할 스킬, 로그 상태
+- 산출: verify 통과 또는 재작성이 필요한 역할 지정
+- 다음 단계 조건: `run-harness`가 현재 상태를 읽고 다음 재진입 지점을 다시 제시할 수 있음
 
 1. 필수 역할 스킬이 모두 존재하는지 확인한다.
 2. 각 역할이 충분히 구분되는지 확인한다.

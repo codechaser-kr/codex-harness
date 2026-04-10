@@ -176,7 +176,7 @@ Codex의 서브에이전트 활용 관점에서,
 ### 1) 파이프라인 (Pipeline)
 
 예:
-- domain-analyst → harness-architect → skill-scaffolder → validator
+- domain-analyst → harness-architect → qa-designer → validator
 
 특징:
 - 순차 의존성이 강하다
@@ -195,12 +195,12 @@ Codex의 서브에이전트 활용 관점에서,
 - skill-scaffolder → validator
 
 특징:
-- 생성 결과의 최소 품질을 바로 점검할 수 있다
-- 하네스 보강 루프에 적합하다
+- 스킬 계약 정렬 결과의 최소 품질을 바로 점검할 수 있다
+- sync 성격의 보정 루프에 적합하다
 
 언제 쓰는가:
-- 파일 생성 직후 검증이 필요할 때
-- 구조적 누락과 약한 설명을 잡고 싶을 때
+- 로컬 스킬 설명 drift를 정렬한 직후 검증이 필요할 때
+- 구조적 누락보다 계약 불일치와 약한 설명을 잡고 싶을 때
 
 ---
 
@@ -305,16 +305,18 @@ Codex의 서브에이전트 활용 관점에서,
 
 ## 7. 범용 하네스의 권장 기본 역할
 
-범용 하네스 1차 단계에서는 다음 6개 역할을 기본으로 한다.
+범용 하네스 1차 단계에서는 다음 5개 역할을 기본으로 한다.
 
 - domain-analyst
 - harness-architect
-- skill-scaffolder
 - qa-designer
 - orchestrator
 - validator
 
 이 구조는 기본값이지 절대 규칙은 아니다.
+
+`skill-scaffolder`는 여기 포함되지 않는다.
+이 역할은 기본 파이프라인의 일부가 아니라, 로컬 스킬 설명 drift나 계약 불일치가 드러난 sync 상황에서만 보조적으로 붙인다.
 
 프로젝트가 단순하면 줄일 수 있고,  
 프로젝트가 복잡하면 이후 확장 역할을 추가할 수 있다.
@@ -340,7 +342,7 @@ Codex의 서브에이전트 활용 관점에서,
 
 이 경우:
 - orchestrator 생략 가능
-- skill-scaffolder 생략 가능
+- skill-scaffolder는 기본값이 아니므로 필요 시에만 추가
 
 ---
 
@@ -383,7 +385,7 @@ Codex의 서브에이전트 활용 관점에서,
 - domain-analyst → domain-analysis.md
 - harness-architect ← domain-analysis.md
 - harness-architect → harness-architecture.md
-- skill-scaffolder ← harness-architecture.md
+- skill-scaffolder ← 로컬 스킬 설명 drift 또는 계약 불일치
 - qa-designer ← domain-analysis.md + harness-architecture.md
 - orchestrator ← 주요 리포트 전체
 - validator ← 전체 구조와 리포트

@@ -64,15 +64,17 @@ orchestrator는 최소한 아래를 항상 확인해야 한다.
 
 1. domain-analyst
 2. harness-architect
-3. skill-scaffolder
-4. qa-designer
-5. orchestrator
-6. validator
+3. qa-designer
+4. orchestrator
+5. validator
 
 이 순서는 절대 규칙이 아니라 기본 골격이다.  
 프로젝트에 따라 일부는 생략되거나,  
 일부는 반복되거나,  
 일부는 먼저 초안 수준으로 개입할 수 있다.
+
+`skill-scaffolder`는 이 기본 골격에 항상 들어가는 역할이 아니다.
+로컬 스킬 설명 drift, 구조 문구 불일치, 스킬 계약 재정렬이 필요한 sync 상황에서만 보조적으로 끼운다.
 
 그러나 기본적으로 orchestrator는  
 이 흐름 전체를 한 번에 보는 역할이어야 한다.
@@ -86,7 +88,7 @@ orchestrator는 항상 같은 방식으로 움직이지 않는다.
 
 ### 신규 구축
 
-- domain-analyst → harness-architect → skill-scaffolder → qa-designer → validator 순서의 기본 파이프라인을 먼저 안정화한다.
+- domain-analyst → harness-architect → qa-designer → orchestrator → validator 순서의 기본 파이프라인을 먼저 안정화한다.
 - 이 단계에서는 분기 수를 늘리기보다, 입력/출력 연결을 선명하게 두는 것이 우선이다.
 
 ### 기존 확장
@@ -108,8 +110,8 @@ orchestrator는 항상 같은 방식으로 움직이지 않는다.
 - 단순 요약이 아니라 역할 팀 설계에 영향을 줄 수 있어야 한다
 
 ### harness-architect → skill-scaffolder
-- 구조 설계는 실제 파일 생성 기준이 된다
-- 애매한 설계는 scaffolder 단계에서 품질 저하로 이어진다
+- 구조 설계와 로컬 스킬 설명이 서로 어긋나는 sync 상황에서만 연결한다
+- 기본 흐름의 필수 handoff가 아니라 drift 보정용 예외 연결이다
 
 ### domain-analyst / harness-architect → qa-designer
 - QA는 반드시 실제 구조와 흐름을 근거로 질문을 만들어야 한다

@@ -137,16 +137,16 @@ EXPLORATION_ANCHOR_SUMMARY="$(build_exploration_anchor_summary "$EXPLORATION_NOT
 DISCOVERY_GUIDANCE="$(build_exploration_guidance "$EXPLORATION_NOTES_FILE" "$EXPLORATION_CONTEXT_LEVEL" "")"
 
 if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
-  DISCOVERY_GUIDANCE="현재는 자동 탐색 메모만 있으므로, run-harness는 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 먼저 확인합니다."
+  DISCOVERY_GUIDANCE="현재는 입력 메모만 있으므로, run-harness는 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 먼저 확인합니다."
   log "입력 부족: 사용자 확인 질문부터 정리"
 fi
 
 log "하네스 업데이트 시작"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
-log "탐색 근거 문서: $EXPLORATION_NOTES_FILE"
+log "입력 메모 문서: $EXPLORATION_NOTES_FILE"
 log "입력 상태: $EXPLORATION_CONTEXT_LEVEL"
-log "탐색 근거 요약: $EXPLORATION_ANCHOR_SUMMARY"
-log "탐색 메모 안내: $DISCOVERY_GUIDANCE"
+log "입력 메모 요약: $EXPLORATION_ANCHOR_SUMMARY"
+log "입력 메모 안내: $DISCOVERY_GUIDANCE"
 log "선택 갱신 대상: $(build_selected_target_summary)"
 log "다시 호출할 역할: $(build_selected_role_summary)"
 while IFS= read -r audit_line; do
@@ -159,5 +159,5 @@ while IFS= read -r agents_line; do
 done <<< "$AGENTS_AUDIT_SUMMARY"
 
 log "하네스 업데이트 완료"
-log "루트 기준 AI 탐색 메모만 다시 정리되었습니다."
+log "루트 기준 AI 입력 메모만 다시 정리되었습니다."
 log "선택된 보고서는 위 역할이 직접 다시 작성해야 합니다."

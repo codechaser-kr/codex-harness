@@ -242,7 +242,7 @@ build_exploration_guidance() {
   local boundary_hint="$3"
 
   if [ "$exploration_context_level" = "초기" ]; then
-    printf '%s\n' "자동 탐색 메모만으로는 방향을 좁히기 어렵습니다. 사용자 입력과 역할 재해석을 함께 사용합니다."
+    printf '%s\n' "입력 메모만으로는 방향을 좁히기 어렵습니다. 사용자 입력과 역할 재해석을 함께 사용합니다."
     return
   fi
 

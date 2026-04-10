@@ -259,7 +259,7 @@ setup_test_artifacts "$TMP_ROOT/stack-explore-project"
 )
 assert_file "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md"
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "## 상태" "탐색 문서 상태 섹션"
-assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "자동 경로 수집은 핵심 판단 근거로 사용하지 않습니다." "탐색 문서 약한 입력 전제"
+assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "이 메모는 초기 입력 상태만 전달하며, 최종 판단 근거는 아닙니다." "탐색 문서 약한 입력 전제"
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "## 역할 팀 메모" "탐색 문서 역할 팀 메모"
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "domain-analyst" "탐색 문서 역할 재해석 메모"
 STACK_INIT_OUTPUT="$(
@@ -267,7 +267,7 @@ STACK_INIT_OUTPUT="$(
   bash "$HARNESS_SCRIPT_DIR/harness-init.sh"
 )"
 assert_contains "$STACK_INIT_OUTPUT" "하네스 운영 모드: 신규 구축" "스택 프로젝트 init 로그"
-assert_contains "$STACK_INIT_OUTPUT" "입력 메모 요약: 자동 경로 수집은 보조 메모만 제공하며, 사용자 입력과 역할 재해석이 필요합니다" "스택 프로젝트 init 입력 메모 요약"
+assert_contains "$STACK_INIT_OUTPUT" "입력 메모 요약: 입력 메모는 초기 상태만 전달하며, 사용자 입력과 역할 재해석이 필요합니다" "스택 프로젝트 init 입력 메모 요약"
 assert_file "$TMP_ROOT/stack-project/AGENTS.md"
 assert_file "$TMP_ROOT/stack-project/.codex/config.toml"
 assert_dir "$TMP_ROOT/stack-project/.codex/agents"
@@ -277,7 +277,7 @@ assert_contains "$(cat "$TMP_ROOT/stack-project/.codex/config.toml")" "config_fi
 assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"
 assert_not_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
 assert_not_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"
-assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "자동 경로 수집은 핵심 판단 근거로 사용하지 않습니다." "생성된 탐색 문서 약한 입력 전제"
+assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "이 메모는 초기 입력 상태만 전달하며, 최종 판단 근거는 아닙니다." "생성된 탐색 문서 약한 입력 전제"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "## 다음 확인 질문" "생성된 탐색 문서 확인 질문"
 STACK_VERIFY_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \

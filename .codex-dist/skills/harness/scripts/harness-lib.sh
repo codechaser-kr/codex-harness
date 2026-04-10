@@ -205,7 +205,7 @@ build_exploration_anchor_summary() {
   if project_setup_has_answers ".harness/project-setup.md"; then
     printf '%s\n' "project-setup 입력이 있어 사용자 맥락을 함께 참조할 수 있습니다"
   else
-    printf '%s\n' "자동 경로 수집은 보조 메모만 제공하며, 사용자 입력과 역할 재해석이 필요합니다"
+    printf '%s\n' "입력 메모는 초기 상태만 전달하며, 사용자 입력과 역할 재해석이 필요합니다"
   fi
 }
 
@@ -278,6 +278,7 @@ ensure_harness_log_scaffold() {
 - 역할 호출 기록은 `.harness/logs/session-log.md`에 누적합니다.
 - 구조화된 이벤트는 `.harness/logs/session-events.tsv`에 남깁니다.
 - 세션 종료 시 최신 요약은 `.harness/logs/latest-session-summary.md`로 갱신합니다.
+- `harness-init`는 하네스 골격 준비로 기록하고, 실제 역할 실행 세션은 `run-harness` 또는 개별 역할 이름으로 분리해 남깁니다.
 
 ## 선택 자산
 
@@ -341,6 +342,21 @@ EOF
 ---
 
 ## 예시
+
+### 세션
+
+- 시각: YYYY-MM-DD HH:MM
+- 세션 ID: session-YYYYMMDD-HHMMSS
+- 상태: completed
+- 시작 요청: 현재 프로젝트 하네스를 초기화해줘
+- 진입점: harness-init
+- 호출 역할: -
+- 입력 파일: 없음
+- 출력 파일: AGENTS.md, .codex/config.toml, .harness/reports/exploration-notes.md
+- 다음 권장 역할: run-harness
+- 남은 약점: 역할 팀이 아직 최종 보고서를 작성하지 않음
+
+---
 
 ### 세션
 

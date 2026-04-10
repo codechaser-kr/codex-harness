@@ -24,7 +24,7 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
 
 - 현재 작업 디렉토리: \`$ROOT_DIR\`
 - 하네스 운영 모드: \`$(detect_harness_operation_mode)\`
-- 자동 경로 수집은 핵심 판단 근거로 사용하지 않습니다.
+- 이 메모는 초기 입력 상태만 전달하며, 최종 판단 근거는 아닙니다.
 - 실제 시작점, 경계, 검증 경로는 역할 스킬이 저장소를 다시 읽으며 확정합니다.
 
 ## 현재 입력 상태
@@ -59,4 +59,4 @@ EOF
 EOF
 } > "$OUTPUT_FILE"
 
-log "탐색 근거 문서 생성: $OUTPUT_FILE"
+log "입력 메모 문서 생성: $OUTPUT_FILE"

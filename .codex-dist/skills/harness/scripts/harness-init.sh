@@ -873,6 +873,7 @@ create_file_if_missing ".harness/logging-policy.md" \
 - 사람이 읽을 수 있어야 합니다.
 - 역할 흐름과 피드백 루프가 보이도록 남깁니다.
 - 각 역할은 자신이 수행한 주요 변경과 다음 권장 단계를 남길 책임이 있습니다.
+- \`harness-init\`는 하네스 골격 준비로 기록하고, 실제 역할 실행 세션은 \`run-harness\` 또는 개별 역할 이름으로 분리해 남깁니다.
 - 가능하면 수동 편집보다 자동 append 스크립트를 우선 사용합니다.
 "
 
@@ -901,6 +902,21 @@ create_file_if_missing ".harness/logs/session-log.md" \
 ---
 
 ## 예시
+
+### 세션
+
+- 시각: YYYY-MM-DD HH:MM
+- 세션 ID: session-YYYYMMDD-HHMMSS
+- 상태: completed
+- 시작 요청: 현재 프로젝트 하네스를 초기화해줘
+- 진입점: harness-init
+- 호출 역할: -
+- 입력 파일: 없음
+- 출력 파일: AGENTS.md, .codex/config.toml, .harness/reports/exploration-notes.md
+- 다음 권장 역할: run-harness
+- 남은 약점: 역할 팀이 아직 최종 보고서를 작성하지 않음
+
+---
 
 ### 세션
 

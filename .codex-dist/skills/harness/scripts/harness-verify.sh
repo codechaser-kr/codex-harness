@@ -266,6 +266,10 @@ audit_harness_drift "$HARNESS_OPERATION_MODE" "$HARNESS_SKILL_COUNT" "$HARNESS_R
 check_agents_alignment "$HARNESS_OPERATION_MODE"
 
 # 필수 디렉토리
+check_file "AGENTS.md"
+check_dir ".codex"
+check_file ".codex/config.toml"
+check_dir ".codex/agents"
 check_dir ".codex/skills"
 check_dir ".codex/skills/domain-analyst"
 check_dir ".codex/skills/harness-architect"
@@ -319,6 +323,25 @@ SKILL_FILES=(
 
 for file in "${SKILL_FILES[@]}"; do
   check_file "$file"
+done
+
+AGENT_FILES=(
+  ".codex/agents/domain-analyst.toml"
+  ".codex/agents/harness-architect.toml"
+  ".codex/agents/skill-scaffolder.toml"
+  ".codex/agents/qa-designer.toml"
+  ".codex/agents/orchestrator.toml"
+  ".codex/agents/validator.toml"
+  ".codex/agents/run-harness.toml"
+)
+
+for file in "${AGENT_FILES[@]}"; do
+  check_file "$file"
+  check_contains_hint "$file" "^name = " "에이전트 name 필드"
+  check_contains_hint "$file" "^description = " "에이전트 description 필드"
+  check_contains_hint "$file" "^model = " "에이전트 model 필드"
+  check_contains_hint "$file" "^sandbox_mode = " "에이전트 sandbox_mode 필드"
+  check_contains_hint "$file" "^developer_instructions = " "에이전트 developer_instructions 필드"
 done
 
 # 로컬 역할 스킬 최소 품질 점검

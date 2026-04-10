@@ -15,7 +15,7 @@
 
 ## 설계 원칙
 
-- 하네스의 본체는 역할 스킬, `run-harness`, 오케스트레이션 구조입니다.
+- 하네스의 본체는 Codex 에이전트 설정, 역할 스킬, `run-harness`, 오케스트레이션 구조입니다.
 - `.harness/reports`는 한 종류가 아닙니다.
 - `exploration-notes.md`, `domain-analysis.md`, `qa-strategy.md`는 저장소 입력 문서입니다.
 - `harness-architecture.md`, `orchestration-plan.md`, `team-structure.md`, `team-playbook.md`는 하네스 메타시스템 문서입니다.
@@ -59,7 +59,17 @@ $HOME/.codex/skills/harness
 
 ```text
 repo/
+├── AGENTS.md
 ├── .codex/
+│   ├── config.toml
+│   ├── agents/
+│   │   ├── domain-analyst.toml
+│   │   ├── harness-architect.toml
+│   │   ├── skill-scaffolder.toml
+│   │   ├── qa-designer.toml
+│   │   ├── orchestrator.toml
+│   │   ├── validator.toml
+│   │   └── run-harness.toml
 │   └── skills/
 │       ├── domain-analyst/
 │       ├── harness-architect/
@@ -81,11 +91,14 @@ repo/
     └── logging-policy.md
 ```
 
-핵심 산출물은 `.codex/skills/*` 아래의 로컬 역할 스킬과, 그 스킬이 직접 쓰는 `.harness/reports/*` 문서입니다. `harness-init.sh`는 `exploration-notes.md`와 로그 구조만 준비하고, 나머지 문서는 역할 스킬이 직접 작성합니다. `.harness/logs/*`와 `.harness/logging-policy.md`는 실제 운영 기록과 로그 규칙을 위한 기본 산출물입니다.
+핵심 산출물은 `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`의 로컬 Codex 에이전트 설정, `.codex/skills/*`의 로컬 역할 스킬, 그리고 그 역할이 직접 쓰는 `.harness/reports/*` 문서입니다. `harness-init.sh`는 `exploration-notes.md`, Codex 에이전트 설정, 역할 스킬, 로그 구조를 준비하고, 나머지 문서는 역할 스킬이 직접 작성합니다. `.harness/logs/*`와 `.harness/logging-policy.md`는 실제 운영 기록과 로그 규칙을 위한 기본 산출물입니다.
 
 운영을 시작하면 초기 생성물 중 일부가 계속 다시 쓰이거나 갱신되고, 운영 결과에 따라 새 파일이 추가될 수도 있습니다. 대표적인 범위는 다음과 같습니다.
 
-- `.codex/skills/*`: 역할 정의와 운영 규칙 갱신
+- `AGENTS.md`: 상위 운영 계약과 기본 진입 규칙 갱신
+- `.codex/config.toml`: 프로젝트 에이전트 런타임 설정 갱신
+- `.codex/agents/*.toml`: 에이전트 역할, handoff, phase 책임 갱신
+- `.codex/skills/*`: 역할별 실행 계약과 운영 규칙 갱신
 - `.harness/reports/exploration-notes.md`: 탐색 입력 문서
 - `.harness/reports/domain-analysis.md`, `.harness/reports/qa-strategy.md`: 저장소 분석 입력 문서
 - `.harness/reports/harness-architecture.md`, `.harness/reports/orchestration-plan.md`, `.harness/reports/team-structure.md`, `.harness/reports/team-playbook.md`: 하네스 메타시스템 문서
@@ -133,7 +146,7 @@ repo/
 - `validator`: 문서 누락, generic 회귀, 구조 약점을 읽는 역할
 - `run-harness`: 현재 상태를 보고 어떤 문서부터 다시 써야 하는지 정하는 진입점
 
-`orchestrator`는 팀 흐름의 중심이고, `run-harness`는 팀을 실제로 시작하는 엔트리포인트입니다.
+`AGENTS.md`와 `.codex/agents/*.toml`은 `누가 하는가`, 역할 스킬은 `어떻게 하는가`를 담당합니다. `orchestrator`는 팀 흐름의 중심이고, `run-harness`는 팀을 실제로 시작하는 엔트리포인트입니다.
 
 ## 동작 방식
 

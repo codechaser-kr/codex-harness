@@ -80,6 +80,7 @@ while IFS= read -r agents_line; do
 done <<< "$AGENTS_AUDIT_SUMMARY"
 
 create_dir ".codex"
+create_dir ".codex/agents"
 create_dir ".codex/skills"
 create_dir ".codex/skills/domain-analyst"
 create_dir ".codex/skills/harness-architect"
@@ -157,6 +158,38 @@ ensure_gitignore_entry ".harness/logs/session-events.tsv"
 ensure_gitignore_entry ".harness/logs/latest-session-summary.md"
 ensure_gitignore_entry ".harness/logs/role-frequency.md"
 ensure_gitignore_entry ".harness/logs/session-summary-*.md"
+
+create_file_if_missing "AGENTS.md" \
+"# AGENTS.md
+
+이 저장소는 Codex 하네스 메타시스템을 사용합니다.
+
+## 기본 진입점
+
+- 하네스 초기화: \`bash ~/.codex/skills/harness/scripts/harness-init.sh\`
+- 하네스 갱신: \`bash ~/.codex/skills/harness/scripts/harness-update.sh\`
+- 하네스 검증: \`bash ~/.codex/skills/harness/scripts/harness-verify.sh\`
+
+## 운영 모드
+
+- 신규 구축
+- 기존 확장
+- 운영 유지보수
+
+## 운영 원칙
+
+- \`exploration-notes.md\`는 탐색 입력 문서로 사용합니다.
+- \`domain-analysis.md\`, \`qa-strategy.md\`는 저장소 입력 문서입니다.
+- \`harness-architecture.md\`, \`orchestration-plan.md\`, \`team-structure.md\`, \`team-playbook.md\`는 하네스 메타시스템 문서입니다.
+- \`harness-init.sh\` 직후 상태는 완료가 아니라 탐색 입력과 역할 정의가 준비된 상태입니다.
+- 최종 문서는 역할 스킬과 에이전트 팀이 직접 작성한 뒤 검증합니다.
+"
+
+create_file_if_missing ".codex/config.toml" \
+"[agents]
+max_threads = 4
+max_depth = 1
+"
 
 create_file_if_missing ".codex/skills/domain-analyst/SKILL.md" \
 "---
@@ -659,6 +692,62 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 요청: 탐색 근거 부족, project-setup.md 미작성 → 흐름: 프로젝트 성격 불명 → 시작: project-setup.md 템플릿 제공 및 작성 안내 후 대기
 - 요청: 탐색 근거 부족, project-setup.md 작성됨 → 흐름: 목표·성격 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)
 "
+
+create_file_if_missing ".codex/agents/domain-analyst.toml" \
+"name = \"domain_analyst\"
+description = \"저장소를 읽고 domain-analysis.md를 최종 분석 문서로 작성하는 분석 에이전트.\"
+model = \"gpt-5.4\"
+model_reasoning_effort = \"high\"
+sandbox_mode = \"workspace-write\"
+developer_instructions = \"\"\"\n저장소를 직접 읽고 domain-analysis.md를 최종 분석 문서로 작성한다.\nexploration-notes.md는 후보 단서로만 보고, 실제 코드와 문서를 다시 읽어 핵심 흐름과 위험 변경 유형을 고정한다.\nqa-designer, harness-architect, orchestrator가 공통으로 참조할 수 있는 분석 결과를 남긴다.\n\"\"\""
+
+create_file_if_missing ".codex/agents/harness-architect.toml" \
+"name = \"harness_architect\"
+description = \"하네스 메타시스템 구조, 역할 경계, handoff 기준을 설계하는 아키텍트 에이전트.\"
+model = \"gpt-5.4\"
+model_reasoning_effort = \"high\"
+sandbox_mode = \"workspace-write\"
+developer_instructions = \"\"\"\n저장소 입력 문서를 바탕으로 harness-architecture.md와 team-structure.md를 메타시스템 문서로 작성한다.\n실행 모드와 아키텍처 패턴 선택을 고정하고, 역할 경계와 handoff 기준을 분명히 적는다.\n\"\"\""
+
+create_file_if_missing ".codex/agents/skill-scaffolder.toml" \
+"name = \"skill_scaffolder\"
+description = \"로컬 스킬 설명 drift와 계약 불일치를 정렬하는 보조 에이전트.\"
+model = \"gpt-5.4-mini\"
+model_reasoning_effort = \"medium\"
+sandbox_mode = \"workspace-write\"
+developer_instructions = \"\"\"\n핵심 문서 작성 흐름이 아니라 스킬 계약 정렬이 필요한 예외 상황에서만 개입한다.\n.codex/skills/*의 설명, 책임, 트리거가 현재 메타시스템 구조와 어긋나는 지점을 정렬한다.\n\"\"\""
+
+create_file_if_missing ".codex/agents/qa-designer.toml" \
+"name = \"qa_designer\"
+description = \"자동/수동 검증 분리와 변경 유형별 체크 기준을 작성하는 QA 설계 에이전트.\"
+model = \"gpt-5.4\"
+model_reasoning_effort = \"high\"
+sandbox_mode = \"workspace-write\"
+developer_instructions = \"\"\"\nqa-strategy.md를 최종 QA 전략 문서로 작성한다.\n자동과 수동 검증을 나누고, 승격 기준과 변경 유형별 체크 기준을 validator와 orchestrator가 공통으로 쓸 수 있게 고정한다.\n\"\"\""
+
+create_file_if_missing ".codex/agents/orchestrator.toml" \
+"name = \"orchestrator\"
+description = \"시작점, 재진입, 종료 조건을 설계하는 오케스트레이션 에이전트.\"
+model = \"gpt-5.4\"
+model_reasoning_effort = \"high\"
+sandbox_mode = \"workspace-write\"
+developer_instructions = \"\"\"\n요청 유형별 시작점과 재진입 기준을 orchestration-plan.md와 team-playbook.md에 작성한다.\n팀 운영 원칙과 종료 조건을 실제 하네스 운영 흐름으로 고정한다.\n\"\"\""
+
+create_file_if_missing ".codex/agents/validator.toml" \
+"name = \"validator\"
+description = \"저장소 입력 문서와 메타시스템 문서의 운영 계약을 감사하는 검증 에이전트.\"
+model = \"gpt-5.4\"
+model_reasoning_effort = \"high\"
+sandbox_mode = \"read-only\"
+developer_instructions = \"\"\"\n저장소 입력 문서와 메타시스템 문서의 목적 혼합, generic 회귀, 구조 누락을 찾는다.\n어떤 역할이 어느 문서를 다시 써야 하는지 재작성 책임을 분명히 지정한다.\n\"\"\""
+
+create_file_if_missing ".codex/agents/run-harness.toml" \
+"name = \"run_harness\"
+description = \"현재 상태를 읽고 어떤 Phase와 어떤 역할 조합부터 시작할지 결정하는 진입 에이전트.\"
+model = \"gpt-5.4\"
+model_reasoning_effort = \"high\"
+sandbox_mode = \"workspace-write\"
+developer_instructions = \"\"\"\n현재 .harness/reports/*, .codex/config.toml, .codex/agents/*.toml, .codex/skills/*, 로그 상태를 읽는다.\n어떤 저장소 입력 문서 또는 메타시스템 문서부터 다시 써야 하는지와 어느 Phase부터 다시 시작해야 하는지 결정한다.\n\"\"\""
 
 create_file_if_missing ".harness/logging-policy.md" \
 "# 로그 정책

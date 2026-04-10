@@ -30,8 +30,8 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 1. 현재 저장소 내부에 **프로젝트 로컬 실행 하네스 팀**을 만든다.
 2. 전역 `AGENTS.md`를 생성하거나 수정하지 않는다.
 3. 기존 저장소에 `AGENTS.md`가 있으면 덮어쓰기보다 감사와 정렬을 앞에 둔다.
-4. 하네스의 본체는 로컬 역할 스킬, `run-harness`, 오케스트레이션 구조다.
-5. 역할 팀은 로컬 스킬과 orchestrator 중심 흐름으로 구성한다.
+4. 하네스의 본체는 로컬 Codex 에이전트 설정, 로컬 역할 스킬, `run-harness`, 오케스트레이션 구조다.
+5. 역할 팀은 `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`의 실행 계약을 함께 가진다.
 6. QA와 validator는 실행 하네스 팀의 필수 일부로 다룬다.
 7. `run-harness`는 로컬 역할 팀을 실제로 기동하는 진입점으로 다룬다.
 8. 리포트는 한 종류가 아니다. 저장소 입력 문서와 하네스 메타시스템 문서를 분리해서 다룬다.
@@ -113,7 +113,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 
 하네스 스킬이 트리거되면, 실제 생성 전에 현재 저장소의 하네스 현황을 앞에서 감사한다.
 
-1. `.codex/skills/`, `.harness/reports/`, `.harness/logs/`의 존재와 현재 파일 수를 앞에서 읽는다.
+1. `AGENTS.md`, `.codex/config.toml`, `.codex/agents/`, `.codex/skills/`, `.harness/reports/`, `.harness/logs/`의 존재와 현재 파일 수를 앞에서 읽는다.
 2. 저장소 루트에 `AGENTS.md`가 있으면 상위 운영 계약 문서로 읽고 현재 하네스와 충돌하는지 함께 본다.
 3. 현황에 따라 실행 모드를 나눈다.
 4. 기존 하네스가 있으면 덮어쓰기보다 필요한 문서를 다시 쓰는 쪽을 앞에 두고, drift 가능성을 읽는다.
@@ -172,6 +172,20 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - `.codex/skills/orchestrator/SKILL.md`
 - `.codex/skills/validator/SKILL.md`
 - `.codex/skills/run-harness/SKILL.md`
+
+### 프로젝트 로컬 에이전트 정의
+
+- `AGENTS.md`
+- `.codex/config.toml`
+- `.codex/agents/domain-analyst.toml`
+- `.codex/agents/harness-architect.toml`
+- `.codex/agents/skill-scaffolder.toml`
+- `.codex/agents/qa-designer.toml`
+- `.codex/agents/orchestrator.toml`
+- `.codex/agents/validator.toml`
+- `.codex/agents/run-harness.toml`
+
+`AGENTS.md`와 `.codex/agents/*.toml`은 `누가 하는가`, 스킬은 `어떻게 하는가`를 담당한다.
 
 ### 문서 계층
 

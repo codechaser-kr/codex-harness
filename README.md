@@ -267,6 +267,16 @@ repo/
 - run-harness 출력 계약과 orchestration 흐름 설명이 서로 다름
 - 보고서는 존재하지만 저장소 고유 근거나 도메인 밀도가 사라짐
 
+## 운영 루프
+
+이 하네스는 한 번 생성하고 끝나는 구조가 아니라, 아래 세 루프를 계속 도는 메타시스템입니다.
+
+- `drift`: 현재 약해진 역할, 문서, 운영 계약, 로그 정합성을 읽습니다.
+- `sync`: `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`, 문서 계층이 같은 운영 계약을 말하도록 다시 맞춥니다.
+- `evolve`: 반복 패턴, 검증 비용, handoff 병목을 바탕으로 역할 팀, 실행 모드, 실행 패턴을 다시 설계합니다.
+
+`run-harness`는 이 루프의 진입점이고, `validator`는 운영 계약 감사자이며, `skill-scaffolder`는 sync가 필요한 예외 상황에서만 보조적으로 개입합니다.
+
 ## 고급 스크립트
 
 전역 설치된 `harness` 스킬은 다음 스크립트를 사용합니다.

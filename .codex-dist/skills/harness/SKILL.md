@@ -39,6 +39,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 10. 탐색 근거가 아직 부족하면, `run-harness`가 사용자 확인 질문부터 제시하고 그 답을 다음 단계 입력으로 연결한다.
 11. 언어, 구조, 경계 해석은 **코드베이스 탐색 결과**를 기준으로 한다.
 12. 하네스의 핵심 입력은 탐색으로 수집한 근거와 그 해석이다.
+13. drift / sync / evolve는 부가 유지보수가 아니라 메타시스템의 핵심 운영 루프다.
 
 ## 작성 언어 원칙
 
@@ -165,12 +166,26 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - run-harness, orchestrator, validator의 역할 설명이 서로 충돌하는가
 - 기존 `AGENTS.md`의 상위 운영 규칙이 현재 하네스의 진입점, 상태 모드, 실행 모드, 재구성 원칙과 충돌하는가
 
+### 운영 루프
+
+- `drift`: 산출물, 역할 설명, 운영 규칙이 서로 어긋난 상태를 읽고 재진입 지점을 정한다.
+- `sync`: `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`, 문서 계층이 같은 운영 계약을 말하도록 다시 맞춘다.
+- `evolve`: 반복 패턴, 검증 비용, handoff 병목을 바탕으로 역할 팀, 실행 모드, 실행 패턴을 다시 설계한다.
+
+이 세 루프는 부가 기능이 아니라 `run-harness`와 `validator`가 계속 다루는 메타시스템 본체다.
+
 ## 기본 실행 순서
 
 - 새 프로젝트 하네스 구성: `bash scripts/harness-init.sh` → 역할 기반 `.harness/reports/*` 문서 재작성 → 필요 시 역할 재호출 → `bash scripts/harness-verify.sh`
 - 기존 프로젝트 확장: 하네스 현황 감사 → `bash scripts/harness-update.sh` → 역할 기반 `.harness/reports/*` 문서 재작성 → `bash scripts/harness-verify.sh`
 - 기존 프로젝트의 구조 누락 정리: 하네스 현황 감사 → 필요한 경우에만 `bash scripts/harness-init.sh` 또는 명시적 재구성 → 역할 기반 `.harness/reports/*` 문서 재작성 → `bash scripts/harness-verify.sh`
 - 기존 프로젝트의 운영 유지보수/감사: 하네스 현황 감사 → 필요 시 `bash scripts/harness-update.sh` → 역할 기반 `.harness/reports/*` 문서 재작성 → `bash scripts/harness-verify.sh`
+
+운영 유지보수에서는 아래 루프를 계속 돈다.
+
+- drift: 현재 약해진 문서/역할/계약을 읽는다.
+- sync: 상위 운영 계약과 로컬 하네스 자산을 다시 맞춘다.
+- evolve: 반복 패턴과 병목을 바탕으로 팀 구조나 패턴 선택을 다시 고른다.
 
 ---
 
@@ -319,6 +334,14 @@ QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 8. 가능하면 `without-skill` 기준선과 비교해 시작 역할 해석, 질문 절제, handoff, 저장소 근거 연결, 검증 가능성이 실제로 나아졌는지 본다.
 
 테스트/검증 관점은 `references/skill-testing-guide.md`, 품질 비교 기준은 `references/quality-evaluation-guide.md`를 참고한다.
+
+### 운영 루프: drift / sync / evolve
+
+1. `drift`: 현재 약해진 역할, 문서, 운영 계약, 로그 정합성을 읽는다.
+2. `sync`: `AGENTS.md`, 에이전트 정의, 역할 스킬, 문서 계층을 같은 계약으로 다시 맞춘다.
+3. `evolve`: 반복 패턴, 검증 비용, handoff 병목을 바탕으로 역할 팀, 실행 모드, 실행 패턴을 다시 고른다.
+
+`run-harness`는 이 루프의 진입점이고, `validator`는 감사자이며, `skill-scaffolder`는 sync가 필요한 예외 상황에서만 보조적으로 개입한다.
 
 ---
 

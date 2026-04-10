@@ -287,6 +287,7 @@ check_dir ".harness/logs"
 check_dir "$HARNESS_REFERENCE_DIR"
 check_file "$HARNESS_REFERENCE_DIR/agent-design-patterns.md"
 check_file "$HARNESS_REFERENCE_DIR/exploration-model.md"
+check_file "$HARNESS_REFERENCE_DIR/meta-system-maturity-guide.md"
 check_file "$HARNESS_REFERENCE_DIR/orchestrator-template.md"
 check_file "$HARNESS_REFERENCE_DIR/skill-writing-guide.md"
 check_file "$HARNESS_REFERENCE_DIR/skill-testing-guide.md"
@@ -371,6 +372,11 @@ for file in "${SKILL_FILES[@]}"; do
     check_contains_hint "$file" "## 운영 규칙" "운영 규칙 섹션"
   fi
 done
+
+check_contains_hint ".codex/skills/validator/SKILL.md" "meta-system-maturity-guide.md" "validator 성숙도 기준 연결"
+check_contains_hint ".codex/skills/validator/SKILL.md" "운영 가능 / 재작성 필요 / 재구성 필요" "validator 상태 판정 계약"
+check_contains_hint ".codex/skills/run-harness/SKILL.md" "meta-system-maturity-guide.md" "run-harness 성숙도 기준 연결"
+check_contains_hint ".codex/skills/run-harness/SKILL.md" "운영 가능 / 재작성 필요 / 재구성 필요" "run-harness 상태 판정 계약"
 
 # 로그 구조
 LOG_FILES=(

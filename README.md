@@ -145,7 +145,6 @@ repo/
 - `skill-scaffolder`: 로컬 스킬 설명 drift가 생겼을 때만 보조적으로 정렬
 - `qa-designer`: 저장소 기준의 QA 전략과 승격 기준 작성
 - `orchestrator`: 하네스 오케스트레이션과 재진입 구조 작성
-- `validator`: 문서 누락, generic 회귀, 구조 약점을 읽는 역할
 - `validator`: 운영 계약, drift, 역할 정렬 상태를 감사하는 역할
 - `run-harness`: 현재 상태를 보고 어떤 문서부터 다시 써야 하는지 정하는 진입점
 
@@ -302,6 +301,7 @@ repo/
 - 완료로 보기 전에 `validator` 감사와 `harness-verify.sh`를 모두 거칩니다.
 - 역할 재작성 없이 `harness-verify.sh`를 먼저 통과시키는 흐름은 정상 완료로 보지 않습니다.
 - `harness-verify.sh`가 실패하면 구성이 완료된 것으로 보지 않습니다.
+- `run-harness`와 `validator`는 현재 상태를 `운영 가능 / 재작성 필요 / 재구성 필요` 중 하나로 설명할 수 있어야 합니다.
 
 ## 로그 운영
 

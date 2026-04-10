@@ -147,6 +147,8 @@ repo/
 
 즉 최종 역할 이름은 저장소마다 달라질 수 있고, `team-spec`에는 왜 seed 역할명을 유지하거나 버렸는지 도메인 근거가 함께 남아야 합니다.
 
+권장 형식은 `role_id`는 snake_case, 표시 이름과 파일명은 kebab-case입니다. 중요한 것은 형식 자체보다도, 역할명이 저장소 고유 용어와 실패 경계를 직접 드러내야 한다는 점입니다.
+
 예:
 
 - 결제 시스템: `payment-dev`, `billing-reviewer`, `checkout-qa`

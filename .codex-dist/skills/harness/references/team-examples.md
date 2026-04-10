@@ -215,6 +215,33 @@ CLI는 사용자 흐름이 비교적 단순한 경우가 많기 때문에,
 
 ---
 
+## 역할명 작명 예시
+
+프로젝트 특화 팀에서는 seed 이름보다 저장소 용어가 먼저 보여야 한다.
+
+좋은 예:
+
+- `payment-dev`
+- `billing-reviewer`
+- `checkout-qa`
+- `desktop-runtime-dev`
+- `ipc-reviewer`
+- `release-orchestrator`
+
+피해야 할 예:
+
+- `core-agent`
+- `smart-worker`
+- `specialist-1`
+- `project-helper`
+
+이유:
+
+- 좋은 이름은 어떤 경계와 실패 비용을 다루는지 바로 드러낸다.
+- 나쁜 이름은 역할 책임을 숨기고, Phase 3 생성물에서도 generic 팀처럼 보이게 만든다.
+
+---
+
 ## 역할 수를 줄여야 하는 경우
 
 다음과 같은 경우에는 기본 5개 역할을 모두 유지하지 않아도 된다.

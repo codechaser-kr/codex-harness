@@ -174,6 +174,14 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 - 이 팀이 먼저 다뤄야 할 요청 유형:
 - seed 역할 이름을 그대로 쓰기 어려운 이유:
 
+## 역할명 설계 메모
+
+- 역할명은 도메인 명사 + 책임 동사/역할 조합을 우선합니다.
+- 예: \`payment-dev\`, \`billing-reviewer\`, \`checkout-qa\`, \`desktop-runtime-dev\`, \`ipc-reviewer\`
+- seed 이름을 유지한다면 왜 범용 이름이 더 적절한지 적습니다.
+- 새 역할명을 만들었다면 어떤 seed 역할을 대체하는지 함께 적습니다.
+- \`role_id\`는 snake_case, 표시 이름과 파일/디렉토리명은 kebab-case를 기본으로 둡니다.
+
 ## 팀 설계 결정
 
 - 중심 역할:
@@ -209,6 +217,8 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 - \`.codex/agents/*.toml\`은 역할 식별, 모델, sandbox, 짧은 실행 설명을 담습니다.
 - \`.codex/skills/*\`는 역할별 절차, 입력/출력, handoff, 완료 기준을 담습니다.
 - 생성기보다 team-spec이 우선하며, 파일명/역할명/책임 범위가 다르면 team-spec 기준으로 다시 생성합니다.
+- 프로젝트 특화 역할을 만들 때는 seed 이름보다 저장소 고유 용어를 우선합니다.
+- 같은 역할을 서로 다른 표기로 중복 정의하지 않습니다. 예: \`payment_dev\`, \`payment-dev\`, \`payments-dev\`
 
 ## seed 역할 인벤토리
 
@@ -225,6 +235,11 @@ orchestrator|orchestrator|orchestrator|gpt-5.4|high|workspace-write|Choose start
 validator|validator|validator|gpt-5.4|high|read-only|Audit operating contracts, drift, and rewrite ownership.
 run_harness|run-harness|run-harness|gpt-5.4|high|workspace-write|Entry agent that chooses phase, mode, pattern, and next roles.
 <!-- team-spec-roles:end -->
+
+프로젝트 특화 역할 예시:
+
+- \`payment_dev|payment-dev|payment-dev|gpt-5.4|high|workspace-write|Implement payment flow changes and write payment rollout notes.\`
+- \`billing_reviewer|billing-reviewer|billing-reviewer|gpt-5.4|high|read-only|Review billing contract changes and regression risks.\`
 
 ## 작성 메모
 

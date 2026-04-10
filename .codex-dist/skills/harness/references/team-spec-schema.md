@@ -71,6 +71,13 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 
 `role_id|display_name|agent_file|model|reasoning|sandbox|description`
 
+형식 규칙은 아래를 기본으로 한다.
+
+- `role_id`: snake_case
+- `display_name`: kebab-case 또는 사람이 읽는 짧은 역할명
+- `agent_file`: kebab-case
+- seed 역할 유지 여부와 대체 관계는 기계 블록 밖의 설명 섹션에도 남긴다
+
 ### D. 운영 계약
 
 - 기본 시작 역할
@@ -89,6 +96,8 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 - Electron 런타임 중심 프로젝트면 `desktop-runtime-dev`, `ipc-reviewer` 같은 이름이 더 적절할 수 있다.
 - 즉 `domain-analyst`, `qa-designer` 같은 범용 이름은 seed 또는 fallback일 뿐, 최종 정답이 아니다.
 - 따라서 team-spec 상단에는 왜 seed 이름을 유지하거나 버렸는지 설명하는 도메인 근거가 있어야 한다.
+- 이름은 멋있어 보이는 추상어보다, 실제 저장소 용어와 실패 경계를 드러내는 쪽이 우선이다.
+- 같은 역할을 `payment_dev`, `payment-dev`, `payments-dev`처럼 섞어 쓰지 말고 한 표기로 고정한다.
 
 ---
 

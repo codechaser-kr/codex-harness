@@ -10,13 +10,14 @@
 
 ---
 
-## 1. 상태 모드 / 실행 모드 / Phase 게이트
+## 1. 상태 모드 / 실행 모드 / Phase 0~7 게이트
 
 다음 질문에 답해야 할 때 먼저 읽는다.
 
 - 지금 `신규 구축 / 기존 확장 / 운영 유지보수` 중 어디에 가까운가
 - `에이전트 팀 / 단일 역할 / 하이브리드` 중 무엇으로 시작할까
 - 어느 Phase부터 재진입해야 하는가
+- 현재 품질 문제가 어떤 Phase의 부족함에서 시작됐는가
 
 주요 문서:
 
@@ -85,13 +86,14 @@
 
 ---
 
-## 6. 메타시스템 성숙도 평가
+## 6. Phase 7 품질 비교와 메타시스템 성숙도 평가
 
 다음 질문에 답해야 할 때 먼저 읽는다.
 
 - 지금 생성된 하네스가 실제 운영 가능한 수준인가
 - 상위 수준의 메타시스템 축을 갖췄는가
 - 부족한 점이 입력 문서 품질 문제인지, 역할 계약 문제인지, 운영 계약 문제인지
+- 다음 재진입을 어느 Phase로 돌려야 하는가
 
 주요 문서:
 
@@ -144,6 +146,10 @@
   - `reference-map.md`
   - `phase-selection-matrix.md`
   - 필요 시 `agents-sync-guide.md`
+- phase 7 품질 비교와 성숙도 평가:
+  - `reference-map.md`
+  - `quality-evaluation-guide.md`
+  - 필요 시 `meta-system-maturity-guide.md`
 - 패턴 선택:
   - `reference-map.md`
   - `agent-design-patterns.md`

@@ -5,7 +5,7 @@
 목표는 두 가지다.
 
 - `harness-update.sh`가 무조건 전체 보강을 향하지 않게 한다.
-- 변경 유형에 따라 `Phase 0 ~ 6` 중 어디부터 다시 들어갈지 명확히 만든다.
+- 변경 유형에 따라 `Phase 0 ~ 7` 중 어디부터 다시 들어갈지 명확히 만든다.
 
 ---
 
@@ -21,7 +21,7 @@
 
 ### 신규 구축
 
-- `Phase 0 감사` -> `Phase 1 저장소 분석` -> `Phase 2 팀 설계` -> `Phase 3 스킬 생성` -> `Phase 4 QA/검증 구조` -> `Phase 5 문서 가공` -> `Phase 6 verify`
+- `Phase 0 감사` -> `Phase 1 도메인/작업 분석` -> `Phase 2 팀 설계` -> `Phase 3 에이전트/스킬 생성` -> `Phase 4 QA/검증 구조` -> `Phase 5 역할별 최종 작성` -> `Phase 6 verify` -> `Phase 7 품질 비교와 성숙도 평가`
 
 ### 기존 확장
 
@@ -29,7 +29,7 @@
 
 ### 운영 유지보수
 
-- `Phase 0 감사` -> 필요한 `Phase` 재진입 -> `Phase 6 verify`
+- `Phase 0 감사` -> 필요한 `Phase` 재진입 -> `Phase 6 verify` -> 필요 시 `Phase 7 품질 비교와 성숙도 평가`
 
 ### 재구성
 
@@ -41,28 +41,33 @@
 
 ### domain 근거가 약하거나 오래된 경우
 
-- 시작: `Phase 1 저장소 분석`
-- 이후: `Phase 2`, `Phase 4`, `Phase 5`, `Phase 6`
+- 시작: `Phase 1 도메인/작업 분석`
+- 이후: `Phase 2`, `Phase 4`, `Phase 5`, `Phase 6`, 필요 시 `Phase 7`
 
 ### 역할 경계나 구조 설명이 흐린 경우
 
 - 시작: `Phase 2 실행 하네스 팀 설계`
-- 이후: `Phase 3`, `Phase 4`, `Phase 5`, `Phase 6`
+- 이후: `Phase 3`, `Phase 4`, `Phase 5`, `Phase 6`, 필요 시 `Phase 7`
 
 ### 로컬 스킬 설명이나 트리거가 약한 경우
 
 - 시작: `Phase 3 로컬 역할 스킬 생성`
-- 이후: `Phase 4`, `Phase 6`
+- 이후: `Phase 4`, `Phase 6`, 필요 시 `Phase 7`
 
 ### QA 질문과 최소 체크가 약한 경우
 
 - 시작: `Phase 4 QA 및 검증 구조`
-- 이후: `Phase 5`, `Phase 6`
+- 이후: `Phase 5`, `Phase 6`, 필요 시 `Phase 7`
 
 ### orchestration과 handoff가 약한 경우
 
-- 시작: `Phase 5 문서 가공`
-- 이후: `Phase 6`
+- 시작: `Phase 5 역할별 최종 작성`
+- 이후: `Phase 6`, 필요 시 `Phase 7`
+
+### verify는 통과하지만 운영 품질이 약한 경우
+
+- 시작: `Phase 7 품질 비교와 성숙도 평가`
+- 이후: 부족 축에 따라 `Phase 1`~`Phase 5` 중 하나로 재진입
 
 ### AGENTS.md와 하네스 운영 계약이 충돌하는 경우
 
@@ -72,7 +77,7 @@
 ### 로그 정책과 실제 운영 루프가 어긋난 경우
 
 - 시작: `Phase 0 감사`
-- 이후: `Phase 4` 또는 `Phase 5`, 마지막에 `Phase 6`
+- 이후: `Phase 4` 또는 `Phase 5`, 마지막에 `Phase 6`, 필요 시 `Phase 7`
 
 ---
 

@@ -111,7 +111,7 @@ EOF
 generate_assets() {
   local parsed=0
 
-  mkdir -p ".codex" ".codex/agents"
+  mkdir -p ".codex" ".codex/agents" ".codex/skills"
   write_config_header
 
   while IFS='|' read -r role_id display_name agent_file model reasoning sandbox description; do

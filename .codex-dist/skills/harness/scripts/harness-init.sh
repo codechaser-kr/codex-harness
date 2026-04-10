@@ -204,6 +204,37 @@ create_file_if_missing ".codex/config.toml" \
 "[agents]
 max_threads = 4
 max_depth = 1
+
+[agents.default]
+description = \"General-purpose helper.\"
+
+[agents.domain_analyst]
+description = \"Analyze the repository and write domain-analysis.md.\"
+config_file = \"agents/domain-analyst.toml\"
+
+[agents.harness_architect]
+description = \"Design the harness meta-system structure and handoff rules.\"
+config_file = \"agents/harness-architect.toml\"
+
+[agents.skill_scaffolder]
+description = \"Realign local skill contracts when sync drift appears.\"
+config_file = \"agents/skill-scaffolder.toml\"
+
+[agents.qa_designer]
+description = \"Write qa-strategy.md with validation boundaries and escalation rules.\"
+config_file = \"agents/qa-designer.toml\"
+
+[agents.orchestrator]
+description = \"Choose start points, re-entry rules, and team flow.\"
+config_file = \"agents/orchestrator.toml\"
+
+[agents.validator]
+description = \"Audit operating contracts, drift, and rewrite ownership.\"
+config_file = \"agents/validator.toml\"
+
+[agents.run_harness]
+description = \"Entry agent that chooses phase, mode, pattern, and next roles.\"
+config_file = \"agents/run-harness.toml\"
 "
 
 create_file_if_missing ".codex/skills/domain-analyst/SKILL.md" \

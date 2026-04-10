@@ -293,6 +293,18 @@ check_file "$HARNESS_REFERENCE_DIR/skill-testing-guide.md"
 check_file "$HARNESS_REFERENCE_DIR/qa-agent-guide.md"
 check_file "$HARNESS_REFERENCE_DIR/team-examples.md"
 
+check_contains_hint ".codex/config.toml" "^\\[agents\\]$" "config agents 섹션"
+check_contains_hint ".codex/config.toml" "^max_threads = " "config max_threads"
+check_contains_hint ".codex/config.toml" "^\\[agents\\.default\\]$" "config default agent"
+check_contains_hint ".codex/config.toml" "^\\[agents\\.domain_analyst\\]$" "config domain_analyst agent"
+check_contains_hint ".codex/config.toml" "^\\[agents\\.harness_architect\\]$" "config harness_architect agent"
+check_contains_hint ".codex/config.toml" "^\\[agents\\.skill_scaffolder\\]$" "config skill_scaffolder agent"
+check_contains_hint ".codex/config.toml" "^\\[agents\\.qa_designer\\]$" "config qa_designer agent"
+check_contains_hint ".codex/config.toml" "^\\[agents\\.orchestrator\\]$" "config orchestrator agent"
+check_contains_hint ".codex/config.toml" "^\\[agents\\.validator\\]$" "config validator agent"
+check_contains_hint ".codex/config.toml" "^\\[agents\\.run_harness\\]$" "config run_harness agent"
+check_contains_hint ".codex/config.toml" "^config_file = \"agents/" "config agent config_file"
+
 # harness 자동화 스크립트 확인
 DIST_SCRIPT_FILES=(
   "$HARNESS_SCRIPT_DIR/harness-lib.sh"

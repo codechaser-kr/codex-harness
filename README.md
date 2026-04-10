@@ -144,6 +144,7 @@ repo/
 - `qa-designer`: 저장소 기준의 QA 전략과 승격 기준 작성
 - `orchestrator`: 하네스 오케스트레이션과 재진입 구조 작성
 - `validator`: 문서 누락, generic 회귀, 구조 약점을 읽는 역할
+- `validator`: 운영 계약, drift, 역할 정렬 상태를 감사하는 역할
 - `run-harness`: 현재 상태를 보고 어떤 문서부터 다시 써야 하는지 정하는 진입점
 
 `AGENTS.md`와 `.codex/agents/*.toml`은 `누가 하는가`, 역할 스킬은 `어떻게 하는가`를 담당합니다. `orchestrator`는 팀 흐름의 중심이고, `run-harness`는 팀을 실제로 시작하는 엔트리포인트입니다.
@@ -159,7 +160,7 @@ repo/
 4. `domain-analyst`, `qa-designer`가 저장소 입력 문서를 작성합니다.
 5. `harness-architect`, `orchestrator`가 하네스 메타시스템 문서를 작성합니다.
 6. 필요할 때만 `skill-scaffolder`가 로컬 스킬 설명 drift를 정렬합니다.
-7. 마지막에 `validator`와 `harness-verify.sh`로 구조 누락과 generic 회귀를 확인합니다.
+7. 마지막에 `validator`가 운영 계약을 감사하고, `harness-verify.sh`가 파일/구조 기준을 확인합니다.
 
 ## Phase 게이트
 
@@ -179,15 +180,15 @@ repo/
   - 다음 단계 조건: 누가 하는가와 어떻게 하는가가 분리됨
 - `Phase 4 QA 및 검증 구조`
   - 입력: 저장소 입력 문서와 팀 구조
-  - 산출: `qa-strategy.md`, validator 감사 기준
-  - 다음 단계 조건: 자동/수동 검증 분리와 승격 기준이 고정됨
+  - 산출: `qa-strategy.md`, validator 감사 기준, verify 최소 구조 기준
+  - 다음 단계 조건: 자동/수동 검증 분리와 승격 기준이 고정되고 validator가 운영 계약 감사 기준을 가짐
 - `Phase 5 문서 최종 작성`
   - 입력: 입력 문서, 메타시스템 문서, QA 기준, 현재 실행 모드와 패턴
   - 산출: 최종 문서 본문
   - 다음 단계 조건: 문서 부재, 골격 잔존, 목적 혼합이 없어야 함
 - `Phase 6 검증`
   - 입력: 최종 문서, 에이전트 정의, 역할 스킬, 로그 상태
-  - 산출: verify 통과 또는 재작성 대상 역할
+  - 산출: validator 감사 결과, verify 통과 여부, 재작성 대상 역할
   - 다음 단계 조건: `run-harness`가 다음 재진입 지점을 다시 제시할 수 있음
 
 탐색 근거가 아직 부족하면, 위 흐름에 들어가기 전에 `run-harness`가 짧은 사용자 질문을 만들고 그 답을 `domain-analysis`와 이후 오케스트레이션의 입력으로 사용합니다.
@@ -272,7 +273,7 @@ repo/
 
 - `harness-init.sh`: 새 하네스 구조 생성 또는 명시적 재구성
 - `harness-update.sh`: 기존 하네스 구조를 감사한 뒤 필요한 문서와 탐색 근거를 다시 정리
-- `harness-verify.sh`: 필수 구조 검증
+- `harness-verify.sh`: 파일/구조 기준 검증
 - `harness-log.sh`: 세션 로그 기록
 - `harness-session-close.sh`: 세션 종료 로그 정리와 요약/통계 갱신
 - `harness-role-stats.sh`: 누적 로그 기반 역할 호출 빈도 재계산
@@ -286,7 +287,7 @@ repo/
 - 기존 확장이나 운영 유지보수는 `harness-update.sh`를 기본 진입점으로 둡니다.
 - `harness-update.sh`는 `--domain`, `--architecture`, `--qa`, `--orchestration`, `--team-structure`, `--team-playbook`으로 필요한 범위만 갱신할 수 있습니다.
 - `초기` 탐색 상태에서는 질문과 탐색 재읽기가 앞에 놓이고, `제한적` 상태에서는 필요한 문서만 선택 갱신하며, `충분` 상태에서는 더 구체적인 구조와 검증을 적용합니다.
-- 완료로 보기 전에 `harness-verify.sh`를 반드시 실행합니다.
+- 완료로 보기 전에 `validator` 감사와 `harness-verify.sh`를 모두 거칩니다.
 - 역할 재작성 없이 `harness-verify.sh`를 먼저 통과시키는 흐름은 정상 완료로 보지 않습니다.
 - `harness-verify.sh`가 실패하면 구성이 완료된 것으로 보지 않습니다.
 

@@ -157,7 +157,9 @@ repo/
 
 `AGENTS.md`와 `.codex/agents/*.toml`은 `누가 하는가`, 역할 스킬은 `어떻게 하는가`를 담당합니다. 중요한 것은 고정된 역할 이름이 아니라, 타겟 프로젝트에 맞는 역할 집합이 실제로 생성되는 것입니다.
 
-현재 과도기 구조에서는 seed 역할의 상세 SKILL은 기본 템플릿을 유지하지만, `team-spec`에 seed 밖의 새 역할이 추가되면 `Phase 3` 생성기가 해당 역할의 `.codex/skills/*` 기본 스킬도 함께 만듭니다.
+현재 구조에서는 seed 역할의 상세 SKILL을 즉시 제거하지 않습니다. 이유는 `domain-analyst`, `harness-architect`, `qa-designer`, `orchestrator`, `validator`, `run-harness`가 여전히 메타시스템의 기준 계약을 담는 고품질 seed 템플릿이기 때문입니다.
+
+대신 `team-spec`에 seed 밖의 새 역할이 추가되면 `Phase 3` 생성기가 해당 역할의 `.codex/skills/*` 기본 스킬을 만들고, 그 프로젝트에서 실제로 필요한 절차와 출력 계약은 이후 그 역할이 직접 구체화합니다.
 
 ## 동작 방식
 

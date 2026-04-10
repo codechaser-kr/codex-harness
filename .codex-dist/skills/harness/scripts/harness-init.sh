@@ -60,11 +60,6 @@ mkdir -p ".harness/reports"
 bash "$SCRIPT_DIR/harness-explore.sh" "$EXPLORATION_NOTES_FILE" >/dev/null
 EXPLORATION_CONTEXT_LEVEL="$(detect_exploration_context_level "$EXPLORATION_NOTES_FILE")"
 EXPLORATION_ANCHOR_SUMMARY="$(build_exploration_anchor_summary "$EXPLORATION_NOTES_FILE")"
-EXPLORATION_ENTRYPOINT_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "대표 진입점" "추정 불가")"
-EXPLORATION_BOUNDARY_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "주요 코드 경계" "추정 불가")"
-EXPLORATION_TEST_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "테스트 및 검증 자산" "추정 불가")"
-EXPLORATION_CONFIG_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "설정 및 실행 경로" "추정 불가")"
-EXPLORATION_DOMAIN_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "저장소 고유 용어 단서" "추정 불가")"
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
 log "탐색 근거 문서: $EXPLORATION_NOTES_FILE"
@@ -939,6 +934,6 @@ if optional_harness_assets_enabled "$EXPLORATION_NOTES_FILE"; then
 fi
 
 log "프로젝트 로컬 실행 하네스 초기화 완료"
-log "exploration-notes와 로컬 역할 스킬이 준비되었습니다."
+log "루트 기준 AI 탐색 메모와 로컬 역할 스킬이 준비되었습니다."
 log "최종 보고서는 run-harness 또는 역할 스킬이 직접 작성해야 합니다."
 log "다음 단계: 역할이 보고서를 작성한 뒤 harness-verify.sh 를 실행하세요."

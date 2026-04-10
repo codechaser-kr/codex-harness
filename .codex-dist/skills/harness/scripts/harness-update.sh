@@ -134,37 +134,19 @@ mkdir -p "$REPORT_DIR"
 bash "$SCRIPT_DIR/harness-explore.sh" "$EXPLORATION_NOTES_FILE" >/dev/null
 EXPLORATION_CONTEXT_LEVEL="$(detect_exploration_context_level "$EXPLORATION_NOTES_FILE")"
 EXPLORATION_ANCHOR_SUMMARY="$(build_exploration_anchor_summary "$EXPLORATION_NOTES_FILE")"
-EXPLORATION_ENTRYPOINT_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "대표 진입점" "추정 불가")"
-EXPLORATION_BOUNDARY_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "주요 코드 경계" "추정 불가")"
-EXPLORATION_TEST_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "테스트 및 검증 자산" "추정 불가")"
-EXPLORATION_CONFIG_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "설정 및 실행 경로" "추정 불가")"
-EXPLORATION_DOMAIN_HINT="$(build_exploration_section_summary "$EXPLORATION_NOTES_FILE" "저장소 고유 용어 단서" "추정 불가")"
-BOUNDARY_HINT="$EXPLORATION_BOUNDARY_HINT"
-CONFIG_HINT="$EXPLORATION_CONFIG_HINT"
-PROJECT_TYPE_LABEL="$(build_project_type_label "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT")"
-KEY_AXES_HINT="$(build_key_axes_hint "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT" "$EXPLORATION_TEST_HINT" "$CONFIG_HINT")"
-CORE_FLOW_HINT="$(build_core_flow_hint "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT")"
-if [ "$EXPLORATION_ENTRYPOINT_HINT" != "추정 불가" ]; then
-  CORE_FLOW_HINT="$(build_core_flow_summary "$EXPLORATION_ENTRYPOINT_HINT")"
-fi
-DOMAIN_SUMMARY_BLOCK="$(build_domain_summary_block "$EXPLORATION_CONTEXT_LEVEL" "$PROJECT_TYPE_LABEL" "$BOUNDARY_HINT" "$CORE_FLOW_HINT" "$KEY_AXES_HINT" "$CONFIG_HINT")"
-INITIAL_OBSERVATION_LINE="$(build_initial_observation "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT" "$CONFIG_HINT" "$EXPLORATION_DOMAIN_HINT")"
-if [ "$EXPLORATION_DOMAIN_HINT" != "추정 불가" ]; then
-  INITIAL_OBSERVATION_LINE="- 탐색 문서에서 \`$EXPLORATION_DOMAIN_HINT\` 단서를 수집했습니다."
-fi
-NEXT_STEP_DETAIL_LINE="$(build_next_step_line "$EXPLORATION_CONTEXT_LEVEL" "update")"
-DISCOVERY_GUIDANCE="$(build_exploration_guidance "$EXPLORATION_NOTES_FILE" "$EXPLORATION_CONTEXT_LEVEL" "$BOUNDARY_HINT")"
+DISCOVERY_GUIDANCE="$(build_exploration_guidance "$EXPLORATION_NOTES_FILE" "$EXPLORATION_CONTEXT_LEVEL" "")"
 
 if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
-  DISCOVERY_GUIDANCE="현재 탐색 근거만으로는 방향을 좁히기 어렵습니다. run-harness는 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 확인합니다."
-  log "탐색 근거 부족: 사용자 확인 질문부터 정리"
+  DISCOVERY_GUIDANCE="현재는 자동 탐색 메모만 있으므로, run-harness는 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 먼저 확인합니다."
+  log "입력 부족: 사용자 확인 질문부터 정리"
 fi
 
 log "하네스 업데이트 시작"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
 log "탐색 근거 문서: $EXPLORATION_NOTES_FILE"
-log "탐색 상태: $EXPLORATION_CONTEXT_LEVEL"
+log "입력 상태: $EXPLORATION_CONTEXT_LEVEL"
 log "탐색 근거 요약: $EXPLORATION_ANCHOR_SUMMARY"
+log "탐색 메모 안내: $DISCOVERY_GUIDANCE"
 log "선택 갱신 대상: $(build_selected_target_summary)"
 log "다시 호출할 역할: $(build_selected_role_summary)"
 while IFS= read -r audit_line; do
@@ -177,5 +159,5 @@ while IFS= read -r agents_line; do
 done <<< "$AGENTS_AUDIT_SUMMARY"
 
 log "하네스 업데이트 완료"
-log "exploration-notes만 다시 정리되었습니다."
+log "루트 기준 AI 탐색 메모만 다시 정리되었습니다."
 log "선택된 보고서는 위 역할이 직접 다시 작성해야 합니다."

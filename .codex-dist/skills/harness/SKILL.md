@@ -251,7 +251,7 @@ init는 탐색 입력만 만들고, 나머지 문서는 역할 스킬이 직접 
 4. 탐색만으로 부족한 부분은 사용자에게 확인할 질문으로 분리한다.
 
 이 단계의 결과는 실행 하네스 팀의 출발점이 된다.  
-분석 기준은 `references/agent-design-patterns.md`, 탐색 결과 형식은 `references/exploration-model.md`, 상위 컨텍스트 정렬 기준은 `references/agents-sync-guide.md`, 기존 확장 재진입 기준은 `references/phase-selection-matrix.md`를 참고한다.
+분석 기준은 `references/reference-map.md`를 먼저 읽고, 이어서 `references/agent-design-patterns.md`, `references/exploration-model.md`, `references/agents-sync-guide.md`, `references/phase-selection-matrix.md`를 현재 문제 축에 맞게 선택해 참고한다.
 
 ### Phase 2: 실행 하네스 팀 설계
 
@@ -270,7 +270,7 @@ init는 탐색 입력만 만들고, 나머지 문서는 역할 스킬이 직접 
 
 이 단계의 핵심은  
 문서를 늘리는 것이 아니라 **운영 가능한 역할 팀**을 설계하는 것이다.  
-흐름과 위임 기준은 `references/orchestrator-template.md`를 참고한다.
+흐름과 위임 기준은 `references/reference-map.md`를 먼저 읽고, `references/orchestrator-template.md`를 필요할 때 참고한다.
 
 ### Phase 3: 로컬 역할 스킬 생성
 
@@ -288,7 +288,7 @@ init는 탐색 입력만 만들고, 나머지 문서는 역할 스킬이 직접 
 
 `skill-scaffolder`는 핵심 보고서 작성 흐름의 기본 단계가 아니다. 이 역할은 로컬 스킬 설명 drift, 구조 문구 불일치, 스킬 계약 재정렬이 필요할 때만 보조적으로 사용한다.
 
-스킬 작성 기준은 `references/skill-writing-guide.md`를 참고한다.
+스킬 작성 기준은 `references/reference-map.md`, `references/skill-writing-guide.md`를 순서대로 참고한다.
 
 ### Phase 4: QA 및 검증 구조 포함
 
@@ -301,7 +301,7 @@ init는 탐색 입력만 만들고, 나머지 문서는 역할 스킬이 직접 
 3. orchestrator가 각 역할의 입력/출력을 연결할 수 있게 한다.
 4. QA와 validator의 피드백이 다시 구조 재작성으로 이어질 수 있게 한다.
 
-QA 기준은 `references/qa-agent-guide.md`를 참고한다.
+QA 기준은 `references/reference-map.md`, `references/qa-agent-guide.md`를 순서대로 참고한다.
 
 ### Phase 5: `.harness/reports/*` 문서 프로젝트 맞춤 작성
 
@@ -333,7 +333,7 @@ QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 7. 역할 팀 구조가 이후 프로젝트 특화 하네스로 확장 가능한지 본다.
 8. 가능하면 `without-skill` 기준선과 비교해 시작 역할 해석, 질문 절제, handoff, 저장소 근거 연결, 검증 가능성이 실제로 나아졌는지 본다.
 
-테스트/검증 관점은 `references/skill-testing-guide.md`, 품질 비교 기준은 `references/quality-evaluation-guide.md`를 참고한다.
+테스트/검증 관점은 `references/reference-map.md`를 먼저 읽고, `references/skill-testing-guide.md`, `references/quality-evaluation-guide.md`를 현재 문제 축에 맞게 참고한다.
 
 ### 운영 루프: drift / sync / evolve
 

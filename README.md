@@ -97,6 +97,8 @@ repo/
 
 핵심 산출물은 `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`의 로컬 Codex 에이전트 설정, `.codex/skills/*`의 로컬 역할 스킬, 그리고 그 역할이 직접 쓰는 `.harness/reports/*` 문서입니다. `harness-init.sh`는 `exploration-notes.md`, 생성 파이프라인 입력, 로그 구조를 준비하고, 최종 agent/skill 산출은 `Phase 2`와 `Phase 3` 계약을 따라야 합니다. `.harness/logs/*`와 `.harness/logging-policy.md`는 실제 운영 기록과 로그 규칙을 위한 기본 산출물입니다.
 
+현재 구조에서 `.codex/config.toml`과 `.codex/agents/*.toml`은 `harness-init.sh`가 직접 쓰지 않고, 항상 `team-spec`을 읽는 `Phase 3` 생성기가 책임집니다.
+
 운영을 시작하면 초기 생성물 중 일부가 계속 다시 쓰이거나 갱신되고, 운영 결과에 따라 새 파일이 추가될 수도 있습니다. 대표적인 범위는 다음과 같습니다.
 
 - `AGENTS.md`: 상위 운영 계약과 기본 진입 규칙 갱신

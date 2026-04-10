@@ -57,6 +57,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - 최초 하네스 구성 요청이면 반드시 `bash scripts/harness-init.sh`를 앞에 실행한다.
 - `harness-init.sh` 직후 상태는 완료가 아니라 자동 판단 보류 메모와 역할 입력만 준비된 상태로 본다.
 - `harness-init.sh` 다음에는 `Phase 2`가 team-spec을 만들고, `Phase 3`이 그 스펙으로 동적 agent/skill 자산을 생성해야 한다.
+- `.codex/config.toml`과 `.codex/agents/*.toml`은 init 스크립트의 고정 템플릿이 아니라, Phase 3 생성기가 team-spec 기준으로 책임진다.
 - `harness-init.sh`가 고정 agent 파일 세트를 완성본처럼 남기는 구조를 최종 형태로 간주하지 않는다.
 - 하네스 구성이 끝났다고 판단하기 전에 반드시 `bash scripts/harness-verify.sh`를 실행한다.
 - 역할 재작성 없이 `harness-verify.sh`를 먼저 실행해 통과시키려 하지 않는다.

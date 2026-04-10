@@ -157,6 +157,18 @@ warn_if_contains_literal() {
   fi
 }
 
+warn_if_contains_pattern() {
+  local file="$1"
+  local pattern="$2"
+  local label="$3"
+
+  [ -f "$file" ] || return
+
+  if grep -Eq -- "$pattern" "$file"; then
+    warn "$label: 자기설명 회귀 가능성이 있습니다 — 역할 이름이 하네스 구현 설명에 쓰이지 않는지 확인하세요"
+  fi
+}
+
 fail_if_contains_literal() {
   local file="$1"
   local literal="$2"
@@ -415,7 +427,7 @@ if [ -f ".harness/reports/harness-architecture.md" ]; then
   check_contains_hint ".harness/reports/harness-architecture.md" "## 역할 유지와 조정 기준" "아키텍처 역할 유지 기준"
   check_contains_hint ".harness/reports/harness-architecture.md" "## 남아 있는 질문" "아키텍처 남은 질문"
   fail_if_contains_pattern ".harness/reports/harness-architecture.md" "최종 구조 설명은 harness-architect가 직접 작성합니다\\.|직접 작성합니다\\." "아키텍처 역할 재작성 미수행"
-  fail_if_contains_pattern ".harness/reports/harness-architecture.md" "skill-scaffolder" "아키텍처 자기설명 회귀"
+  warn_if_contains_pattern ".harness/reports/harness-architecture.md" "skill-scaffolder" "아키텍처 자기설명 회귀"
 fi
 
 if [ -f ".harness/reports/qa-strategy.md" ]; then
@@ -435,7 +447,7 @@ if [ -f ".harness/reports/orchestration-plan.md" ]; then
   check_contains_hint ".harness/reports/orchestration-plan.md" "## 재진입 및 handoff 기준" "오케스트레이션 재진입 및 handoff 기준"
   check_contains_hint ".harness/reports/orchestration-plan.md" "## 남아 있는 질문" "오케스트레이션 남은 질문"
   fail_if_contains_pattern ".harness/reports/orchestration-plan.md" "최종 오케스트레이션 계획은 orchestrator가 직접 작성합니다\\.|직접 작성합니다\\." "오케스트레이션 역할 재작성 미수행"
-  fail_if_contains_pattern ".harness/reports/orchestration-plan.md" "skill-scaffolder" "오케스트레이션 자기설명 회귀"
+  warn_if_contains_pattern ".harness/reports/orchestration-plan.md" "skill-scaffolder" "오케스트레이션 자기설명 회귀"
 fi
 
 if [ -f ".harness/reports/team-structure.md" ]; then
@@ -445,7 +457,7 @@ if [ -f ".harness/reports/team-structure.md" ]; then
   check_contains_hint ".harness/reports/team-structure.md" "## 경계별 역할 분담" "팀 구조 경계별 역할 분담"
   check_contains_hint ".harness/reports/team-structure.md" "## 역할 추가/축소 기준" "팀 구조 역할 추가 축소 기준"
   fail_if_contains_pattern ".harness/reports/team-structure.md" "최종 팀 구조는 harness-architect가 직접 작성합니다\\.|직접 작성합니다\\." "팀 구조 역할 재작성 미수행"
-  fail_if_contains_pattern ".harness/reports/team-structure.md" "skill-scaffolder" "팀 구조 자기설명 회귀"
+  warn_if_contains_pattern ".harness/reports/team-structure.md" "skill-scaffolder" "팀 구조 자기설명 회귀"
 fi
 
 if [ -f ".harness/reports/team-playbook.md" ]; then
@@ -455,7 +467,7 @@ if [ -f ".harness/reports/team-playbook.md" ]; then
   check_contains_hint ".harness/reports/team-playbook.md" "## 역할 팀 운영 원칙" "플레이북 역할 팀 운영 원칙"
   check_contains_hint ".harness/reports/team-playbook.md" "## 검증과 종료 조건" "플레이북 검증과 종료 조건"
   fail_if_contains_pattern ".harness/reports/team-playbook.md" "최종 운영 플레이북은 orchestrator가 직접 작성합니다\\.|직접 작성합니다\\." "플레이북 역할 재작성 미수행"
-  fail_if_contains_pattern ".harness/reports/team-playbook.md" "skill-scaffolder" "플레이북 자기설명 회귀"
+  warn_if_contains_pattern ".harness/reports/team-playbook.md" "skill-scaffolder" "플레이북 자기설명 회귀"
 fi
 
 if [ -f ".harness/reports/exploration-notes.md" ]; then

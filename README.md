@@ -265,20 +265,20 @@ repo/
 - `오케스트레이션 중심`: handoff와 재진입이 핵심일 때
 - `전문가 풀`: 저장소마다 역할 구성이 크게 달라질 때
 
-패턴은 부가 설명이 아니라 메타시스템의 중심 선택 결과입니다. `run-harness`는 현재 상태에서 어떤 패턴을 먼저 적용할지 제시하고, `harness-architect`는 그 패턴이 왜 맞는지와 handoff 구조를 문서로 고정합니다.
+패턴은 부가 설명이 아니라 메타시스템의 중심 선택 결과입니다. 시작 진입 역할은 현재 상태에서 어떤 패턴을 먼저 적용할지 제시하고, 구조 설계 역할은 그 패턴이 왜 맞는지와 handoff 구조를 문서로 고정합니다.
 
 ### 하네스 현황 감사에서 보는 것
 
 - `.codex/skills/*`가 어느 정도 이미 존재하는가
 - `.harness/reports/*`와 `.harness/logs/*`가 어느 정도 운영되고 있는가
-- run-harness, orchestrator, validator 설명이 현재 저장소와 맞는가
+- 시작 진입 역할, 흐름 조율 역할, 운영 감사 역할 설명이 현재 저장소와 맞는가
 - 문서가 실제 저장소 분석보다 일반론으로 되돌아간 흔적이 있는가
 
 ### drift 예시
 
 - 역할 스킬은 있는데 보고서가 오래된 구조를 설명함
 - 로그 정책은 선택 자산을 말하는데 실제 로그 자산은 전혀 없음
-- run-harness 출력 계약과 orchestration 흐름 설명이 서로 다름
+- 시작 진입 역할 출력 계약과 orchestration 흐름 설명이 서로 다름
 - 보고서는 존재하지만 저장소 고유 근거나 도메인 밀도가 사라짐
 
 ## 운영 루프
@@ -289,7 +289,7 @@ repo/
 - `sync`: `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`, 문서 계층이 같은 운영 계약을 말하도록 다시 맞춥니다.
 - `evolve`: 반복 패턴, 검증 비용, handoff 병목을 바탕으로 역할 팀, 실행 모드, 실행 패턴을 다시 설계합니다.
 
-`run-harness`는 이 루프의 진입점이고, `validator`는 운영 계약 감사자이며, `skill-scaffolder`는 sync가 필요한 예외 상황에서만 보조적으로 개입합니다.
+시작 진입 역할은 이 루프의 진입점이고, 운영 감사 역할은 운영 계약 감사자이며, 스킬 계약 정렬 역할은 sync가 필요한 예외 상황에서만 보조적으로 개입합니다.
 
 ## 고급 스크립트
 
@@ -307,14 +307,14 @@ repo/
 
 - 최초 구성 요청이면 `harness-init.sh`를 앞에 실행합니다.
 - `harness-init.sh` 직후 상태는 완료가 아니라 자동 판단 보류 메모와 역할 입력만 준비된 상태로 봅니다.
-- `run-harness`와 역할 스킬이 `.harness/reports/*`를 직접 작성한 뒤에만 완료 흐름으로 봅니다.
+- 시작 진입 역할과 역할 스킬이 `.harness/reports/*`를 직접 작성한 뒤에만 완료 흐름으로 봅니다.
 - 기존 확장이나 운영 유지보수는 `harness-update.sh`를 기본 진입점으로 둡니다.
 - `harness-update.sh`는 `--domain`, `--architecture`, `--qa`, `--orchestration`, `--team-structure`, `--team-playbook`으로 필요한 범위만 갱신할 수 있습니다.
 - `초기` 입력 상태에서는 질문과 `project-setup.md` 작성이 앞에 놓이고, `제한적` 상태에서는 역할 스킬의 저장소 재독해와 문서 작성이 앞에 놓입니다.
-- 완료로 보기 전에 `validator` 감사와 `harness-verify.sh`를 모두 거칩니다.
+- 완료로 보기 전에 운영 감사 역할의 감사와 `harness-verify.sh`를 모두 거칩니다.
 - 역할 재작성 없이 `harness-verify.sh`를 먼저 통과시키는 흐름은 정상 완료로 보지 않습니다.
 - `harness-verify.sh`가 실패하면 구성이 완료된 것으로 보지 않습니다.
-- `run-harness`와 `validator`는 현재 상태를 `운영 가능 / 재작성 필요 / 재구성 필요` 중 하나로 설명할 수 있어야 합니다.
+- 시작 진입 역할과 운영 감사 역할은 현재 상태를 `운영 가능 / 재작성 필요 / 재구성 필요` 중 하나로 설명할 수 있어야 합니다.
 
 ## 로그 운영
 
@@ -385,7 +385,7 @@ repo/
 권장 절차는 다음과 같습니다.
 
 1. 타겟 프로젝트의 기존 하네스 상태를 먼저 기록합니다.
-2. `harness-init.sh` 또는 `harness-update.sh`/`run-harness`로 필요한 phase부터 다시 들어갑니다.
+2. `harness-init.sh` 또는 `harness-update.sh`/시작 진입 역할로 필요한 phase부터 다시 들어갑니다.
 3. 역할 작성이 끝난 뒤 `harness-verify.sh`를 실행합니다.
 4. verify 통과 후에도 바로 합격 처리하지 않고, `quality-evaluation-guide.md`와 `meta-system-maturity-guide.md` 기준으로 `운영 가능 / 재작성 필요 / 재구성 필요`를 판정합니다.
 5. 판정 결과에 따라 다음 재진입 phase를 정합니다.

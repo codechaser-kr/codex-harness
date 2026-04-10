@@ -5,7 +5,7 @@
 핵심 원칙:
 
 - references는 부록이 아니라 메타시스템 설계 기준 라이브러리다.
-- `run-harness`, 역할 스킬, validator는 이 문서들을 필요할 때 선택적으로 참조한다.
+- 시작 진입 역할, 역할 스킬, 운영 감사 역할은 이 문서들을 필요할 때 선택적으로 참조한다.
 - 모든 문서를 한 번에 읽기보다, 현재 결정하려는 축에 맞는 문서부터 읽는다.
 
 ---
@@ -105,13 +105,13 @@
 
 ---
 
-## 7. validator 감사 기준
+## 7. 운영 감사 기준
 
 다음 질문에 답해야 할 때 먼저 읽는다.
 
-- validator가 verify와 어떻게 다른가
+- 운영 감사 역할이 verify와 어떻게 다른가
 - 운영 계약 감사는 무엇을 봐야 하는가
-- QA와 validator의 경계를 어떻게 나눌까
+- QA와 운영 감사 역할의 경계를 어떻게 나눌까
 
 주요 문서:
 
@@ -159,7 +159,7 @@
   - `agent-design-patterns.md`
   - `team-spec-schema.md`
   - 필요 시 `orchestrator-template.md`
-- validator 감사 강화:
+- 운영 감사 강화:
   - `reference-map.md`
   - `qa-agent-guide.md`
   - `quality-evaluation-guide.md`

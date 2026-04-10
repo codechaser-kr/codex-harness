@@ -216,6 +216,8 @@ assert_contains "$(cat "$HARNESS_REF_DIR/agent-design-patterns.md")" "범용 하
 assert_contains "$(cat "$HARNESS_REF_DIR/agent-design-patterns.md")" $'- domain-analyst\n- harness-architect\n- qa-designer\n- orchestrator\n- validator' "에이전트 패턴 기본 역할 목록"
 assert_contains "$(cat "$HARNESS_REF_DIR/team-examples.md")" "기본 5역할 팀이 자연스럽다." "팀 예시 기본 역할 수"
 assert_contains "$(cat "$HARNESS_REF_DIR/team-examples.md")" $'- domain-analyst\n- harness-architect\n- qa-designer\n- orchestrator\n- validator' "팀 예시 기본 역할 목록"
+assert_contains "$(cat "$HARNESS_REF_DIR/target-evaluation-playbook.md")" "운영 가능" "타겟 평가 플레이북 상태 판정"
+assert_contains "$(cat "$HARNESS_REF_DIR/target-evaluation-playbook.md")" "다음 재진입 phase" "타겟 평가 플레이북 재진입 기준"
 assert_dir "$TMP_ROOT/empty-project/.harness/reports"
 assert_file "$TMP_ROOT/empty-project/.harness/project-setup.md"
 if (

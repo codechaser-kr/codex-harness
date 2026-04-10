@@ -374,6 +374,20 @@ repo/
 
 상위 수준의 메타시스템 성숙도를 목표로 볼 때도 기준은 “문서가 많아졌는가”가 아니라 “에이전트 팀 / 실행 패턴 / 운영 계약이 실제로 살아 있는가”입니다. 이 판단은 `references/meta-system-maturity-guide.md` 기준으로 합니다.
 
+## 타겟 프로젝트 평가
+
+생성기 변경 후에는 실제 타겟 프로젝트에서 재생성과 평가를 함께 해야 합니다.
+
+권장 절차는 다음과 같습니다.
+
+1. 타겟 프로젝트의 기존 하네스 상태를 먼저 기록합니다.
+2. `harness-init.sh` 또는 `harness-update.sh`/`run-harness`로 필요한 phase부터 다시 들어갑니다.
+3. 역할 작성이 끝난 뒤 `harness-verify.sh`를 실행합니다.
+4. verify 통과 후에도 바로 합격 처리하지 않고, `quality-evaluation-guide.md`와 `meta-system-maturity-guide.md` 기준으로 `운영 가능 / 재작성 필요 / 재구성 필요`를 판정합니다.
+5. 판정 결과에 따라 다음 재진입 phase를 정합니다.
+
+구체적인 타겟 프로젝트 절차와 체크리스트는 `references/target-evaluation-playbook.md`를 기준으로 봅니다.
+
 ## references
 
 전역 `harness` 스킬은 다음 참고 문서를 함께 사용합니다.
@@ -385,6 +399,7 @@ repo/
 - `references/skill-testing-guide.md`
 - `references/qa-agent-guide.md`
 - `references/team-examples.md`
+- `references/target-evaluation-playbook.md`
 
 이 문서들은 실행 하네스 팀을 설계하고 다시 쓰기 위한 지식 베이스입니다.
 

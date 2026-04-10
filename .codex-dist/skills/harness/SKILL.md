@@ -513,6 +513,7 @@ QA와 validator는 비슷해 보여도 다르다.
 - `references/skill-testing-guide.md`
 - `references/qa-agent-guide.md`
 - `references/team-examples.md`
+- `references/target-evaluation-playbook.md`
 
 이 문서들은 실행 하네스 팀을 더 잘 설계하고 다시 쓰기 위한 지식 베이스이다.
 이 참고 문서들은 `Codex 중심 메타 프레임워크`의 설계 규칙 집합 역할도 함께 맡는다.

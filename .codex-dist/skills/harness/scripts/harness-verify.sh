@@ -302,6 +302,7 @@ check_file "$HARNESS_REFERENCE_DIR/skill-writing-guide.md"
 check_file "$HARNESS_REFERENCE_DIR/skill-testing-guide.md"
 check_file "$HARNESS_REFERENCE_DIR/qa-agent-guide.md"
 check_file "$HARNESS_REFERENCE_DIR/team-examples.md"
+check_file "$HARNESS_REFERENCE_DIR/target-evaluation-playbook.md"
 
 check_contains_hint ".codex/config.toml" "^\\[agents\\]$" "config agents 섹션"
 check_contains_hint ".codex/config.toml" "^max_threads = " "config max_threads"

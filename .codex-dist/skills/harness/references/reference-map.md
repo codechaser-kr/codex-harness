@@ -99,6 +99,7 @@
 
 - `meta-system-maturity-guide.md`
 - `quality-evaluation-guide.md`
+- `target-evaluation-playbook.md`
 
 ---
 
@@ -149,6 +150,7 @@
 - phase 7 품질 비교와 성숙도 평가:
   - `reference-map.md`
   - `quality-evaluation-guide.md`
+  - `target-evaluation-playbook.md`
   - 필요 시 `meta-system-maturity-guide.md`
 - 패턴 선택:
   - `reference-map.md`

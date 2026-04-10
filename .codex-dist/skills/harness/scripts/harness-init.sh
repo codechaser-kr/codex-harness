@@ -3,7 +3,7 @@
 # 디렉토리, 로컬 역할 스킬, 탐색 문서를 최초 1회 생성합니다.
 # harness-update.sh와 차이:
 #   - harness-init.sh: 디렉토리/스킬/탐색 문서 생성 (기존 파일 유지)
-#   - harness-update.sh: 기존 하네스 구조를 감사한 뒤 탐색 근거를 다시 정리
+#   - harness-update.sh: 기존 하네스 구조를 감사한 뒤 입력 메모와 재작성 대상을 다시 정리
 # 사용 시점: 프로젝트에 처음 하네스를 구성할 때
 set -euo pipefail
 
@@ -62,9 +62,9 @@ EXPLORATION_CONTEXT_LEVEL="$(detect_exploration_context_level "$EXPLORATION_NOTE
 EXPLORATION_ANCHOR_SUMMARY="$(build_exploration_anchor_summary "$EXPLORATION_NOTES_FILE")"
 log "프로젝트 로컬 실행 하네스 초기화 시작: $ROOT_DIR"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
-log "탐색 근거 문서: $EXPLORATION_NOTES_FILE"
-log "탐색 상태: $EXPLORATION_CONTEXT_LEVEL"
-log "탐색 근거 요약: $EXPLORATION_ANCHOR_SUMMARY"
+log "입력 메모 문서: $EXPLORATION_NOTES_FILE"
+log "입력 상태: $EXPLORATION_CONTEXT_LEVEL"
+log "입력 메모 요약: $EXPLORATION_ANCHOR_SUMMARY"
 while IFS= read -r audit_line; do
   [ -n "$audit_line" ] || continue
   log "하네스 감사: $audit_line"
@@ -104,7 +104,7 @@ if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
 
 ## 작성 안내
 
-탐색 근거가 아직 부족해 자동 분석이 제한적입니다.
+입력 정보가 아직 부족해 자동 판단을 보류합니다.
 아래 항목을 채운 뒤 AI에게 다음과 같이 요청하세요:
 
 > project-setup.md를 작성했습니다. 이 내용을 바탕으로 하네스 분석을 시작해주세요.
@@ -187,10 +187,10 @@ create_file_if_missing "AGENTS.md" \
 
 ## 운영 원칙
 
-- \`exploration-notes.md\`는 탐색 입력 문서로 사용합니다.
+- \`exploration-notes.md\`는 자동 판단 보류를 위한 약한 메모로 사용합니다.
 - \`domain-analysis.md\`, \`qa-strategy.md\`는 저장소 입력 문서입니다.
 - \`harness-architecture.md\`, \`orchestration-plan.md\`, \`team-structure.md\`, \`team-playbook.md\`는 하네스 메타시스템 문서입니다.
-- \`harness-init.sh\` 직후 상태는 완료가 아니라 탐색 입력과 역할 정의가 준비된 상태입니다.
+- \`harness-init.sh\` 직후 상태는 완료가 아니라 자동 판단 보류 메모와 역할 정의가 준비된 상태입니다.
 - 최종 문서는 역할 스킬과 에이전트 팀이 직접 작성한 뒤 검증합니다.
 - drift / sync / evolve는 운영 유지보수의 기본 루프입니다.
 "
@@ -645,7 +645,7 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 2. 저장소 입력 문서와 메타시스템 문서가 각각 이미 있는지, 아직 작성되지 않았는지 먼저 가른다.
 3. 요청이 기능 구현, 구조 정리, 공통 모듈 수정, 빌드/검증 변경 중 어디에 가까운지 가른다.
 4. 변경 영향 범위가 단일 모듈인지, 여러 경계나 공통 계층까지 전파되는지 함께 읽는다.
-5. 탐색 근거가 부족하거나 빈 프로젝트에 가까우면 사용자 질문을 남긴다.
+5. 입력 정보가 부족하거나 빈 프로젝트에 가까우면 사용자 질문을 남긴다.
 6. 아래 Phase 중 어디서부터 다시 시작해야 하는지 정한다.
 7. 현재 상태가 drift, sync, evolve 중 어떤 루프에 가까운지도 함께 적는다.
 8. 마지막에 validator 관점의 최소 구조 확인을 남긴다.
@@ -754,7 +754,7 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 시작 역할을 정한 뒤에는 무엇이 바뀌면 다른 시작점이 더 적절해지는지도 짧게 남긴다.
 - 입력 문서나 메타시스템 문서가 비어 있거나 generic 문장만 남아 있으면 \`harness-verify.sh\`보다 역할 재작성부터 앞에 둔다.
 - 성숙도 판단이 \`재구성 필요\`이면 부분 갱신보다 명시적 재구성을 먼저 제안한다.
-- 빈 저장소이거나 탐색 근거가 부족하면, \`.harness/project-setup.md\` 존재 여부부터 읽는다.
+- 빈 저장소이거나 입력 정보가 부족하면, \`.harness/project-setup.md\` 존재 여부부터 읽는다.
 - \`.harness/project-setup.md\`가 작성되어 있으면 그 내용을 domain-analyst의 시작 입력으로 연결한다.
 - 작성되어 있지 않으면 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 먼저 묻고, 파일이 없는 경우 템플릿 내용을 포함하여 \`.harness/project-setup.md\`에 채우도록 안내한다.
 - 사용자 답변이 모이면 그 내용을 domain-analysis와 orchestration-plan의 입력으로 바로 연결한다.
@@ -772,8 +772,8 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 - 요청: \"QA 문서만 다시 작성\" → 흐름: 기존 확장, 단일 보고서 갱신 → 시작: \`harness-update.sh --qa\` 후 qa-designer
 - 요청: \"domain-analysis만 오래됐음\" → 흐름: 기존 확장, 단일 보고서 갱신 → 시작: \`harness-update.sh --domain\` 후 domain-analyst
 - 요청: 역할 스킬은 있는데 보고서가 대부분 비어 있음 → 흐름: 부분 구조 drift → 시작: 명시적 재구성 제안
-- 요청: 탐색 근거 부족, project-setup.md 미작성 → 흐름: 프로젝트 성격 불명 → 시작: project-setup.md 템플릿 제공 및 작성 안내 후 대기
-- 요청: 탐색 근거 부족, project-setup.md 작성됨 → 흐름: 목표·성격 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)
+- 요청: 입력 정보 부족, project-setup.md 미작성 → 흐름: 프로젝트 성격 불명 → 시작: project-setup.md 템플릿 제공 및 작성 안내 후 대기
+- 요청: 입력 정보 부족, project-setup.md 작성됨 → 흐름: 목표·성격 확인됨 → 시작: domain-analyst(project-setup.md 입력 연결)
 "
 
 create_file_if_missing ".codex/agents/domain-analyst.toml" \

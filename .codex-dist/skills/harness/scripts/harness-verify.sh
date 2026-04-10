@@ -256,8 +256,8 @@ EXPLORATION_ANCHOR_SUMMARY="$(build_exploration_anchor_summary "$EXPLORATION_NOT
 
 log "실행 하네스 팀 구조 검증 시작"
 log "harness 기준 경로: $HARNESS_HOME"
-log "탐색 상태: $EXPLORATION_CONTEXT_LEVEL"
-log "탐색 근거 요약: $EXPLORATION_ANCHOR_SUMMARY"
+log "입력 상태: $EXPLORATION_CONTEXT_LEVEL"
+log "입력 메모 요약: $EXPLORATION_ANCHOR_SUMMARY"
 log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
 log "하네스 감사: 기존 로컬 역할 스킬 수: $HARNESS_SKILL_COUNT"
 log "하네스 감사: 기존 보고서 수: $HARNESS_REPORT_COUNT"
@@ -462,11 +462,11 @@ if [ -f ".harness/reports/team-playbook.md" ]; then
 fi
 
 if [ -f ".harness/reports/exploration-notes.md" ]; then
-  check_contains_hint ".harness/reports/exploration-notes.md" "## 상태" "탐색 상태 섹션"
-  check_contains_hint ".harness/reports/exploration-notes.md" "## 현재 입력 상태" "탐색 입력 상태 섹션"
-  check_contains_hint ".harness/reports/exploration-notes.md" "## 역할 팀 메모" "탐색 역할 팀 메모 섹션"
-  check_contains_hint ".harness/reports/exploration-notes.md" "## 다음 확인 질문" "탐색 다음 확인 질문 섹션"
-  check_contains_hint ".harness/reports/exploration-notes.md" "자동 경로 수집은 핵심 판단 근거로 사용하지 않습니다." "탐색 약한 입력 전제"
+  check_contains_hint ".harness/reports/exploration-notes.md" "## 상태" "입력 상태 섹션"
+  check_contains_hint ".harness/reports/exploration-notes.md" "## 현재 입력 상태" "입력 상태 안내 섹션"
+  check_contains_hint ".harness/reports/exploration-notes.md" "## 역할 팀 메모" "역할 팀 메모 섹션"
+  check_contains_hint ".harness/reports/exploration-notes.md" "## 다음 확인 질문" "다음 확인 질문 섹션"
+  check_contains_hint ".harness/reports/exploration-notes.md" "역할 팀은 이 문서를 출발점 정도로만 보고" "약한 메모 전제"
 fi
 
 if [ -f ".harness/logs/session-log.md" ]; then
@@ -496,9 +496,9 @@ fi
 
 if [ "$FAILURES" -eq 0 ]; then
   if [ "$EXPLORATION_CONTEXT_LEVEL" = "초기" ]; then
-    log "검증 통과: 빈 프로젝트용 하네스 구조와 질문 유도 기본값이 최소 요건을 만족합니다"
+    log "검증 통과: 입력 부족 상태에서의 질문 유도 구조가 최소 요건을 만족합니다"
   elif [ "$EXPLORATION_CONTEXT_LEVEL" = "제한적" ]; then
-    log "검증 통과: 탐색 제한 상태 하네스 구조와 질문 유도 흐름이 최소 요건을 만족합니다"
+    log "검증 통과: 사용자 입력 기반 저장소 재독해 흐름이 최소 요건을 만족합니다"
   else
     log "검증 통과: 실행 하네스 팀 구조가 최소 요건을 만족합니다"
   fi

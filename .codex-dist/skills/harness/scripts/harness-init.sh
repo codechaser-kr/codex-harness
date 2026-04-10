@@ -159,6 +159,12 @@ create_file_if_missing "AGENTS.md" \
 
 이 저장소는 Codex 하네스 메타시스템을 사용합니다.
 
+## seed 팀 안내
+
+- init이 만든 역할 목록과 에이전트 정의는 프로젝트 맞춤 팀이 확정되기 전의 초기 seed입니다.
+- \`Phase 2 프로젝트 맞춤 에이전트 팀 설계\`에서 역할 수, 중심 역할, handoff를 다시 정합니다.
+- \`Phase 3 에이전트 정의 생성\`에서 \`.codex/config.toml\`, \`.codex/agents/*.toml\`, \`.codex/skills/*\`를 그 결정에 맞게 다시 정렬합니다.
+
 ## 기본 진입점
 
 - 하네스 초기화: \`bash ~/.codex/skills/harness/scripts/harness-init.sh\`
@@ -196,7 +202,10 @@ create_file_if_missing "AGENTS.md" \
 "
 
 create_file_if_missing ".codex/config.toml" \
-"[agents]
+"# 초기 seed 에이전트 팀 설정
+# Phase 2에서 팀 구조를 정한 뒤 Phase 3에서 이 파일을 프로젝트 맞춤 구성으로 다시 정렬합니다.
+
+[agents]
 max_threads = 4
 max_depth = 1
 
@@ -783,7 +792,9 @@ description: 프로젝트 로컬 실행 하네스 팀을 실제로 기동하는 
 "
 
 create_file_if_missing ".codex/agents/domain-analyst.toml" \
-"name = \"domain_analyst\"
+"# 초기 seed 정의
+# Phase 2/3에서 프로젝트 맞춤 역할 체계에 맞게 이름, 설명, 지침을 다시 정렬합니다.
+name = \"domain_analyst\"
 description = \"저장소를 읽고 domain-analysis.md를 최종 분석 문서로 작성하는 분석 에이전트.\"
 model = \"gpt-5.4\"
 model_reasoning_effort = \"high\"
@@ -791,7 +802,9 @@ sandbox_mode = \"workspace-write\"
 developer_instructions = \"\"\"\n저장소를 직접 읽고 domain-analysis.md를 최종 분석 문서로 작성한다.\nexploration-notes.md는 자동 판단을 보류하는 약한 메모로만 보고, 실제 코드와 문서를 다시 읽어 핵심 흐름과 위험 변경 유형을 고정한다.\nqa-designer, harness-architect, orchestrator가 공통으로 참조할 수 있는 분석 결과를 남긴다.\n\"\"\""
 
 create_file_if_missing ".codex/agents/harness-architect.toml" \
-"name = \"harness_architect\"
+"# 초기 seed 정의
+# Phase 2/3에서 프로젝트 맞춤 역할 체계에 맞게 이름, 설명, 지침을 다시 정렬합니다.
+name = \"harness_architect\"
 description = \"하네스 메타시스템 구조, 역할 경계, handoff 기준을 설계하는 아키텍트 에이전트.\"
 model = \"gpt-5.4\"
 model_reasoning_effort = \"high\"
@@ -799,7 +812,9 @@ sandbox_mode = \"workspace-write\"
 developer_instructions = \"\"\"\n저장소 입력 문서를 바탕으로 harness-architecture.md와 team-structure.md를 메타시스템 문서로 작성한다.\n실행 모드와 아키텍처 패턴 선택을 먼저 고정하고, 왜 그 패턴이 현재 저장소와 요청에 맞는지부터 적는다.\n그 다음 역할 경계와 handoff 기준을 분명히 적는다.\n\"\"\""
 
 create_file_if_missing ".codex/agents/skill-scaffolder.toml" \
-"name = \"skill_scaffolder\"
+"# 초기 seed 정의
+# Phase 2/3에서 프로젝트 맞춤 역할 체계에 맞게 이름, 설명, 지침을 다시 정렬합니다.
+name = \"skill_scaffolder\"
 description = \"로컬 스킬 설명 drift와 계약 불일치를 정렬하는 보조 에이전트.\"
 model = \"gpt-5.4-mini\"
 model_reasoning_effort = \"medium\"
@@ -807,7 +822,9 @@ sandbox_mode = \"workspace-write\"
 developer_instructions = \"\"\"\n핵심 문서 작성 흐름이 아니라 sync 루프에서 스킬 계약 정렬이 필요한 예외 상황에서만 개입한다.\n.codex/skills/*의 설명, 책임, 트리거가 현재 메타시스템 구조와 어긋나는 지점을 정렬한다.\n\"\"\""
 
 create_file_if_missing ".codex/agents/qa-designer.toml" \
-"name = \"qa_designer\"
+"# 초기 seed 정의
+# Phase 2/3에서 프로젝트 맞춤 역할 체계에 맞게 이름, 설명, 지침을 다시 정렬합니다.
+name = \"qa_designer\"
 description = \"자동/수동 검증 분리와 변경 유형별 체크 기준을 작성하는 QA 설계 에이전트.\"
 model = \"gpt-5.4\"
 model_reasoning_effort = \"high\"
@@ -815,7 +832,9 @@ sandbox_mode = \"workspace-write\"
 developer_instructions = \"\"\"\nqa-strategy.md를 최종 QA 전략 문서로 작성한다.\n자동과 수동 검증을 나누고, 승격 기준과 변경 유형별 체크 기준을 validator와 orchestrator가 공통으로 쓸 수 있게 고정한다.\n\"\"\""
 
 create_file_if_missing ".codex/agents/orchestrator.toml" \
-"name = \"orchestrator\"
+"# 초기 seed 정의
+# Phase 2/3에서 프로젝트 맞춤 역할 체계에 맞게 이름, 설명, 지침을 다시 정렬합니다.
+name = \"orchestrator\"
 description = \"시작점, 재진입, 종료 조건을 설계하는 오케스트레이션 에이전트.\"
 model = \"gpt-5.4\"
 model_reasoning_effort = \"high\"
@@ -823,7 +842,9 @@ sandbox_mode = \"workspace-write\"
 developer_instructions = \"\"\"\n요청 유형별 시작점과 재진입 기준을 orchestration-plan.md와 team-playbook.md에 작성한다.\n팀 운영 원칙과 종료 조건을 실제 하네스 운영 흐름으로 고정한다.\n\"\"\""
 
 create_file_if_missing ".codex/agents/validator.toml" \
-"name = \"validator\"
+"# 초기 seed 정의
+# Phase 2/3에서 프로젝트 맞춤 역할 체계에 맞게 이름, 설명, 지침을 다시 정렬합니다.
+name = \"validator\"
 description = \"저장소 입력 문서와 메타시스템 문서의 운영 계약을 감사하는 검증 에이전트.\"
 model = \"gpt-5.4\"
 model_reasoning_effort = \"high\"
@@ -831,7 +852,9 @@ sandbox_mode = \"read-only\"
 developer_instructions = \"\"\"\n저장소 입력 문서와 메타시스템 문서의 목적 혼합, 실행 모드/패턴 drift, phase 게이트 누락, sync 불일치, evolve 필요 신호를 찾는다.\nverify가 맡는 파일/구조 문제와 validator가 맡는 운영 계약 문제를 구분한다.\n어떤 역할이 어느 문서를 다시 써야 하는지 재작성 책임을 분명히 지정한다.\n\"\"\""
 
 create_file_if_missing ".codex/agents/run-harness.toml" \
-"name = \"run_harness\"
+"# 초기 seed 정의
+# Phase 2/3에서 프로젝트 맞춤 역할 체계에 맞게 이름, 설명, 지침을 다시 정렬합니다.
+name = \"run_harness\"
 description = \"현재 상태를 읽고 어떤 Phase와 어떤 역할 조합부터 시작할지 결정하는 진입 에이전트.\"
 model = \"gpt-5.4\"
 model_reasoning_effort = \"high\"

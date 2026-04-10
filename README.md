@@ -15,8 +15,10 @@
 
 ## 설계 원칙
 
-- 하네스의 본체는 문서가 아니라 역할 팀입니다.
-- `.harness/reports` 문서는 프로젝트 운영 기준을 고정하고 수정하기 위한 핵심 산출물입니다.
+- 하네스의 본체는 역할 스킬, `run-harness`, 오케스트레이션 구조입니다.
+- `.harness/reports`는 한 종류가 아닙니다.
+- `exploration-notes.md`, `domain-analysis.md`, `qa-strategy.md`는 저장소 입력 문서입니다.
+- `harness-architecture.md`, `orchestration-plan.md`, `team-structure.md`, `team-playbook.md`는 하네스 메타시스템 문서입니다.
 - QA와 validator는 실행 하네스의 일부입니다.
 - 특정 프레임워크에 과하게 고정하지 않습니다.
 - 프로젝트별로 확장 가능한 구조를 기본값으로 둡니다.
@@ -79,12 +81,14 @@ repo/
     └── logging-policy.md
 ```
 
-핵심 산출물은 `.codex/skills/*` 아래의 로컬 역할 스킬과, 그 스킬이 직접 쓰는 `.harness/reports/*` 운영 문서입니다. `harness-init.sh`는 `exploration-notes.md`와 로그 구조만 준비하고, 최종 보고서는 역할 스킬이 직접 작성합니다. `.harness/logs/*`와 `.harness/logging-policy.md`는 실제 운영 기록과 로그 규칙을 위한 기본 산출물입니다.
+핵심 산출물은 `.codex/skills/*` 아래의 로컬 역할 스킬과, 그 스킬이 직접 쓰는 `.harness/reports/*` 문서입니다. `harness-init.sh`는 `exploration-notes.md`와 로그 구조만 준비하고, 나머지 문서는 역할 스킬이 직접 작성합니다. `.harness/logs/*`와 `.harness/logging-policy.md`는 실제 운영 기록과 로그 규칙을 위한 기본 산출물입니다.
 
 운영을 시작하면 초기 생성물 중 일부가 계속 다시 쓰이거나 갱신되고, 운영 결과에 따라 새 파일이 추가될 수도 있습니다. 대표적인 범위는 다음과 같습니다.
 
 - `.codex/skills/*`: 역할 정의와 운영 규칙 갱신
-- `.harness/reports/*`: `exploration-notes.md`를 시작으로, 이후 역할 스킬이 직접 작성
+- `.harness/reports/exploration-notes.md`: 탐색 입력 문서
+- `.harness/reports/domain-analysis.md`, `.harness/reports/qa-strategy.md`: 저장소 분석 입력 문서
+- `.harness/reports/harness-architecture.md`, `.harness/reports/orchestration-plan.md`, `.harness/reports/team-structure.md`, `.harness/reports/team-playbook.md`: 하네스 메타시스템 문서
 - `.harness/logs/*`: 세션 로그, 이벤트, 요약, 역할 빈도 갱신
 - `.harness/templates/*.md`: 반복 작업 흐름을 재사용할 수 있게 정리한 템플릿 파일
 - `.harness/reports/template-candidates.md`: 반복 작업 흐름 중 템플릿으로 정리할 만한 후보 분석 결과
@@ -110,21 +114,22 @@ repo/
 완료로 보기 위한 최소 기준은 아래와 같습니다.
 
 - `exploration-notes.md`가 후보 단서 문서로 존재함
-- 핵심 보고서 6종이 실제 저장소 운영 문서로 직접 작성됨
+- `domain-analysis.md`, `qa-strategy.md`가 저장소 입력 문서로 직접 작성됨
+- 비-domain 문서 4종이 하네스 메타시스템 문서로 직접 작성됨
 - `run-harness`가 시작 역할과 다음 역할을 분명히 제시함
 - `harness-verify.sh`가 구조 누락과 골격 잔존 없이 통과함
 
 탐색 근거가 아직 부족한 경우에는 바로 역할을 단정하지 않고, `run-harness`가 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오 같은 사용자 질문을 남긴 뒤 다음 역할 흐름으로 넘어가도록 설계되어 있습니다.
 
-## 기본 역할 팀
+## 기본 역할 스킬
 
 생성되는 기본 역할은 다음과 같습니다.
 
 - `domain-analyst`: 저장소 분석과 핵심 흐름 파악
-- `harness-architect`: 로컬 실행 하네스 구조와 역할 경계 설계
+- `harness-architect`: 하네스 메타시스템 구조와 역할 경계 설계
 - `skill-scaffolder`: 로컬 스킬 설명 drift가 생겼을 때만 보조적으로 정렬
 - `qa-designer`: 저장소 기준의 QA 전략과 승격 기준 작성
-- `orchestrator`: 요청 유형별 시작점, 재진입 기준, 종료 조건 작성
+- `orchestrator`: 하네스 오케스트레이션과 재진입 구조 작성
 - `validator`: 문서 누락, generic 회귀, 구조 약점을 읽는 역할
 - `run-harness`: 현재 상태를 보고 어떤 문서부터 다시 써야 하는지 정하는 진입점
 
@@ -138,13 +143,14 @@ repo/
 1. `harness-init.sh`로 로컬 역할 스킬, 탐색 문서, 로그 구조를 생성합니다.
 2. 저장소를 탐색하고 근거를 수집합니다.
 3. `run-harness`가 현재 상태를 읽고 어느 Phase부터 다시 시작할지 정합니다.
-4. `domain-analyst`, `harness-architect`, `qa-designer`, `orchestrator`가 각 보고서를 직접 최종 문서로 작성합니다.
-5. 필요할 때만 `skill-scaffolder`가 로컬 스킬 설명 drift를 정렬합니다.
-6. 마지막에 `validator`와 `harness-verify.sh`로 구조 누락과 generic 회귀를 확인합니다.
+4. `domain-analyst`, `qa-designer`가 저장소 입력 문서를 작성합니다.
+5. `harness-architect`, `orchestrator`가 하네스 메타시스템 문서를 작성합니다.
+6. 필요할 때만 `skill-scaffolder`가 로컬 스킬 설명 drift를 정렬합니다.
+7. 마지막에 `validator`와 `harness-verify.sh`로 구조 누락과 generic 회귀를 확인합니다.
 
 탐색 근거가 아직 부족하면, 위 흐름에 들어가기 전에 `run-harness`가 짧은 사용자 질문을 만들고 그 답을 `domain-analysis`와 이후 오케스트레이션의 입력으로 사용합니다.
 
-즉, 단순 문서 생성이 아니라 `탐색 -> 역할 설계 -> 스킬 생성 -> 오케스트레이션 -> QA/검증 -> 로그 운영` 흐름을 갖춘 실행 하네스 기반을 만드는 것이 목적입니다.
+즉, 단순 저장소 운영 문서를 만드는 것이 아니라 `탐색 -> 저장소 입력 문서 -> 하네스 메타시스템 문서 -> 스킬/오케스트레이션 -> QA/검증 -> 로그 운영` 흐름을 갖춘 실행 하네스 기반을 만드는 것이 목적입니다.
 
 ## 탐색 기반 분석
 

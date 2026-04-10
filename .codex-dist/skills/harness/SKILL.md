@@ -30,11 +30,11 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 1. 현재 저장소 내부에 **프로젝트 로컬 실행 하네스 팀**을 만든다.
 2. 전역 `AGENTS.md`를 생성하거나 수정하지 않는다.
 3. 기존 저장소에 `AGENTS.md`가 있으면 덮어쓰기보다 감사와 정렬을 앞에 둔다.
-4. 하네스의 본체는 문서가 아니라 **역할 팀**이다.
+4. 하네스의 본체는 로컬 역할 스킬, `run-harness`, 오케스트레이션 구조다.
 5. 역할 팀은 로컬 스킬과 orchestrator 중심 흐름으로 구성한다.
 6. QA와 validator는 실행 하네스 팀의 필수 일부로 다룬다.
 7. `run-harness`는 로컬 역할 팀을 실제로 기동하는 진입점으로 다룬다.
-8. 리포트는 사람이 구조를 이해하고 수정할 수 있게 돕는 동시에, 실제 저장소 운영 기준을 고정하는 핵심 산출물로 다룬다.
+8. 리포트는 한 종류가 아니다. 저장소 입력 문서와 하네스 메타시스템 문서를 분리해서 다룬다.
 9. 역할 수는 많을수록 좋은 것이 아니라, 실제 프로젝트에 맞는 운영 가능한 팀 크기가 중요하다.
 10. 탐색 근거가 아직 부족하면, `run-harness`가 사용자 확인 질문부터 제시하고 그 답을 다음 단계 입력으로 연결한다.
 11. 언어, 구조, 경계 해석은 **코드베이스 탐색 결과**를 기준으로 한다.
@@ -71,9 +71,10 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 하네스 구성이 끝났다고 말하려면 아래가 모두 만족돼야 한다.
 
 1. `exploration-notes.md`가 후보 단서 문서로 존재한다.
-2. `domain-analysis.md`, `harness-architecture.md`, `qa-strategy.md`, `orchestration-plan.md`, `team-structure.md`, `team-playbook.md`가 역할별 최종 결과 문서로 작성돼 있다.
-3. `run-harness`가 현재 상태를 읽고 시작 역할, 다음 역할, 미해결 질문을 분명히 제시할 수 있다.
-4. `scripts/harness-verify.sh`가 구조 누락과 골격 잔존 없이 통과한다.
+2. `domain-analysis.md`, `qa-strategy.md`가 저장소 입력 문서로 작성돼 있다.
+3. `harness-architecture.md`, `orchestration-plan.md`, `team-structure.md`, `team-playbook.md`가 하네스 메타시스템 문서로 작성돼 있다.
+4. `run-harness`가 현재 상태를 읽고 시작 역할, 다음 역할, 미해결 질문을 분명히 제시할 수 있다.
+5. `scripts/harness-verify.sh`가 구조 누락과 골격 잔존 없이 통과한다.
 
 즉 `harness-init.sh`가 끝난 상태는 완료가 아니라 **탐색 입력이 준비된 상태**다.
 
@@ -172,13 +173,23 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - `.codex/skills/validator/SKILL.md`
 - `.codex/skills/run-harness/SKILL.md`
 
-### 운영 문서
+### 문서 계층
 
 - `.harness/reports/exploration-notes.md`
-- 역할 스킬이 직접 생성하는 `.harness/reports/*.md`
+- `.harness/reports/domain-analysis.md`
+- `.harness/reports/qa-strategy.md`
+- `.harness/reports/harness-architecture.md`
+- `.harness/reports/orchestration-plan.md`
+- `.harness/reports/team-structure.md`
+- `.harness/reports/team-playbook.md`
 
-핵심은 역할 스킬과 운영 문서이며,  
-init는 탐색 입력만 만들고 최종 리포트는 역할 스킬이 직접 작성한다.
+문서 계층은 아래처럼 나눈다.
+
+- `exploration-notes.md`: 탐색 입력 문서
+- `domain-analysis.md`, `qa-strategy.md`: 저장소 입력 문서
+- `harness-architecture.md`, `orchestration-plan.md`, `team-structure.md`, `team-playbook.md`: 하네스 메타시스템 문서
+
+init는 탐색 입력만 만들고, 나머지 문서는 역할 스킬이 직접 작성한다.
 
 ---
 
@@ -236,12 +247,12 @@ QA 기준은 `references/qa-agent-guide.md`를 참고한다.
 
 1. `harness-init.sh` 또는 `harness-update.sh`가 최종 보고서를 대신 쓰지 않는다.
 2. domain-analyst가 저장소 사실, 대표 흐름, 예외를 기준으로 `domain-analysis.md`를 직접 다시 쓴다.
-3. 이 단계에서 기존 README, 도메인 문서, 사용자 흐름 설명에 있던 업무 용어와 문제 정의를 하네스 운영 문구가 덮어쓰지 않게 유지한다.
-4. harness-architect와 qa-designer가 역할 경계, handoff, 검증 기준을 현재 저장소 운영 방식에 맞는 결과 문서로 다시 쓴다.
-5. orchestrator가 시작 분기, 재진입 루프, 세션 운영 규칙을 실제 요청 유형 기준의 운영 문서로 다시 쓴다.
-6. validator는 문서가 스키마만 맞춘 일반론에 머물지 않고 저장소 특화 근거와 도메인 밀도를 유지하는지 확인한다.
+3. qa-designer가 검증 비용과 승격 기준을 `qa-strategy.md`에 다시 쓴다.
+4. harness-architect가 하네스 구조와 역할 경계를 메타시스템 문서로 다시 쓴다.
+5. orchestrator가 시작 분기, 재진입 루프, 세션 운영 규칙을 메타시스템 문서로 다시 쓴다.
+6. validator는 입력 문서와 메타시스템 문서가 서로 다른 목적을 유지하는지 확인한다.
 
-이 단계의 목적은 스크립트가 아니라 역할 스킬이 각 프로젝트의 구조, 운영 맥락, 기존 도메인 언어에 맞는 결과 문서를 직접 작성하는 것이다.
+이 단계의 목적은 스크립트가 아니라 역할 스킬이 각 프로젝트의 구조와 운영 맥락에 맞는 입력 문서와 메타시스템 문서를 직접 작성하는 것이다.
 
 ### Phase 6: 실행 하네스 팀 검증
 
@@ -335,7 +346,7 @@ QA와 validator는 비슷해 보여도 다르다.
 
 ## 리포트의 위치
 
-리포트는 보조 설명서가 아니라, 역할 스킬이 남기는 실제 운영 문서다.
+리포트는 보조 설명서가 아니라, 역할 스킬이 남기는 입력 문서와 메타시스템 문서다.
 
 이 스킬에서 중심은:
 
@@ -343,10 +354,10 @@ QA와 validator는 비슷해 보여도 다르다.
 - run-harness 진입점
 - 오케스트레이션 구조
 - QA/검증 구조
-- 역할 스킬이 직접 작성한 운영 문서
+- 역할 스킬이 직접 작성한 입력 문서와 메타시스템 문서
 
 즉 리포트는 주변 설명이 아니라  
-👉 **저장소 운영 기준을 고정하는 핵심 산출물**이다.
+👉 **하네스 설계와 운영 기준을 고정하는 핵심 산출물**이다.
 
 ---
 
@@ -381,7 +392,7 @@ QA와 validator는 비슷해 보여도 다르다.
 - expected-state, diff, scenario runner는 이후 프로젝트 특화 실행 하네스로 확장할 수 있다.
 - 역할 스킬이 직접 작성하는 운영 문서를 하네스 자기설명서로 흐리지 말라.
 - 역할을 과도하게 늘리지 말고, 실제로 의미 있는 팀 구조를 앞에 둔다.
-- 리포트가 역할 카드 소개보다 저장소 운영 기준을 더 강하게 말하게 유지하라.
+- 리포트가 입력 문서와 메타시스템 문서의 목적을 섞지 않게 유지하라.
 
 ---
 
@@ -394,7 +405,7 @@ QA와 validator는 비슷해 보여도 다르다.
 - [ ] run-harness가 포함되어 있다.
 - [ ] QA와 validator가 포함되어 있다.
 - [ ] 실행 하네스 팀이 프로젝트에 맞게 구성되어 있다.
-- [ ] 운영 문서가 하네스 자기설명보다 저장소 운영 기준을 더 강하게 말한다.
+- [ ] 입력 문서와 메타시스템 문서가 서로 다른 목적을 유지한다.
 - [ ] 이후 프로젝트 특화 실행 하네스로 확장 가능한 구조다.
 
 ---

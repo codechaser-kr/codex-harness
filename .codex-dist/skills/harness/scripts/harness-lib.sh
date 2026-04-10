@@ -193,6 +193,27 @@ find_exploration_paths() {
     "$@"
 }
 
+is_exploration_config_candidate() {
+  local path="$1"
+  local base
+
+  base="$(basename "$path")"
+
+  case "$path" in
+    .github/*|*/.github/*|.gitlab/*|*/.gitlab/*|.circleci/*|*/.circleci/*)
+      return 1
+      ;;
+  esac
+
+  case "$base" in
+    .*|package-lock.json|pnpm-lock.yaml|yarn.lock|bun.lockb|Cargo.lock|composer.lock|Gemfile.lock)
+      return 1
+      ;;
+  esac
+
+  return 0
+}
+
 list_source_group_boundary_roots() {
   find_exploration_paths \
     -type f \
@@ -206,8 +227,32 @@ list_source_group_boundary_roots() {
         print $1
         next
       }
-      NF == 1 { print $1 }
-    ' | awk '!seen[$0]++'
+      NF == 1 {
+        if ($1 ~ /\./) {
+          next
+        }
+        print $1
+      }
+    ' | awk '!seen[$0]++' | awk -F/ '
+      {
+        roots[++count] = $0
+        present[$0] = 1
+      }
+      END {
+        for (i = 1; i <= count; i++) {
+          part_count = split(roots[i], parts, "/")
+
+          if (part_count >= 2 \
+            && parts[1] ~ /^(src|test|tests|app|apps|lib|libs|cmd|bin|server|client|internal)$/ \
+            && present[parts[1]] \
+            && parts[2] !~ /\./) {
+            continue
+          }
+
+          print roots[i]
+        }
+      }
+    '
 }
 
 list_source_anchor_paths() {
@@ -217,24 +262,79 @@ list_source_anchor_paths() {
     -print | sed 's#^\./##' | head -n 5
 }
 
+select_best_entrypoint_path() {
+  local root="$1"
+
+  find "./$root" \
+    \( -path "./$root/node_modules" -o -name dist -o -name build -o -name coverage \) -prune \
+    -o -type f \
+    \( -name 'main.ts' -o -name 'main.tsx' -o -name 'main.js' -o -name 'main.jsx' -o -name 'main.rs' -o \
+       -name 'index.ts' -o -name 'index.tsx' -o -name 'index.js' -o -name 'index.jsx' -o \
+       -name 'app.ts' -o -name 'app.tsx' -o -name 'app.js' -o -name 'app.jsx' -o \
+       -name 'server.ts' -o -name 'server.tsx' -o -name 'server.js' -o -name 'server.jsx' -o \
+       -name 'cli.ts' -o -name 'cli.tsx' -o -name 'cli.js' -o -name 'cli.jsx' -o \
+       -name 'lib.ts' -o -name 'lib.tsx' -o -name 'lib.js' -o -name 'lib.jsx' -o \
+       -name 'mod.rs' \) \
+    -print | sed 's#^\./##' | awk '
+      function score(path,    parts, part_count, base, value) {
+        part_count = split(path, parts, "/")
+        base = parts[part_count]
+        value = 0
+
+        if (base ~ /^main\./) {
+          value += 120
+        } else if (base ~ /^app\./) {
+          value += 110
+        } else if (base ~ /^server\./) {
+          value += 105
+        } else if (base ~ /^cli\./) {
+          value += 100
+        } else if (base == "mod.rs") {
+          value += 95
+        } else if (base ~ /^index\./) {
+          value += 90
+        } else if (base ~ /^lib\./) {
+          value += 60
+        }
+
+        if (path ~ /(^|\/)src\/main\./) {
+          value += 40
+        }
+        if (path ~ /(^|\/)src\/index\./) {
+          value += 35
+        }
+        if (path ~ /(^|\/)renderer\/index\./) {
+          value += 25
+        }
+        if (path ~ /(^|\/)main\/main\./) {
+          value += 20
+        }
+        if (path ~ /(^|\/)(router|routes)\/index\./) {
+          value += 5
+        }
+
+        if (path ~ /(^|\/)(__tests__|tests?|fixtures|examples?|samples?)\//) {
+          value -= 120
+        }
+        if (path ~ /(^|\/)(hooks?|utils?|components|pages|features)\//) {
+          value -= 50
+        }
+
+        return value
+      }
+      {
+        depth = split($0, parts, "/")
+        printf "%d\t%d\t%s\n", score($0), depth, $0
+      }
+    ' | sort -t '	' -k1,1nr -k2,2n -k3,3 | head -n 1 | cut -f3-
+}
+
 list_entrypoint_anchor_paths() {
   local root
-  local printed=0
 
   while IFS= read -r root; do
     [ -n "$root" ] || continue
-
-    find "./$root" \
-      \( -path "./$root/node_modules" -o -name dist -o -name build -o -name coverage \) -prune \
-      -o -type f \
-      \( -name 'main.ts' -o -name 'main.tsx' -o -name 'main.js' -o -name 'main.jsx' -o -name 'main.rs' -o \
-         -name 'index.ts' -o -name 'index.tsx' -o -name 'index.js' -o -name 'index.jsx' -o \
-         -name 'app.ts' -o -name 'app.tsx' -o -name 'app.js' -o -name 'app.jsx' -o \
-         -name 'server.ts' -o -name 'server.tsx' -o -name 'server.js' -o -name 'server.jsx' -o \
-         -name 'cli.ts' -o -name 'cli.tsx' -o -name 'cli.js' -o -name 'cli.jsx' -o \
-         -name 'lib.ts' -o -name 'lib.tsx' -o -name 'lib.js' -o -name 'lib.jsx' -o \
-         -name 'mod.rs' \) \
-      -print | sed 's#^\./##' | head -n 1
+    select_best_entrypoint_path "$root"
   done < <(list_source_group_boundary_roots) | awk '!seen[$0]++' | head -n 5
 }
 
@@ -252,16 +352,18 @@ list_config_asset_paths() {
   find_exploration_paths -maxdepth 3 \
     -type f \
     \( -name 'package.json' -o -name 'Cargo.toml' -o -name 'pyproject.toml' -o -name 'requirements.txt' -o -name 'go.mod' -o -name 'pom.xml' -o -name 'build.gradle' -o -name 'build.gradle.kts' -o -name 'settings.gradle' -o -name 'settings.gradle.kts' -o -name 'composer.json' -o -name 'Gemfile' -o -name 'Makefile' -o -name 'CMakeLists.txt' -o -name 'Dockerfile' -o -name '*.yml' -o -name '*.yaml' \) \
-    -print | sed 's#^\./##' | awk '
+    -print | sed 's#^\./##' | while IFS= read -r path; do
+      [ -n "$path" ] || continue
+      if is_exploration_config_candidate "$path"; then
+        printf '%s\n' "$path"
+      fi
+    done | awk '
       {
         n = split($0, parts, "/")
         base = parts[n]
-        if (base ~ /^\./) {
-          next
-        }
         print
       }
-    ' | head -n 8
+    ' | awk '!seen[$0]++' | head -n 8
 }
 
 list_domain_context_paths() {

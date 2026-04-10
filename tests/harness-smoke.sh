@@ -222,12 +222,19 @@ EOF
 cat > "$TMP_ROOT/stack-project/src/app.ts" <<'EOF'
 export const appName = "smoke-stack-project";
 EOF
+mkdir -p "$TMP_ROOT/stack-project/src/features/auth/hooks"
+cat > "$TMP_ROOT/stack-project/src/features/auth/hooks/index.ts" <<'EOF'
+export const useAuth = () => true;
+EOF
 cat > "$TMP_ROOT/stack-project/tests/app.test.ts" <<'EOF'
 import { appName } from "../src/app";
 
 if (appName !== "smoke-stack-project") {
   throw new Error("unexpected app name");
 }
+EOF
+cat > "$TMP_ROOT/stack-project/eslint.config.js" <<'EOF'
+export default [];
 EOF
 setup_test_artifacts "$TMP_ROOT/stack-project"
 mkdir -p "$TMP_ROOT/stack-explore-project"
@@ -237,7 +244,10 @@ cp "$TMP_ROOT/stack-project/src/main.ts" "$TMP_ROOT/stack-explore-project/src/ma
 mkdir -p "$TMP_ROOT/stack-explore-project/src/com.example"
 cp "$TMP_ROOT/stack-project/src/com.example/Main.kt" "$TMP_ROOT/stack-explore-project/src/com.example/Main.kt"
 cp "$TMP_ROOT/stack-project/src/app.ts" "$TMP_ROOT/stack-explore-project/src/app.ts"
+mkdir -p "$TMP_ROOT/stack-explore-project/src/features/auth/hooks"
+cp "$TMP_ROOT/stack-project/src/features/auth/hooks/index.ts" "$TMP_ROOT/stack-explore-project/src/features/auth/hooks/index.ts"
 cp "$TMP_ROOT/stack-project/tests/app.test.ts" "$TMP_ROOT/stack-explore-project/tests/app.test.ts"
+cp "$TMP_ROOT/stack-project/eslint.config.js" "$TMP_ROOT/stack-explore-project/eslint.config.js"
 setup_test_artifacts "$TMP_ROOT/stack-explore-project"
 (
   cd "$TMP_ROOT/stack-explore-project"
@@ -246,8 +256,10 @@ setup_test_artifacts "$TMP_ROOT/stack-explore-project"
 assert_file "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md"
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "## 대표 진입점" "탐색 문서 진입점 섹션"
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" '`src/main.ts`' "탐색 문서 대표 진입점 앵커"
+assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" '`src/features/auth/hooks/index.ts`' "탐색 문서 얕은 index 진입점 제외"
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" '`tests/app.test.ts`' "탐색 문서 테스트 자산 앵커"
 assert_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" '`src/com.example`' "탐색 문서 점 포함 디렉토리 경계"
+assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "eslint.config.js" "탐색 문서 루트 설정 파일 경계 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" ".claude/" "탐색 문서 AI 설정 디렉토리 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" ".cursor/" "탐색 문서 cursor 디렉토리 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-explore-project/.harness/reports/exploration-notes.md")" "CLAUDE.md" "탐색 문서 AI 컨텍스트 파일 제외"
@@ -272,6 +284,8 @@ assert_not_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
 assert_not_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" '`src/main.ts`' "생성된 탐색 문서 대표 진입점"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" '`src/com.example`' "생성된 탐색 문서 점 포함 디렉토리 경계"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" '`src/features/auth/hooks/index.ts`' "생성된 탐색 문서 얕은 index 진입점 제외"
+assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "eslint.config.js" "생성된 탐색 문서 루트 설정 파일 경계 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" ".claude/" "생성된 탐색 문서 AI 설정 디렉토리 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" ".cursor/" "생성된 탐색 문서 cursor 디렉토리 제외"
 assert_not_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "CLAUDE.md" "생성된 탐색 문서 AI 컨텍스트 파일 제외"

@@ -52,7 +52,7 @@
 ### 5) 검증 가능성
 
 - without-skill: 결과가 애매해서 검증하기 어려운가
-- with-skill: verify나 validator가 어느 지점을 점검해야 하는지 더 명확한가
+- with-skill: verify나 운영 감사 역할이 어느 지점을 점검해야 하는지 더 명확한가
 
 ---
 
@@ -73,7 +73,7 @@
 
 예:
 
-- with-skill에서는 시작 역할이 `domain-analyst`로 고정되고, without-skill보다 초기 질문 수가 줄었다.
+- with-skill에서는 시작 역할이 저장소 입력 문서 담당 역할로 선명해지고, without-skill보다 초기 질문 수가 줄었다.
 - with-skill에서는 AGENTS.md 충돌을 update 전에 드러내지만, without-skill에서는 뒤늦게 문서 불일치로 드러난다.
 
 즉 "좋아졌다"보다  
@@ -85,8 +85,8 @@
 
 이 기준은 다음 위치에서 사용한다.
 
-- `run-harness` 출력 계약 점검
-- `validator` 피드백 문구 점검
+- 시작 진입 역할 출력 계약 점검
+- 운영 감사 역할 피드백 문구 점검
 - 회귀 테스트에서 최소 품질 비교 기준 점검
 - 메타시스템 성숙도 회고 시 `meta-system-maturity-guide.md`와 함께 비교 기준으로 사용
 

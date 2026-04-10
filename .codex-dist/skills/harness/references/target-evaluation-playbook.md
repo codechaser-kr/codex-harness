@@ -26,14 +26,14 @@
 ### 2) 하네스 재생성 또는 갱신
 
 - 신규 재생성이면 `harness-init.sh`부터 시작한다.
-- 기존 구조 점검이면 `run-harness` 또는 `harness-update.sh`로 필요한 phase부터 다시 들어간다.
+- 기존 구조 점검이면 시작 진입 역할 또는 `harness-update.sh`로 필요한 phase부터 다시 들어간다.
 - 생성 직후에는 init 산출물을 완성본으로 보지 않고, 역할 작성이 끝났는지 먼저 본다.
 
 ### 3) 역할 작성 확인
 
 - `domain-analysis.md`, `qa-strategy.md`가 실제 저장소 입력 문서처럼 읽히는지 본다.
 - `harness-architecture.md`, `orchestration-plan.md`, `team-structure.md`, `team-playbook.md`가 하네스 운영 문서처럼 읽히는지 본다.
-- `run-harness`와 `validator`가 현재 상태와 다음 재진입 phase를 실제로 설명할 수 있는지 본다.
+- 시작 진입 역할과 운영 감사 역할이 현재 상태와 다음 재진입 phase를 실제로 설명할 수 있는지 본다.
 
 ### 4) 검증 실행
 
@@ -66,12 +66,12 @@
 ### C. 에이전트 팀 계약
 
 - `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`가 같은 팀 계약을 말하는가
-- init이 만든 seed 팀과, 이후 프로젝트 맞춤 팀 설계 결과의 차이가 문서에서 설명되는가
-- `run-harness`가 현재 시작 역할, 다음 역할, 다음 재진입 phase를 실제로 제시할 수 있는가
+- 프로젝트 맞춤 역할명이 실제 저장소의 요청 유형과 실패 경계를 설명하는가
+- 시작 진입 역할이 현재 시작 역할, 다음 역할, 다음 재진입 phase를 실제로 제시할 수 있는가
 
 ### D. 검증과 재진입
 
-- `validator`가 단순 파일 검사자가 아니라 운영 계약 감사자로 읽히는가
+- 운영 감사 역할이 단순 파일 검사자가 아니라 운영 계약 감사자로 읽히는가
 - `운영 가능 / 재작성 필요 / 재구성 필요` 판단이 다음 action과 바로 연결되는가
 - `재작성 필요`일 때는 `Phase 1~5` 중 어디로 가야 하는지 드러나는가
 - `재구성 필요`일 때는 `Phase 0` 감사와 명시적 재구성이 먼저 제안되는가
@@ -84,14 +84,14 @@
 
 - verify를 통과한다.
 - 입력 문서와 메타시스템 문서가 서로 다른 목적을 유지한다.
-- `run-harness`와 `validator`가 다음 행동을 모호하지 않게 설명한다.
+- 시작 진입 역할과 운영 감사 역할이 다음 행동을 모호하지 않게 설명한다.
 - 보고서가 더 이상 generic scaffold로 읽히지 않는다.
 
 ### 재작성 필요
 
 - 구조는 대체로 맞지만, 일부 문서가 가이드 문체나 일반론으로 흐른다.
 - 시작점, handoff, 재진입 phase 중 하나 이상이 약하다.
-- validator가 특정 문서와 담당 역할을 다시 지정할 수 있다.
+- 운영 감사 역할이 특정 문서와 담당 역할을 다시 지정할 수 있다.
 
 ### 재구성 필요
 
@@ -116,7 +116,7 @@
 - 현재 판정: `재작성 필요`
 - 가장 약한 축: 입력 문서 품질, handoff 명확성
 - 다음 재진입 phase: `Phase 1`, `Phase 5`
-- 다시 써야 할 문서와 담당 역할: `domain-analysis.md / domain-analyst`, `orchestration-plan.md / orchestrator`
+- 다시 써야 할 문서와 담당 역할: `domain-analysis.md / 저장소 입력 문서 담당 역할`, `orchestration-plan.md / 흐름 조율 역할`
 - 비교 메모: with-skill에서는 시작 역할은 선명하지만, 타겟 저장소 고유 흐름 설명은 아직 일반론으로 흐른다.
 
 ---

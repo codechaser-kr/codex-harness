@@ -320,6 +320,22 @@ assert_not_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
 assert_not_file "$TMP_ROOT/stack-project/.harness/reports/harness-architecture.md"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "이 메모는 초기 입력 상태만 전달하며, 최종 판단 근거는 아닙니다." "생성된 탐색 문서 약한 입력 전제"
 assert_contains "$(cat "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md")" "## 다음 확인 질문" "생성된 탐색 문서 확인 질문"
+
+log "team-spec custom 역할 skill 생성 확인"
+mkdir -p "$TMP_ROOT/custom-role-project"
+(
+  cd "$TMP_ROOT/custom-role-project" && \
+  bash "$HARNESS_SCRIPT_DIR/harness-init.sh" >/dev/null && \
+  perl -0pi -e 's@run_harness\|run-harness\|run-harness\|gpt-5\.4\|high\|workspace-write\|Entry agent that chooses phase, mode, pattern, and next roles\.\n@run_harness|run-harness|run-harness|gpt-5.4|high|workspace-write|Entry agent that chooses phase, mode, pattern, and next roles.\npayment_dev|payment-dev|payment-dev|gpt-5.4|high|workspace-write|Implement payment flow changes and write payment rollout notes.\n@' .harness/reports/team-spec.md && \
+  bash "$HARNESS_SCRIPT_DIR/harness-generate-team-assets.sh" >/dev/null
+)
+assert_file "$TMP_ROOT/custom-role-project/.codex/agents/payment-dev.toml"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/config.toml")" "[agents.payment_dev]" "custom 역할 config section"
+assert_dir "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "team-spec" "custom 역할 skill team-spec 기준"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "payment_dev" "custom 역할 skill role id"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "workspace-write" "custom 역할 skill sandbox"
+
 cat > "$TMP_ROOT/stack-project/.harness/project-setup.md" <<'EOF'
 # 프로젝트 설정
 

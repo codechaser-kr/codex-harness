@@ -7,6 +7,19 @@ log() {
   printf '[harness][generate] %s\n' "$1"
 }
 
+is_seed_role() {
+  local role_id="$1"
+
+  case "$role_id" in
+    domain_analyst|harness_architect|skill_scaffolder|qa_designer|orchestrator|validator|run_harness)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 require_team_spec() {
   [ -f "$TEAM_SPEC_FILE" ] || {
     printf '[harness][generate][error] team-spec 문서가 없습니다: %s\n' "$TEAM_SPEC_FILE" >&2
@@ -108,6 +121,57 @@ EOF
   log "agent 생성: .codex/agents/${agent_file}.toml"
 }
 
+write_skill_file() {
+  local role_id="$1"
+  local display_name="$2"
+  local skill_dir="$3"
+  local sandbox="$4"
+  local description="$5"
+  local skill_file=".codex/skills/${skill_dir}/SKILL.md"
+
+  mkdir -p ".codex/skills/${skill_dir}"
+
+  if [ -f "$skill_file" ]; then
+    log "기존 skill 유지: ${skill_file}"
+    return
+  fi
+
+  cat > "$skill_file" <<EOF
+---
+name: ${display_name}
+description: ${description}
+---
+
+# ${display_name}
+
+이 스킬은 \`team-spec\`에서 정의한 역할을 Codex 로컬 실행 계약으로 옮긴 기본 스킬이다.
+
+## 목적
+
+\`${role_id}\` 역할이 맡아야 하는 작업 범위와 산출물 책임을 현재 프로젝트 기준으로 유지한다.
+
+## 입력
+
+- 현재 요청
+- \`.harness/reports/team-spec.md\`
+- 필요 시 관련 \`.harness/reports/*\` 문서
+
+## 출력
+
+- team-spec에 정의된 역할 산출물
+
+## 기본 운영 규칙
+
+- 이 역할은 \`team-spec\`에 적힌 목적, 입력, 출력, handoff를 먼저 따른다.
+- \`AGENTS.md\`, \`.codex/config.toml\`, \`.codex/agents/*.toml\`과 서로 충돌하는 설명을 새로 만들지 않는다.
+- 현재 sandbox 정책은 \`${sandbox}\` 이다.
+- description 초안은 다음과 같다: ${description}
+- 프로젝트 맞춤 절차가 더 필요해지면 이 스킬을 구체화하되, team-spec의 역할 책임과 어긋나지 않게 유지한다.
+EOF
+
+  log "skill 생성: ${skill_file}"
+}
+
 generate_assets() {
   local parsed=0
 
@@ -118,6 +182,9 @@ generate_assets() {
     [ -n "${role_id:-}" ] || continue
     append_config_section "$role_id" "$agent_file" "$description"
     write_agent_file "$role_id" "$agent_file" "$model" "$reasoning" "$sandbox" "$description"
+    if ! is_seed_role "$role_id"; then
+      write_skill_file "$role_id" "$display_name" "$agent_file" "$sandbox" "$description"
+    fi
     parsed=1
   done < <(awk '
     /<!-- team-spec-roles:start -->/ { in_block = 1; next }

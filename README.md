@@ -93,7 +93,9 @@ repo/
     └── logging-policy.md
 ```
 
-핵심 산출물은 `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`의 로컬 Codex 에이전트 설정, `.codex/skills/*`의 로컬 역할 스킬, 그리고 그 역할이 직접 쓰는 `.harness/reports/*` 문서입니다. `harness-init.sh`는 `exploration-notes.md`, Codex 에이전트 설정, 역할 스킬, 로그 구조를 준비하고, 나머지 문서는 역할 스킬이 직접 작성합니다. `.harness/logs/*`와 `.harness/logging-policy.md`는 실제 운영 기록과 로그 규칙을 위한 기본 산출물입니다.
+현재 저장소는 아직 고정 seed 역할 생성 구조를 포함하고 있지만, 목표 구조에서는 `Phase 2`가 `team-spec`을 만들고 `Phase 3`이 그 스펙을 바탕으로 `.codex/agents/*.toml`, `.codex/skills/*`, `.codex/config.toml`을 동적으로 생성해야 합니다. 이 기준 문서는 `references/team-spec-schema.md`에 둡니다.
+
+핵심 산출물은 `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`의 로컬 Codex 에이전트 설정, `.codex/skills/*`의 로컬 역할 스킬, 그리고 그 역할이 직접 쓰는 `.harness/reports/*` 문서입니다. `harness-init.sh`는 `exploration-notes.md`, 생성 파이프라인 입력, 로그 구조를 준비하고, 최종 agent/skill 산출은 `Phase 2`와 `Phase 3` 계약을 따라야 합니다. `.harness/logs/*`와 `.harness/logging-policy.md`는 실제 운영 기록과 로그 규칙을 위한 기본 산출물입니다.
 
 운영을 시작하면 초기 생성물 중 일부가 계속 다시 쓰이거나 갱신되고, 운영 결과에 따라 새 파일이 추가될 수도 있습니다. 대표적인 범위는 다음과 같습니다.
 
@@ -136,20 +138,20 @@ repo/
 
 입력 정보가 아직 부족한 경우에는 바로 역할을 단정하지 않고, `run-harness`가 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오 같은 사용자 질문을 남긴 뒤 다음 역할 흐름으로 넘어가도록 설계되어 있습니다.
 
-## 초기 seed 역할
+## 프로젝트 특화 에이전트 팀
 
-초기화 직후 생성되는 역할은 프로젝트 맞춤 팀이 완성되기 전의 seed 팀입니다.
-이 목록은 고정 정답이 아니라, `Phase 2 프로젝트 맞춤 에이전트 팀 설계`와 `Phase 3 에이전트 정의 생성`에서 축소·확장·재명명될 수 있는 출발점입니다.
+목표 구조에서 하네스는 고정 역할 세트를 복사하지 않습니다.
+대신 `Phase 2 프로젝트 맞춤 에이전트 팀 설계`에서 현재 저장소 도메인에 맞는 `team-spec`을 만들고, `Phase 3 에이전트 정의 생성`에서 그 스펙을 바탕으로 실제 `.codex/agents/*.toml`, `.codex/skills/*`, `.codex/config.toml`을 동적으로 생성합니다.
 
-- `domain-analyst`: 저장소 분석과 핵심 흐름 파악
-- `harness-architect`: 하네스 메타시스템 구조와 역할 경계 설계
-- `skill-scaffolder`: 로컬 스킬 설명 drift가 생겼을 때만 보조적으로 정렬
-- `qa-designer`: 저장소 기준의 QA 전략과 승격 기준 작성
-- `orchestrator`: 하네스 오케스트레이션과 재진입 구조 작성
-- `validator`: 운영 계약, drift, 역할 정렬 상태를 감사하는 역할
-- `run-harness`: 현재 상태를 보고 어떤 문서부터 다시 써야 하는지 정하는 진입점
+즉 최종 역할 이름은 저장소마다 달라질 수 있습니다.
 
-`AGENTS.md`와 `.codex/agents/*.toml`은 `누가 하는가`, 역할 스킬은 `어떻게 하는가`를 담당합니다. 다만 init이 만든 정의는 완성형 조직도가 아니라 초기 seed이므로, `orchestrator`와 `harness-architect`가 프로젝트 문맥에 맞게 다시 정렬해야 합니다.
+예:
+
+- 결제 시스템: `payment-dev`, `billing-reviewer`, `checkout-qa`
+- Electron 런타임 중심 앱: `desktop-runtime-dev`, `ipc-reviewer`
+- 운영/배포 중심 프로젝트: `release-orchestrator`, `deploy-validator`
+
+`AGENTS.md`와 `.codex/agents/*.toml`은 `누가 하는가`, 역할 스킬은 `어떻게 하는가`를 담당합니다. 중요한 것은 고정된 역할 이름이 아니라, 타겟 프로젝트에 맞는 역할 집합이 실제로 생성되는 것입니다.
 
 ## 동작 방식
 
@@ -161,7 +163,7 @@ repo/
 3. `run-harness`가 현재 상태를 읽고 어느 Phase부터 다시 시작할지 정합니다.
 4. `domain-analyst`가 저장소 감사 결과를 바탕으로 도메인/작업 분석을 최종 작성합니다.
 5. `harness-architect`가 프로젝트 맞춤 에이전트 팀과 메타시스템 구조를 설계합니다.
-6. 역할 정의와 로컬 스킬이 생성되고, `qa-designer`, `orchestrator`가 QA/운영 계약 문서를 완성합니다.
+6. `Phase 2`가 만든 team-spec을 바탕으로 역할 정의와 로컬 스킬이 동적으로 생성되고, 해당 팀이 QA/운영 계약 문서를 완성합니다.
 7. 필요할 때만 `skill-scaffolder`가 로컬 스킬 설명 drift를 정렬합니다.
 8. `validator`와 `harness-verify.sh`가 구조/운영 계약을 검증합니다.
 9. 마지막에 품질 비교와 성숙도 평가를 통해 다음 재진입 지점을 정리합니다.
@@ -180,12 +182,12 @@ repo/
   - 다음 단계 조건: 실제 시작 흐름, 핵심 경계, 실패 비용이 최소한 문서로 고정됨
 - `Phase 2 프로젝트 맞춤 에이전트 팀 설계`
   - 입력: `domain-analysis.md`, 상태 모드, 실행 모드, 실행 패턴 후보
-  - 산출: `harness-architecture.md`, `team-structure.md`, `team-playbook.md`
-  - 다음 단계 조건: 역할 경계, handoff 기준, 패턴 선택 이유가 고정됨
+  - 산출: `harness-architecture.md`, `team-structure.md`, `team-playbook.md`, `team-spec`
+  - 다음 단계 조건: 역할 경계, handoff 기준, 패턴 선택 이유, 동적 생성용 역할 스펙이 고정됨
 - `Phase 3 에이전트 정의 생성`
-  - 입력: 선택된 팀 구조와 패턴
+  - 입력: `Phase 2`가 만든 `team-spec`
   - 산출: `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`
-  - 다음 단계 조건: 누가 하는가와 어떻게 하는가가 분리됨
+  - 다음 단계 조건: team-spec과 생성 결과가 일치하고, 누가 하는가와 어떻게 하는가가 분리됨
 - `Phase 4 QA 및 검증 구조`
   - 입력: 저장소 입력 문서와 팀 구조
   - 산출: `qa-strategy.md`, validator 감사 기준, verify 최소 구조 기준
@@ -205,7 +207,7 @@ repo/
 
 입력 정보가 아직 부족하면, 위 흐름에 들어가기 전에 `run-harness`가 짧은 사용자 질문을 만들고 그 답을 `domain-analysis`와 이후 오케스트레이션의 입력으로 사용합니다.
 
-즉, 단순 저장소 운영 문서를 만드는 것이 아니라 `저장소 감사 -> 도메인/작업 분석 -> 팀 설계 -> 에이전트/스킬 생성 -> QA/검증 구조 -> 역할별 최종 작성 -> 검증 -> 품질 비교와 성숙도 평가` 흐름을 갖춘 실행 하네스 기반을 만드는 것이 목적입니다.
+즉, 단순 저장소 운영 문서를 만드는 것이 아니라 `저장소 감사 -> 도메인/작업 분석 -> team-spec 설계 -> team-spec 기반 에이전트/스킬 생성 -> QA/검증 구조 -> 역할별 최종 작성 -> 검증 -> 품질 비교와 성숙도 평가` 흐름을 갖춘 실행 하네스 기반을 만드는 것이 목적입니다.
 
 ## 입력 기반 분석
 

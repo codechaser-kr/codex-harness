@@ -46,6 +46,7 @@
 다음 질문에 답해야 할 때 먼저 읽는다.
 
 - `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`을 어떻게 맞출까
+- team-spec에서 정의한 역할 이름과 파일 구성을 어떻게 생성 결과로 옮길까
 - 상위 운영 계약과 로컬 하네스가 충돌하는가
 - sync가 필요한가
 
@@ -53,6 +54,7 @@
 
 - `agents-sync-guide.md`
 - `agent-design-patterns.md`
+- `team-spec-schema.md`
 
 ---
 
@@ -155,6 +157,7 @@
 - 패턴 선택:
   - `reference-map.md`
   - `agent-design-patterns.md`
+  - `team-spec-schema.md`
   - 필요 시 `orchestrator-template.md`
 - validator 감사 강화:
   - `reference-map.md`

@@ -385,9 +385,13 @@ done
 check_contains_hint ".codex/skills/validator/SKILL.md" "meta-system-maturity-guide.md" "validator 성숙도 기준 연결"
 check_contains_hint ".codex/skills/validator/SKILL.md" "운영 가능 / 재작성 필요 / 재구성 필요" "validator 상태 판정 계약"
 check_contains_hint ".codex/skills/validator/SKILL.md" "Phase 7" "validator phase 7 계약"
+check_contains_hint ".codex/skills/validator/SKILL.md" "재작성 필요" "validator 재진입 판단"
+check_contains_hint ".codex/skills/validator/SKILL.md" "Phase 0" "validator 재구성 시작점"
 check_contains_hint ".codex/skills/run-harness/SKILL.md" "meta-system-maturity-guide.md" "run-harness 성숙도 기준 연결"
 check_contains_hint ".codex/skills/run-harness/SKILL.md" "운영 가능 / 재작성 필요 / 재구성 필요" "run-harness 상태 판정 계약"
 check_contains_hint ".codex/skills/run-harness/SKILL.md" "Phase 7" "run-harness phase 7 계약"
+check_contains_hint ".codex/skills/run-harness/SKILL.md" "다음 재진입 Phase" "run-harness 재진입 출력 계약"
+check_contains_hint ".codex/skills/run-harness/SKILL.md" "Phase 0" "run-harness 재구성 시작점"
 
 # 로그 구조
 LOG_FILES=(

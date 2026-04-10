@@ -163,26 +163,12 @@ build_harness_audit_summary() {
 }
 
 optional_harness_assets_enabled() {
-  local exploration_file="${1:-$EXPLORATION_NOTES_DEFAULT_PATH}"
-  local entrypoint_count=0
-  local boundary_count=0
-  local test_count=0
-
   if [ -d ".harness/templates" ] \
     || [ -d ".harness/scenarios" ] \
     || [ -f ".harness/logs/role-frequency.md" ] \
     || [ -f ".harness/reports/template-candidates.md" ]; then
     return 0
   fi
-
-  [ -f "$exploration_file" ] || return 1
-
-  entrypoint_count="$(count_markdown_bullets_under_heading "$exploration_file" "대표 진입점" | tr -d '[:space:]')"
-  boundary_count="$(count_markdown_bullets_under_heading "$exploration_file" "주요 코드 경계" | tr -d '[:space:]')"
-  test_count="$(count_markdown_bullets_under_heading "$exploration_file" "테스트 및 검증 자산" | tr -d '[:space:]')"
-
-  [ "${entrypoint_count:-0}" -gt 0 ] && [ "${boundary_count:-0}" -gt 0 ] && return 0
-  [ "${boundary_count:-0}" -gt 0 ] && [ "${test_count:-0}" -gt 0 ] && return 0
   return 1
 }
 
@@ -433,68 +419,41 @@ count_markdown_bullets_under_heading() {
   ' "$file"
 }
 
+project_setup_has_answers() {
+  local file="${1:-.harness/project-setup.md}"
+
+  [ -f "$file" ] || return 1
+
+  awk '
+    /^[[:space:]]*$/ { next }
+    /^[[:space:]]*#/ { next }
+    /^[[:space:]]*<!--/ { next }
+    /^[[:space:]]*-->/ { next }
+    {
+      print
+      exit
+    }
+  ' "$file" >/dev/null
+}
+
 exploration_requires_user_bootstrap() {
-  local file="${1:-$EXPLORATION_NOTES_DEFAULT_PATH}"
-  local entrypoint_count=0
-  local boundary_count=0
-
-  [ -f "$file" ] || return 0
-
-  entrypoint_count="$(count_markdown_bullets_under_heading "$file" "대표 진입점" | tr -d '[:space:]')"
-  boundary_count="$(count_markdown_bullets_under_heading "$file" "주요 코드 경계" | tr -d '[:space:]')"
-
-  [ "${entrypoint_count:-0}" -eq 0 ] && [ "${boundary_count:-0}" -eq 0 ]
+  ! project_setup_has_answers ".harness/project-setup.md"
 }
 
 detect_exploration_context_level() {
-  local file="${1:-$EXPLORATION_NOTES_DEFAULT_PATH}"
-  local entrypoint_count=0
-  local boundary_count=0
-
-  [ -f "$file" ] || {
-    printf '%s\n' "초기"
-    return
-  }
-
-  entrypoint_count="$(count_markdown_bullets_under_heading "$file" "대표 진입점" | tr -d '[:space:]')"
-  boundary_count="$(count_markdown_bullets_under_heading "$file" "주요 코드 경계" | tr -d '[:space:]')"
-
-  if [ "${entrypoint_count:-0}" -eq 0 ] && [ "${boundary_count:-0}" -eq 0 ]; then
-    printf '%s\n' "초기"
-    return
-  fi
-
-  if [ "${entrypoint_count:-0}" -eq 0 ] || [ "${boundary_count:-0}" -eq 0 ]; then
+  if project_setup_has_answers ".harness/project-setup.md"; then
     printf '%s\n' "제한적"
-    return
+  else
+    printf '%s\n' "초기"
   fi
-
-  if [ "${entrypoint_count:-0}" -lt 2 ] || [ "${boundary_count:-0}" -lt 2 ]; then
-    printf '%s\n' "제한적"
-    return
-  fi
-
-  printf '%s\n' "충분"
 }
 
 build_exploration_anchor_summary() {
-  local file="${1:-$EXPLORATION_NOTES_DEFAULT_PATH}"
-  local entrypoint_count=0
-  local boundary_count=0
-  local test_count=0
-  local config_count=0
-  local domain_count=0
-
-  if [ -f "$file" ]; then
-    entrypoint_count="$(count_markdown_bullets_under_heading "$file" "대표 진입점" | tr -d '[:space:]')"
-    boundary_count="$(count_markdown_bullets_under_heading "$file" "주요 코드 경계" | tr -d '[:space:]')"
-    test_count="$(count_markdown_bullets_under_heading "$file" "테스트 및 검증 자산" | tr -d '[:space:]')"
-    config_count="$(count_markdown_bullets_under_heading "$file" "설정 및 실행 경로" | tr -d '[:space:]')"
-    domain_count="$(count_markdown_bullets_under_heading "$file" "저장소 고유 용어 단서" | tr -d '[:space:]')"
+  if project_setup_has_answers ".harness/project-setup.md"; then
+    printf '%s\n' "project-setup 입력이 있어 사용자 맥락을 함께 참조할 수 있습니다"
+  else
+    printf '%s\n' "자동 경로 수집은 보조 메모만 제공하며, 사용자 입력과 역할 재해석이 필요합니다"
   fi
-
-  printf '대표 진입점 %s개, 주요 코드 경계 %s개, 테스트 자산 %s개, 설정 경로 %s개, 도메인 단서 %s개\n' \
-    "${entrypoint_count:-0}" "${boundary_count:-0}" "${test_count:-0}" "${config_count:-0}" "${domain_count:-0}"
 }
 
 count_harness_skill_dirs() {
@@ -576,21 +535,12 @@ build_exploration_guidance() {
   local exploration_context_level="$2"
   local boundary_hint="$3"
 
-  if [ ! -f "$file" ]; then
-    if [ "$exploration_context_level" = "초기" ] || [ "$exploration_context_level" = "제한적" ]; then
-      printf '%s\n' "탐색 근거와 사용자 응답을 함께 참고한 초기 방향 메모가 놓입니다."
-    else
-      printf '%s\n' "현재 저장소는 실제 코드 경계와 대표 흐름을 다시 읽는 관련 문서 메모로 이어집니다."
-    fi
+  if [ "$exploration_context_level" = "초기" ]; then
+    printf '%s\n' "자동 탐색 메모만으로는 방향을 좁히기 어렵습니다. 사용자 입력과 역할 재해석을 함께 사용합니다."
     return
   fi
 
-  if [ "$exploration_context_level" = "초기" ] || [ "$exploration_context_level" = "제한적" ]; then
-    printf '%s\n' "탐색 문서에 수집된 단서를 바탕으로, 부족한 부분은 사용자 질문 메모로 이어집니다."
-    return
-  fi
-
-  printf '%s\n' "현재 저장소는 탐색 문서의 대표 진입점과 코드 경계($boundary_hint)를 바탕으로 관련 문서 메모가 이어집니다."
+  printf '%s\n' "사용자 입력과 현재 저장소를 함께 다시 읽어, 역할 스킬이 최종 문서를 직접 작성합니다."
 }
 
 build_project_type_label() {

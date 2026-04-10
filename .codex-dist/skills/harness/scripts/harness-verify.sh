@@ -462,11 +462,11 @@ if [ -f ".harness/reports/team-playbook.md" ]; then
 fi
 
 if [ -f ".harness/reports/exploration-notes.md" ]; then
-  check_contains_hint ".harness/reports/exploration-notes.md" "## 대표 진입점" "탐색 진입점 섹션"
-  check_contains_hint ".harness/reports/exploration-notes.md" "## 주요 코드 경계" "탐색 코드 경계 섹션"
-  check_contains_hint ".harness/reports/exploration-notes.md" "## 테스트 및 검증 자산" "탐색 테스트 자산 섹션"
-  check_contains_hint ".harness/reports/exploration-notes.md" "## 설정 및 실행 경로" "탐색 설정 경로 섹션"
-  check_contains_hint ".harness/reports/exploration-notes.md" "## 저장소 고유 용어 단서" "탐색 도메인 단서 섹션"
+  check_contains_hint ".harness/reports/exploration-notes.md" "## 상태" "탐색 상태 섹션"
+  check_contains_hint ".harness/reports/exploration-notes.md" "## 현재 입력 상태" "탐색 입력 상태 섹션"
+  check_contains_hint ".harness/reports/exploration-notes.md" "## 역할 팀 메모" "탐색 역할 팀 메모 섹션"
+  check_contains_hint ".harness/reports/exploration-notes.md" "## 다음 확인 질문" "탐색 다음 확인 질문 섹션"
+  check_contains_hint ".harness/reports/exploration-notes.md" "자동 경로 수집은 핵심 판단 근거로 사용하지 않습니다." "탐색 약한 입력 전제"
 fi
 
 if [ -f ".harness/logs/session-log.md" ]; then
@@ -490,17 +490,8 @@ else
   log "선택 자산 생략: .harness/logs/role-frequency.md"
 fi
 
-if [ "$EXPLORATION_CONTEXT_LEVEL" = "충분" ]; then
-  log "탐색 근거가 충분한 저장소로 판단됨: 최소 구조와 골격 잔존 여부를 함께 확인합니다"
-
-  if [ -f ".harness/reports/domain-analysis.md" ]; then
-    warn_if_anchor_count_below ".harness/reports/domain-analysis.md" "저장소 고유 근거" 3 "도메인 분석 소스 앵커"
-  fi
-
-  if [ -f ".harness/reports/exploration-notes.md" ]; then
-    warn_if_anchor_count_below ".harness/reports/exploration-notes.md" "대표 진입점" 1 "탐색 대표 진입점"
-    warn_if_anchor_count_below ".harness/reports/exploration-notes.md" "주요 코드 경계" 1 "탐색 주요 코드 경계"
-  fi
+if [ "$EXPLORATION_CONTEXT_LEVEL" = "제한적" ]; then
+  log "사용자 입력은 있으나 최종 판단은 역할 재작성에 의존합니다"
 fi
 
 if [ "$FAILURES" -eq 0 ]; then

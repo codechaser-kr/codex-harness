@@ -52,6 +52,9 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 - 중심 역할 여부
 - 보조 역할 여부
 
+역할 스펙은 단순 제목 나열이 아니라, 적어도 한 개 이상의 완전한 역할 카드가 들어 있어야 한다.
+즉 `역할 id:` 같은 빈 템플릿 줄만 남아 있는 상태를 완료로 보면 안 된다.
+
 ### C. Codex 생성 정보
 
 각 역할마다 실제 생성에 필요한 정보도 가진다.
@@ -61,6 +64,12 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 - description 초안
 - sandbox 정책
 - 권장 모델 클래스
+- role description 초안
+
+또한 생성기는 team-spec 안의 기계 판독 블록도 읽을 수 있어야 한다.
+현재 기본 형식은 아래와 같다.
+
+`role_id|display_name|agent_file|model|reasoning|sandbox|description`
 
 ### D. 운영 계약
 
@@ -79,6 +88,7 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 - 예를 들어 결제 시스템이면 `payment-dev`, `billing-reviewer`, `checkout-qa` 같은 이름이 더 적절할 수 있다.
 - Electron 런타임 중심 프로젝트면 `desktop-runtime-dev`, `ipc-reviewer` 같은 이름이 더 적절할 수 있다.
 - 즉 `domain-analyst`, `qa-designer` 같은 범용 이름은 seed 또는 fallback일 뿐, 최종 정답이 아니다.
+- 따라서 team-spec 상단에는 왜 seed 이름을 유지하거나 버렸는지 설명하는 도메인 근거가 있어야 한다.
 
 ---
 
@@ -105,6 +115,9 @@ team-spec을 바탕으로 아래를 동적으로 생성한다.
 
 즉 `Phase 3`은 고정 파일 복사가 아니라  
 `team-spec -> Codex 자산 생성` 단계다.
+
+초기 init 시점에는 seed 인벤토리가 들어갈 수 있지만, 목표 상태에서는 team-spec 자체가 프로젝트 특화 팀 설계서로 읽혀야 한다.
+즉 `초안 필요`, `나중에 다시 정리` 같은 메타 문장보다 실제 팀 구조와 역할 결정이 더 앞에 보여야 한다.
 
 ---
 

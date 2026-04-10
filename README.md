@@ -93,7 +93,7 @@ repo/
     └── logging-policy.md
 ```
 
-현재 저장소는 아직 고정 seed 역할 생성 구조를 포함하고 있지만, 목표 구조에서는 `Phase 2`가 `team-spec`을 만들고 `Phase 3`이 그 스펙을 바탕으로 `.codex/agents/*.toml`, `.codex/skills/*`, `.codex/config.toml`을 동적으로 생성해야 합니다. 이 기준 문서는 `references/team-spec-schema.md`에 둡니다.
+현재 저장소는 아직 고정 seed 역할 생성 구조를 포함하고 있지만, 목표 구조에서는 `Phase 2`가 단순 초안이 아니라 실제 프로젝트 맞춤 `team-spec`을 만들고 `Phase 3`이 그 스펙을 바탕으로 `.codex/agents/*.toml`, `.codex/skills/*`, `.codex/config.toml`을 동적으로 생성해야 합니다. 이 기준 문서는 `references/team-spec-schema.md`에 둡니다.
 
 핵심 산출물은 `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`의 로컬 Codex 에이전트 설정, `.codex/skills/*`의 로컬 역할 스킬, 그리고 그 역할이 직접 쓰는 `.harness/reports/*` 문서입니다. `harness-init.sh`는 `exploration-notes.md`, 생성 파이프라인 입력, 로그 구조를 준비하고, 최종 agent/skill 산출은 `Phase 2`와 `Phase 3` 계약을 따라야 합니다. `.harness/logs/*`와 `.harness/logging-policy.md`는 실제 운영 기록과 로그 규칙을 위한 기본 산출물입니다.
 
@@ -143,7 +143,7 @@ repo/
 목표 구조에서 하네스는 고정 역할 세트를 복사하지 않습니다.
 대신 `Phase 2 프로젝트 맞춤 에이전트 팀 설계`에서 현재 저장소 도메인에 맞는 `team-spec`을 만들고, `Phase 3 에이전트 정의 생성`에서 그 스펙을 바탕으로 실제 `.codex/agents/*.toml`, `.codex/skills/*`, `.codex/config.toml`을 동적으로 생성합니다.
 
-즉 최종 역할 이름은 저장소마다 달라질 수 있습니다.
+즉 최종 역할 이름은 저장소마다 달라질 수 있고, `team-spec`에는 왜 seed 역할명을 유지하거나 버렸는지 도메인 근거가 함께 남아야 합니다.
 
 예:
 

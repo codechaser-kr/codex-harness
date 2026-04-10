@@ -223,7 +223,11 @@ assert_dir "$TMP_ROOT/empty-project/.harness/reports"
 assert_file "$TMP_ROOT/empty-project/.harness/project-setup.md"
 assert_file "$TMP_ROOT/empty-project/.harness/reports/team-spec.md"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/reports/team-spec.md")" "## 팀 메타데이터" "빈 프로젝트 team-spec 메타데이터"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/reports/team-spec.md")" "## 도메인 근거 요약" "빈 프로젝트 team-spec 도메인 근거"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/reports/team-spec.md")" "## 팀 설계 결정" "빈 프로젝트 team-spec 팀 설계 결정"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/reports/team-spec.md")" "## 역할 스펙 초안" "빈 프로젝트 team-spec 역할 스펙"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/reports/team-spec.md")" "## 생성 규칙" "빈 프로젝트 team-spec 생성 규칙"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/reports/team-spec.md")" 'role_id|display_name|agent_file|model|reasoning|sandbox|description' "빈 프로젝트 team-spec 역할 블록 형식"
 if (
   cd "$TMP_ROOT/empty-project" && \
   project_setup_has_answers_check ".harness/project-setup.md"

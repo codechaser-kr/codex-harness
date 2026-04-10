@@ -150,13 +150,13 @@ fi
 create_file_if_missing ".harness/reports/team-spec.md" \
 "# 팀 스펙
 
-이 문서는 \`Phase 2 프로젝트 맞춤 에이전트 팀 설계\`의 산출물을 정리하기 위한 작업 스펙입니다.
-현재 상태에서는 완성된 팀 정의가 아니라, \`Phase 3\` 동적 agent/skill 생성으로 이어질 입력 문서를 준비하는 단계로 봅니다.
+이 문서는 \`Phase 2 프로젝트 맞춤 에이전트 팀 설계\`의 핵심 산출물입니다.
+\`Phase 3\`은 이 문서를 직접 읽고 \`.codex/config.toml\`, \`.codex/agents/*.toml\`, \`.codex/skills/*\`를 생성하거나 재정렬해야 합니다.
 
 ## 상태
 
-- 현재 상태: team-spec 초안 필요
-- 다음 단계: domain-analysis.md와 harness-architecture.md를 바탕으로 프로젝트 맞춤 역할 팀 스펙 작성
+- 현재 상태: 초기 seed 기반 초안
+- 다음 단계: 저장소 분석과 메타시스템 설계를 반영해 프로젝트 맞춤 팀 스펙으로 재작성
 
 ## 팀 메타데이터
 
@@ -166,22 +166,55 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 - 실행 패턴:
 - 팀 설계 이유:
 
+## 도메인 근거 요약
+
+- 대표 사용자/운영 흐름:
+- 실패 비용이 큰 경계:
+- 핵심 코드/문서 근거:
+- 이 팀이 먼저 다뤄야 할 요청 유형:
+- seed 역할 이름을 그대로 쓰기 어려운 이유:
+
+## 팀 설계 결정
+
+- 중심 역할:
+- 보조 역할:
+- 기본 시작 역할:
+- 요청 유형별 시작 역할:
+- 재진입 규칙:
+- validator 개입 시점:
+- 재구성 조건:
+
 ## 역할 스펙 초안
 
+### 역할 1
+
 - 역할 id:
-  - 역할 표시 이름:
-  - 역할 목적:
-  - 주요 입력:
-  - 주요 출력:
-  - handoff 대상:
-  - agent 파일명:
-  - skill 디렉토리명:
-  - sandbox 정책:
+- 역할 표시 이름:
+- 역할 목적:
+- 역할 책임:
+- 주요 입력:
+- 주요 출력:
+- handoff 대상:
+- 중심 역할 여부:
+- 보조 역할 여부:
+- agent 파일명:
+- skill 디렉토리명:
+- description 초안:
+- 권장 모델 클래스:
+- sandbox 정책:
+
+## 생성 규칙
+
+- \`.codex/config.toml\`에는 아래 역할 목록을 모두 등록합니다.
+- \`.codex/agents/*.toml\`은 역할 식별, 모델, sandbox, 짧은 실행 설명을 담습니다.
+- \`.codex/skills/*\`는 역할별 절차, 입력/출력, handoff, 완료 기준을 담습니다.
+- 생성기보다 team-spec이 우선하며, 파일명/역할명/책임 범위가 다르면 team-spec 기준으로 다시 생성합니다.
 
 ## seed 역할 인벤토리
 
 아래 블록은 현재 생성기가 사용하는 초기 역할 인벤토리입니다.
 \`Phase 2\`에서 이 목록을 프로젝트 맞춤 역할 집합으로 다시 쓰고, \`Phase 3\`은 이 블록을 입력으로 \`.codex/config.toml\`과 \`.codex/agents/*.toml\`을 생성합니다.
+줄 형식은 \`role_id|display_name|agent_file|model|reasoning|sandbox|description\` 입니다.
 
 <!-- team-spec-roles:start -->
 domain_analyst|domain-analyst|domain-analyst|gpt-5.4|high|workspace-write|Analyze the repository and write domain-analysis.md.
@@ -193,17 +226,10 @@ validator|validator|validator|gpt-5.4|high|read-only|Audit operating contracts, 
 run_harness|run-harness|run-harness|gpt-5.4|high|workspace-write|Entry agent that chooses phase, mode, pattern, and next roles.
 <!-- team-spec-roles:end -->
 
-## 운영 계약
-
-- 기본 시작 역할:
-- 요청 유형별 시작 역할:
-- 재진입 규칙:
-- validator 개입 시점:
-- 재구성 조건:
-
 ## 작성 메모
 
 - 고정 seed 역할 이름을 그대로 유지할지, 프로젝트 도메인에 맞는 새 역할명을 만들지 여기서 결정합니다.
+- 역할 이름을 바꾸면 seed 흔적을 남기지 말고, 그 이유와 대체 관계를 팀 메타데이터 또는 역할 책임에 적습니다.
 - 이 문서가 정리된 뒤 \`Phase 3\`이 \`.codex/config.toml\`, \`.codex/agents/*.toml\`, \`.codex/skills/*\` 생성 결과를 다시 맞춥니다.
 "
 

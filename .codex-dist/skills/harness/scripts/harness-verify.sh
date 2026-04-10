@@ -253,7 +253,7 @@ check_team_spec_asset_alignment() {
   done < <(each_team_spec_role)
 
   if [ "$parsed" -eq 0 ]; then
-    fail "team-spec 역할 인벤토리를 읽지 못했습니다"
+    fail "team-spec 최종 역할 인벤토리 미작성"
   else
     log "OK team-spec 역할 인벤토리 정렬 검사"
   fi
@@ -378,18 +378,7 @@ done
 # team-spec 기반 생성 결과 정렬 확인
 check_team_spec_asset_alignment
 
-SKILL_FILES=(
-  ".codex/skills/domain-analyst/SKILL.md"
-  ".codex/skills/harness-architect/SKILL.md"
-  ".codex/skills/skill-scaffolder/SKILL.md"
-  ".codex/skills/qa-designer/SKILL.md"
-  ".codex/skills/orchestrator/SKILL.md"
-  ".codex/skills/validator/SKILL.md"
-  ".codex/skills/run-harness/SKILL.md"
-)
-
-# 로컬 역할 스킬 최소 품질 점검
-for file in "${SKILL_FILES[@]}"; do
+while IFS= read -r file; do
   if [ -f "$file" ]; then
     check_frontmatter_name "$file"
     check_frontmatter_description "$file"
@@ -402,18 +391,7 @@ for file in "${SKILL_FILES[@]}"; do
     check_contains_hint "$file" "## 협업 원칙" "협업 원칙 섹션"
     check_contains_hint "$file" "## 운영 규칙" "운영 규칙 섹션"
   fi
-done
-
-check_contains_hint ".codex/skills/validator/SKILL.md" "meta-system-maturity-guide.md" "validator 성숙도 기준 연결"
-check_contains_hint ".codex/skills/validator/SKILL.md" "운영 가능 / 재작성 필요 / 재구성 필요" "validator 상태 판정 계약"
-check_contains_hint ".codex/skills/validator/SKILL.md" "Phase 7" "validator phase 7 계약"
-check_contains_hint ".codex/skills/validator/SKILL.md" "재작성 필요" "validator 재진입 판단"
-check_contains_hint ".codex/skills/validator/SKILL.md" "Phase 0" "validator 재구성 시작점"
-check_contains_hint ".codex/skills/run-harness/SKILL.md" "meta-system-maturity-guide.md" "run-harness 성숙도 기준 연결"
-check_contains_hint ".codex/skills/run-harness/SKILL.md" "운영 가능 / 재작성 필요 / 재구성 필요" "run-harness 상태 판정 계약"
-check_contains_hint ".codex/skills/run-harness/SKILL.md" "Phase 7" "run-harness phase 7 계약"
-check_contains_hint ".codex/skills/run-harness/SKILL.md" "다음 재진입 Phase" "run-harness 재진입 출력 계약"
-check_contains_hint ".codex/skills/run-harness/SKILL.md" "Phase 0" "run-harness 재구성 시작점"
+done < <(find ".codex/skills" -mindepth 2 -maxdepth 2 -type f -name 'SKILL.md' | sort)
 
 # 로그 구조
 LOG_FILES=(
@@ -510,9 +488,11 @@ fi
 if [ -f ".harness/reports/team-spec.md" ]; then
   check_contains_hint ".harness/reports/team-spec.md" "## 팀 메타데이터" "team-spec 메타데이터 섹션"
   check_contains_hint ".harness/reports/team-spec.md" "## 도메인 근거 요약" "team-spec 도메인 근거 섹션"
+  check_contains_hint ".harness/reports/team-spec.md" "## 역할명 설계 메모" "team-spec 역할명 설계 메모 섹션"
   check_contains_hint ".harness/reports/team-spec.md" "## 팀 설계 결정" "team-spec 팀 설계 결정 섹션"
   check_contains_hint ".harness/reports/team-spec.md" "## 역할 스펙 초안" "team-spec 역할 스펙 섹션"
   check_contains_hint ".harness/reports/team-spec.md" "## 생성 규칙" "team-spec 생성 규칙 섹션"
+  check_contains_hint ".harness/reports/team-spec.md" "## 최종 역할 인벤토리" "team-spec 최종 역할 인벤토리 섹션"
   check_contains_hint ".harness/reports/team-spec.md" "agent 파일명" "team-spec agent 파일명 힌트"
   check_contains_hint ".harness/reports/team-spec.md" "skill 디렉토리명" "team-spec skill 디렉토리명 힌트"
 fi

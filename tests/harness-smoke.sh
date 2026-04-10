@@ -188,38 +188,17 @@ EMPTY_INIT_OUTPUT="$(
 assert_contains "$EMPTY_INIT_OUTPUT" "하네스 운영 모드: 신규 구축" "빈 프로젝트 init 로그"
 assert_contains "$EMPTY_INIT_OUTPUT" "입력 메모 문서: .harness/reports/exploration-notes.md" "빈 프로젝트 init 입력 메모 로그"
 assert_file "$TMP_ROOT/empty-project/AGENTS.md"
-assert_contains "$(cat "$TMP_ROOT/empty-project/AGENTS.md")" "init이 만든 역할 목록과 에이전트 정의는 프로젝트 맞춤 팀이 확정되기 전의 초기 seed입니다." "빈 프로젝트 AGENTS seed 안내"
-assert_file "$TMP_ROOT/empty-project/.codex/config.toml"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/config.toml")" "# team-spec 기반 초기 에이전트 팀 설정" "빈 프로젝트 config team-spec 안내"
-assert_dir "$TMP_ROOT/empty-project/.codex/agents"
-assert_file "$TMP_ROOT/empty-project/.codex/agents/run-harness.toml"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/agents/run-harness.toml")" "# team-spec 기반 생성 결과" "빈 프로젝트 run-harness agent team-spec 생성"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/config.toml")" "[agents.default]" "빈 프로젝트 config default agent"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/config.toml")" "[agents.run_harness]" "빈 프로젝트 config run_harness agent"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/config.toml")" "config_file = \"agents/run-harness.toml\"" "빈 프로젝트 config run_harness config_file"
-assert_dir "$TMP_ROOT/empty-project/.codex/skills/run-harness"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "운영 가능 / 재작성 필요 / 재구성 필요" "빈 프로젝트 run-harness 성숙도 상태"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "meta-system-maturity-guide.md" "빈 프로젝트 run-harness 성숙도 기준"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "Phase 7 품질 비교와 성숙도 평가" "빈 프로젝트 run-harness phase 7 계약"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "다음 재진입 Phase" "빈 프로젝트 run-harness 재진입 출력 계약"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" "Phase 0" "빈 프로젝트 run-harness 재구성 시작점"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/run-harness/SKILL.md")" '`skill-scaffolder`는 하이브리드 모드에서 로컬 스킬 설명 drift, 구조 문구 불일치, 스킬 계약 재정렬이 필요할 때만 보조적으로 둔다.' "빈 프로젝트 run-harness skill-scaffolder 보조 역할"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/harness-architect/SKILL.md")" "domain-analyst, harness-architect, qa-designer, orchestrator, validator의 5역할을 기준으로 보고" "빈 프로젝트 harness-architect 기본 5역할 기준"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/qa-designer/SKILL.md")" '`자동/수동 검증 분리`와 `변경 유형별 체크 기준`은 중첩 불릿보다 한 줄짜리 문장형 항목으로 정리한다.' "빈 프로젝트 qa-designer 문장형 목록 규칙"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/validator/SKILL.md")" "운영 가능 / 재작성 필요 / 재구성 필요" "빈 프로젝트 validator 성숙도 상태"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/validator/SKILL.md")" "meta-system-maturity-guide.md" "빈 프로젝트 validator 성숙도 기준"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/validator/SKILL.md")" "Phase 7" "빈 프로젝트 validator phase 7 계약"
-assert_contains "$(cat "$TMP_ROOT/empty-project/.codex/skills/validator/SKILL.md")" "Phase 0" "빈 프로젝트 validator 재구성 시작점"
+assert_contains "$(cat "$TMP_ROOT/empty-project/AGENTS.md")" "init 직후에는 프로젝트 특화 역할 팀이 아직 생성되지 않은 상태입니다." "빈 프로젝트 AGENTS 역할 설계 전 안내"
+assert_not_file "$TMP_ROOT/empty-project/.codex/config.toml"
+assert_not_dir "$TMP_ROOT/empty-project/.codex/agents"
+assert_not_dir "$TMP_ROOT/empty-project/.codex/skills"
 assert_contains "$(cat "$HARNESS_REF_DIR/../SKILL.md")" "프로젝트 특화 역할 팀" "전역 harness skill 프로젝트 특화 역할 팀 표현"
-assert_contains "$(cat "$HARNESS_REF_DIR/../SKILL.md")" "seed 역할의 상세 SKILL은 메타시스템 기준 계약을 담는 고품질 템플릿으로 유지한다." "전역 harness skill seed 상세 skill 유지 계약"
 assert_contains "$(cat "$HARNESS_REF_DIR/orchestrator-template.md")" "domain-analyst → harness-architect → qa-designer → orchestrator → validator" "오케스트레이터 기본 파이프라인"
 assert_not_contains "$(cat "$HARNESS_REF_DIR/orchestrator-template.md")" "domain-analyst → harness-architect → skill-scaffolder → qa-designer → validator" "오케스트레이터 기본 파이프라인의 skill-scaffolder 제거"
 assert_contains "$(cat "$HARNESS_REF_DIR/agent-design-patterns.md")" "범용 하네스 1차 단계에서는 다음 5개 역할을 기본으로 한다." "에이전트 패턴 기본 역할 수"
 assert_contains "$(cat "$HARNESS_REF_DIR/agent-design-patterns.md")" $'- domain-analyst\n- harness-architect\n- qa-designer\n- orchestrator\n- validator' "에이전트 패턴 기본 역할 목록"
 assert_contains "$(cat "$HARNESS_REF_DIR/team-examples.md")" "기본 5역할 팀이 자연스럽다." "팀 예시 기본 역할 수"
 assert_contains "$(cat "$HARNESS_REF_DIR/team-examples.md")" $'- domain-analyst\n- harness-architect\n- qa-designer\n- orchestrator\n- validator' "팀 예시 기본 역할 목록"
-assert_contains "$(cat "$HARNESS_REF_DIR/team-spec-schema.md")" "seed 역할: 이미 품질 기준이 높은 상세 SKILL 템플릿을 유지한다." "team-spec schema seed skill 유지"
-assert_contains "$(cat "$HARNESS_REF_DIR/team-spec-schema.md")" "프로젝트 특화 역할: team-spec을 바탕으로 기본 SKILL을 생성" "team-spec schema custom skill 생성"
 assert_contains "$(cat "$HARNESS_REF_DIR/target-evaluation-playbook.md")" "운영 가능" "타겟 평가 플레이북 상태 판정"
 assert_contains "$(cat "$HARNESS_REF_DIR/target-evaluation-playbook.md")" "다음 재진입 phase" "타겟 평가 플레이북 재진입 기준"
 assert_dir "$TMP_ROOT/empty-project/.harness/reports"
@@ -231,8 +210,10 @@ assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/reports/team-spec.md")"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/reports/team-spec.md")" "## 팀 설계 결정" "빈 프로젝트 team-spec 팀 설계 결정"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/reports/team-spec.md")" "## 역할 스펙 초안" "빈 프로젝트 team-spec 역할 스펙"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/reports/team-spec.md")" "## 생성 규칙" "빈 프로젝트 team-spec 생성 규칙"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/reports/team-spec.md")" "## 최종 역할 인벤토리" "빈 프로젝트 team-spec 최종 역할 인벤토리"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/reports/team-spec.md")" 'role_id|display_name|agent_file|model|reasoning|sandbox|description' "빈 프로젝트 team-spec 역할 블록 형식"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/reports/team-spec.md")" "payment_dev|payment-dev|payment-dev" "빈 프로젝트 team-spec 프로젝트 특화 역할 예시"
+assert_not_contains "$(cat "$TMP_ROOT/empty-project/.harness/reports/team-spec.md")" "domain_analyst|domain-analyst|domain-analyst" "빈 프로젝트 team-spec seed 역할 미생성"
 if (
   cd "$TMP_ROOT/empty-project" && \
   project_setup_has_answers_check ".harness/project-setup.md"
@@ -244,8 +225,8 @@ assert_not_file "$TMP_ROOT/empty-project/.harness/reports/domain-analysis.md"
 assert_command_fails_with \
   "$TMP_ROOT/empty-project" \
   "bash \"$HARNESS_SCRIPT_DIR/harness-verify.sh\"" \
-  "문서 누락: 역할 재작성 미수행" \
-  "빈 프로젝트 verify 최종 문서 누락 실패"
+  "누락된 파일: .codex/config.toml" \
+  "빈 프로젝트 verify phase 3 미수행 실패"
 
 log "스택 프로젝트 init -> verify 확인"
 mkdir -p "$TMP_ROOT/stack-project"
@@ -314,11 +295,9 @@ STACK_INIT_OUTPUT="$(
 assert_contains "$STACK_INIT_OUTPUT" "하네스 운영 모드: 신규 구축" "스택 프로젝트 init 로그"
 assert_contains "$STACK_INIT_OUTPUT" "입력 메모 요약: 입력 메모는 초기 상태만 전달하며, 사용자 입력과 역할 재해석이 필요합니다" "스택 프로젝트 init 입력 메모 요약"
 assert_file "$TMP_ROOT/stack-project/AGENTS.md"
-assert_file "$TMP_ROOT/stack-project/.codex/config.toml"
-assert_dir "$TMP_ROOT/stack-project/.codex/agents"
-assert_file "$TMP_ROOT/stack-project/.codex/agents/domain-analyst.toml"
-assert_contains "$(cat "$TMP_ROOT/stack-project/.codex/config.toml")" "[agents.domain_analyst]" "스택 프로젝트 config domain_analyst agent"
-assert_contains "$(cat "$TMP_ROOT/stack-project/.codex/config.toml")" "config_file = \"agents/domain-analyst.toml\"" "스택 프로젝트 config domain_analyst config_file"
+assert_not_file "$TMP_ROOT/stack-project/.codex/config.toml"
+assert_not_dir "$TMP_ROOT/stack-project/.codex/agents"
+assert_not_dir "$TMP_ROOT/stack-project/.codex/skills"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/exploration-notes.md"
 assert_file "$TMP_ROOT/stack-project/.harness/reports/team-spec.md"
 assert_not_file "$TMP_ROOT/stack-project/.harness/reports/domain-analysis.md"
@@ -331,21 +310,27 @@ mkdir -p "$TMP_ROOT/custom-role-project"
 (
   cd "$TMP_ROOT/custom-role-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-init.sh" >/dev/null && \
-  perl -0pi -e 's@run_harness\|run-harness\|run-harness\|gpt-5\.4\|high\|workspace-write\|Entry agent that chooses phase, mode, pattern, and next roles\.\n@run_harness|run-harness|run-harness|gpt-5.4|high|workspace-write|Entry agent that chooses phase, mode, pattern, and next roles.\npayment_dev|payment-dev|payment-dev|gpt-5.4|high|workspace-write|Implement payment flow changes and write payment rollout notes.\n@' .harness/reports/team-spec.md && \
+  perl -0pi -e 's@<!-- team-spec-roles:start -->\n<!-- team-spec-roles:end -->@<!-- team-spec-roles:start -->\nrun_harness|run-harness|run-harness|gpt-5.4|high|workspace-write|Entry agent that chooses phase, mode, pattern, and next roles.\npayment_dev|payment-dev|payment-dev|gpt-5.4|high|workspace-write|Implement payment flow changes and write payment rollout notes.\n<!-- team-spec-roles:end -->@' .harness/reports/team-spec.md && \
   bash "$HARNESS_SCRIPT_DIR/harness-generate-team-assets.sh" >/dev/null
 )
 assert_file "$TMP_ROOT/custom-role-project/.codex/agents/payment-dev.toml"
+assert_file "$TMP_ROOT/custom-role-project/.codex/agents/run-harness.toml"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/config.toml")" "[agents.payment_dev]" "custom 역할 config section"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/config.toml")" "[agents.run_harness]" "custom 역할 run_harness config section"
 assert_dir "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev"
+assert_dir "$TMP_ROOT/custom-role-project/.codex/skills/run-harness"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "team-spec" "custom 역할 skill team-spec 기준"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "payment_dev" "custom 역할 skill role id"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "workspace-write" "custom 역할 skill sandbox"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/run-harness/SKILL.md")" "## 주요 작업" "custom run-harness skill 주요 작업"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/run-harness/SKILL.md")" "## 협업 원칙" "custom run-harness skill 협업 원칙"
 CUSTOM_VERIFY_OUTPUT="$(
   cd "$TMP_ROOT/custom-role-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh" 2>&1 || true
 )"
 assert_not_contains "$CUSTOM_VERIFY_OUTPUT" "누락된 파일: .codex/agents/payment-dev.toml" "custom 역할 verify agent 누락 없음"
 assert_not_contains "$CUSTOM_VERIFY_OUTPUT" "누락된 파일: .codex/skills/payment-dev/SKILL.md" "custom 역할 verify skill 누락 없음"
+assert_not_contains "$CUSTOM_VERIFY_OUTPUT" "team-spec 최종 역할 인벤토리 미작성" "custom 역할 verify team-spec 작성 완료"
 assert_contains "$CUSTOM_VERIFY_OUTPUT" "문서 누락: 역할 재작성 미수행" "custom 역할 verify는 최종 보고서 누락만 실패"
 
 cat > "$TMP_ROOT/stack-project/.harness/project-setup.md" <<'EOF'
@@ -371,7 +356,7 @@ STACK_VERIFY_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh" 2>&1 || true
 )"
-assert_contains "$STACK_VERIFY_OUTPUT" "문서 누락: 역할 재작성 미수행" "스택 프로젝트 verify 최종 문서 누락 실패"
+assert_contains "$STACK_VERIFY_OUTPUT" "누락된 파일: .codex/config.toml" "스택 프로젝트 verify phase 3 미수행 실패"
 STACK_UPDATE_OUTPUT="$(
   cd "$TMP_ROOT/stack-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-update.sh" --domain --qa

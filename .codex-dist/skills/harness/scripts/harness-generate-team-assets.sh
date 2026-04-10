@@ -7,19 +7,6 @@ log() {
   printf '[harness][generate] %s\n' "$1"
 }
 
-is_seed_role() {
-  local role_id="$1"
-
-  case "$role_id" in
-    domain_analyst|harness_architect|skill_scaffolder|qa_designer|orchestrator|validator|run_harness)
-      return 0
-      ;;
-    *)
-      return 1
-      ;;
-  esac
-}
-
 require_team_spec() {
   [ -f "$TEAM_SPEC_FILE" ] || {
     printf '[harness][generate][error] team-spec 문서가 없습니다: %s\n' "$TEAM_SPEC_FILE" >&2
@@ -150,6 +137,12 @@ description: ${description}
 
 \`${role_id}\` 역할이 맡아야 하는 작업 범위와 산출물 책임을 현재 프로젝트 기준으로 유지한다.
 
+## 주요 작업
+
+1. \`.harness/reports/team-spec.md\`에서 이 역할의 목적, 입력, 출력, handoff를 다시 읽는다.
+2. 현재 요청이 이 역할의 책임 범위에 실제로 들어오는지 먼저 확인한다.
+3. 관련 보고서나 산출물을 직접 읽고, 이 역할이 담당해야 할 결과만 작성하거나 갱신한다.
+
 ## 입력
 
 - 현재 요청
@@ -160,13 +153,21 @@ description: ${description}
 
 - team-spec에 정의된 역할 산출물
 
-## 기본 운영 규칙
+## 역할 팀 내 위치
+
+- team-spec이 정의한 프로젝트 특화 역할
+
+## 협업 원칙
 
 - 이 역할은 \`team-spec\`에 적힌 목적, 입력, 출력, handoff를 먼저 따른다.
 - \`AGENTS.md\`, \`.codex/config.toml\`, \`.codex/agents/*.toml\`과 서로 충돌하는 설명을 새로 만들지 않는다.
+- 프로젝트 맞춤 절차가 더 필요해지면 이 스킬을 구체화하되, team-spec의 역할 책임과 어긋나지 않게 유지한다.
+
+## 운영 규칙
+
 - 현재 sandbox 정책은 \`${sandbox}\` 이다.
 - description 초안은 다음과 같다: ${description}
-- 프로젝트 맞춤 절차가 더 필요해지면 이 스킬을 구체화하되, team-spec의 역할 책임과 어긋나지 않게 유지한다.
+- 이 파일이 얇은 기본 스킬로 시작하더라도, 실제 프로젝트 운영 중에는 해당 역할이 직접 더 구체적인 실행 계약으로 다시 써야 한다.
 EOF
 
   log "skill 생성: ${skill_file}"
@@ -182,9 +183,7 @@ generate_assets() {
     [ -n "${role_id:-}" ] || continue
     append_config_section "$role_id" "$agent_file" "$description"
     write_agent_file "$role_id" "$agent_file" "$model" "$reasoning" "$sandbox" "$description"
-    if ! is_seed_role "$role_id"; then
-      write_skill_file "$role_id" "$display_name" "$agent_file" "$sandbox" "$description"
-    fi
+    write_skill_file "$role_id" "$display_name" "$agent_file" "$sandbox" "$description"
     parsed=1
   done < <(awk '
     /<!-- team-spec-roles:start -->/ { in_block = 1; next }

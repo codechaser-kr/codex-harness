@@ -56,7 +56,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 
 - 최초 하네스 구성 요청이면 반드시 `bash scripts/harness-init.sh`를 앞에 실행한다.
 - `harness-init.sh` 직후 상태는 완료가 아니라 자동 판단 보류 메모와 역할 입력만 준비된 상태로 본다.
-- `harness-init.sh` 다음에는 `Phase 2`가 team-spec을 만들고, `Phase 3`이 그 스펙으로 동적 agent/skill 자산을 생성해야 한다.
+- `harness-init.sh` 다음에는 `Phase 2`가 team-spec의 최종 역할 인벤토리를 만들고, `Phase 3`이 그 스펙으로 동적 agent/skill 자산을 생성해야 한다.
 - `.codex/config.toml`과 `.codex/agents/*.toml`은 init 스크립트의 고정 템플릿이 아니라, Phase 3 생성기가 team-spec 기준으로 책임진다.
 - `harness-init.sh`가 고정 agent 파일 세트를 완성본처럼 남기는 구조를 최종 형태로 간주하지 않는다.
 - 하네스 구성이 끝났다고 판단하기 전에 반드시 `bash scripts/harness-verify.sh`를 실행한다.
@@ -269,7 +269,7 @@ init는 자동 판단 보류 메모만 만들고, 나머지 문서는 역할 스
 7. orchestrator를 중심으로 흐름을 설계한다.
 8. run-harness를 팀 기동 진입점으로 포함한다.
 9. 각 역할의 agent 파일명, skill 디렉토리명, 입력/출력, handoff, sandbox 정책, description 초안을 team-spec으로 정리한다.
-10. team-spec 상단에는 seed 역할 유지 여부와 새 역할명이 필요한 이유를 도메인 근거로 함께 남긴다.
+10. team-spec 상단에는 왜 그 역할명이 현재 저장소의 도메인과 실패 경계를 더 잘 설명하는지 도메인 근거를 함께 남긴다.
 11. 새 역할명을 만들 때는 저장소 용어와 실패 경계를 드러내는 이름을 우선하고, `role_id`는 snake_case, 표시 이름과 파일명은 kebab-case로 정리한다.
 
 이 단계의 핵심은  
@@ -290,8 +290,8 @@ init는 자동 판단 보류 메모만 만들고, 나머지 문서는 역할 스
 6. description은 실제 요청에서 트리거될 수 있도록 구체적으로 작성한다.
 7. 역할 이름, 파일명, sandbox 정책은 team-spec이 먼저 정하고 생성기는 그 결과를 반영한다.
 8. run-harness가 팀의 실제 진입점으로 기능하도록 한다.
-9. seed 역할의 상세 SKILL은 메타시스템 기준 계약을 담는 고품질 템플릿으로 유지한다.
-10. team-spec에 새 역할이 들어오면 그 역할의 `.codex/skills/*` 기본 스킬을 함께 생성하고, 해당 프로젝트 안에서 그 역할이 직접 구체화하도록 둔다.
+9. team-spec에 적힌 역할만 `.codex/skills/*`로 생성한다.
+10. 생성된 역할 스킬은 현재 프로젝트 안에서 실제 절차와 산출물 계약에 맞게 다시 구체화한다.
 
 `skill-scaffolder`는 핵심 보고서 작성 흐름의 기본 단계가 아니다. 이 역할은 로컬 스킬 설명 drift, 구조 문구 불일치, 스킬 계약 재정렬이 필요할 때만 보조적으로 사용한다.
 

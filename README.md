@@ -93,7 +93,7 @@ repo/
     └── logging-policy.md
 ```
 
-현재 저장소는 아직 고정 seed 역할 생성 구조를 포함하고 있지만, 목표 구조에서는 `Phase 2`가 단순 초안이 아니라 실제 프로젝트 맞춤 `team-spec`을 만들고 `Phase 3`이 그 스펙을 바탕으로 `.codex/agents/*.toml`, `.codex/skills/*`, `.codex/config.toml`을 동적으로 생성해야 합니다. 이 기준 문서는 `references/team-spec-schema.md`에 둡니다.
+목표 구조에서는 `Phase 2`가 단순 초안이 아니라 실제 프로젝트 맞춤 `team-spec`을 만들고, `Phase 3`이 그 스펙만 바탕으로 `.codex/agents/*.toml`, `.codex/skills/*`, `.codex/config.toml`을 동적으로 생성해야 합니다. 이 기준 문서는 `references/team-spec-schema.md`에 둡니다.
 
 핵심 산출물은 `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`의 로컬 Codex 에이전트 설정, `.codex/skills/*`의 로컬 역할 스킬, 그리고 그 역할이 직접 쓰는 `.harness/reports/*` 문서입니다. `harness-init.sh`는 `exploration-notes.md`, 생성 파이프라인 입력, 로그 구조를 준비하고, 최종 agent/skill 산출은 `Phase 2`와 `Phase 3` 계약을 따라야 합니다. `.harness/logs/*`와 `.harness/logging-policy.md`는 실제 운영 기록과 로그 규칙을 위한 기본 산출물입니다.
 
@@ -128,7 +128,7 @@ repo/
 
 그러면 전역 `harness` 스킬이 현재 저장소를 읽고, 프로젝트 내부에 로컬 실행 하네스 스킬과 루트 기준 AI 탐색 구조를 생성합니다.
 
-초기화 직후에는 `exploration-notes.md`와 역할 스킬만 준비된 상태입니다. 여기서 `exploration-notes.md`는 자동 판단 보류를 위한 약한 메모이며, 기본 흐름은 `harness-init.sh`로 이 메모와 역할 입력을 준비한 뒤, `run-harness`와 역할 스킬이 저장소를 다시 읽어 각 보고서를 직접 작성하고, 마지막에 `harness-verify.sh`로 확인하는 순서입니다.
+초기화 직후에는 `exploration-notes.md`, `project-setup.md`, `team-spec.md` 같은 입력 계약만 준비된 상태입니다. 여기서 `exploration-notes.md`는 자동 판단 보류를 위한 약한 메모이며, 기본 흐름은 `harness-init.sh`로 이 메모와 역할 설계 계약을 준비한 뒤, `Phase 2`가 `team-spec`의 최종 역할 인벤토리를 작성하고, `Phase 3`이 그 결과로 로컬 agent/skill을 생성하는 순서입니다.
 
 완료로 보기 위한 최소 기준은 아래와 같습니다.
 
@@ -145,7 +145,7 @@ repo/
 목표 구조에서 하네스는 고정 역할 세트를 복사하지 않습니다.
 대신 `Phase 2 프로젝트 맞춤 에이전트 팀 설계`에서 현재 저장소 도메인에 맞는 `team-spec`을 만들고, `Phase 3 에이전트 정의 생성`에서 그 스펙을 바탕으로 실제 `.codex/agents/*.toml`, `.codex/skills/*`, `.codex/config.toml`을 동적으로 생성합니다.
 
-즉 최종 역할 이름은 저장소마다 달라질 수 있고, `team-spec`에는 왜 seed 역할명을 유지하거나 버렸는지 도메인 근거가 함께 남아야 합니다.
+즉 최종 역할 이름은 저장소마다 달라질 수 있고, `team-spec`에는 왜 그 역할명이 현재 저장소의 도메인과 실패 경계를 더 잘 설명하는지 근거가 함께 남아야 합니다.
 
 권장 형식은 `role_id`는 snake_case, 표시 이름과 파일명은 kebab-case입니다. 중요한 것은 형식 자체보다도, 역할명이 저장소 고유 용어와 실패 경계를 직접 드러내야 한다는 점입니다.
 
@@ -157,24 +157,20 @@ repo/
 
 `AGENTS.md`와 `.codex/agents/*.toml`은 `누가 하는가`, 역할 스킬은 `어떻게 하는가`를 담당합니다. 중요한 것은 고정된 역할 이름이 아니라, 타겟 프로젝트에 맞는 역할 집합이 실제로 생성되는 것입니다.
 
-현재 구조에서는 seed 역할의 상세 SKILL을 즉시 제거하지 않습니다. 이유는 `domain-analyst`, `harness-architect`, `qa-designer`, `orchestrator`, `validator`, `run-harness`가 여전히 메타시스템의 기준 계약을 담는 고품질 seed 템플릿이기 때문입니다.
-
-대신 `team-spec`에 seed 밖의 새 역할이 추가되면 `Phase 3` 생성기가 해당 역할의 `.codex/skills/*` 기본 스킬을 만들고, 그 프로젝트에서 실제로 필요한 절차와 출력 계약은 이후 그 역할이 직접 구체화합니다.
+이 구조에서는 seed 역할 세트를 init이 미리 제공하지 않습니다. `team-spec`의 최종 역할 인벤토리가 먼저 확정되고, `Phase 3` 생성기가 그 역할들만 읽어 `.codex/agents/*.toml`과 `.codex/skills/*`를 생성합니다.
 
 ## 동작 방식
 
 이 시스템은 보통 다음 순서로 동작합니다.
 
 0. 현재 하네스 현황을 먼저 감사합니다.
-1. `harness-init.sh`로 로컬 역할 스킬, 입력 메모, 로그 구조를 생성합니다.
+1. `harness-init.sh`로 입력 메모, 역할 설계 계약, 로그 구조를 생성합니다.
 2. 자동 메모와 사용자 입력 준비 상태를 확인합니다.
-3. `run-harness`가 현재 상태를 읽고 어느 Phase부터 다시 시작할지 정합니다.
-4. `domain-analyst`가 저장소 감사 결과를 바탕으로 도메인/작업 분석을 최종 작성합니다.
-5. `harness-architect`가 프로젝트 맞춤 에이전트 팀과 메타시스템 구조를 설계합니다.
-6. `Phase 2`가 만든 team-spec을 바탕으로 역할 정의와 로컬 스킬이 동적으로 생성되고, 해당 팀이 QA/운영 계약 문서를 완성합니다.
-7. 필요할 때만 `skill-scaffolder`가 로컬 스킬 설명 drift를 정렬합니다.
-8. `validator`와 `harness-verify.sh`가 구조/운영 계약을 검증합니다.
-9. 마지막에 품질 비교와 성숙도 평가를 통해 다음 재진입 지점을 정리합니다.
+3. `Phase 1`과 `Phase 2`가 저장소를 읽고 `domain-analysis.md`, `team-spec.md`, 메타시스템 문서를 작성합니다.
+4. `Phase 3`이 `team-spec`의 최종 역할 인벤토리를 바탕으로 역할 정의와 로컬 스킬을 동적으로 생성합니다.
+5. 생성된 팀이 QA/운영 계약 문서를 완성합니다.
+6. `validator`와 `harness-verify.sh`가 구조/운영 계약을 검증합니다.
+7. 마지막에 품질 비교와 성숙도 평가를 통해 다음 재진입 지점을 정리합니다.
 
 ## Phase 게이트
 

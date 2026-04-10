@@ -140,10 +140,16 @@ if [ "$HARNESS_OPERATION_MODE" = "신규 구축" ]; then
 fi
 
 if [ "$HARNESS_OPERATION_MODE" = "기존 확장" ] && { [ "$HARNESS_SKILL_COUNT" -eq 0 ] || [ "$HARNESS_REPORT_COUNT" -eq 0 ]; }; then
-  log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
-  log "부분 구조만 남아 있어 update보다 명시적 재구성이 적절합니다."
-  log "기존 하네스 구조 정리 후 harness-init.sh로 다시 구성하세요."
-  exit 1
+  if [ -f "$REPORT_DIR/team-spec.md" ] && [ -f "$EXPLORATION_NOTES_FILE" ]; then
+    log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
+    log "Phase 2/3 이전의 설계 계약 상태로 판단합니다."
+    log "team-spec 재정리와 재진입 안내를 계속 진행합니다."
+  else
+    log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
+    log "부분 구조만 남아 있어 update보다 명시적 재구성이 적절합니다."
+    log "기존 하네스 구조 정리 후 harness-init.sh로 다시 구성하세요."
+    exit 1
+  fi
 fi
 
 if [ "$AGENTS_ALIGNMENT_STATUS" = "충돌" ] || [ "$AGENTS_ALIGNMENT_STATUS" = "재구성 필요" ]; then

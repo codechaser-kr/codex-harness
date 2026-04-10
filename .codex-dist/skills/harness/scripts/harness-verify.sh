@@ -42,6 +42,18 @@ check_file() {
   fi
 }
 
+each_team_spec_role() {
+  local team_spec_file=".harness/reports/team-spec.md"
+
+  [ -f "$team_spec_file" ] || return 0
+
+  awk '
+    /<!-- team-spec-roles:start -->/ { in_block = 1; next }
+    /<!-- team-spec-roles:end -->/ { in_block = 0; exit }
+    in_block && NF { print }
+  ' "$team_spec_file"
+}
+
 check_frontmatter_name() {
   local file="$1"
   if grep -q '^name:' "$file"; then
@@ -204,6 +216,49 @@ check_final_report() {
   fi
 }
 
+check_team_spec_asset_alignment() {
+  local parsed=0
+  local role_id
+  local display_name
+  local agent_file
+  local model
+  local reasoning
+  local sandbox
+  local description
+  local config_section
+  local config_line
+  local agent_path
+  local skill_path
+
+  while IFS='|' read -r role_id display_name agent_file model reasoning sandbox description; do
+    [ -n "${role_id:-}" ] || continue
+    parsed=1
+    config_section="^\\[agents\\.${role_id}\\]$"
+    config_line="config_file = \"agents/${agent_file}.toml\""
+    agent_path=".codex/agents/${agent_file}.toml"
+    skill_path=".codex/skills/${agent_file}/SKILL.md"
+
+    check_contains_hint ".codex/config.toml" "$config_section" "config team-spec 역할 섹션"
+    check_contains_hint ".codex/config.toml" "$config_line" "config team-spec 역할 config_file"
+    check_file "$agent_path"
+    check_file "$skill_path"
+    check_contains_hint "$agent_path" "^name = " "team-spec 역할 agent name 필드"
+    check_contains_hint "$agent_path" "^description = " "team-spec 역할 agent description 필드"
+    check_contains_hint "$agent_path" "^model = " "team-spec 역할 agent model 필드"
+    check_contains_hint "$agent_path" "^sandbox_mode = " "team-spec 역할 agent sandbox_mode 필드"
+    check_contains_hint "$agent_path" "^developer_instructions = " "team-spec 역할 agent developer_instructions 필드"
+    check_frontmatter_name "$skill_path"
+    check_frontmatter_description "$skill_path"
+    check_description_length "$skill_path"
+  done < <(each_team_spec_role)
+
+  if [ "$parsed" -eq 0 ]; then
+    fail "team-spec 역할 인벤토리를 읽지 못했습니다"
+  else
+    log "OK team-spec 역할 인벤토리 정렬 검사"
+  fi
+}
+
 audit_harness_drift() {
   local mode="$1"
   local skill_count="$2"
@@ -280,13 +335,6 @@ check_dir ".codex"
 check_file ".codex/config.toml"
 check_dir ".codex/agents"
 check_dir ".codex/skills"
-check_dir ".codex/skills/domain-analyst"
-check_dir ".codex/skills/harness-architect"
-check_dir ".codex/skills/skill-scaffolder"
-check_dir ".codex/skills/qa-designer"
-check_dir ".codex/skills/orchestrator"
-check_dir ".codex/skills/validator"
-check_dir ".codex/skills/run-harness"
 
 check_dir ".harness"
 check_dir ".harness/reports"
@@ -307,13 +355,6 @@ check_file "$HARNESS_REFERENCE_DIR/target-evaluation-playbook.md"
 check_contains_hint ".codex/config.toml" "^\\[agents\\]$" "config agents 섹션"
 check_contains_hint ".codex/config.toml" "^max_threads = " "config max_threads"
 check_contains_hint ".codex/config.toml" "^\\[agents\\.default\\]$" "config default agent"
-check_contains_hint ".codex/config.toml" "^\\[agents\\.domain_analyst\\]$" "config domain_analyst agent"
-check_contains_hint ".codex/config.toml" "^\\[agents\\.harness_architect\\]$" "config harness_architect agent"
-check_contains_hint ".codex/config.toml" "^\\[agents\\.skill_scaffolder\\]$" "config skill_scaffolder agent"
-check_contains_hint ".codex/config.toml" "^\\[agents\\.qa_designer\\]$" "config qa_designer agent"
-check_contains_hint ".codex/config.toml" "^\\[agents\\.orchestrator\\]$" "config orchestrator agent"
-check_contains_hint ".codex/config.toml" "^\\[agents\\.validator\\]$" "config validator agent"
-check_contains_hint ".codex/config.toml" "^\\[agents\\.run_harness\\]$" "config run_harness agent"
 check_contains_hint ".codex/config.toml" "^config_file = \"agents/" "config agent config_file"
 
 # harness 자동화 스크립트 확인
@@ -334,7 +375,9 @@ for file in "${DIST_SCRIPT_FILES[@]}"; do
   check_file "$file"
 done
 
-# 필수 로컬 역할 스킬
+# team-spec 기반 생성 결과 정렬 확인
+check_team_spec_asset_alignment
+
 SKILL_FILES=(
   ".codex/skills/domain-analyst/SKILL.md"
   ".codex/skills/harness-architect/SKILL.md"
@@ -344,29 +387,6 @@ SKILL_FILES=(
   ".codex/skills/validator/SKILL.md"
   ".codex/skills/run-harness/SKILL.md"
 )
-
-for file in "${SKILL_FILES[@]}"; do
-  check_file "$file"
-done
-
-AGENT_FILES=(
-  ".codex/agents/domain-analyst.toml"
-  ".codex/agents/harness-architect.toml"
-  ".codex/agents/skill-scaffolder.toml"
-  ".codex/agents/qa-designer.toml"
-  ".codex/agents/orchestrator.toml"
-  ".codex/agents/validator.toml"
-  ".codex/agents/run-harness.toml"
-)
-
-for file in "${AGENT_FILES[@]}"; do
-  check_file "$file"
-  check_contains_hint "$file" "^name = " "에이전트 name 필드"
-  check_contains_hint "$file" "^description = " "에이전트 description 필드"
-  check_contains_hint "$file" "^model = " "에이전트 model 필드"
-  check_contains_hint "$file" "^sandbox_mode = " "에이전트 sandbox_mode 필드"
-  check_contains_hint "$file" "^developer_instructions = " "에이전트 developer_instructions 필드"
-done
 
 # 로컬 역할 스킬 최소 품질 점검
 for file in "${SKILL_FILES[@]}"; do
@@ -489,8 +509,10 @@ fi
 
 if [ -f ".harness/reports/team-spec.md" ]; then
   check_contains_hint ".harness/reports/team-spec.md" "## 팀 메타데이터" "team-spec 메타데이터 섹션"
+  check_contains_hint ".harness/reports/team-spec.md" "## 도메인 근거 요약" "team-spec 도메인 근거 섹션"
+  check_contains_hint ".harness/reports/team-spec.md" "## 팀 설계 결정" "team-spec 팀 설계 결정 섹션"
   check_contains_hint ".harness/reports/team-spec.md" "## 역할 스펙 초안" "team-spec 역할 스펙 섹션"
-  check_contains_hint ".harness/reports/team-spec.md" "## 운영 계약" "team-spec 운영 계약 섹션"
+  check_contains_hint ".harness/reports/team-spec.md" "## 생성 규칙" "team-spec 생성 규칙 섹션"
   check_contains_hint ".harness/reports/team-spec.md" "agent 파일명" "team-spec agent 파일명 힌트"
   check_contains_hint ".harness/reports/team-spec.md" "skill 디렉토리명" "team-spec skill 디렉토리명 힌트"
 fi

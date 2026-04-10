@@ -335,6 +335,13 @@ assert_dir "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "team-spec" "custom 역할 skill team-spec 기준"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "payment_dev" "custom 역할 skill role id"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "workspace-write" "custom 역할 skill sandbox"
+CUSTOM_VERIFY_OUTPUT="$(
+  cd "$TMP_ROOT/custom-role-project" && \
+  bash "$HARNESS_SCRIPT_DIR/harness-verify.sh" 2>&1 || true
+)"
+assert_not_contains "$CUSTOM_VERIFY_OUTPUT" "누락된 파일: .codex/agents/payment-dev.toml" "custom 역할 verify agent 누락 없음"
+assert_not_contains "$CUSTOM_VERIFY_OUTPUT" "누락된 파일: .codex/skills/payment-dev/SKILL.md" "custom 역할 verify skill 누락 없음"
+assert_contains "$CUSTOM_VERIFY_OUTPUT" "문서 누락: 역할 재작성 미수행" "custom 역할 verify는 최종 보고서 누락만 실패"
 
 cat > "$TMP_ROOT/stack-project/.harness/project-setup.md" <<'EOF'
 # 프로젝트 설정

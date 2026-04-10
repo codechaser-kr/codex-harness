@@ -178,6 +178,21 @@ create_file_if_missing ".harness/reports/team-spec.md" \
   - skill 디렉토리명:
   - sandbox 정책:
 
+## seed 역할 인벤토리
+
+아래 블록은 현재 생성기가 사용하는 초기 역할 인벤토리입니다.
+\`Phase 2\`에서 이 목록을 프로젝트 맞춤 역할 집합으로 다시 쓰고, \`Phase 3\`은 이 블록을 입력으로 \`.codex/config.toml\`과 \`.codex/agents/*.toml\`을 생성합니다.
+
+<!-- team-spec-roles:start -->
+domain_analyst|domain-analyst|domain-analyst|gpt-5.4|high|workspace-write|Analyze the repository and write domain-analysis.md.
+harness_architect|harness-architect|harness-architect|gpt-5.4|high|workspace-write|Design the harness meta-system structure and handoff rules.
+skill_scaffolder|skill-scaffolder|skill-scaffolder|gpt-5.4-mini|medium|workspace-write|Realign local skill contracts when sync drift appears.
+qa_designer|qa-designer|qa-designer|gpt-5.4|high|workspace-write|Write qa-strategy.md with validation boundaries and escalation rules.
+orchestrator|orchestrator|orchestrator|gpt-5.4|high|workspace-write|Choose start points, re-entry rules, and team flow.
+validator|validator|validator|gpt-5.4|high|read-only|Audit operating contracts, drift, and rewrite ownership.
+run_harness|run-harness|run-harness|gpt-5.4|high|workspace-write|Entry agent that chooses phase, mode, pattern, and next roles.
+<!-- team-spec-roles:end -->
+
 ## 운영 계약
 
 - 기본 시작 역할:
@@ -246,6 +261,8 @@ create_file_if_missing "AGENTS.md" \
 - 최종 문서는 역할 스킬과 에이전트 팀이 직접 작성한 뒤 검증합니다.
 - drift / sync / evolve는 운영 유지보수의 기본 루프입니다.
 "
+
+bash "$SCRIPT_DIR/harness-generate-team-assets.sh"
 
 create_file_if_missing ".codex/config.toml" \
 "# 초기 seed 에이전트 팀 설정

@@ -321,6 +321,7 @@ DIST_SCRIPT_FILES=(
   "$HARNESS_SCRIPT_DIR/harness-lib.sh"
   "$HARNESS_SCRIPT_DIR/harness-init.sh"
   "$HARNESS_SCRIPT_DIR/harness-explore.sh"
+  "$HARNESS_SCRIPT_DIR/harness-generate-team-assets.sh"
   "$HARNESS_SCRIPT_DIR/harness-update.sh"
   "$HARNESS_SCRIPT_DIR/harness-verify.sh"
   "$HARNESS_SCRIPT_DIR/harness-log.sh"

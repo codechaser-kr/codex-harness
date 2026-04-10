@@ -326,6 +326,14 @@ STACK_VERIFY_OUTPUT="$(
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh" 2>&1 || true
 )"
 assert_contains "$STACK_VERIFY_OUTPUT" "문서 누락: 역할 재작성 미수행" "스택 프로젝트 verify 최종 문서 누락 실패"
+STACK_UPDATE_OUTPUT="$(
+  cd "$TMP_ROOT/stack-project" && \
+  bash "$HARNESS_SCRIPT_DIR/harness-update.sh" --domain --qa
+)"
+assert_contains "$STACK_UPDATE_OUTPUT" "update 수행 범위: Phase 0 감사와 입력 메모 재정리" "스택 프로젝트 update phase 0 감사"
+assert_contains "$STACK_UPDATE_OUTPUT" "권장 재진입: Phase 1 도메인/작업 분석" "스택 프로젝트 update phase 1 재진입"
+assert_contains "$STACK_UPDATE_OUTPUT" "권장 재진입: Phase 4 QA 및 검증 구조" "스택 프로젝트 update phase 4 재진입"
+assert_contains "$STACK_UPDATE_OUTPUT" "Phase 6 검증을 수행하고, 운영 가치가 약하면 Phase 7 품질 비교와 성숙도 평가로 이어집니다." "스택 프로젝트 update phase 7 후속"
 
 log "다중 실행 경계 탐색 확인"
 mkdir -p "$TMP_ROOT/multi-boundary-project/packages/web/src" \

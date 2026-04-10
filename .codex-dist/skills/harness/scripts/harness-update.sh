@@ -96,6 +96,32 @@ build_selected_role_summary() {
   join_by_comma "${roles[@]}"
 }
 
+build_selected_phase_summary() {
+  local phases=()
+
+  [ "$UPDATE_DOMAIN" -eq 1 ] && phases+=("Phase 1 도메인/작업 분석")
+  if [ "$UPDATE_ARCHITECTURE" -eq 1 ] || [ "$UPDATE_TEAM_STRUCTURE" -eq 1 ]; then
+    phases+=("Phase 2 프로젝트 맞춤 에이전트 팀 설계")
+  fi
+  [ "$UPDATE_QA" -eq 1 ] && phases+=("Phase 4 QA 및 검증 구조")
+  if [ "$UPDATE_ORCHESTRATION" -eq 1 ] || [ "$UPDATE_TEAM_PLAYBOOK" -eq 1 ]; then
+    phases+=("Phase 5 역할별 최종 산출물 작성")
+  fi
+
+  printf '%s\n' "${phases[@]}" | awk '!seen[$0]++'
+}
+
+build_phase7_followup_summary() {
+  local selected_phase_summary="$1"
+
+  if [ -z "$selected_phase_summary" ]; then
+    printf '%s\n' "Phase 6 검증 후 필요하면 Phase 7 품질 비교와 성숙도 평가로 이어집니다."
+    return
+  fi
+
+  printf '%s\n' "선택된 재진입 Phase를 마친 뒤에는 Phase 6 검증을 수행하고, 운영 가치가 약하면 Phase 7 품질 비교와 성숙도 평가로 이어집니다."
+}
+
 parse_update_targets "$@"
 
 HARNESS_OPERATION_MODE="$(detect_harness_operation_mode)"
@@ -135,6 +161,8 @@ bash "$SCRIPT_DIR/harness-explore.sh" "$EXPLORATION_NOTES_FILE" >/dev/null
 EXPLORATION_CONTEXT_LEVEL="$(detect_exploration_context_level "$EXPLORATION_NOTES_FILE")"
 EXPLORATION_ANCHOR_SUMMARY="$(build_exploration_anchor_summary "$EXPLORATION_NOTES_FILE")"
 DISCOVERY_GUIDANCE="$(build_exploration_guidance "$EXPLORATION_NOTES_FILE" "$EXPLORATION_CONTEXT_LEVEL" "")"
+SELECTED_PHASE_SUMMARY="$(build_selected_phase_summary)"
+PHASE7_FOLLOWUP_SUMMARY="$(build_phase7_followup_summary "$SELECTED_PHASE_SUMMARY")"
 
 if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
   DISCOVERY_GUIDANCE="현재는 입력 메모만 있으므로, run-harness는 사용자에게 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 먼저 확인합니다."
@@ -149,6 +177,12 @@ log "입력 메모 요약: $EXPLORATION_ANCHOR_SUMMARY"
 log "입력 메모 안내: $DISCOVERY_GUIDANCE"
 log "선택 갱신 대상: $(build_selected_target_summary)"
 log "다시 호출할 역할: $(build_selected_role_summary)"
+log "update 수행 범위: Phase 0 감사와 입력 메모 재정리"
+while IFS= read -r phase_line; do
+  [ -n "$phase_line" ] || continue
+  log "권장 재진입: $phase_line"
+done <<< "$SELECTED_PHASE_SUMMARY"
+log "$PHASE7_FOLLOWUP_SUMMARY"
 while IFS= read -r audit_line; do
   [ -n "$audit_line" ] || continue
   log "하네스 감사: $audit_line"
@@ -159,5 +193,5 @@ while IFS= read -r agents_line; do
 done <<< "$AGENTS_AUDIT_SUMMARY"
 
 log "하네스 업데이트 완료"
-log "루트 기준 AI 입력 메모만 다시 정리되었습니다."
-log "선택된 보고서는 위 역할이 직접 다시 작성해야 합니다."
+log "루트 기준 AI 입력 메모와 재진입 안내만 다시 정리되었습니다."
+log "선택된 Phase와 역할이 실제 문서를 직접 다시 작성해야 합니다."

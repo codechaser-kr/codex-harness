@@ -83,19 +83,6 @@ build_selected_target_summary() {
   join_by_comma "${targets[@]}"
 }
 
-build_selected_role_summary() {
-  local roles=()
-
-  [ "$UPDATE_DOMAIN" -eq 1 ] && roles+=("domain-analyst")
-  [ "$UPDATE_ARCHITECTURE" -eq 1 ] && roles+=("harness-architect")
-  [ "$UPDATE_QA" -eq 1 ] && roles+=("qa-designer")
-  [ "$UPDATE_ORCHESTRATION" -eq 1 ] && roles+=("orchestrator")
-  [ "$UPDATE_TEAM_STRUCTURE" -eq 1 ] && roles+=("harness-architect")
-  [ "$UPDATE_TEAM_PLAYBOOK" -eq 1 ] && roles+=("orchestrator")
-
-  join_by_comma "${roles[@]}"
-}
-
 build_selected_phase_summary() {
   local phases=()
 
@@ -182,7 +169,7 @@ log "입력 상태: $EXPLORATION_CONTEXT_LEVEL"
 log "입력 메모 요약: $EXPLORATION_ANCHOR_SUMMARY"
 log "입력 메모 안내: $DISCOVERY_GUIDANCE"
 log "선택 갱신 대상: $(build_selected_target_summary)"
-log "다시 호출할 역할: $(build_selected_role_summary)"
+log "다시 확인할 범위: $(build_selected_target_summary)"
 log "update 수행 범위: Phase 0 감사와 입력 메모/team-spec 재정리"
 while IFS= read -r phase_line; do
   [ -n "$phase_line" ] || continue

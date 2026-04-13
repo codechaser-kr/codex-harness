@@ -502,6 +502,11 @@ if [ -f ".harness/docs/qa-strategy.md" ]; then
   check_contains_hint ".harness/docs/qa-strategy.md" "## 자동/수동 검증 분리" "QA 자동 수동 검증 분리"
   check_contains_hint ".harness/docs/qa-strategy.md" "## 핵심 질문" "QA 핵심 질문"
   check_contains_hint ".harness/docs/qa-strategy.md" "## 변경 유형별 체크 기준" "QA 변경 유형별 체크 기준"
+  check_required_contains ".harness/docs/qa-strategy.md" "자동 검증" "QA 자동 검증 항목"
+  check_required_contains ".harness/docs/qa-strategy.md" "수동 검증" "QA 수동 검증 항목"
+  check_required_contains ".harness/docs/qa-strategy.md" "미실행 항목" "QA 미실행 항목"
+  check_required_contains ".harness/docs/qa-strategy.md" "잔여 위험" "QA 잔여 위험 항목"
+  check_required_contains ".harness/docs/qa-strategy.md" "다음 조치" "QA 다음 조치 항목"
   fail_if_contains_pattern ".harness/docs/qa-strategy.md" "최종 QA 전략은 qa-designer가 직접 작성합니다\\.|직접 작성합니다\\." "QA 역할 재작성 미수행"
 fi
 
@@ -540,6 +545,8 @@ if [ -f ".harness/docs/exploration-notes.md" ]; then
   check_contains_hint ".harness/docs/exploration-notes.md" "## 상태" "입력 상태 섹션"
   check_contains_hint ".harness/docs/exploration-notes.md" "## 현재 입력 상태" "입력 상태 안내 섹션"
   check_contains_hint ".harness/docs/exploration-notes.md" "## 역할 팀 메모" "역할 팀 메모 섹션"
+  check_contains_hint ".harness/docs/exploration-notes.md" "## 반영 대상" "반영 대상 섹션"
+  check_contains_hint ".harness/docs/exploration-notes.md" "## 판단 종료 조건" "판단 종료 조건 섹션"
   check_contains_hint ".harness/docs/exploration-notes.md" "## 다음 확인 질문" "다음 확인 질문 섹션"
   check_contains_hint ".harness/docs/exploration-notes.md" "역할 팀은 이 문서를 출발점 정도로만 보고" "약한 메모 전제"
 fi

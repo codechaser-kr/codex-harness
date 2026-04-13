@@ -569,6 +569,10 @@ check_contains_hint ".harness/logs/session-events.tsv" "status" "이벤트 상�
 
 if [ -f ".harness/logs/latest-session-summary.md" ]; then
   check_contains_hint ".harness/logs/latest-session-summary.md" "세션 요약" "최신 세션 요약"
+  check_contains_hint ".harness/logs/latest-session-summary.md" "다음 시작 역할" "최신 세션 요약 다음 시작 역할"
+  check_contains_hint ".harness/logs/latest-session-summary.md" "다음 재진입 phase" "최신 세션 요약 다음 재진입 phase"
+  check_contains_hint ".harness/logs/latest-session-summary.md" "다음 시작 전 우선 확인 입력 파일" "최신 세션 요약 우선 입력 파일"
+  check_contains_hint ".harness/logs/latest-session-summary.md" "최근 출력 파일" "최신 세션 요약 최근 출력 파일"
 fi
 
 if [ -f ".harness/logs/role-frequency.md" ]; then

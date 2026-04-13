@@ -97,6 +97,8 @@ ENTRY_POINT=""
 START_REQUEST=""
 LAST_NEXT_ROLE=""
 LAST_WEAKNESSES=""
+LAST_INPUTS=""
+LAST_OUTPUTS=""
 NEXT_PHASE="미정"
 
 while IFS=$'\t' read -r kind value1 value2; do
@@ -126,6 +128,12 @@ while IFS=$'\t' read -r kind value1 value2; do
           ;;
         last_weaknesses)
           LAST_WEAKNESSES="$value2"
+          ;;
+        last_inputs)
+          LAST_INPUTS="$value2"
+          ;;
+        last_outputs)
+          LAST_OUTPUTS="$value2"
           ;;
       esac
       ;;
@@ -170,6 +178,14 @@ done < <(
         last_weaknesses = $10
       }
 
+      if ($7 != "") {
+        last_inputs = $7
+      }
+
+      if ($8 != "") {
+        last_outputs = $8
+      }
+
       split($6, roles, ",")
       for (i in roles) {
         gsub(/^[[:space:]]+|[[:space:]]+$/, "", roles[i])
@@ -195,6 +211,8 @@ done < <(
       printf "META\tstart_request\t%s\n", start_request
       printf "META\tlast_next_role\t%s\n", last_next_role
       printf "META\tlast_weaknesses\t%s\n", last_weaknesses
+      printf "META\tlast_inputs\t%s\n", last_inputs
+      printf "META\tlast_outputs\t%s\n", last_outputs
 
       for (role in role_counts) {
         printf "ROLE\t%d\t%s\n", role_counts[role], role
@@ -256,6 +274,8 @@ esac
   printf '## 재진입 요약\n\n'
   printf -- '- 다음 시작 역할: %s\n' "${LAST_NEXT_ROLE:--}"
   printf -- '- 다음 재진입 phase: %s\n' "$NEXT_PHASE"
+  printf -- '- 다음 시작 전 우선 확인 입력 파일: %s\n' "${LAST_INPUTS:--}"
+  printf -- '- 최근 출력 파일: %s\n' "${LAST_OUTPUTS:--}"
   printf -- '- 남은 위험 또는 미해결 항목: %s\n' "${LAST_WEAKNESSES:--}"
   printf -- '- 세션 종료 메모: %s\n' "$SUMMARY_NOTE"
   printf '\n'

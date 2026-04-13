@@ -104,17 +104,6 @@ print_contract_bullets() {
   local fallback="$3"
   local raw
 
-  if [ "$key" = "산출 형식 템플릿" ]; then
-    # 산출 형식 템플릿은 팀 스펙의 최종 입력을 그대로 반영해야 하므로,
-    # 로컬 필드 캐시(field_value) 대신 team-spec 원본을 사용한다.
-    raw="$(field_value_from_team_spec "$role_id" "$key")"
-    if [ -z "$(trim "$raw")" ]; then
-      raw="$fallback"
-    fi
-    print_raw_bullets "$raw" "$fallback"
-    return
-  fi
-
   raw="$(field_value "$role_id" "$key")"
   if [ -z "$(trim "$raw")" ]; then
     raw="$(field_value_from_team_spec "$role_id" "$key")"

@@ -464,11 +464,6 @@ write_skill_file() {
 
   mkdir -p ".codex/skills/${skill_dir}"
 
-  if [ -f "$skill_file" ]; then
-    log "기존 skill 유지: ${skill_file}"
-    return
-  fi
-
   cat > "$skill_file" <<EOF
 ---
 name: ${display_name}

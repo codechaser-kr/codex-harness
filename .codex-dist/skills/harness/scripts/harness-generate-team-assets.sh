@@ -4,11 +4,16 @@ set -euo pipefail
 TEAM_SPEC_FILE=".harness/reports/team-spec.md"
 
 declare -A ROLE_TYPES
+declare -A ROLE_START_PATHS
 declare -A ROLE_PRIORITY_INPUTS
+declare -A ROLE_REQUEST_BRANCHES
 declare -A ROLE_START_CHECKLISTS
 declare -A ROLE_DECISION_RULES
 declare -A ROLE_ANTI_PATTERNS
 declare -A ROLE_OUTPUT_CONTRACTS
+declare -A ROLE_OUTPUT_TEMPLATES
+declare -A ROLE_REENTRY_TRIGGERS
+declare -A ROLE_EXIT_CRITERIA
 declare -A ROLE_COMPLETION_CRITERIA
 declare -A ROLE_VERIFICATION_FOCUS
 
@@ -51,16 +56,46 @@ field_value() {
 
   case "$key" in
     "역할 유형") value="${ROLE_TYPES[$role_id]:-}" ;;
+    "대표 시작 경로") value="${ROLE_START_PATHS[$role_id]:-}" ;;
     "우선 입력 문서") value="${ROLE_PRIORITY_INPUTS[$role_id]:-}" ;;
+    "요청 유형별 하위 분기") value="${ROLE_REQUEST_BRANCHES[$role_id]:-}" ;;
     "작업 시작 체크리스트") value="${ROLE_START_CHECKLISTS[$role_id]:-}" ;;
     "주요 판단 기준") value="${ROLE_DECISION_RULES[$role_id]:-}" ;;
     "금지 판단/피해야 할 오해") value="${ROLE_ANTI_PATTERNS[$role_id]:-}" ;;
     "출력 계약") value="${ROLE_OUTPUT_CONTRACTS[$role_id]:-}" ;;
+    "산출 형식 템플릿") value="${ROLE_OUTPUT_TEMPLATES[$role_id]:-}" ;;
+    "재진입 트리거") value="${ROLE_REENTRY_TRIGGERS[$role_id]:-}" ;;
+    "종료 판정 기준") value="${ROLE_EXIT_CRITERIA[$role_id]:-}" ;;
     "완료 기준") value="${ROLE_COMPLETION_CRITERIA[$role_id]:-}" ;;
     "검증/리뷰 초점") value="${ROLE_VERIFICATION_FOCUS[$role_id]:-}" ;;
   esac
 
   printf '%s' "$value"
+}
+
+field_value_from_team_spec() {
+  local role_id="$1"
+  local key="$2"
+
+  awk -v role_id="$role_id" -v key="$key" '
+    function trim(s) {
+      gsub(/^[[:space:]]+/, "", s)
+      gsub(/[[:space:]]+$/, "", s)
+      return s
+    }
+    /^## 역할 스펙 초안/ { in_specs = 1; next }
+    /^## 생성 규칙/ { exit }
+    !in_specs { next }
+    /^### / { current_role = ""; next }
+    /^- 역할 id:/ {
+      current_role = trim(substr($0, index($0, ":") + 1))
+      next
+    }
+    current_role == role_id && $0 ~ ("^- " key ":") {
+      print trim(substr($0, index($0, ":") + 1))
+      exit
+    }
+  ' "$TEAM_SPEC_FILE"
 }
 
 print_contract_bullets() {
@@ -70,6 +105,18 @@ print_contract_bullets() {
   local raw
 
   raw="$(field_value "$role_id" "$key")"
+  if [ -z "$(trim "$raw")" ]; then
+    raw="$(field_value_from_team_spec "$role_id" "$key")"
+  fi
+  print_raw_bullets "$raw" "$fallback"
+}
+
+print_raw_bullets() {
+  local raw="$1"
+  local fallback="$2"
+  local line
+  local -a parts
+
   raw="$(trim "$raw")"
 
   if [ -z "$raw" ]; then
@@ -78,7 +125,8 @@ print_contract_bullets() {
   fi
 
   if printf '%s' "$raw" | grep -q ';'; then
-    printf '%s' "$raw" | tr ';' '\n' | while IFS= read -r line; do
+    IFS=';' read -r -a parts <<< "$raw"
+    for line in "${parts[@]}"; do
       line="$(trim "$line")"
       [ -n "$line" ] || continue
       printf -- '- %s\n' "$line"
@@ -165,22 +213,32 @@ load_role_contracts() {
   local line
   local role_id
   local role_type
+  local start_paths
   local priority_inputs
+  local request_branches
   local start_checklist
   local decision_rules
   local anti_patterns
   local output_contract
+  local output_template
+  local reentry_triggers
+  local exit_criteria
   local completion_criteria
   local verification_focus
 
-  while IFS=$'\t' read -r role_id role_type priority_inputs start_checklist decision_rules anti_patterns output_contract completion_criteria verification_focus; do
+  while IFS=$'\t' read -r role_id role_type start_paths priority_inputs request_branches start_checklist decision_rules anti_patterns output_contract output_template reentry_triggers exit_criteria completion_criteria verification_focus; do
     [ -n "${role_id:-}" ] || continue
     ROLE_TYPES["$role_id"]="$(trim "${role_type:-}")"
+    ROLE_START_PATHS["$role_id"]="$(trim "${start_paths:-}")"
     ROLE_PRIORITY_INPUTS["$role_id"]="$(trim "${priority_inputs:-}")"
+    ROLE_REQUEST_BRANCHES["$role_id"]="$(trim "${request_branches:-}")"
     ROLE_START_CHECKLISTS["$role_id"]="$(trim "${start_checklist:-}")"
     ROLE_DECISION_RULES["$role_id"]="$(trim "${decision_rules:-}")"
     ROLE_ANTI_PATTERNS["$role_id"]="$(trim "${anti_patterns:-}")"
     ROLE_OUTPUT_CONTRACTS["$role_id"]="$(trim "${output_contract:-}")"
+    ROLE_OUTPUT_TEMPLATES["$role_id"]="$(trim "${output_template:-}")"
+    ROLE_REENTRY_TRIGGERS["$role_id"]="$(trim "${reentry_triggers:-}")"
+    ROLE_EXIT_CRITERIA["$role_id"]="$(trim "${exit_criteria:-}")"
     ROLE_COMPLETION_CRITERIA["$role_id"]="$(trim "${completion_criteria:-}")"
     ROLE_VERIFICATION_FOCUS["$role_id"]="$(trim "${verification_focus:-}")"
   done < <(awk '
@@ -196,11 +254,16 @@ load_role_contracts() {
       printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
         role_id,
         role_type,
+        start_paths,
         priority_inputs,
+        request_branches,
         start_checklist,
         decision_rules,
         anti_patterns,
         output_contract,
+        output_template,
+        reentry_triggers,
+        exit_criteria,
         completion_criteria,
         verification_focus
     }
@@ -221,11 +284,16 @@ load_role_contracts() {
       emit()
       role_id = ""
       role_type = ""
+      start_paths = ""
       priority_inputs = ""
+      request_branches = ""
       start_checklist = ""
       decision_rules = ""
       anti_patterns = ""
       output_contract = ""
+      output_template = ""
+      reentry_triggers = ""
+      exit_criteria = ""
       completion_criteria = ""
       verification_focus = ""
       next
@@ -238,8 +306,16 @@ load_role_contracts() {
       role_type = trim(substr($0, index($0, ":") + 1))
       next
     }
+    /^- 대표 시작 경로:/ {
+      start_paths = trim(substr($0, index($0, ":") + 1))
+      next
+    }
     /^- 우선 입력 문서:/ {
       priority_inputs = trim(substr($0, index($0, ":") + 1))
+      next
+    }
+    /^- 요청 유형별 하위 분기:/ {
+      request_branches = trim(substr($0, index($0, ":") + 1))
       next
     }
     /^- 작업 시작 체크리스트:/ {
@@ -256,6 +332,18 @@ load_role_contracts() {
     }
     /^- 출력 계약:/ {
       output_contract = trim(substr($0, index($0, ":") + 1))
+      next
+    }
+    /^- 산출 형식 템플릿:/ {
+      output_template = trim(substr($0, index($0, ":") + 1))
+      next
+    }
+    /^- 재진입 트리거:/ {
+      reentry_triggers = trim(substr($0, index($0, ":") + 1))
+      next
+    }
+    /^- 종료 판정 기준:/ {
+      exit_criteria = trim(substr($0, index($0, ":") + 1))
       next
     }
     /^- 완료 기준:/ {
@@ -364,9 +452,17 @@ $(print_type_specific_steps "$role_type")
 - \`.harness/reports/team-spec.md\`
 - 필요 시 관련 \`.harness/reports/*\` 문서
 
+## 대표 시작 경로
+
+$(print_contract_bullets "$role_id" "대표 시작 경로" "관련 코드 경계와 보고서 중 이 역할의 대표 진입 경로를 먼저 고른다.")
+
 ## 우선 입력 문서
 
 $(print_contract_bullets "$role_id" "우선 입력 문서" "관련 .harness 입력 문서와 team-spec 역할 카드를 먼저 읽는다.")
+
+## 요청 유형별 하위 분기
+
+$(print_contract_bullets "$role_id" "요청 유형별 하위 분기" "요청 유형이 갈라지면 하위 분기와 추가 handoff를 먼저 정리한다.")
 
 ## 작업 시작 체크리스트
 
@@ -387,6 +483,18 @@ $(print_contract_bullets "$role_id" "금지 판단/피해야 할 오해" "team-s
 ## 출력 계약
 
 $(print_contract_bullets "$role_id" "출력 계약" "파일, 로그, 보고서 중 무엇을 남겨야 하는지 team-spec 기준으로 분명히 남긴다.")
+
+## 산출 형식 템플릿
+
+$(print_contract_bullets "$role_id" "산출 형식 템플릿" "다음 역할이 바로 이어받을 수 있도록 결과 형식을 짧게 고정한다.")
+
+## 재진입 트리거
+
+$(print_contract_bullets "$role_id" "재진입 트리거" "현재 역할 범위를 넘는 경계가 드러나면 조율 역할 또는 이전 단계로 되돌린다.")
+
+## 종료 판정 기준
+
+$(print_contract_bullets "$role_id" "종료 판정 기준" "다음 역할이 추가 해석 없이 이어받을 수 있으면 이 역할을 종료한다.")
 
 ## 완료 기준
 

@@ -540,6 +540,8 @@ if [ -f ".harness/docs/exploration-notes.md" ]; then
   check_contains_hint ".harness/docs/exploration-notes.md" "## 상태" "입력 상태 섹션"
   check_contains_hint ".harness/docs/exploration-notes.md" "## 현재 입력 상태" "입력 상태 안내 섹션"
   check_contains_hint ".harness/docs/exploration-notes.md" "## 역할 팀 메모" "역할 팀 메모 섹션"
+  check_contains_hint ".harness/docs/exploration-notes.md" "## 반영 대상" "반영 대상 섹션"
+  check_contains_hint ".harness/docs/exploration-notes.md" "## 판단 종료 조건" "판단 종료 조건 섹션"
   check_contains_hint ".harness/docs/exploration-notes.md" "## 다음 확인 질문" "다음 확인 질문 섹션"
   check_contains_hint ".harness/docs/exploration-notes.md" "역할 팀은 이 문서를 출발점 정도로만 보고" "약한 메모 전제"
 fi

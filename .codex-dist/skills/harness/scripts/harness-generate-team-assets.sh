@@ -104,6 +104,15 @@ print_contract_bullets() {
   local fallback="$3"
   local raw
 
+  if [ "$key" = "산출 형식 템플릿" ]; then
+    raw="$(field_value_from_team_spec "$role_id" "$key")"
+    if [ -z "$(trim "$raw")" ]; then
+      raw="$fallback"
+    fi
+    print_raw_bullets "$raw" "$fallback"
+    return
+  fi
+
   raw="$(field_value "$role_id" "$key")"
   if [ -z "$(trim "$raw")" ]; then
     raw="$(field_value_from_team_spec "$role_id" "$key")"

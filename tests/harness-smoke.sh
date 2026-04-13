@@ -315,6 +315,7 @@ mkdir -p "$TMP_ROOT/custom-role-project"
 (
   cd "$TMP_ROOT/custom-role-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-init.sh" >/dev/null && \
+  perl -0pi -e 's@### 역할 1\n\n- 역할 id:\n- 역할 표시 이름:\n- 역할 유형:\n- 역할 목적:\n- 역할 책임:\n- 주요 입력:\n- 주요 출력:\n- handoff 대상:\n- 중심 역할 여부:\n- 보조 역할 여부:\n- 우선 입력 문서:\n- 작업 시작 체크리스트:\n- 주요 판단 기준:\n- 금지 판단/피해야 할 오해:\n- 출력 계약:\n- 완료 기준:\n- 검증/리뷰 초점:\n- agent 파일명:\n- skill 디렉토리명:\n- description 초안:\n- 권장 모델 클래스:\n- sandbox 정책:@### 역할 1\n\n- 역할 id: intake_router\n- 역할 표시 이름: intake-router\n- 역할 유형: conductor\n- 역할 목적: 요청을 프로젝트 특화 실행 경로로 분기한다.\n- 역할 책임: 시작 역할 판단;handoff 순서 고정;재진입 시점 기록\n- 주요 입력: 현재 요청;team-spec;domain-analysis\n- 주요 출력: 시작 역할 판단 메모;handoff 순서;재진입 메모\n- handoff 대상: payment_dev\n- 중심 역할 여부: 예\n- 보조 역할 여부: 아니오\n- 우선 입력 문서: .harness/reports/team-spec.md;.harness/reports/domain-analysis.md\n- 작업 시작 체크리스트: 요청 범위 판정;선행 문서 준비 상태 확인;시작 역할 선택\n- 주요 판단 기준: 실패 비용이 큰 경계를 먼저 판정;병렬보다 handoff 명확성을 우선\n- 금지 판단/피해야 할 오해: 직접 구현 역할까지 겸한다고 가정하지 않음\n- 출력 계약: 시작 역할과 다음 handoff 대상을 한 번에 명시\n- 완료 기준: 다음 역할이 추가 질문 없이 시작 가능\n- 검증/리뷰 초점: handoff 누락;재진입 기준 부재\n- agent 파일명: intake-router\n- skill 디렉토리명: intake-router\n- description 초안: Route requests into the right project-specific execution path.\n- 권장 모델 클래스: frontier\n- sandbox 정책: workspace-write\n\n### 역할 2\n\n- 역할 id: payment_dev\n- 역할 표시 이름: payment-dev\n- 역할 유형: dev\n- 역할 목적: 결제 흐름 변경을 구현한다.\n- 역할 책임: 구현 경계 유지;계약 영향 확인;검증 메모 남기기\n- 주요 입력: 현재 요청;team-spec;qa-strategy\n- 주요 출력: 코드 변경;검증 메모\n- handoff 대상: billing_reviewer\n- 중심 역할 여부: 아니오\n- 보조 역할 여부: 아니오\n- 우선 입력 문서: .harness/reports/team-spec.md;.harness/reports/qa-strategy.md\n- 작업 시작 체크리스트: 수정 경계 확인;영향 파일 확인;검증 경로 확인\n- 주요 판단 기준: 공용 계약 영향 우선 확인;변경 범위를 최소화\n- 금지 판단/피해야 할 오해: 리뷰나 QA 판단까지 선점하지 않음\n- 출력 계약: 코드 변경과 필요한 검증 메모를 함께 남김\n- 완료 기준: 구현 범위가 닫히고 reviewer로 handoff 가능\n- 검증/리뷰 초점: 계약 회귀;테스트 공백\n- agent 파일명: payment-dev\n- skill 디렉토리명: payment-dev\n- description 초안: Implement payment flow changes and write payment rollout notes.\n- 권장 모델 클래스: frontier\n- sandbox 정책: workspace-write@' .harness/reports/team-spec.md && \
   perl -0pi -e 's@<!-- team-spec-roles:start -->\n<!-- team-spec-roles:end -->@<!-- team-spec-roles:start -->\nintake_router|intake-router|intake-router|gpt-5.4|high|workspace-write|Route requests into the right project-specific execution path.\npayment_dev|payment-dev|payment-dev|gpt-5.4|high|workspace-write|Implement payment flow changes and write payment rollout notes.\n<!-- team-spec-roles:end -->@' .harness/reports/team-spec.md && \
   bash "$HARNESS_SCRIPT_DIR/harness-generate-team-assets.sh" >/dev/null
 )
@@ -327,8 +328,16 @@ assert_dir "$TMP_ROOT/custom-role-project/.codex/skills/intake-router"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "team-spec" "custom 역할 skill team-spec 기준"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "payment_dev" "custom 역할 skill role id"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "workspace-write" "custom 역할 skill sandbox"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" '역할의 유형은 `dev`' "custom payment skill 역할 유형"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "## 우선 입력 문서" "custom payment skill 우선 입력 문서"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "공용 계약 영향 우선 확인" "custom payment skill 판단 기준"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "리뷰나 QA 판단까지 선점하지 않음" "custom payment skill 금지 판단"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "코드 변경과 필요한 검증 메모를 함께 남김" "custom payment skill 출력 계약"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/intake-router/SKILL.md")" "## 주요 작업" "custom intake router skill 주요 작업"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/intake-router/SKILL.md")" "## 협업 원칙" "custom intake router skill 협업 원칙"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/intake-router/SKILL.md")" '역할의 유형은 `conductor`' "custom intake skill 역할 유형"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/intake-router/SKILL.md")" "어떤 역할이 시작해야 하는지 먼저 판정한다" "custom intake skill conductor 작업"
+assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/intake-router/SKILL.md")" "handoff 누락" "custom intake skill 검증 초점"
 CUSTOM_VERIFY_OUTPUT="$(
   cd "$TMP_ROOT/custom-role-project" && \
   bash "$HARNESS_SCRIPT_DIR/harness-verify.sh" 2>&1 || true

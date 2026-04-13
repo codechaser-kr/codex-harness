@@ -97,6 +97,7 @@ ENTRY_POINT=""
 START_REQUEST=""
 LAST_NEXT_ROLE=""
 LAST_WEAKNESSES=""
+NEXT_PHASE="미정"
 
 while IFS=$'\t' read -r kind value1 value2; do
   case "$kind" in
@@ -220,6 +221,24 @@ SUMMARY_FILE="$LOG_DIR/session-summary-$SESSION_ID.md"
 ROLE_LIST="$(join_keys ROLE_COUNTS)"
 OUTPUT_LIST="$(join_keys OUTPUT_COUNTS)"
 
+case "${LAST_NEXT_ROLE:-}" in
+  ""|-)
+    NEXT_PHASE="미정"
+    ;;
+  run-harness|*-orchestrator|*-conductor|*router*)
+    NEXT_PHASE="Phase 0 또는 Phase 5"
+    ;;
+  *qa*|*guard*)
+    NEXT_PHASE="Phase 4"
+    ;;
+  *auditor*|*reviewer*)
+    NEXT_PHASE="Phase 6"
+    ;;
+  *)
+    NEXT_PHASE="Phase 5"
+    ;;
+esac
+
 {
   printf '# 세션 요약\n\n'
   printf -- '- 세션 ID: %s\n' "$SESSION_ID"
@@ -230,8 +249,15 @@ OUTPUT_LIST="$(join_keys OUTPUT_COUNTS)"
   printf -- '- 진입점: %s\n' "${ENTRY_POINT:--}"
   printf -- '- 호출 역할: %s\n' "${ROLE_LIST:--}"
   printf -- '- 마지막 권장 역할: %s\n' "${LAST_NEXT_ROLE:--}"
+  printf -- '- 다음 재진입 phase: %s\n' "$NEXT_PHASE"
   printf -- '- 남은 약점: %s\n' "${LAST_WEAKNESSES:--}"
   printf -- '- 메모: %s\n' "$SUMMARY_NOTE"
+  printf '\n'
+  printf '## 재진입 요약\n\n'
+  printf -- '- 다음 시작 역할: %s\n' "${LAST_NEXT_ROLE:--}"
+  printf -- '- 다음 재진입 phase: %s\n' "$NEXT_PHASE"
+  printf -- '- 남은 위험 또는 미해결 항목: %s\n' "${LAST_WEAKNESSES:--}"
+  printf -- '- 세션 종료 메모: %s\n' "$SUMMARY_NOTE"
   printf '\n'
   printf '## 역할별 호출 수\n\n'
 

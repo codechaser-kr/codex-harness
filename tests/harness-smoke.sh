@@ -232,6 +232,10 @@ if (
 fi
 assert_file "$TMP_ROOT/empty-project/.harness/reports/exploration-notes.md"
 assert_not_file "$TMP_ROOT/empty-project/.harness/reports/domain-analysis.md"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/logging-policy.md")" "다음 재진입 phase" "빈 프로젝트 logging policy 재진입 phase"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/logging-policy.md")" "세션 종료 사유" "빈 프로젝트 logging policy 종료 사유"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/logs/latest-session-summary.md")" "다음 시작 역할" "빈 프로젝트 latest summary 다음 시작 역할"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/logs/latest-session-summary.md")" "다음 재진입 phase" "빈 프로젝트 latest summary 재진입 phase"
 assert_command_fails_with \
   "$TMP_ROOT/empty-project" \
   "bash \"$HARNESS_SCRIPT_DIR/harness-verify.sh\"" \

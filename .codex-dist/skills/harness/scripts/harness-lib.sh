@@ -290,6 +290,7 @@ ensure_harness_log_scaffold() {
 - 구조화된 이벤트는 `.harness/logs/session-events.tsv`에 남깁니다.
 - 세션 종료 시 최신 요약은 `.harness/logs/latest-session-summary.md`로 갱신합니다.
 - `harness-init`는 하네스 골격 준비로 기록하고, 실제 역할 실행 세션은 `run-harness` 또는 개별 역할 이름으로 분리해 남깁니다.
+- 최신 요약은 다음 시작 역할, 다음 재진입 phase, 남은 위험을 바로 읽을 수 있어야 합니다.
 
 ## 선택 자산
 
@@ -315,13 +316,16 @@ ensure_harness_log_scaffold() {
 - 입력으로 본 파일
 - 출력/갱신된 파일
 - 다음 권장 역할
+- 다음 재진입 phase
 - 남은 약점 또는 미해결 항목
+- 세션 종료 사유
 
 ## 원칙
 
 - 로그는 짧지만 구조적으로 남깁니다.
 - 사람이 읽을 수 있어야 합니다.
 - 역할 흐름과 피드백 루프가 보이도록 남깁니다.
+- 다음 실행자가 바로 다시 시작할 수 있을 정도로 재진입 정보가 남아야 합니다.
 - 각 역할은 자신이 수행한 주요 변경과 다음 권장 단계를 남길 책임이 있습니다.
 - 가능하면 수동 편집보다 자동 append 스크립트 쪽에 더 가깝게 둡니다.
 EOF
@@ -348,7 +352,9 @@ EOF
 - 입력 파일:
 - 출력 파일:
 - 다음 권장 역할:
+- 다음 재진입 phase:
 - 남은 약점:
+- 세션 종료 사유:
 
 ---
 
@@ -365,7 +371,9 @@ EOF
 - 입력 파일: 없음
 - 출력 파일: AGENTS.md, .codex/config.toml, .harness/reports/exploration-notes.md
 - 다음 권장 역할: run-harness
+- 다음 재진입 phase: Phase 1
 - 남은 약점: 역할 팀이 아직 최종 보고서를 작성하지 않음
+- 세션 종료 사유: 초기화 완료, 역할 실행 전 종료
 
 ---
 
@@ -380,7 +388,9 @@ EOF
 - 입력 파일: 없음
 - 출력 파일: .harness/reports/domain-analysis.md, .harness/reports/harness-architecture.md
 - 다음 권장 역할: qa-designer
+- 다음 재진입 phase: Phase 4
 - 남은 약점: QA 질문이 아직 추상적임
+- 세션 종료 사유: QA 기준 보강 필요
 EOF
   fi
 
@@ -393,6 +403,14 @@ EOF
 # 최신 세션 요약
 
 아직 종료된 세션 집계가 없습니다.
+
+최신 세션 요약에는 최소한 아래를 남깁니다.
+
+- 현재 종료된 세션 ID
+- 다음 시작 역할
+- 다음 재진입 phase
+- 남은 위험 또는 미해결 항목
+- 세션 종료 메모
 EOF
   fi
 

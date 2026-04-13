@@ -65,17 +65,7 @@ candidate_name() {
       ;;
   esac
 
-  case "$roles" in
-    *orchestrator*,validator*|*validator*,orchestrator*)
-      printf '%s' "구조 보강 후 검증"
-      ;;
-    *domain-analyst*,harness-architect*|*harness-architect*,domain-analyst*)
-      printf '%s' "분석 후 구조 설계"
-      ;;
-    *)
-      printf '%s' "반복 업무 후보"
-      ;;
-  esac
+  printf '%s' "반복 업무 후보"
 }
 
 candidate_slug() {
@@ -106,17 +96,7 @@ candidate_slug() {
       ;;
   esac
 
-  case "$roles" in
-    *orchestrator*,validator*|*validator*,orchestrator*)
-      printf '%s' "structure-validation-workflow"
-      ;;
-    *domain-analyst*,harness-architect*|*harness-architect*,domain-analyst*)
-      printf '%s' "analysis-architecture-workflow"
-      ;;
-    *)
-      printf 'template-candidate-%s' "$idx"
-      ;;
-  esac
+  printf 'template-candidate-%s' "$idx"
 }
 
 render_report() {

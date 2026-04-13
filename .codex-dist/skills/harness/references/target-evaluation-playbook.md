@@ -198,6 +198,7 @@
 예시:
 
 - `team-playbook.md`, `orchestration-plan.md`, `latest-session-summary.md`가 다음 재진입을 분명히 남기지 못한다
+- `latest-session-summary.md`가 다음 시작 전에 다시 읽을 입력 파일과 최근 출력 파일을 남기지 못한다
 - 운영 감사와 verify의 경계가 흐려진다
 
 우선 재진입:
@@ -214,6 +215,7 @@
 
 - 세션 종료 요약
 - 다음 시작 역할 / 다음 재진입 phase
+- 다음 시작 전 우선 확인 입력 파일 / 최근 출력 파일
 - 운영 감사와 구조 검증의 책임 분리
 
 ### E. 재구성 필요 신호

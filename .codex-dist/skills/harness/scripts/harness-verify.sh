@@ -564,6 +564,12 @@ if [ -f ".harness/logs/session-log.md" ]; then
   check_contains_hint ".harness/logs/session-log.md" "다음 권장 역할" "다음 권장 역할 로그"
 fi
 
+if [ -f ".harness/logging-policy.md" ]; then
+  check_contains_hint ".harness/logging-policy.md" "다음 재진입 phase" "로그 정책 다음 재진입 phase"
+  check_contains_hint ".harness/logging-policy.md" "다음 시작 전 우선 확인 입력 파일" "로그 정책 우선 입력 파일"
+  check_contains_hint ".harness/logging-policy.md" "최근 출력 파일" "로그 정책 최근 출력 파일"
+fi
+
 check_contains_hint ".harness/logs/session-events.tsv" "session_id" "세션 이벤트 헤더"
 check_contains_hint ".harness/logs/session-events.tsv" "status" "이벤트 상태 헤더"
 

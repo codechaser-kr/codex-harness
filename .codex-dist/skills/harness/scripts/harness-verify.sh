@@ -130,6 +130,18 @@ check_contains_hint() {
   fi
 }
 
+check_required_contains() {
+  local file="$1"
+  local pattern="$2"
+  local label="$3"
+
+  if grep -q -- "$pattern" "$file"; then
+    log "OK $label: $file"
+  else
+    fail "$label 누락: $file"
+  fi
+}
+
 count_markdown_bullets_under_h2() {
   local file="$1"
   local heading="$2"
@@ -422,13 +434,21 @@ while IFS= read -r file; do
     check_frontmatter_name "$file"
     check_frontmatter_description "$file"
     check_description_length "$file"
-    check_contains_hint "$file" "## 목적" "목적 섹션"
-    check_contains_hint "$file" "## 주요 작업" "주요 작업 섹션"
-    check_contains_hint "$file" "## 입력" "입력 섹션"
-    check_contains_hint "$file" "## 출력" "출력 섹션"
-    check_contains_hint "$file" "## 역할 팀 내 위치" "역할 팀 위치 섹션"
-    check_contains_hint "$file" "## 협업 원칙" "협업 원칙 섹션"
-    check_contains_hint "$file" "## 운영 규칙" "운영 규칙 섹션"
+    check_required_contains "$file" "## 목적" "목적 섹션"
+    check_required_contains "$file" "## 주요 작업" "주요 작업 섹션"
+    check_required_contains "$file" "## 입력" "입력 섹션"
+    check_required_contains "$file" "## 우선 입력 문서" "우선 입력 문서 섹션"
+    check_required_contains "$file" "## 작업 시작 체크리스트" "작업 시작 체크리스트 섹션"
+    check_required_contains "$file" "## 주요 판단 기준" "주요 판단 기준 섹션"
+    check_required_contains "$file" "## 피해야 할 오해" "피해야 할 오해 섹션"
+    check_required_contains "$file" "## 출력" "출력 섹션"
+    check_required_contains "$file" "## 출력 계약" "출력 계약 섹션"
+    check_required_contains "$file" "## 완료 기준" "완료 기준 섹션"
+    check_required_contains "$file" "## 검증/리뷰 초점" "검증/리뷰 초점 섹션"
+    check_required_contains "$file" "## 역할 팀 내 위치" "역할 팀 위치 섹션"
+    check_required_contains "$file" "## 협업 원칙" "협업 원칙 섹션"
+    check_required_contains "$file" "## 운영 규칙" "운영 규칙 섹션"
+    fail_if_contains_literal "$file" "이 파일이 얇은 기본 스킬로 시작하더라도" "역할 스킬 구체화 미반영"
   fi
 done < <(find ".codex/skills" -mindepth 2 -maxdepth 2 -type f -name 'SKILL.md' | sort)
 

@@ -387,10 +387,10 @@ EOF
 - 상태: started
 - 시작 요청: 현재 프로젝트에 하네스 팀을 한 번 돌려줘
 - 진입점: run-harness
-- 호출 역할: domain-analyst, harness-architect, orchestrator
+- 호출 역할: <project-role-1>, <project-role-2>
 - 입력 파일: 없음
 - 출력 파일: .harness/docs/domain-analysis.md, .harness/docs/harness-architecture.md
-- 다음 권장 역할: qa-designer
+- 다음 권장 역할: <project-role-3>
 - 다음 재진입 phase: Phase 4
 - 남은 약점: QA 질문이 아직 추상적임
 - 세션 종료 사유: QA 기준 보강 필요

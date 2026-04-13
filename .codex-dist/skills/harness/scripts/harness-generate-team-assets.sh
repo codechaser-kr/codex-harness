@@ -293,7 +293,7 @@ load_role_contracts() {
       if (role_id == "") {
         return
       }
-      printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+      printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
         role_id,
         role_type,
         start_paths,

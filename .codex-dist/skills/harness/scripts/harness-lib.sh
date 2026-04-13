@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 이 파일은 소싱 전용입니다. 직접 실행하지 마세요.
 
-EXPLORATION_NOTES_DEFAULT_PATH=".harness/reports/exploration-notes.md"
+EXPLORATION_NOTES_DEFAULT_PATH=".harness/docs/exploration-notes.md"
 
 trim_text() {
   local value="$1"
@@ -29,27 +29,27 @@ join_by_comma() {
 
 detect_harness_operation_mode() {
   local has_skills=0
-  local has_reports=0
+  local has_docs=0
   local has_logs=0
 
   if [ -d ".codex/skills" ] && find ".codex/skills" -mindepth 1 -maxdepth 1 -type d -print -quit | grep -q .; then
     has_skills=1
   fi
 
-  if [ -d ".harness/reports" ] && find ".harness/reports" -mindepth 1 -maxdepth 1 -type f -name '*.md' -print -quit | grep -q .; then
-    has_reports=1
+  if [ -d ".harness/docs" ] && find ".harness/docs" -mindepth 1 -maxdepth 1 -type f -name '*.md' -print -quit | grep -q .; then
+    has_docs=1
   fi
 
   if [ -d ".harness/logs" ] && find ".harness/logs" -mindepth 1 -maxdepth 1 -type f -print -quit | grep -q .; then
     has_logs=1
   fi
 
-  if [ "$has_skills" -eq 0 ] && [ "$has_reports" -eq 0 ] && [ "$has_logs" -eq 0 ]; then
+  if [ "$has_skills" -eq 0 ] && [ "$has_docs" -eq 0 ] && [ "$has_logs" -eq 0 ]; then
     printf '%s\n' "신규 구축"
     return
   fi
 
-  if [ "$has_skills" -eq 1 ] && [ "$has_reports" -eq 1 ] && [ "$has_logs" -eq 1 ]; then
+  if [ "$has_skills" -eq 1 ] && [ "$has_docs" -eq 1 ] && [ "$has_logs" -eq 1 ]; then
     printf '%s\n' "운영 유지보수"
     return
   fi
@@ -74,7 +74,7 @@ agents_mentions_operation_modes() {
 agents_conflict_markers() {
   [ -f "AGENTS.md" ] || return 0
 
-  grep -Eo 'CLAUDE\.md|\.claude/agents|\.claude/skills|harness-refresh-reports\.sh|refresh-reports' "AGENTS.md" \
+  grep -Eo 'CLAUDE\.md|\.claude/agents|\.claude/skills' "AGENTS.md" \
     | awk '!seen[$0]++'
 }
 
@@ -149,16 +149,16 @@ build_agents_audit_summary() {
 build_harness_audit_summary() {
   local mode="$1"
   local skill_count=0
-  local report_count=0
+  local doc_count=0
   local log_count=0
 
   [ -d ".codex/skills" ] && skill_count="$(find ".codex/skills" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d '[:space:]')"
-  [ -d ".harness/reports" ] && report_count="$(find ".harness/reports" -mindepth 1 -maxdepth 1 -type f -name '*.md' | wc -l | tr -d '[:space:]')"
+  [ -d ".harness/docs" ] && doc_count="$(find ".harness/docs" -mindepth 1 -maxdepth 1 -type f -name '*.md' | wc -l | tr -d '[:space:]')"
   [ -d ".harness/logs" ] && log_count="$(find ".harness/logs" -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d '[:space:]')"
 
   printf '%s\n' "모드: $mode"
   printf '%s\n' "기존 로컬 역할 스킬 수: $skill_count"
-  printf '%s\n' "기존 보고서 수: $report_count"
+  printf '%s\n' "기존 문서 수: $doc_count"
   printf '%s\n' "기존 로그 파일 수: $log_count"
 }
 
@@ -166,14 +166,14 @@ optional_harness_assets_enabled() {
   if [ -d ".harness/templates" ] \
     || [ -d ".harness/scenarios" ] \
     || [ -f ".harness/logs/role-frequency.md" ] \
-    || [ -f ".harness/reports/template-candidates.md" ]; then
+    || [ -f ".harness/docs/template-candidates.md" ]; then
     return 0
   fi
   return 1
 }
 
 project_setup_has_answers() {
-  local file="${1:-.harness/project-setup.md}"
+  local file="${1:-.harness/docs/project-setup.md}"
 
   [ -f "$file" ] || return 1
 
@@ -201,11 +201,11 @@ project_setup_has_answers() {
 }
 
 exploration_requires_user_bootstrap() {
-  ! project_setup_has_answers ".harness/project-setup.md"
+  ! project_setup_has_answers ".harness/docs/project-setup.md"
 }
 
 detect_exploration_context_level() {
-  if project_setup_has_answers ".harness/project-setup.md"; then
+  if project_setup_has_answers ".harness/docs/project-setup.md"; then
     printf '%s\n' "제한적"
   else
     printf '%s\n' "초기"
@@ -213,7 +213,7 @@ detect_exploration_context_level() {
 }
 
 build_exploration_anchor_summary() {
-  if project_setup_has_answers ".harness/project-setup.md"; then
+  if project_setup_has_answers ".harness/docs/project-setup.md"; then
     printf '%s\n' "project-setup 입력이 있어 사용자 맥락을 함께 참조할 수 있습니다"
   else
     printf '%s\n' "입력 메모는 초기 상태만 전달하며, 사용자 입력과 역할 재해석이 필요합니다"
@@ -230,12 +230,12 @@ count_harness_skill_dirs() {
 }
 
 count_harness_report_files() {
-  [ -d ".harness/reports" ] || {
+  [ -d ".harness/docs" ] || {
     printf '0\n'
     return
   }
 
-  find ".harness/reports" -mindepth 1 -maxdepth 1 -type f -name '*.md' | wc -l | tr -d '[:space:]'
+  find ".harness/docs" -mindepth 1 -maxdepth 1 -type f -name '*.md' | wc -l | tr -d '[:space:]'
 }
 
 count_harness_log_files() {
@@ -263,13 +263,14 @@ build_exploration_guidance() {
 ensure_harness_log_scaffold() {
   local harness_dir=".harness"
   local log_dir="$harness_dir/logs"
-  local logging_policy_file="$harness_dir/logging-policy.md"
+  local doc_dir="$harness_dir/docs"
+  local logging_policy_file="$doc_dir/logging-policy.md"
   local session_log_file="$log_dir/session-log.md"
   local events_file="$log_dir/session-events.tsv"
   local latest_summary_file="$log_dir/latest-session-summary.md"
   local role_frequency_file="$log_dir/role-frequency.md"
 
-  mkdir -p "$harness_dir" "$log_dir"
+  mkdir -p "$harness_dir" "$doc_dir" "$log_dir"
 
   if [ ! -f "$logging_policy_file" ]; then
     cat > "$logging_policy_file" <<'EOF'
@@ -296,7 +297,7 @@ ensure_harness_log_scaffold() {
 
 - 선택 자산이 활성화된 프로젝트에서는 `harness-session-close.sh`가 역할 호출 빈도 통계와 템플릿 후보 분석까지 함께 갱신합니다.
 - `harness-role-stats.sh`는 누적 로그를 기준으로 역할 호출 빈도 통계를 다시 계산합니다.
-- `harness-template-candidates.sh`는 누적 로그를 분석한 반복 업무 템플릿 후보 메모를 `.harness/reports/template-candidates.md`로 남깁니다.
+- `harness-template-candidates.sh`는 누적 로그를 분석한 반복 업무 템플릿 후보 메모를 `.harness/docs/template-candidates.md`로 남깁니다.
 
 ## 로그를 남겨야 하는 상황
 
@@ -371,7 +372,7 @@ EOF
 - 진입점: harness-init
 - 호출 역할: -
 - 입력 파일: 없음
-- 출력 파일: AGENTS.md, .codex/config.toml, .harness/reports/exploration-notes.md
+- 출력 파일: AGENTS.md, .codex/config.toml, .harness/docs/exploration-notes.md
 - 다음 권장 역할: run-harness
 - 다음 재진입 phase: Phase 1
 - 남은 약점: 역할 팀이 아직 최종 보고서를 작성하지 않음
@@ -388,7 +389,7 @@ EOF
 - 진입점: run-harness
 - 호출 역할: domain-analyst, harness-architect, orchestrator
 - 입력 파일: 없음
-- 출력 파일: .harness/reports/domain-analysis.md, .harness/reports/harness-architecture.md
+- 출력 파일: .harness/docs/domain-analysis.md, .harness/docs/harness-architecture.md
 - 다음 권장 역할: qa-designer
 - 다음 재진입 phase: Phase 4
 - 남은 약점: QA 질문이 아직 추상적임

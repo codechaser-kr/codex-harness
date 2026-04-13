@@ -7,7 +7,7 @@
 #   - 명시적 재구성 전, 현재 구조를 다시 쓸 수 있는지 점검
 set -euo pipefail
 
-REPORT_DIR=".harness/reports"
+DOC_DIR=".harness/docs"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/harness-lib.sh"
 
@@ -131,7 +131,7 @@ AGENTS_AUDIT_SUMMARY="$(build_agents_audit_summary "$HARNESS_OPERATION_MODE")"
 HARNESS_SKILL_COUNT="$(count_harness_skill_dirs)"
 HARNESS_REPORT_COUNT="$(count_harness_report_files)"
 HARNESS_LOG_COUNT="$(count_harness_log_files)"
-EXPLORATION_NOTES_FILE="$REPORT_DIR/exploration-notes.md"
+EXPLORATION_NOTES_FILE="$DOC_DIR/exploration-notes.md"
 
 if [ "$HARNESS_OPERATION_MODE" = "신규 구축" ]; then
   log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
@@ -140,9 +140,9 @@ if [ "$HARNESS_OPERATION_MODE" = "신규 구축" ]; then
 fi
 
 if [ "$HARNESS_OPERATION_MODE" = "기존 확장" ] && { [ "$HARNESS_SKILL_COUNT" -eq 0 ] || [ "$HARNESS_REPORT_COUNT" -eq 0 ]; }; then
-  if [ -f "$REPORT_DIR/team-spec.md" ] && [ -f "$EXPLORATION_NOTES_FILE" ]; then
+  if [ -f "$DOC_DIR/team-spec.md" ] && [ -f "$EXPLORATION_NOTES_FILE" ]; then
     log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
-    log "Phase 2/3 이전의 설계 계약 상태로 판단합니다."
+    log "Phase 2/3 이전의 설계 규칙 상태로 판단합니다."
     log "team-spec 재정리와 재진입 안내를 계속 진행합니다."
   else
     log "하네스 운영 모드: $HARNESS_OPERATION_MODE"
@@ -158,11 +158,11 @@ if [ "$AGENTS_ALIGNMENT_STATUS" = "충돌" ] || [ "$AGENTS_ALIGNMENT_STATUS" = "
     [ -n "$agents_line" ] || continue
     log "상위 컨텍스트 감사: $agents_line"
   done <<< "$AGENTS_AUDIT_SUMMARY"
-  log "AGENTS.md 운영 계약 충돌이 있어 update 대신 정렬 또는 명시적 재구성이 필요합니다."
+  log "AGENTS.md 운영 기준 충돌이 있어 update 대신 정렬 또는 명시적 재구성이 필요합니다."
   exit 1
 fi
 
-mkdir -p "$REPORT_DIR"
+mkdir -p "$DOC_DIR"
 bash "$SCRIPT_DIR/harness-explore.sh" "$EXPLORATION_NOTES_FILE" >/dev/null
 EXPLORATION_CONTEXT_LEVEL="$(detect_exploration_context_level "$EXPLORATION_NOTES_FILE")"
 EXPLORATION_ANCHOR_SUMMARY="$(build_exploration_anchor_summary "$EXPLORATION_NOTES_FILE")"

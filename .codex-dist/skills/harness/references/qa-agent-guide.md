@@ -203,6 +203,6 @@ AI가 초안을 만들고,
 ## 10. 다른 레퍼런스와의 연결
 
 - `agent-design-patterns.md`: 어떤 역할 분리와 실행 단위가 품질 위험을 키우는지 상위 기준을 제공한다.
-- `orchestrator-template.md`: QA 질문이 실제 흐름 수정과 handoff 보완으로 어떻게 이어지는지 연결한다.
+- `orchestrator-template.md`: QA 질문이 실제 흐름 수정과 역할 연결 보완으로 어떻게 이어지는지 연결한다.
 - `team-examples.md`: 저장소 예시별로 어떤 QA 질문이 더 중요해지는지 연결한다.
 - `skill-testing-guide.md`: QA 질문이 테스트와 회귀 검증 항목으로 어떻게 내려가는지 연결한다.

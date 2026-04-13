@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # harness-init.sh
-# seed 역할 없이 입력 메모와 team-spec 설계 계약만 최초 1회 생성합니다.
+# seed 역할 없이 입력 메모와 team-spec 설계 규칙만 최초 1회 생성합니다.
 set -euo pipefail
 
 ROOT_DIR="$(pwd)"
@@ -53,7 +53,7 @@ HARNESS_AUDIT_SUMMARY="$(build_harness_audit_summary "$HARNESS_OPERATION_MODE")"
 AGENTS_AUDIT_SUMMARY="$(build_agents_audit_summary "$HARNESS_OPERATION_MODE")"
 EXPLORATION_NOTES_FILE="$EXPLORATION_NOTES_DEFAULT_PATH"
 
-mkdir -p ".harness/reports"
+mkdir -p ".harness/docs"
 bash "$SCRIPT_DIR/harness-explore.sh" "$EXPLORATION_NOTES_FILE" >/dev/null
 EXPLORATION_CONTEXT_LEVEL="$(detect_exploration_context_level "$EXPLORATION_NOTES_FILE")"
 EXPLORATION_ANCHOR_SUMMARY="$(build_exploration_anchor_summary "$EXPLORATION_NOTES_FILE")"
@@ -74,7 +74,7 @@ done <<< "$AGENTS_AUDIT_SUMMARY"
 
 create_dir ".codex"
 create_dir ".harness"
-create_dir ".harness/reports"
+create_dir ".harness/docs"
 create_dir ".harness/logs"
 
 if optional_harness_assets_enabled "$EXPLORATION_NOTES_FILE"; then
@@ -86,7 +86,7 @@ else
 fi
 
 if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
-  create_file_if_missing ".harness/project-setup.md" \
+  create_file_if_missing ".harness/docs/project-setup.md" \
 "# 프로젝트 설정
 
 ## 작성 안내
@@ -134,7 +134,7 @@ if exploration_requires_user_bootstrap "$EXPLORATION_NOTES_FILE"; then
 "
 fi
 
-create_file_if_missing ".harness/reports/team-spec.md" \
+create_file_if_missing ".harness/docs/team-spec.md" \
 "# 팀 스펙
 
 이 문서는 \`Phase 2 프로젝트 맞춤 에이전트 팀 설계\`의 핵심 산출물입니다.
@@ -166,7 +166,7 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 - 역할명은 도메인 명사 + 책임 동사/역할 조합을 우선합니다.
 - 예: \`payment-dev\`, \`billing-reviewer\`, \`checkout-qa\`, \`desktop-runtime-dev\`, \`ipc-reviewer\`
 - 추상적인 프레임워크 역할명보다 저장소 고유 용어와 변경 위험을 드러내는 이름을 우선합니다.
-- 새 역할명은 실제 요청 분류, 주요 경계, handoff 지점을 설명할 수 있어야 합니다.
+- 새 역할명은 실제 요청 분류, 주요 경계, 다음 역할로 넘길 지점을 설명할 수 있어야 합니다.
 - \`role_id\`는 snake_case, 표시 이름과 파일/디렉토리명은 kebab-case를 기본으로 둡니다.
 
 ## 팀 설계 결정
@@ -190,7 +190,7 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 - 역할 책임:
 - 주요 입력:
 - 주요 출력:
-- handoff 대상:
+- 다음 역할:
 - 중심 역할 여부:
 - 보조 역할 여부:
 - 대표 시작 경로:
@@ -199,7 +199,7 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 - 작업 시작 체크리스트:
 - 주요 판단 기준:
 - 금지 판단/피해야 할 오해:
-- 출력 계약:
+- 출력 규칙:
 - 산출 형식 템플릿:
 - 재진입 트리거:
 - 종료 판정 기준:
@@ -215,7 +215,7 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 
 - \`.codex/config.toml\`에는 아래 최종 역할 목록을 모두 등록합니다.
 - \`.codex/agents/*.toml\`은 역할 식별, 모델, sandbox, 짧은 실행 설명을 담습니다.
-- \`.codex/skills/*\`는 역할별 절차, 대표 시작 경로, 우선 입력 문서, 요청 분기, 시작 체크리스트, 판단 기준, 출력 계약, 재진입/종료 규칙, handoff, 완료 기준을 담습니다.
+- \`.codex/skills/*\`는 역할별 절차, 대표 시작 경로, 우선 입력 문서, 요청 분기, 시작 체크리스트, 판단 기준, 출력 규칙, 재진입/종료 규칙, 다음 역할, 완료 기준을 담습니다.
 - 생성기보다 team-spec이 우선하며, 파일명/역할명/책임 범위가 다르면 team-spec 기준으로 다시 생성합니다.
 - 최종 역할 인벤토리는 저장소 고유 용어와 실제 운영 경계를 반영해야 합니다.
 - 같은 역할을 서로 다른 표기로 중복 정의하지 않습니다. 예: \`payment_dev\`, \`payment-dev\`, \`payments-dev\`
@@ -239,7 +239,7 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 
 - 최종 역할 인벤토리는 프레임워크 범용 역할명이 아니라 현재 저장소의 도메인과 운영 경계를 설명해야 합니다.
 - 역할 이름은 실제 요청을 어디로 보낼지 판단할 수 있을 정도로 구체적이어야 합니다.
-- 역할 스펙 초안에는 이름만이 아니라 실행 계약 필드까지 채워야 합니다.
+- 역할 스펙 초안에는 이름만이 아니라 실행 기준 필드까지 채워야 합니다.
 - 역할 스펙 초안에는 이 역할이 어디서부터 읽고, 어떻게 분기하며, 어떤 형식으로 남기고, 언제 재진입/종료하는지도 포함돼야 합니다.
 - 최종 역할 인벤토리가 비어 있으면 \`Phase 2\`가 끝나지 않은 상태로 봅니다.
 - 이 문서가 정리되기 전에는 \`.codex/config.toml\`, \`.codex/agents/*.toml\`, \`.codex/skills/*\`를 만들지 않습니다.
@@ -295,13 +295,13 @@ create_file_if_missing "AGENTS.md" \
 
 - \`exploration-notes.md\`는 자동 판단 보류를 위한 약한 메모로 사용합니다.
 - \`team-spec.md\`는 프로젝트 맞춤 에이전트 팀과 동적 생성 결과를 연결하는 스펙 문서입니다.
-- \`harness-init.sh\` 직후 상태는 완료가 아니라 자동 판단 보류 메모와 역할 설계 계약만 준비된 상태입니다.
+- \`harness-init.sh\` 직후 상태는 완료가 아니라 자동 판단 보류 메모와 역할 설계 규칙만 준비된 상태입니다.
 - 최종 문서는 역할 스킬과 에이전트 팀이 직접 작성한 뒤 검증합니다.
-- drift / sync / evolve는 운영 유지보수의 기본 루프입니다.
+- 상태 점검 / 정렬 / 개선은 운영 유지보수의 기본 루프입니다.
 "
 
 ensure_harness_log_scaffold
 
 log "하네스 초기화 완료"
-log "현재 상태는 입력 메모와 역할 설계 계약만 준비된 상태입니다."
+log "현재 상태는 입력 메모와 역할 설계 규칙만 준비된 상태입니다."
 log "다음 단계: Phase 2가 team-spec의 최종 역할 인벤토리를 작성한 뒤 Phase 3 생성기를 실행해야 합니다."

@@ -30,7 +30,7 @@ assert_file_contains "$QUALITY_REF" "without-skill" "quality guide without-skill
 assert_file_contains "$QUALITY_REF" "with-skill" "quality guide with-skill"
 assert_file_contains "$QUALITY_REF" "시작 역할 판단" "quality guide 시작 역할 판단"
 assert_file_contains "$QUALITY_REF" "사용자 질문 절제" "quality guide 질문 절제"
-assert_file_contains "$QUALITY_REF" "handoff 명확성" "quality guide handoff 명확성"
+assert_file_contains "$QUALITY_REF" "다음 역할 명확성" "quality guide 다음 역할 명확성"
 assert_file_contains "$QUALITY_REF" "저장소 근거 연결" "quality guide 저장소 근거 연결"
 assert_file_contains "$QUALITY_REF" "검증 가능성" "quality guide 검증 가능성"
 assert_file_contains "$QUALITY_REF" "## 6. 다른 레퍼런스와의 연결" "quality guide 연결 섹션"

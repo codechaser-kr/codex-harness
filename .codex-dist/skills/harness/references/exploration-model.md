@@ -40,4 +40,4 @@
 - `harness-explore.sh`는 이 모델을 따라 약한 탐색 메모를 만든다.
 - `harness-init.sh`와 `harness-update.sh`는 이 메모와 `project-setup.md` 상태를 읽는다.
 - 시작 진입 역할은 이 문서만으로 시작 역할을 단정하지 않는다.
-- `harness-verify.sh`는 입력 메모의 풍부함보다, 역할 재작성과 운영 계약 정렬 여부를 더 앞에서 본다.
+- `harness-verify.sh`는 입력 메모의 풍부함보다, 역할 재작성과 운영 기준 정렬 여부를 더 앞에서 본다.

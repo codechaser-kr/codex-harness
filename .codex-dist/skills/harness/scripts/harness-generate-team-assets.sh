@@ -87,11 +87,11 @@ field_value_from_team_spec() {
     /^## 생성 규칙/ { exit }
     !in_specs { next }
     /^### / { current_role = ""; next }
-    /^- 역할 id:/ {
+    /^[[:space:]]*[-*][[:space:]]*역할 id[[:space:]]*:/ {
       current_role = trim(substr($0, index($0, ":") + 1))
       next
     }
-    current_role == role_id && $0 ~ ("^- " key ":") {
+    current_role == role_id && $0 ~ ("^[[:space:]]*[-*][[:space:]]*" key "[[:space:]]*:") {
       print trim(substr($0, index($0, ":") + 1))
       exit
     }
@@ -340,59 +340,59 @@ load_role_contracts() {
       verification_focus = ""
       next
     }
-    /^- 역할 id:/ {
+    /^[[:space:]]*[-*][[:space:]]*역할 id[[:space:]]*:/ {
       role_id = trim(substr($0, index($0, ":") + 1))
       next
     }
-    /^- 역할 유형:/ {
+    /^[[:space:]]*[-*][[:space:]]*역할 유형[[:space:]]*:/ {
       role_type = trim(substr($0, index($0, ":") + 1))
       next
     }
-    /^- 대표 시작 경로:/ {
+    /^[[:space:]]*[-*][[:space:]]*대표 시작 경로[[:space:]]*:/ {
       start_paths = trim(substr($0, index($0, ":") + 1))
       next
     }
-    /^- 우선 입력 문서:/ {
+    /^[[:space:]]*[-*][[:space:]]*우선 입력 문서[[:space:]]*:/ {
       priority_inputs = trim(substr($0, index($0, ":") + 1))
       next
     }
-    /^- 요청 유형별 하위 분기:/ {
+    /^[[:space:]]*[-*][[:space:]]*요청 유형별 하위 분기[[:space:]]*:/ {
       request_branches = trim(substr($0, index($0, ":") + 1))
       next
     }
-    /^- 작업 시작 체크리스트:/ {
+    /^[[:space:]]*[-*][[:space:]]*작업 시작 체크리스트[[:space:]]*:/ {
       start_checklist = trim(substr($0, index($0, ":") + 1))
       next
     }
-    /^- 주요 판단 기준:/ {
+    /^[[:space:]]*[-*][[:space:]]*주요 판단 기준[[:space:]]*:/ {
       decision_rules = trim(substr($0, index($0, ":") + 1))
       next
     }
-    /^- 금지 판단\/피해야 할 오해:/ {
+    /^[[:space:]]*[-*][[:space:]]*금지 판단\/피해야 할 오해[[:space:]]*:/ {
       anti_patterns = trim(substr($0, index($0, ":") + 1))
       next
     }
-    /^- 출력 규칙:/ {
+    /^[[:space:]]*[-*][[:space:]]*출력 규칙[[:space:]]*:/ {
       output_contract = trim(substr($0, index($0, ":") + 1))
       next
     }
-    /^- 산출 형식 템플릿:/ {
+    /^[[:space:]]*[-*][[:space:]]*산출 형식 템플릿[[:space:]]*:/ {
       output_template = trim(substr($0, index($0, ":") + 1))
       next
     }
-    /^- 재진입 트리거:/ {
+    /^[[:space:]]*[-*][[:space:]]*재진입 트리거[[:space:]]*:/ {
       reentry_triggers = trim(substr($0, index($0, ":") + 1))
       next
     }
-    /^- 종료 판정 기준:/ {
+    /^[[:space:]]*[-*][[:space:]]*종료 판정 기준[[:space:]]*:/ {
       exit_criteria = trim(substr($0, index($0, ":") + 1))
       next
     }
-    /^- 완료 기준:/ {
+    /^[[:space:]]*[-*][[:space:]]*완료 기준[[:space:]]*:/ {
       completion_criteria = trim(substr($0, index($0, ":") + 1))
       next
     }
-    /^- 검증\/리뷰 초점:/ {
+    /^[[:space:]]*[-*][[:space:]]*검증\/리뷰 초점[[:space:]]*:/ {
       verification_focus = trim(substr($0, index($0, ":") + 1))
       next
     }

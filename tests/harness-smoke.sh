@@ -356,6 +356,8 @@ assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "공용 계약 영향이 확인될 때" "custom payment skill 재진입 값"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "## 종료 판정 기준" "custom payment skill 종료 판정 기준"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "reviewer로 바로 handoff 가능한 상태일 때" "custom payment skill 종료 값"
+assert_not_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "초기 스킬" "custom payment skill 초기 스킬 문구 제거"
+assert_not_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/payment-dev/SKILL.md")" "더 보강할 수 있다" "custom payment skill 메타 보강 문구 제거"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/intake-router/SKILL.md")" "## 주요 작업" "custom intake router skill 주요 작업"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/intake-router/SKILL.md")" "## 협업 원칙" "custom intake router skill 협업 원칙"
 assert_contains "$(cat "$TMP_ROOT/custom-role-project/.codex/skills/intake-router/SKILL.md")" '역할의 유형은 `conductor`' "custom intake skill 역할 유형"
@@ -382,6 +384,22 @@ assert_not_contains "$CUSTOM_VERIFY_OUTPUT" "추상 역할명이 남아 있음" 
 assert_not_contains "$CUSTOM_VERIFY_OUTPUT" "추상 표시 이름이 남아 있음" "custom 역할 verify generic display name 없음"
 assert_not_contains "$CUSTOM_VERIFY_OUTPUT" "추상 agent 파일명이 남아 있음" "custom 역할 verify generic agent file 없음"
 assert_contains "$CUSTOM_VERIFY_OUTPUT" "문서 누락: 역할 재작성 미수행" "custom 역할 verify는 최종 보고서 누락만 실패"
+
+log "review/qa 역할 기본 산출 형식 생성 확인"
+mkdir -p "$TMP_ROOT/review-qa-project"
+(
+  cd "$TMP_ROOT/review-qa-project" && \
+  bash "$HARNESS_SCRIPT_DIR/harness-init.sh" >/dev/null && \
+  perl -0pi -e 's@### 역할 1\n\n- 역할 id:\n- 역할 표시 이름:\n- 역할 유형:\n- 역할 목적:\n- 역할 책임:\n- 주요 입력:\n- 주요 출력:\n- handoff 대상:\n- 중심 역할 여부:\n- 보조 역할 여부:\n- 대표 시작 경로:\n- 우선 입력 문서:\n- 요청 유형별 하위 분기:\n- 작업 시작 체크리스트:\n- 주요 판단 기준:\n- 금지 판단/피해야 할 오해:\n- 출력 계약:\n- 산출 형식 템플릿:\n- 재진입 트리거:\n- 종료 판정 기준:\n- 완료 기준:\n- 검증/리뷰 초점:\n- agent 파일명:\n- skill 디렉토리명:\n- description 초안:\n- 권장 모델 클래스:\n- sandbox 정책:@### 역할 1\n\n- 역할 id: workspace_boundary_reviewer\n- 역할 표시 이름: workspace-boundary-reviewer\n- 역할 유형: review\n- 역할 목적: 워크스페이스 경계 변경의 회귀 위험을 검토한다.\n- 역할 책임: 위험 순위화;근거 기록;후속 재작업 제안\n- 주요 입력: 현재 요청;team-spec;domain-analysis\n- 주요 출력: 리뷰 findings;추가 검증 요청\n- handoff 대상: release_regression_qa\n- 중심 역할 여부: 아니오\n- 보조 역할 여부: 아니오\n- 대표 시작 경로: packages/workspace/src;packages/common/src\n- 우선 입력 문서: .harness/reports/domain-analysis.md;.harness/reports/team-spec.md\n- 요청 유형별 하위 분기: 공용 타입 변경이면 common-ui 영향 확인;에디터 변경이면 저장 흐름 회귀 우선 검토\n- 작업 시작 체크리스트: 변경 경계 확인;실패 비용 큰 흐름 확인;근거 파일 확보\n- 주요 판단 기준: correctness와 회귀 위험을 먼저 정리;테스트 공백은 별도 분리\n- 금지 판단/피해야 할 오해: 구현 수정까지 직접 맡는다고 가정하지 않음\n- 출력 계약: severity 순서 findings와 필요한 재작업을 함께 남김\n- 산출 형식 템플릿:\n- 재진입 트리거: 재현 불가 이슈가 남을 때;공용 경계 충돌이 추가로 확인될 때\n- 종료 판정 기준: QA가 바로 이어받을 수 있게 findings와 근거가 분리돼 있을 때\n- 완료 기준: 주요 위험과 근거가 정리되고 다음 역할이 시작 가능\n- 검증/리뷰 초점: correctness;regression;contract drift;테스트 공백\n- agent 파일명: workspace-boundary-reviewer\n- skill 디렉토리명: workspace-boundary-reviewer\n- description 초안: Review workspace boundary changes for regression and contract risks.\n- 권장 모델 클래스: frontier\n- sandbox 정책: workspace-write\n\n### 역할 2\n\n- 역할 id: release_regression_qa\n- 역할 표시 이름: release-regression-qa\n- 역할 유형: qa\n- 역할 목적: 릴리즈 전 회귀 검증과 남은 위험을 정리한다.\n- 역할 책임: 자동 검증과 수동 검증 분리;잔여 위험 기록;출시 판단 메모\n- 주요 입력: 현재 요청;team-spec;qa-strategy\n- 주요 출력: QA 결과 메모;잔여 위험;다음 조치\n- handoff 대상: second_repo_conductor\n- 중심 역할 여부: 아니오\n- 보조 역할 여부: 아니오\n- 대표 시작 경로: .harness/reports/qa-strategy.md;packages/second/tests\n- 우선 입력 문서: .harness/reports/qa-strategy.md;.harness/reports/team-spec.md\n- 요청 유형별 하위 분기: 데스크톱 변경이면 패키징 위험 기록;공용 변경이면 웹/데스크톱 공통 회귀 분리\n- 작업 시작 체크리스트: 자동 검증 목록 정리;수동 확인 경로 정리;미실행 항목 기준 고정\n- 주요 판단 기준: 실패 비용 큰 흐름부터 검증;미실행 항목은 위험으로 남김\n- 금지 판단/피해야 할 오해: 구현 보완까지 직접 맡는다고 가정하지 않음\n- 출력 계약: 자동 검증, 수동 검증, 잔여 위험을 분리해 남김\n- 산출 형식 템플릿:\n- 재진입 트리거: 재현이 불안정한 결함이 남을 때;릴리즈 판단이 보류될 때\n- 종료 판정 기준: 다음 역할이 출시 판단을 내릴 수 있게 검증 결과와 잔여 위험이 정리될 때\n- 완료 기준: 자동 검증, 수동 검증, 미실행 항목, 잔여 위험이 구분됨\n- 검증/리뷰 초점: 회귀 위험;릴리즈 차단 요소;미실행 검증\n- agent 파일명: release-regression-qa\n- skill 디렉토리명: release-regression-qa\n- description 초안: Validate release regression risk and summarize remaining issues.\n- 권장 모델 클래스: frontier\n- sandbox 정책: workspace-write@' .harness/reports/team-spec.md && \
+  perl -0pi -e 's@<!-- team-spec-roles:start -->\n<!-- team-spec-roles:end -->@<!-- team-spec-roles:start -->\nworkspace_boundary_reviewer|workspace-boundary-reviewer|workspace-boundary-reviewer|gpt-5.4|high|workspace-write|Review workspace boundary changes for regression and contract risks.\nrelease_regression_qa|release-regression-qa|release-regression-qa|gpt-5.4|high|workspace-write|Validate release regression risk and summarize remaining issues.\n<!-- team-spec-roles:end -->@' .harness/reports/team-spec.md && \
+  bash "$HARNESS_SCRIPT_DIR/harness-generate-team-assets.sh" >/dev/null
+)
+assert_contains "$(cat "$TMP_ROOT/review-qa-project/.codex/skills/workspace-boundary-reviewer/SKILL.md")" "## 산출 형식 템플릿" "review 역할 산출 형식 템플릿 섹션"
+assert_contains "$(cat "$TMP_ROOT/review-qa-project/.codex/skills/workspace-boundary-reviewer/SKILL.md")" "findings: <severity-ordered findings>" "review 역할 기본 findings 예시"
+assert_contains "$(cat "$TMP_ROOT/review-qa-project/.codex/skills/workspace-boundary-reviewer/SKILL.md")" "근거: <files or reports>" "review 역할 기본 근거 예시"
+assert_contains "$(cat "$TMP_ROOT/review-qa-project/.codex/skills/release-regression-qa/SKILL.md")" "## 산출 형식 템플릿" "qa 역할 산출 형식 템플릿 섹션"
+assert_contains "$(cat "$TMP_ROOT/review-qa-project/.codex/skills/release-regression-qa/SKILL.md")" "자동 검증: <commands or results>" "qa 역할 기본 자동 검증 예시"
+assert_contains "$(cat "$TMP_ROOT/review-qa-project/.codex/skills/release-regression-qa/SKILL.md")" "잔여 위험: <remaining risks>" "qa 역할 기본 잔여 위험 예시"
 
 log "역할 스킬 실행 계약 누락 검증 확인"
 mkdir -p "$TMP_ROOT/invalid-skill-project"

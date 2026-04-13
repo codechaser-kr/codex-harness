@@ -5,7 +5,7 @@ ROOT_DIR="$(pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/harness-lib.sh"
 
-OUTPUT_FILE="${1:-.harness/reports/exploration-notes.md}"
+OUTPUT_FILE="${1:-.harness/docs/exploration-notes.md}"
 
 log() {
   printf '[harness][explore] %s\n' "$1"
@@ -30,7 +30,7 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
 ## 현재 입력 상태
 
 EOF
-  if project_setup_has_answers ".harness/project-setup.md"; then
+  if project_setup_has_answers ".harness/docs/project-setup.md"; then
     cat <<'EOF'
 - `project-setup.md`에 사용자 입력이 있습니다.
 - 역할 스킬은 이 입력을 저장소 재탐색과 함께 사용해야 합니다.
@@ -55,7 +55,7 @@ EOF
 - 이 저장소가 해결하는 사용자 문제 또는 운영 문제는 무엇인가
 - 어떤 실행 흐름이 가장 먼저 성공해야 하는가
 - 어떤 실패가 가장 비용이 큰가
-- 지금 부족한 것은 저장소 입력 부족인지, 문서 재작성 부족인지, 운영 계약 drift인지
+- 지금 부족한 것은 저장소 입력 부족인지, 문서 재작성 부족인지, 운영 기준과 실제 상태의 불일치인지
 EOF
 } > "$OUTPUT_FILE"
 

@@ -5,10 +5,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/harness-lib.sh"
 
 LOG_DIR=".harness/logs"
-REPORT_DIR=".harness/reports"
+DOC_DIR=".harness/docs"
 TEMPLATE_DIR=".harness/templates"
 EVENTS_FILE="$LOG_DIR/session-events.tsv"
-REPORT_FILE="$REPORT_DIR/template-candidates.md"
+DOC_FILE="$DOC_DIR/template-candidates.md"
 
 MIN_COUNT=3
 MIN_ROLES=2
@@ -65,17 +65,7 @@ candidate_name() {
       ;;
   esac
 
-  case "$roles" in
-    *orchestrator*,validator*|*validator*,orchestrator*)
-      printf '%s' "구조 보강 후 검증"
-      ;;
-    *domain-analyst*,harness-architect*|*harness-architect*,domain-analyst*)
-      printf '%s' "분석 후 구조 설계"
-      ;;
-    *)
-      printf '%s' "반복 업무 후보"
-      ;;
-  esac
+  printf '%s' "반복 업무 후보"
 }
 
 candidate_slug() {
@@ -106,17 +96,7 @@ candidate_slug() {
       ;;
   esac
 
-  case "$roles" in
-    *orchestrator*,validator*|*validator*,orchestrator*)
-      printf '%s' "structure-validation-workflow"
-      ;;
-    *domain-analyst*,harness-architect*|*harness-architect*,domain-analyst*)
-      printf '%s' "analysis-architecture-workflow"
-      ;;
-    *)
-      printf 'template-candidate-%s' "$idx"
-      ;;
-  esac
+  printf 'template-candidate-%s' "$idx"
 }
 
 render_report() {
@@ -144,7 +124,7 @@ render_report() {
     printf '\n'
     printf '## 다음에 후보가 되는 조건\n\n'
     printf -- '- 같은 진입점, 역할 흐름, 산출물 유형 조합이 %s회 이상 반복되면 후보가 됩니다.\n' "$MIN_COUNT"
-    printf -- '- 한 번성 처리보다 재사용 가능한 handoff와 산출물 흐름이 누적될수록 후보가 잘 잡힙니다.\n'
+      printf -- '- 한 번성 처리보다 재사용 가능한 다음 역할 흐름과 산출물 흐름이 누적될수록 후보가 잘 잡힙니다.\n'
     printf -- '- report/skill/log 산출물 조합이 안정적으로 반복되면 템플릿화 가치가 높아집니다.\n'
     printf '\n'
     printf '## 현재 관찰 메모\n\n'
@@ -296,7 +276,7 @@ case "$MIN_ROLES" in
 esac
 
 ensure_harness_log_scaffold
-mkdir -p "$REPORT_DIR"
+mkdir -p "$DOC_DIR"
 
 if ! optional_harness_assets_enabled; then
   log "optional assets disabled: skip template candidate analysis"
@@ -351,8 +331,8 @@ NEAR_MISS_COUNT="$(
 
     function classify_output(path,    value) {
       value = trim(path)
-      if (value ~ /^\.harness\/reports\/.*\.md$/) {
-        sub(/^\.harness\/reports\//, "", value)
+      if (value ~ /^\.harness\/docs\/.*\.md$/) {
+        sub(/^\.harness\/docs\//, "", value)
         sub(/\.md$/, "", value)
         return "report:" value
       }
@@ -471,8 +451,8 @@ CANDIDATE_ROWS="$(
 
     function classify_output(path,    value) {
       value = trim(path)
-      if (value ~ /^\.harness\/reports\/.*\.md$/) {
-        sub(/^\.harness\/reports\//, "", value)
+      if (value ~ /^\.harness\/docs\/.*\.md$/) {
+        sub(/^\.harness\/docs\//, "", value)
         sub(/\.md$/, "", value)
         return "report:" value
       }
@@ -575,8 +555,8 @@ if [ "$DRY_RUN" -eq 1 ]; then
 else
   # 수동 영역 보존: <!-- harness:manual --> 이후 내용을 유지하고 자동 영역만 갱신
   MANUAL_SECTION=""
-  if [ -f "$REPORT_FILE" ] && grep -qF '<!-- harness:manual -->' "$REPORT_FILE"; then
-    MANUAL_SECTION="$(awk '/^<!-- harness:manual -->/{found=1; next} found{print}' "$REPORT_FILE")"
+  if [ -f "$DOC_FILE" ] && grep -qF '<!-- harness:manual -->' "$DOC_FILE"; then
+    MANUAL_SECTION="$(awk '/^<!-- harness:manual -->/{found=1; next} found{print}' "$DOC_FILE")"
   fi
 
   {
@@ -588,9 +568,9 @@ else
       printf '## 운영 메모\n\n'
       printf '<!-- 이 섹션은 스크립트가 덮어쓰지 않습니다. 자유롭게 메모를 남길 수 있습니다. -->\n'
     fi
-  } > "$REPORT_FILE"
+  } > "$DOC_FILE"
 
-  log "후보 보고서 생성: $REPORT_FILE"
+  log "후보 문서 생성: $DOC_FILE"
 fi
 
 if [ "$WRITE_TEMPLATES" -eq 1 ]; then

@@ -7,7 +7,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 
 이 스킬은 현재 저장소에 맞는 **프로젝트 로컬 실행 하네스 팀**을 구성하는 `Codex 중심 메타 프레임워크`다.
 
-이 스킬은 저장소를 탐색해 근거를 수집하고, 그 결과를 공통 입력으로 삼아 역할 팀, 운영 구조, QA/검증 흐름, `run-harness` 진입점, drift / sync / evolve 루프를 설계한다.
+이 스킬은 저장소를 탐색해 근거를 수집하고, 그 결과를 공통 입력으로 삼아 역할 팀, 운영 구조, QA/검증 흐름, 시작 진입 역할(`run-harness`), 상태 점검 / 정렬 / 개선 루프를 설계한다.
 
 ---
 
@@ -18,9 +18,9 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - 저장소에 프로젝트별 실행 하네스 팀이 필요할 때
 - 역할 기반 로컬 스킬 구조를 만들고 싶을 때
 - 분석 / 설계 / 생성 / QA / 검증 역할을 분리하고 싶을 때
-- orchestrator 중심의 팀 흐름이 필요할 때
-- run-harness 같은 팀 기동 진입점이 필요할 때
-- 프로젝트에 맞는 QA / validator 포함 구조가 필요할 때
+- 흐름 조율 역할을 중심으로 팀 흐름을 설계해야 할 때
+- 시작 진입 역할(`run-harness`)이 필요한 프로젝트일 때
+- 프로젝트에 맞는 QA 역할과 운영 감사 역할이 필요한 경우
 - 이후 프로젝트 특화 실행 하네스로 확장 가능한 기반이 필요할 때
 
 ---
@@ -30,16 +30,26 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 1. 현재 저장소 내부에 **프로젝트 로컬 실행 하네스 팀**을 만든다.
 2. 전역 `AGENTS.md`를 생성하거나 수정하지 않는다.
 3. 기존 저장소에 `AGENTS.md`가 있으면 덮어쓰기보다 감사와 정렬을 앞에 둔다.
-4. 하네스의 본체는 로컬 Codex 에이전트 설정, 로컬 역할 스킬, `run-harness`, 오케스트레이션 구조다.
-5. 역할 팀은 `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`의 실행 계약을 함께 가진다.
-6. QA와 validator는 실행 하네스 팀의 필수 일부로 다룬다.
-7. `run-harness`는 로컬 역할 팀을 실제로 기동하는 진입점으로 다룬다.
-8. 리포트는 한 종류가 아니다. 저장소 입력 문서와 하네스 메타시스템 문서를 분리해서 다룬다.
+4. 하네스의 본체는 로컬 Codex 에이전트 설정, 로컬 역할 스킬, 시작 진입 역할(`run-harness`), 오케스트레이션 구조다.
+5. 역할 팀은 `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`의 실행 기준을 함께 가진다.
+6. QA 역할과 운영 감사 역할은 실행 하네스 팀의 필수 일부로 다룬다.
+7. 시작 진입 역할(`run-harness`)은 로컬 역할 팀을 실제로 기동하는 진입점이다.
+8. 문서는 저장소 입력 문서와 하네스 메타시스템 문서로 분리해 다룬다.
 9. 역할 수는 많을수록 좋은 것이 아니라, 실제 프로젝트에 맞는 운영 가능한 팀 크기가 중요하다.
-10. 입력 정보가 아직 부족하면, `run-harness`가 사용자 확인 질문부터 제시하고 그 답을 다음 단계 입력으로 연결한다.
+10. 입력 정보가 아직 부족하면, 시작 진입 역할(`run-harness`)이 사용자 확인 질문부터 제시하고 그 답을 다음 단계 입력으로 연결한다.
 11. 언어, 구조, 경계 해석은 **루트 기준 저장소 재독해**를 기준으로 한다.
 12. 하네스의 핵심 입력은 탐색으로 수집한 근거와 그 해석이다.
-13. drift / sync / evolve는 부가 유지보수가 아니라 메타시스템의 핵심 운영 루프다.
+13. 상태 점검 / 정렬 / 개선은 부가 유지보수가 아니라 메타시스템의 핵심 운영 루프다.
+
+## 실행 흐름 요약
+
+1. 현재 하네스 현황을 감사한다.
+2. 입력 메모, 역할 설계 규칙, 로그 구조를 만든다.
+3. 저장소를 다시 읽어 도메인 분석과 팀 스펙을 작성한다.
+4. 팀 스펙을 바탕으로 프로젝트 특화 실행 팀을 구성한다.
+5. QA/운영 기준 문서를 완성한다.
+6. 운영 감사 역할이 구조와 운영 기준을 점검한다.
+7. 품질 비교와 성숙도 평가로 다음 재진입 지점을 정리한다.
 
 ## 작성 언어 원칙
 
@@ -47,7 +57,7 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - 보고서 파일명은 `domain-analysis.md` 같은 기존 영문 파일명을 유지하되, 본문과 항목명은 한글을 기본으로 한다.
 - 프로젝트에 이미 명시된 문서 언어 규칙이 있다면 그 규칙을 앞에 두되, 별도 규칙이 없으면 한글 작성이 기본이다.
 
-## 실행 계약
+## 실행 기준
 
 이 스킬이 트리거되었다고 해서 임의 방식으로 파일을 만들면 안 된다.
 
@@ -56,28 +66,18 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 
 - 최초 하네스 구성 요청이면 반드시 `bash scripts/harness-init.sh`를 앞에 실행한다.
 - `harness-init.sh` 직후 상태는 완료가 아니라 자동 판단 보류 메모와 역할 입력만 준비된 상태로 본다.
-- `harness-init.sh` 다음에는 역할 스킬이 `.harness/reports/*`를 직접 작성해야 한다.
+- `harness-init.sh` 다음에는 `Phase 2`가 team-spec의 최종 역할 인벤토리를 만들고, `Phase 3`이 그 스펙으로 동적 agent/skill 자산을 생성해야 한다.
+- `.codex/config.toml`과 `.codex/agents/*.toml`은 init 스크립트의 고정 템플릿이 아니라, Phase 3 생성기가 team-spec 기준으로 책임진다.
+- `harness-init.sh`가 고정 agent 파일 세트를 완성본처럼 남기는 구조를 최종 형태로 간주하지 않는다.
 - 하네스 구성이 끝났다고 판단하기 전에 반드시 `bash scripts/harness-verify.sh`를 실행한다.
 - 역할 재작성 없이 `harness-verify.sh`를 먼저 실행해 통과시키려 하지 않는다.
 - `scripts/harness-update.sh`는 이미 하네스 구조가 있는 프로젝트에서 필요한 문서와 입력 메모를 다시 정리할 때 사용한다. 필요하면 `--domain`, `--architecture`, `--qa`, `--orchestration`, `--team-structure`, `--team-playbook`으로 범위를 좁힌다.
 - `초기` 입력 상태에서는 질문과 `project-setup.md` 작성을 앞에 두고, `제한적` 상태에서는 역할 스킬이 저장소를 다시 읽으며 문서를 작성한다.
 - `harness-init.sh` 또는 `harness-update.sh`가 만든 문서는 완성본으로 간주하지 않고, 완료 전에 반드시 저장소 사실, 기존 도메인 언어, 운영 흐름에 맞게 역할 관점으로 다시 작성한다.
-- `.harness/reports/*` 문서 재가공 없이 스크립트 출력만으로 완료 처리하지 않는다.
+- `.harness/docs/*` 문서 재가공 없이 스크립트 출력만으로 완료 처리하지 않는다.
 - `scripts/harness-init.sh` 대신 `.codex/skills/*`, `.harness/*`를 수동으로 직접 생성하는 방식은 사용하지 않는다.
 - `scripts/harness-verify.sh`가 실패하면 완료로 간주하지 말고, 누락된 구조를 앞에서 다시 쓴다.
 - 생성 문서와 예시 명령에 사용자 홈 디렉토리나 절대경로를 하드코딩하지 않는다. 실행 예시는 상대경로나 스킬 기준 경로를 사용한다.
-
-### 완료 기준
-
-하네스 구성이 끝났다고 말하려면 아래가 모두 만족돼야 한다.
-
-1. `exploration-notes.md`가 자동 판단 보류를 위한 약한 메모로 존재한다.
-2. `domain-analysis.md`, `qa-strategy.md`가 저장소 입력 문서로 작성돼 있다.
-3. `harness-architecture.md`, `orchestration-plan.md`, `team-structure.md`, `team-playbook.md`가 하네스 메타시스템 문서로 작성돼 있다.
-4. `run-harness`가 현재 상태를 읽고 시작 역할, 다음 역할, 미해결 질문을 분명히 제시할 수 있다.
-5. `scripts/harness-verify.sh`가 구조 누락과 골격 잔존 없이 통과한다.
-
-즉 `harness-init.sh`가 끝난 상태는 완료가 아니라 **자동 판단 보류 메모와 역할 입력이 준비된 상태**다.
 
 ## 탐색 우선 원칙
 
@@ -112,24 +112,24 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 
 하네스 스킬이 트리거되면, 실제 생성 전에 현재 저장소의 하네스 현황을 앞에서 감사한다.
 
-1. `AGENTS.md`, `.codex/config.toml`, `.codex/agents/`, `.codex/skills/`, `.harness/reports/`, `.harness/logs/`의 존재와 현재 파일 수를 앞에서 읽는다.
-2. 저장소 루트에 `AGENTS.md`가 있으면 상위 운영 계약 문서로 읽고 현재 하네스와 충돌하는지 함께 본다.
+1. `AGENTS.md`, `.codex/config.toml`, `.codex/agents/`, `.codex/skills/`, `.harness/docs/`, `.harness/logs/`의 존재와 현재 파일 수를 앞에서 읽는다.
+2. 저장소 루트에 `AGENTS.md`가 있으면 상위 운영 기준 문서로 읽고 현재 하네스와 충돌하는지 함께 본다.
 3. 현황에 따라 상태 모드를 먼저 나눈다.
 4. 상태 모드와 별개로 실행 모드를 고른다.
-5. 기존 하네스가 있으면 덮어쓰기보다 필요한 문서를 다시 쓰는 쪽을 앞에 두고, drift 가능성을 읽는다.
+5. 기존 하네스가 있으면 덮어쓰기보다 필요한 문서를 다시 쓰는 쪽을 앞에 두고, 불일치 가능성을 읽는다.
 6. 감사 결과는 이후 init/update/verify의 입력으로 계속 사용한다.
 
 ### 상태 모드
 
 - `신규 구축`: 로컬 역할 스킬, 보고서, 로그 구조가 거의 없는 상태. `harness-init.sh` 중심으로 시작한다.
 - `기존 확장`: 일부 역할 스킬, 보고서, 로그 구조가 이미 있는 상태. `harness-update.sh`로 필요한 부분만 다시 쓴다.
-- `운영 유지보수`: 구조는 있으나 문서/스킬/로그 정합성 읽기나 drift 읽기가 필요한 상태. 불필요한 재생성보다 감사와 verify를 앞에 둔다.
+- `운영 유지보수`: 구조는 있으나 문서, 스킬, 로그가 실제 상태와 맞는지 다시 점검해야 하는 상태. 불필요한 재생성보다 감사와 verify를 앞에 둔다.
 
 ### 실행 모드
 
-- `에이전트 팀`: 핵심 역할과 handoff를 계속 운영해야 하는 저장소에서 기본으로 둔다.
+- `에이전트 팀`: 핵심 역할과 역할 연결을 계속 운영해야 하는 저장소에서 기본으로 둔다.
 - `단일 역할`: 입력과 출력이 좁고, 한 문서나 한 축만 다시 쓰면 되는 경우에 둔다.
-- `하이브리드`: 팀 구조를 유지하되 일부 보조 해석이나 drift 정렬만 별도 역할로 분리할 때 둔다.
+- `하이브리드`: 팀 구조를 유지하되 일부 보조 해석이나 불일치 정리만 별도 역할로 분리할 때 둔다.
 
 실행 모드와 상태 모드는 별개다. 예를 들어 `기존 확장` 상태라도 `에이전트 팀` 모드로 갈 수 있고, `운영 유지보수` 상태라도 `단일 역할` 모드로 시작할 수 있다. 입력 상태도 별개다. 예를 들어 `기존 확장` 상태라도 입력 상태가 `초기`일 수 있고, 이 경우에는 세부 역할을 늘리기보다 질문과 `project-setup.md` 작성부터 다시 시작한다.
 
@@ -138,10 +138,10 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - 새 구조를 안정적으로 세울 때는 `파이프라인`
 - 생성 직후 검증을 빨리 돌려야 할 때는 `생성-검증`
 - 하위 경계가 독립적일 때만 `팬아웃/팬인`
-- handoff와 재진입이 핵심이면 `오케스트레이션 중심`
+- 다음 역할 결정과 재진입이 핵심이면 `오케스트레이션 중심`
 - 역할 구성이 저장소마다 크게 달라질 때는 `전문가 풀`
 
-패턴은 부가 설명이 아니라 메타시스템의 중심 선택축이다. run-harness와 harness-architect는 현재 저장소에서 어떤 패턴을 왜 앞에 두는지 항상 먼저 적어야 한다.
+패턴은 부가 설명이 아니라 메타시스템의 중심 선택축이다. `harness-architecture.md`와 `orchestration-plan.md`에는 현재 저장소에서 어떤 패턴을 왜 앞에 두는지 항상 먼저 적어야 한다.
 
 ### 기존 확장 Phase 선택
 
@@ -151,39 +151,40 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 - 역할 경계와 구조 설명이 약하면 `Phase 2`부터 다시 들어간다.
 - 스킬 설명과 트리거가 약하면 `Phase 3`부터 다시 들어간다.
 - QA 기준이 약하면 `Phase 4`부터 다시 들어간다.
-- orchestration, handoff, 세션 운영 규칙이 약하면 `Phase 5`부터 다시 들어간다.
-- 상위 운영 계약이나 `AGENTS.md` 충돌이 크면 update보다 재구성을 앞에 둔다.
+- 오케스트레이션 흐름, 다음 역할 기준, 세션 운영 기준이 약하면 `Phase 5`부터 다시 들어간다.
+- 검증은 통과했지만 운영 가치가 약하면 `Phase 7` 관점에서 비교/회고를 먼저 남긴 뒤 필요한 Phase로 되돌아간다.
+- 상위 운영 기준이나 `AGENTS.md` 충돌이 크면 update보다 재구성을 앞에 둔다.
 
 세부 기준은 `references/phase-selection-matrix.md`를 참고한다.
 
-### drift 점검 기준
+### 상태 점검 기준
 
-- 역할 스킬 수와 보고서 수가 현재 기본 구조와 크게 어긋나는가
-- `.harness/reports/*` 문서가 현재 저장소 구조보다 일반론으로 되돌아갔는가
+- 역할 스킬 수와 보고서 수가 현재 기본 구조와 크게 달라졌는가
+- `.harness/docs/*` 문서가 현재 저장소 구조보다 일반론으로 되돌아갔는가
 - 로그 정책과 실제 로그 자산이 서로 다른 운영 모델을 말하고 있는가
-- run-harness, orchestrator, validator의 역할 설명이 서로 충돌하는가
-- 기존 `AGENTS.md`의 상위 운영 규칙이 현재 하네스의 진입점, 상태 모드, 실행 모드, 재구성 원칙과 충돌하는가
+- 시작 진입 역할, 흐름 조율 역할, 운영 감사 역할의 설명이 서로 충돌하는가
+- 기존 `AGENTS.md`의 상위 운영 기준이 현재 하네스의 진입점, 상태 모드, 실행 모드, 재구성 원칙과 충돌하는가
 
 ### 운영 루프
 
-- `drift`: 산출물, 역할 설명, 운영 규칙이 서로 어긋난 상태를 읽고 재진입 지점을 정한다.
-- `sync`: `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`, 문서 계층이 같은 운영 계약을 말하도록 다시 맞춘다.
-- `evolve`: 반복 패턴, 검증 비용, handoff 병목을 바탕으로 역할 팀, 실행 모드, 실행 패턴을 다시 설계한다.
+- `상태 점검`: 산출물, 역할 설명, 운영 기준이 서로 맞지 않는 상태를 읽고 재진입 지점을 정한다. 새롭게 드러난 경계, 실패 비용, 도메인 용어도 함께 기록해 둔다.
+- `정렬`: 새로 확인된 사실을 `team-spec`, 입력 문서, 운영 문서에 반영해 기준선을 갱신한다. `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`, 문서 계층이 같은 운영 기준을 말하도록 다시 맞춘다.
+- `개선`: 반복 패턴, 검증 비용, 다음 역할 병목과 새롭게 드러난 사실을 바탕으로 역할 팀, 실행 모드, 실행 패턴을 다시 설계한다.
 
-이 세 루프는 부가 기능이 아니라 `run-harness`와 `validator`가 계속 다루는 메타시스템 본체다.
+이 세 루프는 부가 기능이 아니라 시작 진입 역할(`run-harness`)과 운영 감사 역할이 계속 다루는 메타시스템 본체다.
 
 ## 기본 실행 순서
 
-- 새 프로젝트 하네스 구성: `bash scripts/harness-init.sh` → 역할 기반 `.harness/reports/*` 문서 재작성 → 필요 시 역할 재호출 → `bash scripts/harness-verify.sh`
-- 기존 프로젝트 확장: 하네스 현황 감사 → `bash scripts/harness-update.sh` → 역할 기반 `.harness/reports/*` 문서 재작성 → `bash scripts/harness-verify.sh`
-- 기존 프로젝트의 구조 누락 정리: 하네스 현황 감사 → 필요한 경우에만 `bash scripts/harness-init.sh` 또는 명시적 재구성 → 역할 기반 `.harness/reports/*` 문서 재작성 → `bash scripts/harness-verify.sh`
-- 기존 프로젝트의 운영 유지보수/감사: 하네스 현황 감사 → 필요 시 `bash scripts/harness-update.sh` → 역할 기반 `.harness/reports/*` 문서 재작성 → `bash scripts/harness-verify.sh`
+- 새 프로젝트 하네스 구성: `bash scripts/harness-init.sh` → 역할 기반 `.harness/docs/*` 문서 재작성 → 필요 시 역할 재호출 → `bash scripts/harness-verify.sh`
+- 기존 프로젝트 확장: 하네스 현황 감사 → `bash scripts/harness-update.sh` → 역할 기반 `.harness/docs/*` 문서 재작성 → `bash scripts/harness-verify.sh`
+- 기존 프로젝트의 구조 누락 정리: 하네스 현황 감사 → 필요한 경우에만 `bash scripts/harness-init.sh` 또는 명시적 재구성 → 역할 기반 `.harness/docs/*` 문서 재작성 → `bash scripts/harness-verify.sh`
+- 기존 프로젝트의 운영 유지보수/감사: 하네스 현황 감사 → 필요 시 `bash scripts/harness-update.sh` → 역할 기반 `.harness/docs/*` 문서 재작성 → `bash scripts/harness-verify.sh`
 
 운영 유지보수에서는 아래 루프를 계속 돈다.
 
-- drift: 현재 약해진 문서/역할/계약을 읽는다.
-- sync: 상위 운영 계약과 로컬 하네스 자산을 다시 맞춘다.
-- evolve: 반복 패턴과 병목을 바탕으로 팀 구조나 패턴 선택을 다시 고른다.
+- 상태 점검: 현재 약해진 문서/역할/규칙을 읽는다.
+- 정렬: 상위 운영 기준과 로컬 하네스 자산을 다시 맞춘다.
+- 개선: 반복 패턴과 병목을 바탕으로 팀 구조나 패턴 선택을 다시 고른다.
 
 ---
 
@@ -193,37 +194,28 @@ description: 프로젝트에 맞는 실행 하네스 팀을 구성합니다. 현
 
 ### 프로젝트 로컬 역할 스킬
 
-- `.codex/skills/domain-analyst/SKILL.md`
-- `.codex/skills/harness-architect/SKILL.md`
-- `.codex/skills/skill-scaffolder/SKILL.md`
-- `.codex/skills/qa-designer/SKILL.md`
-- `.codex/skills/orchestrator/SKILL.md`
-- `.codex/skills/validator/SKILL.md`
-- `.codex/skills/run-harness/SKILL.md`
+- `.codex/skills/<team-spec의 agent_file>/SKILL.md`
+- 각 스킬은 `Phase 2`가 설계한 프로젝트 특화 역할 하나를 담당한다.
+- 생성기는 역할 개수를 미리 가정하지 않고, `team-spec`의 최종 역할 인벤토리만 읽는다.
 
 ### 프로젝트 로컬 에이전트 정의
 
 - `AGENTS.md`
 - `.codex/config.toml`
-- `.codex/agents/domain-analyst.toml`
-- `.codex/agents/harness-architect.toml`
-- `.codex/agents/skill-scaffolder.toml`
-- `.codex/agents/qa-designer.toml`
-- `.codex/agents/orchestrator.toml`
-- `.codex/agents/validator.toml`
-- `.codex/agents/run-harness.toml`
+- `.codex/agents/<team-spec의 agent_file>.toml`
+- 역할 수와 파일 목록은 `Phase 2`가 설계한 팀 스펙에 따라 달라진다.
 
 `AGENTS.md`와 `.codex/agents/*.toml`은 `누가 하는가`, 스킬은 `어떻게 하는가`를 담당한다.
 
 ### 문서 계층
 
-- `.harness/reports/exploration-notes.md`
-- `.harness/reports/domain-analysis.md`
-- `.harness/reports/qa-strategy.md`
-- `.harness/reports/harness-architecture.md`
-- `.harness/reports/orchestration-plan.md`
-- `.harness/reports/team-structure.md`
-- `.harness/reports/team-playbook.md`
+- `.harness/docs/exploration-notes.md`
+- `.harness/docs/domain-analysis.md`
+- `.harness/docs/qa-strategy.md`
+- `.harness/docs/harness-architecture.md`
+- `.harness/docs/orchestration-plan.md`
+- `.harness/docs/team-structure.md`
+- `.harness/docs/team-playbook.md`
 
 문서 계층은 아래처럼 나눈다.
 
@@ -235,9 +227,9 @@ init는 자동 판단 보류 메모만 만들고, 나머지 문서는 역할 스
 
 ---
 
-## 전체 워크플로우
+## Phase 1~7 상세
 
-### Phase 1: 저장소 분석
+### Phase 1: 도메인/작업 분석
 
 - 입력: `exploration-notes.md`, `project-setup.md` 또는 사용자 답변
 - 산출: `domain-analysis.md`, 저장소 고유 근거, 남아 있는 질문
@@ -251,160 +243,178 @@ init는 자동 판단 보류 메모만 만들고, 나머지 문서는 역할 스
 이 단계의 결과는 실행 하네스 팀의 출발점이 된다.  
 분석 기준은 `references/reference-map.md`를 먼저 읽고, 이어서 `references/agent-design-patterns.md`, `references/exploration-model.md`, `references/agents-sync-guide.md`, `references/phase-selection-matrix.md`를 현재 문제 축에 맞게 선택해 참고한다.
 
-### Phase 2: 실행 하네스 팀 설계
+### Phase 2: 프로젝트 맞춤 에이전트 팀 설계
 
 - 입력: `domain-analysis.md`, 입력 상태, 상태 모드, 실행 모드, 실행 패턴 후보
-- 산출: `harness-architecture.md`, `team-structure.md`, 선택된 실행 패턴과 역할 경계
-- 다음 단계 조건: 역할 경계, handoff 기준, 패턴 선택 이유가 메타시스템 문서에 고정됨
+- 산출: `harness-architecture.md`, `team-structure.md`, 선택된 실행 패턴과 역할 경계, `team-spec`
+- 다음 단계 조건: 역할 경계, 다음 역할 기준, 패턴 선택 이유, 동적 생성용 역할 스펙이 메타시스템 문서와 함께 고정됨
 
 1. 이 프로젝트에 필요한 역할 팀 구성을 결정한다.
-2. 기본 역할 구성을 유지할지, 축소/확장할지 적는다.
+2. 고정 역할 복사가 아니라, 이 프로젝트에 필요한 특화 역할 이름과 책임을 설계한다.
 3. 어떤 역할이 중심이고, 어떤 역할이 보조인지 적는다.
 4. 장기 운영 구조는 팀 역할을 앞에 두고, 좁은 보조 해석만 따로 위임할지 함께 적는다.
 5. 파이프라인, 생성-검증, 팬아웃/팬인, 오케스트레이션 중심, 전문가 풀 중 현재 요청과 경계에 맞는 패턴을 고른다.
 6. 요청이 추상적인지, 저장소 고유 용어와 범위가 충분한지 보고 질문을 앞에 둘지 바로 역할 시작할지 적는다.
-7. orchestrator를 중심으로 흐름을 설계한다.
-8. run-harness를 팀 기동 진입점으로 포함한다.
+7. 팀 흐름을 조율하는 중심 역할과 팀을 실제로 시작시키는 진입 역할을 각각 설계한다.
+8. 운영 감사와 품질 전략이 별도 책임으로 읽히도록 역할 경계를 분리한다.
+9. 각 역할의 agent 파일명, skill 디렉토리명, 입력/출력, 다음 역할, sandbox 정책, description 초안뿐 아니라 대표 시작 경로, 우선 입력 문서, 요청 유형별 하위 분기, 작업 시작 체크리스트, 판단 기준, 금지 판단, 출력 규칙, 산출 형식 템플릿, 재진입 트리거, 종료 판정 기준, 완료 기준까지 team-spec으로 정리한다.
+10. team-spec 상단에는 왜 그 역할명이 현재 저장소의 도메인과 실패 경계를 더 잘 설명하는지 도메인 근거를 함께 남긴다.
+11. 새 역할명을 만들 때는 저장소 용어와 실패 경계를 드러내는 이름을 우선하고, `role_id`는 snake_case, 표시 이름과 파일명은 kebab-case로 정리한다.
+12. `analyst`, `architect`, `orchestrator`, `validator` 같은 추상 직무명만 단독으로 역할명에 쓰지 않고, 반드시 저장소 고유 용어나 책임 축을 붙인다.
 
 이 단계의 핵심은  
 문서를 늘리는 것이 아니라 **운영 가능한 역할 팀**을 설계하는 것이다.  
-흐름과 위임 기준은 `references/reference-map.md`를 먼저 읽고, `references/orchestrator-template.md`를 필요할 때 참고한다.
+흐름과 위임 기준은 `references/reference-map.md`를 먼저 읽고, `references/orchestrator-template.md`, `references/team-spec-schema.md`를 필요할 때 참고한다.
 
-### Phase 3: 로컬 역할 스킬 생성
+### Phase 3: 에이전트 정의와 로컬 역할 스킬 생성
 
-- 입력: 선택된 역할 팀 구조, `harness-architecture.md`, `team-structure.md`
+- 입력: `Phase 2`가 만든 `team-spec`, `harness-architecture.md`, `team-structure.md`
 - 산출: `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`
-- 다음 단계 조건: 누가 하는가와 어떻게 하는가가 분리되고, `run-harness`가 실제 진입점으로 읽힘
+- 다음 단계 조건: team-spec과 생성 결과가 일치하고, 누가 하는가와 어떻게 하는가가 분리되며, `run-harness`가 실제 진입점으로 읽힘
 
-1. 각 역할에 대한 로컬 SKILL.md를 생성한다.
-2. 각 역할은 SKILL.md 하나로 실행 계약과 책임 범위를 함께 설명한다.
-3. 보조 역할 정의 문서를 따로 만들지 않는다.
-4. 각 역할은 명확한 입력/출력/책임 범위를 가져야 한다.
-5. description은 실제 요청에서 트리거될 수 있도록 구체적으로 작성한다.
-6. 역할 팀이 실제로 사용 가능한 수준의 스킬 구조를 만든다.
-7. run-harness가 팀의 실제 진입점으로 기능하도록 한다.
+1. team-spec에 정의된 각 역할에 대해 로컬 SKILL.md를 생성한다.
+2. 각 역할의 작업 절차, 입력/출력, 책임 범위 설명은 SKILL.md 하나에 모은다.
+3. 역할 식별과 실행 설정은 `.codex/agents/*.toml`에 두고, SKILL.md와 분리한다.
+4. 역할별 보조 설명 문서를 따로 늘리지 않는다.
+5. 각 역할은 명확한 입력/출력/책임 범위를 가져야 한다.
+6. description은 실제 요청에서 트리거될 수 있도록 구체적으로 작성한다.
+7. 역할 이름, 파일명, sandbox 정책은 team-spec이 먼저 정하고 생성기는 그 결과를 반영한다.
+8. 시작 진입 역할(`run-harness`)이 팀의 실제 진입점으로 기능하도록 한다.
+9. team-spec에 적힌 역할만 `.codex/skills/*`로 생성한다.
+10. 생성된 역할 스킬은 team-spec의 실행 기준 필드를 바탕으로, 대표 시작 경로, 요청 분기, 우선 입력 문서, 시작 체크리스트, 판단 기준, 출력 형식, 재진입/종료 규칙, 다음 역할, 완료 기준이 역할마다 다르게 읽히도록 구체화한다.
 
-`skill-scaffolder`는 핵심 보고서 작성 흐름의 기본 단계가 아니다. 이 역할은 로컬 스킬 설명 drift, 구조 문구 불일치, 스킬 계약 재정렬이 필요할 때만 보조적으로 사용한다.
+`skill-scaffolder`는 핵심 보고서 작성 흐름의 기본 단계가 아니다. 이 역할은 로컬 스킬 설명 불일치, 구조 문구 불일치, 스킬 규칙 재정렬이 필요할 때만 보조적으로 사용한다.
 
-스킬 작성 기준은 `references/reference-map.md`, `references/skill-writing-guide.md`를 순서대로 참고한다.
+스킬 작성 기준은 `references/reference-map.md`, `references/skill-writing-guide.md`, `references/team-spec-schema.md`를 순서대로 참고한다.
 
 ### Phase 4: QA 및 검증 구조 포함
 
 - 입력: `domain-analysis.md`, 역할 팀 구조, 현재 실행 패턴
-- 산출: `qa-strategy.md`, validator 감사 기준, verify로 넘길 최소 구조 기준
-- 다음 단계 조건: 자동/수동 검증 분리와 승격 기준이 문서화되고 validator가 운영 계약 감사 기준을 가짐
+- 산출: `qa-strategy.md`, 운영 감사 기준, verify로 넘길 최소 구조 기준
+- 다음 단계 조건: 자동/수동 검증 분리와 승격 기준이 문서화되고 운영 감사 역할이 운영 기준 감사 기준을 가짐
 
 1. QA 역할을 포함해 품질 관점을 적는다.
-2. validator를 포함해 최소 검증 구조를 만든다.
-3. orchestrator가 각 역할의 입력/출력을 연결할 수 있게 한다.
-4. QA와 validator의 피드백이 다시 구조 재작성으로 이어질 수 있게 한다.
+2. 운영 감사 역할을 포함해 최소 검증 구조를 만든다.
+3. 흐름 조율 역할이 각 역할의 입력/출력을 연결할 수 있게 한다.
+4. QA와 운영 감사의 피드백이 다시 구조 재작성으로 이어질 수 있게 한다.
 
 QA 기준은 `references/reference-map.md`, `references/qa-agent-guide.md`를 순서대로 참고한다.
 
-### Phase 5: `.harness/reports/*` 문서 프로젝트 맞춤 작성
+### Phase 5: 역할별 최종 산출물 작성
 
 - 입력: 저장소 입력 문서, 메타시스템 구조 문서, QA 기준, 현재 실행 모드와 패턴
 - 산출: 입력 문서와 메타시스템 문서의 최종 본문
-- 다음 단계 조건: 문서 부재, 골격 잔존, 목적 혼합 없이 validator가 읽을 수 있는 상태
+- 다음 단계 조건: 문서 부재, 골격 잔존, 목적 혼합 없이 운영 감사 역할이 읽을 수 있는 상태
 
 1. `harness-init.sh` 또는 `harness-update.sh`가 최종 보고서를 대신 쓰지 않는다.
-2. domain-analyst가 저장소 사실, 대표 흐름, 예외를 기준으로 `domain-analysis.md`를 직접 다시 쓴다.
-3. qa-designer가 검증 비용과 승격 기준을 `qa-strategy.md`에 다시 쓴다.
-4. harness-architect가 하네스 구조와 역할 경계를 메타시스템 문서로 다시 쓴다.
-5. orchestrator가 시작 분기, 재진입 루프, 세션 운영 규칙을 메타시스템 문서로 다시 쓴다.
-6. validator는 입력 문서와 메타시스템 문서가 서로 다른 목적을 유지하는지 확인한다.
+2. 저장소 입력 문서 담당 역할이 저장소 사실, 대표 흐름, 예외를 기준으로 `domain-analysis.md`를 직접 다시 쓴다.
+3. 품질 전략 담당 역할이 검증 비용과 승격 기준을 `qa-strategy.md`에 다시 쓴다.
+4. 구조 설계 담당 역할이 하네스 구조와 역할 경계를 메타시스템 문서로 다시 쓴다.
+5. 흐름 조율 담당 역할이 시작 분기, 재진입 루프, 세션 운영 기준을 메타시스템 문서로 다시 쓴다.
+6. 운영 감사 담당 역할은 입력 문서와 메타시스템 문서가 서로 다른 목적을 유지하는지 확인한다.
 
 이 단계의 목적은 스크립트가 아니라 역할 스킬이 각 프로젝트의 구조와 운영 맥락에 맞는 입력 문서와 메타시스템 문서를 직접 작성하는 것이다.
 
 ### Phase 6: 실행 하네스 팀 검증
 
 - 입력: 최종 입력 문서, 메타시스템 문서, 에이전트 정의, 역할 스킬, 로그 상태
-- 산출: validator 감사 결과, verify 통과 여부, 재작성이 필요한 역할 지정
-- 다음 단계 조건: `run-harness`가 현재 상태를 읽고 다음 재진입 지점을 다시 제시할 수 있음
+- 산출: 운영 감사 결과, verify 통과 여부, 재작성이 필요한 역할 지정
+- 다음 단계 조건: 시작 진입 역할(`run-harness`)이 현재 상태를 읽고 다음 재진입 지점을 다시 제시할 수 있음
 
 1. 필수 역할 스킬이 모두 존재하는지 확인한다.
 2. 각 역할이 충분히 구분되는지 확인한다.
 3. description이 실제로 트리거될 수 있는 수준인지 확인한다.
-4. orchestrator가 중심 역할처럼 읽히는지 확인한다.
-5. run-harness가 실제 기동 엔트리포인트처럼 읽히는지 확인한다.
-6. validator가 문서 검사자에 머무르지 않고 운영 계약 감사자로 읽히는지 확인한다.
+4. 흐름 조율 역할이 중심 역할처럼 읽히는지 확인한다.
+5. 시작 진입 역할이 실제 기동 엔트리포인트처럼 읽히는지 확인한다.
+6. 운영 감사 역할이 문서 검사자에 머무르지 않고 운영 기준 감사자로 읽히는지 확인한다.
 7. 역할 팀 구조가 이후 프로젝트 특화 하네스로 확장 가능한지 본다.
-8. 가능하면 `without-skill` 기준선과 비교해 시작 역할 해석, 질문 절제, handoff, 저장소 근거 연결, 검증 가능성이 실제로 나아졌는지 본다.
+8. 가능하면 `without-skill` 기준선과 비교해 시작 역할 해석, 질문 절제, 다음 역할 안내, 저장소 근거 연결, 검증 가능성이 실제로 나아졌는지 본다.
 9. `meta-system-maturity-guide.md` 기준으로 현재 상태를 운영 가능, 재작성 필요, 재구성 필요 중 어디로 볼지 정리한다.
 
 테스트/검증 관점은 `references/reference-map.md`를 먼저 읽고, `references/skill-testing-guide.md`, `references/quality-evaluation-guide.md`, `references/meta-system-maturity-guide.md`를 현재 문제 축에 맞게 참고한다.
 
-### 운영 루프: drift / sync / evolve
+### Phase 7: 품질 비교와 성숙도 평가
 
-1. `drift`: 현재 약해진 역할, 문서, 운영 계약, 로그 정합성을 읽는다.
-2. `sync`: `AGENTS.md`, 에이전트 정의, 역할 스킬, 문서 계층을 같은 계약으로 다시 맞춘다.
-3. `evolve`: 반복 패턴, 검증 비용, handoff 병목을 바탕으로 역할 팀, 실행 모드, 실행 패턴을 다시 고른다.
+- 입력: 검증을 통과한 하네스 상태, 운영 로그, `with-skill` / `without-skill` 비교 관찰
+- 산출: 품질 비교 메모, 성숙도 판정, 다음 재진입 Phase 제안
+- 다음 단계 조건: 현재 하네스를 `운영 가능 / 재작성 필요 / 재구성 필요` 중 하나로 설명할 수 있음
 
-`run-harness`는 이 루프의 진입점이고, `validator`는 감사자이며, `skill-scaffolder`는 sync가 필요한 예외 상황에서만 보조적으로 개입한다.
+1. 문서 존재 여부가 아니라 실제 운영 가능성을 평가한다.
+2. `without-skill` 기준선과 비교해 시작 역할 판단, 질문 절제, 다음 역할 안내, 저장소 근거 연결, 검증 가능성이 나아졌는지 정리한다.
+3. meta-system 성숙도 축에서 부족한 부분이 입력 문서 품질 문제인지, 역할 규칙 문제인지, 운영 기준 문제인지 분리한다.
+4. 필요한 경우 다음 재진입 시작점을 `Phase 1`~`Phase 6` 중 어디로 둘지 다시 제안한다.
 
----
+이 단계는 부록이 아니라 메타시스템이 범용 골격으로 되돌아가지 않게 유지하는 운영 평가 단계다.
 
-## 기본 역할 팀
+### 운영 루프: 상태 점검 / 정렬 / 개선
 
-### domain-analyst
+1. `상태 점검`: 현재 약해진 역할, 문서, 운영 기준, 로그 상태를 읽는다.
+2. `정렬`: `AGENTS.md`, 에이전트 정의, 역할 스킬, 문서 계층을 같은 규칙으로 다시 맞춘다.
+3. `개선`: 반복 패턴, 검증 비용, 다음 역할 병목을 바탕으로 역할 팀, 실행 모드, 실행 패턴을 다시 고른다.
 
-저장소 분석과 실행 하네스의 출발점 정의를 맡는다.
-
-### harness-architect
-
-프로젝트 로컬 실행 하네스의 구조와 역할 경계를 설계한다.
-
-### skill-scaffolder
-
-로컬 스킬 설명 drift가 생겼을 때만 보조적으로 정렬한다.
-
-### qa-designer
-
-저장소 기준의 최종 QA 전략 문서를 작성한다.
-
-### orchestrator
-
-요청 유형별 시작점과 재진입 기준이 보이는 최종 운영 계획 문서를 작성한다.
-
-### validator
-
-생성된 실행 하네스의 운영 계약, drift, 역할 정렬 상태를 감사한다.
-
-### run-harness
-
-현재 상태를 보고 어떤 역할부터 기동할지 결정하는 실행 하네스 팀의 진입점이다.
-입력 정보가 부족하면 프로젝트 성격, 핵심 사용자, 첫 성공 시나리오를 앞에서 사용자에게 묻는다.
+시작 진입 역할(`run-harness`)은 이 루프의 진입점이고, 운영 감사 역할은 감사자이며, `skill-scaffolder`는 정렬이 필요한 예외 상황에서만 보조적으로 개입한다.
 
 ---
 
-## orchestrator와 run-harness의 위치
+## 완료 기준
+
+하네스 구성이 끝났다고 말하려면 아래가 모두 만족돼야 한다.
+
+1. `exploration-notes.md`가 자동 판단 보류를 위한 약한 메모로 존재한다.
+2. `domain-analysis.md`, `qa-strategy.md`가 저장소 입력 문서로 작성돼 있다.
+3. `harness-architecture.md`, `orchestration-plan.md`, `team-structure.md`, `team-playbook.md`가 하네스 메타시스템 문서로 작성돼 있다.
+4. 시작 진입 역할(`run-harness`)이 현재 상태를 읽고 시작 역할, 다음 역할, 미해결 질문을 분명히 제시할 수 있다.
+5. `scripts/harness-verify.sh`가 구조 누락과 골격 잔존 없이 통과한다.
+
+즉 `harness-init.sh`가 끝난 상태는 완료가 아니라 **자동 판단 보류 메모와 역할 입력이 준비된 상태**다.
+
+---
+
+## 프로젝트 특화 역할 팀
+
+이 하네스의 목표는  
+타겟 저장소를 읽고 그 저장소에 필요한 특화 역할 팀을 설계하는 것이다.
+
+따라서 최종 역할 이름은 저장소마다 달라질 수 있다.
+
+예:
+
+- 결제 시스템: `payment-dev`, `billing-reviewer`, `checkout-qa`
+- Electron 런타임 중심 프로젝트: `desktop-runtime-dev`, `ipc-reviewer`
+- 운영/릴리즈 중심 프로젝트: `release-orchestrator`, `deploy-validator`
+
+최종 역할 인벤토리는 프레임워크 범용 역할명이 아니라 현재 저장소의 도메인 용어와 요청 분류를 직접 반영해야 한다.
+
+---
+
+## 중심 조율 역할과 진입 역할의 위치
 
 이 실행 하네스 팀에서:
 
-- orchestrator는 **팀 구조와 흐름의 중심**
-- run-harness는 **팀을 실제로 시작하는 진입점**
+- 중심 조율 역할은 **팀 구조와 흐름의 중심**
+- 시작 진입 역할은 **팀을 실제로 시작하는 진입점**
 
 으로 본다.
 
 즉:
 
-- orchestrator = 중심 조율자
-- run-harness = 기동 엔트리포인트
+- 중심 조율 역할 = 중심 조율자
+- 시작 진입 역할 = 기동 엔트리포인트
 
 이다.
 
 ---
 
-## QA와 validator의 위치
+## QA와 운영 감사 역할의 위치
 
-QA와 validator는 비슷해 보여도 다르다.
+QA와 운영 감사 역할은 비슷해 보여도 다르다.
 
-### qa-designer
+### 품질 전략 역할
 
 - 어떤 품질 질문을 반복해서 읽을지 적는다
 - 어떤 연결이 중요한지, 어떤 실패가 위험한지 적는다
 
-### validator
+### 운영 감사 역할
 
 - 최소 구조 요건을 읽는다
 - 누락, 약한 설명, 흐름 끊김을 식별한다
@@ -413,7 +423,7 @@ QA와 validator는 비슷해 보여도 다르다.
 즉:
 
 - QA는 품질 관점의 공급자
-- validator는 최소 품질 읽기 역할
+- 운영 감사 역할은 최소 품질 읽기 역할
 
 이며, 둘 다 실행 하네스 팀의 일부로 기능해야 한다.
 
@@ -421,17 +431,17 @@ QA와 validator는 비슷해 보여도 다르다.
 
 ## 리포트의 위치
 
-리포트는 보조 설명서가 아니라, 역할 스킬이 남기는 입력 문서와 메타시스템 문서다.
+문서는 보조 설명서가 아니라, 역할 스킬이 남기는 입력 문서와 메타시스템 문서다.
 
 이 스킬에서 중심은:
 
 - 로컬 역할 스킬
-- run-harness 진입점
+- 시작 진입 역할(`run-harness`) 진입점
 - 오케스트레이션 구조
 - QA/검증 구조
 - 역할 스킬이 직접 작성한 입력 문서와 메타시스템 문서
 
-즉 리포트는 주변 설명이 아니라  
+즉 문서는 주변 설명이 아니라  
 👉 **하네스 설계와 운영 기준을 고정하는 핵심 산출물**이다.
 
 ---
@@ -476,9 +486,9 @@ QA와 validator는 비슷해 보여도 다르다.
 작업 후 최소한 다음을 확인한다.
 
 - [ ] 로컬 역할 스킬 구조가 생성되었다.
-- [ ] orchestrator가 포함되어 있다.
-- [ ] run-harness가 포함되어 있다.
-- [ ] QA와 validator가 포함되어 있다.
+- [ ] 중심 조율 역할이 포함되어 있다.
+- [ ] 시작 진입 역할이 포함되어 있다.
+- [ ] 품질 전략과 운영 감사 역할이 포함되어 있다.
 - [ ] 실행 하네스 팀이 프로젝트에 맞게 구성되어 있다.
 - [ ] 입력 문서와 메타시스템 문서가 서로 다른 목적을 유지한다.
 - [ ] 이후 프로젝트 특화 실행 하네스로 확장 가능한 구조다.
@@ -495,6 +505,8 @@ QA와 validator는 비슷해 보여도 다르다.
 - `references/skill-testing-guide.md`
 - `references/qa-agent-guide.md`
 - `references/team-examples.md`
+- `references/team-spec-schema.md`
+- `references/target-evaluation-playbook.md`
 
 이 문서들은 실행 하네스 팀을 더 잘 설계하고 다시 쓰기 위한 지식 베이스이다.
 이 참고 문서들은 `Codex 중심 메타 프레임워크`의 설계 규칙 집합 역할도 함께 맡는다.

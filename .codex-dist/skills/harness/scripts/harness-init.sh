@@ -185,6 +185,7 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 
 - 역할 id:
 - 역할 표시 이름:
+- 역할 유형:
 - 역할 목적:
 - 역할 책임:
 - 주요 입력:
@@ -192,6 +193,13 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 - handoff 대상:
 - 중심 역할 여부:
 - 보조 역할 여부:
+- 우선 입력 문서:
+- 작업 시작 체크리스트:
+- 주요 판단 기준:
+- 금지 판단/피해야 할 오해:
+- 출력 계약:
+- 완료 기준:
+- 검증/리뷰 초점:
 - agent 파일명:
 - skill 디렉토리명:
 - description 초안:
@@ -202,7 +210,7 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 
 - \`.codex/config.toml\`에는 아래 최종 역할 목록을 모두 등록합니다.
 - \`.codex/agents/*.toml\`은 역할 식별, 모델, sandbox, 짧은 실행 설명을 담습니다.
-- \`.codex/skills/*\`는 역할별 절차, 입력/출력, handoff, 완료 기준을 담습니다.
+- \`.codex/skills/*\`는 역할별 절차, 우선 입력 문서, 시작 체크리스트, 판단 기준, 출력 계약, handoff, 완료 기준을 담습니다.
 - 생성기보다 team-spec이 우선하며, 파일명/역할명/책임 범위가 다르면 team-spec 기준으로 다시 생성합니다.
 - 최종 역할 인벤토리는 저장소 고유 용어와 실제 운영 경계를 반영해야 합니다.
 - 같은 역할을 서로 다른 표기로 중복 정의하지 않습니다. 예: \`payment_dev\`, \`payment-dev\`, \`payments-dev\`
@@ -226,6 +234,7 @@ create_file_if_missing ".harness/reports/team-spec.md" \
 
 - 최종 역할 인벤토리는 프레임워크 범용 역할명이 아니라 현재 저장소의 도메인과 운영 경계를 설명해야 합니다.
 - 역할 이름은 실제 요청을 어디로 보낼지 판단할 수 있을 정도로 구체적이어야 합니다.
+- 역할 스펙 초안에는 이름만이 아니라 실행 계약 필드까지 채워야 합니다.
 - 최종 역할 인벤토리가 비어 있으면 \`Phase 2\`가 끝나지 않은 상태로 봅니다.
 - 이 문서가 정리되기 전에는 \`.codex/config.toml\`, \`.codex/agents/*.toml\`, \`.codex/skills/*\`를 만들지 않습니다.
 - \`Phase 2\`가 역할 인벤토리를 실제로 작성한 뒤에만 \`Phase 3\` 생성기를 실행합니다.

@@ -91,7 +91,7 @@ repo/
     └── logging-policy.md
 ```
 
-목표 구조에서는 `Phase 2`가 단순 초안이 아니라 실제 프로젝트 맞춤 `team-spec`을 만들고, `Phase 3`이 그 스펙만 바탕으로 `.codex/agents/*.toml`, `.codex/skills/*`, `.codex/config.toml`을 동적으로 생성해야 합니다. 이 기준 문서는 `references/team-spec-schema.md`에 둡니다.
+목표 구조에서는 `Phase 2`가 단순 초안이 아니라 실제 프로젝트 맞춤 `team-spec`을 만들고, `Phase 3`이 그 스펙만 바탕으로 `.codex/agents/*.toml`, `.codex/skills/*`, `.codex/config.toml`을 동적으로 생성해야 합니다. 이때 `team-spec`은 역할명 목록만이 아니라 역할별 우선 입력 문서, 시작 체크리스트, 판단 기준, 출력 계약, 완료 기준까지 담는 실행 계약 원본이어야 합니다. 이 기준 문서는 `references/team-spec-schema.md`에 둡니다.
 
 핵심 산출물은 `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`의 로컬 Codex 에이전트 설정, `.codex/skills/*`의 로컬 역할 스킬, 그리고 그 역할이 직접 쓰는 `.harness/reports/*` 문서입니다. `harness-init.sh`는 `exploration-notes.md`, 생성 파이프라인 입력, 로그 구조를 준비하고, 최종 agent/skill 산출은 `Phase 2`와 `Phase 3` 계약을 따라야 합니다. `.harness/logs/*`와 `.harness/logging-policy.md`는 실제 운영 기록과 로그 규칙을 위한 기본 산출물입니다.
 
@@ -153,7 +153,7 @@ repo/
 - Electron 런타임 중심 앱: `desktop-runtime-dev`, `ipc-reviewer`
 - 운영/배포 중심 프로젝트: `release-orchestrator`, `deploy-validator`
 
-`AGENTS.md`와 `.codex/agents/*.toml`은 `누가 하는가`, 역할 스킬은 `어떻게 하는가`를 담당합니다. 중요한 것은 고정된 역할 이름이 아니라, 타겟 프로젝트에 맞는 역할 집합이 실제로 생성되는 것입니다.
+`AGENTS.md`와 `.codex/agents/*.toml`은 `누가 하는가`, 역할 스킬은 `어떻게 하는가`를 담당합니다. 중요한 것은 고정된 역할 이름이 아니라, 타겟 프로젝트에 맞는 역할 집합이 실제로 생성되고, 각 역할 스킬이 우선 입력 문서, 시작 체크리스트, 판단 기준, 출력 계약, 완료 기준까지 실제 실행 형태로 담는 것입니다.
 
 이 구조에서는 seed 역할 세트를 init이 미리 제공하지 않습니다. `team-spec`의 최종 역할 인벤토리가 먼저 확정되고, `Phase 3` 생성기가 그 역할들만 읽어 `.codex/agents/*.toml`과 `.codex/skills/*`를 생성합니다.
 

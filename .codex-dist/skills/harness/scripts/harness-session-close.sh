@@ -95,11 +95,19 @@ ENTRY_COUNT=0
 STARTED_AT=""
 ENTRY_POINT=""
 START_REQUEST=""
+PLANNED_ROLES=""
 LAST_NEXT_ROLE=""
-LAST_WEAKNESSES=""
+LAST_RESULT_STATUS=""
+LAST_INPUT_SUMMARY=""
 LAST_INPUTS=""
+LAST_OUTPUT_SUMMARY=""
 LAST_OUTPUTS=""
+LAST_CHANGED_FILES=""
+LAST_EXPECTED_OUTPUTS=""
+LAST_UNRESOLVED_RISKS=""
 NEXT_PHASE="미정"
+
+declare -A RESULT_COUNTS=()
 
 while IFS=$'\t' read -r kind value1 value2; do
   case "$kind" in
@@ -123,22 +131,43 @@ while IFS=$'\t' read -r kind value1 value2; do
         start_request)
           START_REQUEST="$value2"
           ;;
+        planned_roles)
+          PLANNED_ROLES="$value2"
+          ;;
         last_next_role)
           LAST_NEXT_ROLE="$value2"
           ;;
-        last_weaknesses)
-          LAST_WEAKNESSES="$value2"
+        last_result_status)
+          LAST_RESULT_STATUS="$value2"
+          ;;
+        last_input_summary)
+          LAST_INPUT_SUMMARY="$value2"
           ;;
         last_inputs)
           LAST_INPUTS="$value2"
           ;;
+        last_output_summary)
+          LAST_OUTPUT_SUMMARY="$value2"
+          ;;
         last_outputs)
           LAST_OUTPUTS="$value2"
+          ;;
+        last_changed_files)
+          LAST_CHANGED_FILES="$value2"
+          ;;
+        last_expected_outputs)
+          LAST_EXPECTED_OUTPUTS="$value2"
+          ;;
+        last_unresolved_risks)
+          LAST_UNRESOLVED_RISKS="$value2"
           ;;
       esac
       ;;
     ROLE)
       ROLE_COUNTS["$value2"]="$value1"
+      ;;
+    RESULT)
+      RESULT_COUNTS["$value2"]="$value1"
       ;;
     OUTPUT)
       OUTPUT_COUNTS["$value1"]=1
@@ -170,23 +199,51 @@ done < <(
         entry_point = $5
       }
 
-      if ($9 != "") {
-        last_next_role = $9
+      if (planned_roles == "" && $6 != "") {
+        planned_roles = $6
       }
 
-      if ($10 != "") {
-        last_weaknesses = $10
-      }
-
-      if ($7 != "") {
-        last_inputs = $7
+      if ($15 != "") {
+        last_next_role = $15
       }
 
       if ($8 != "") {
-        last_outputs = $8
+        last_result_status = $8
       }
 
-      split($6, roles, ",")
+      if ($9 != "") {
+        last_input_summary = $9
+      }
+
+      if ($10 != "") {
+        last_inputs = $10
+      }
+
+      if ($11 != "") {
+        last_output_summary = $11
+      }
+
+      if ($12 != "") {
+        last_outputs = $12
+      }
+
+      if ($13 != "") {
+        last_changed_files = $13
+      }
+
+      if ($14 != "") {
+        last_expected_outputs = $14
+      }
+
+      if ($16 != "") {
+        last_unresolved_risks = $16
+      }
+
+      if ($8 != "") {
+        result_counts[$8]++
+      }
+
+      split($7, roles, ",")
       for (i in roles) {
         gsub(/^[[:space:]]+|[[:space:]]+$/, "", roles[i])
         if (roles[i] != "") {
@@ -194,7 +251,7 @@ done < <(
         }
       }
 
-      split($8, outputs, ",")
+      split($12, outputs, ",")
       for (i in outputs) {
         gsub(/^[[:space:]]+|[[:space:]]+$/, "", outputs[i])
         if (outputs[i] != "") {
@@ -209,13 +266,23 @@ done < <(
       printf "META\tstarted_at\t%s\n", started_at
       printf "META\tentry_point\t%s\n", entry_point
       printf "META\tstart_request\t%s\n", start_request
+      printf "META\tplanned_roles\t%s\n", planned_roles
       printf "META\tlast_next_role\t%s\n", last_next_role
-      printf "META\tlast_weaknesses\t%s\n", last_weaknesses
+      printf "META\tlast_result_status\t%s\n", last_result_status
+      printf "META\tlast_input_summary\t%s\n", last_input_summary
       printf "META\tlast_inputs\t%s\n", last_inputs
+      printf "META\tlast_output_summary\t%s\n", last_output_summary
       printf "META\tlast_outputs\t%s\n", last_outputs
+      printf "META\tlast_changed_files\t%s\n", last_changed_files
+      printf "META\tlast_expected_outputs\t%s\n", last_expected_outputs
+      printf "META\tlast_unresolved_risks\t%s\n", last_unresolved_risks
 
       for (role in role_counts) {
         printf "ROLE\t%d\t%s\n", role_counts[role], role
+      }
+
+      for (result in result_counts) {
+        printf "RESULT\t%d\t%s\n", result_counts[result], result
       }
 
       for (output in output_paths) {
@@ -238,6 +305,7 @@ ENDED_AT="$(date '+%Y-%m-%d %H:%M:%S %z')"
 SUMMARY_FILE="$LOG_DIR/session-summary-$SESSION_ID.md"
 ROLE_LIST="$(join_keys ROLE_COUNTS)"
 OUTPUT_LIST="$(join_keys OUTPUT_COUNTS)"
+RESULT_LIST="$(join_keys RESULT_COUNTS)"
 
 case "${LAST_NEXT_ROLE:-}" in
   ""|-)
@@ -265,10 +333,16 @@ esac
   printf -- '- 기록 수: %s\n' "$ENTRY_COUNT"
   printf -- '- 시작 요청: %s\n' "${START_REQUEST:--}"
   printf -- '- 진입점: %s\n' "${ENTRY_POINT:--}"
+  printf -- '- 계획 역할: %s\n' "${PLANNED_ROLES:--}"
   printf -- '- 호출 역할: %s\n' "${ROLE_LIST:--}"
+  printf -- '- 역할 결과 상태: %s\n' "${RESULT_LIST:--}"
+  printf -- '- 최근 입력 요약: %s\n' "${LAST_INPUT_SUMMARY:--}"
+  printf -- '- 최근 출력 요약: %s\n' "${LAST_OUTPUT_SUMMARY:--}"
+  printf -- '- 최근 변경 파일: %s\n' "${LAST_CHANGED_FILES:--}"
+  printf -- '- 예상 산출물: %s\n' "${LAST_EXPECTED_OUTPUTS:--}"
   printf -- '- 마지막 권장 역할: %s\n' "${LAST_NEXT_ROLE:--}"
   printf -- '- 다음 재진입 phase: %s\n' "$NEXT_PHASE"
-  printf -- '- 남은 약점: %s\n' "${LAST_WEAKNESSES:--}"
+  printf -- '- 남은 위험: %s\n' "${LAST_UNRESOLVED_RISKS:--}"
   printf -- '- 메모: %s\n' "$SUMMARY_NOTE"
   printf '\n'
   printf '## 재진입 요약\n\n'
@@ -276,7 +350,8 @@ esac
   printf -- '- 다음 재진입 phase: %s\n' "$NEXT_PHASE"
   printf -- '- 다음 시작 전 우선 확인 입력 파일: %s\n' "${LAST_INPUTS:--}"
   printf -- '- 최근 출력 파일: %s\n' "${LAST_OUTPUTS:--}"
-  printf -- '- 남은 위험 또는 미해결 항목: %s\n' "${LAST_WEAKNESSES:--}"
+  printf -- '- 최근 변경 파일: %s\n' "${LAST_CHANGED_FILES:--}"
+  printf -- '- 남은 위험 또는 미해결 항목: %s\n' "${LAST_UNRESOLVED_RISKS:--}"
   printf -- '- 세션 종료 메모: %s\n' "$SUMMARY_NOTE"
   printf '\n'
   printf '## 역할별 호출 수\n\n'

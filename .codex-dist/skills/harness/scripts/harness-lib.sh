@@ -285,6 +285,14 @@ ensure_harness_log_scaffold() {
 - 전역 설치된 `harness-log.sh`는 역할 호출 시 세션 로그에 자동 append 합니다.
 - 전역 설치된 `harness-session-close.sh`는 세션 종료 시 최신 세션 요약을 자동 갱신합니다.
 
+## 필수 완료 조건
+
+- 하네스 실행을 시작하면 즉시 `harness-log.sh --new-session`으로 세션 시작 이벤트를 남깁니다.
+- 각 역할 또는 subagent 완료 뒤에는 `harness-log.sh`로 진행 이벤트를 누적합니다.
+- 모든 필수 역할이 `completed` 또는 `timed_out`으로 정리되기 전에는 세션을 완료로 보지 않습니다.
+- 최종 응답 전에는 반드시 `harness-session-close.sh`로 최신 세션 요약을 갱신합니다.
+- `.harness/docs/*` 문서를 생성하거나 수정했다면 같은 세션 로그에도 반영 역할, QA 관점, 남은 위험을 남깁니다.
+
 ## 기본 동작
 
 - 역할 호출 기록은 `.harness/logs/session-log.md`에 누적합니다.
@@ -311,17 +319,31 @@ ensure_harness_log_scaffold() {
 ## 최소 로그 항목
 
 - 시각
+- 세션 ID
 - 시작 요청 요약
 - 진입점 역할
+- 계획 역할
 - 호출된 역할
+- 역할 실행 결과 상태
+- 입력 요약
 - 입력으로 본 파일
+- 출력 요약
 - 출력/갱신된 파일
+- 변경 파일
+- 예상 산출물
 - 다음 권장 역할
 - 다음 재진입 phase
 - 다음 시작 전 우선 확인 입력 파일
 - 최근 출력 파일
-- 남은 약점 또는 미해결 항목
+- 남은 위험 또는 미해결 항목
 - 세션 종료 사유
+
+## 역할 상태 규칙
+
+- 진행 중 역할은 `in_progress`로 남깁니다.
+- 정상 완료 역할은 `completed`로 남깁니다.
+- 대기 초과 또는 비동기 미완료 역할은 `timed_out`으로 남기고, 후속 보강 대상임을 메모에 남깁니다.
+- 실패 역할은 `failed`로 남기고, 재시도 전에 필요한 입력과 막힌 이유를 함께 남깁니다.
 
 ## 원칙
 
@@ -340,7 +362,7 @@ EOF
 
 ## 기록 원칙
 
-각 세션마다 아래 형식으로 기록합니다.
+각 세션마다 아래 형식으로 기록합니다. 예시를 복사해 남기지 말고 실제 값으로 채웁니다.
 
 ---
 
@@ -351,54 +373,26 @@ EOF
 - 상태:
 - 시작 요청:
 - 진입점:
+- 계획 역할:
 - 호출 역할:
+- 실행 결과 상태:
+- 입력 요약:
 - 입력 파일:
+- 출력 요약:
 - 출력 파일:
+- 변경 파일:
+- 예상 산출물:
 - 다음 권장 역할:
 - 다음 재진입 phase:
-- 남은 약점:
-- 세션 종료 사유:
+- 남은 위험:
+- 메모:
 
 ---
-
-## 예시
-
-### 세션
-
-- 시각: YYYY-MM-DD HH:MM
-- 세션 ID: session-YYYYMMDD-HHMMSS
-- 상태: completed
-- 시작 요청: 현재 프로젝트 하네스를 초기화해줘
-- 진입점: harness-init
-- 호출 역할: -
-- 입력 파일: 없음
-- 출력 파일: AGENTS.md, .codex/config.toml, .harness/docs/exploration-notes.md
-- 다음 권장 역할: run-harness
-- 다음 재진입 phase: Phase 1
-- 남은 약점: 역할 팀이 아직 최종 보고서를 작성하지 않음
-- 세션 종료 사유: 초기화 완료, 역할 실행 전 종료
-
----
-
-### 세션
-
-- 시각: YYYY-MM-DD HH:MM
-- 세션 ID: session-YYYYMMDD-HHMMSS
-- 상태: started
-- 시작 요청: 현재 프로젝트에 하네스 팀을 한 번 돌려줘
-- 진입점: run-harness
-- 호출 역할: <project-role-1>, <project-role-2>
-- 입력 파일: 없음
-- 출력 파일: .harness/docs/domain-analysis.md, .harness/docs/harness-architecture.md
-- 다음 권장 역할: <project-role-3>
-- 다음 재진입 phase: Phase 4
-- 남은 약점: QA 질문이 아직 추상적임
-- 세션 종료 사유: QA 기준 보강 필요
 EOF
   fi
 
   if [ ! -f "$events_file" ]; then
-    printf 'timestamp\tsession_id\tstatus\trequest\tentry_point\troles\tinputs\toutputs\tnext_role\tweaknesses\tnote\n' > "$events_file"
+    printf 'timestamp\tsession_id\tstatus\trequest\tentry_point\tplanned_roles\troles\tresult_status\tinput_summary\tinputs\toutput_summary\toutputs\tchanged_files\texpected_outputs\tnext_role\tunresolved_risks\tnote\n' > "$events_file"
   fi
 
   if [ ! -f "$latest_summary_file" ]; then

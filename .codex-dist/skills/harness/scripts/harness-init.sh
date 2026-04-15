@@ -232,8 +232,8 @@ create_file_if_missing ".harness/docs/team-spec.md" \
 
 프로젝트 특화 역할 예시:
 
-- \`payment_dev|payment-dev|payment-dev|gpt-5.4|high|workspace-write|Implement payment flow changes and write payment rollout notes.\`
-- \`billing_reviewer|billing-reviewer|billing-reviewer|gpt-5.4|high|read-only|Review billing contract changes and regression risks.\`
+- \`payment_dev|payment-dev|payment-dev|gpt-5.4|high|workspace-write|결제 흐름 변경을 구현하고 배포 메모를 남긴다.\`
+- \`billing_reviewer|billing-reviewer|billing-reviewer|gpt-5.4|high|read-only|청구 계약 변경과 회귀 위험을 검토한다.\`
 
 ## 작성 메모
 

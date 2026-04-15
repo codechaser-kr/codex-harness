@@ -409,7 +409,7 @@ max_threads = 4
 max_depth = 1
 
 [agents.default]
-description = "General-purpose helper."
+description = "기본 작업을 처리하는 공용 에이전트."
 EOF
 }
 

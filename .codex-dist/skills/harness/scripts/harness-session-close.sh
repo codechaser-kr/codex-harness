@@ -178,6 +178,7 @@ done < <(
     NR == 1 { next }
     $2 != target_session { next }
     {
+      result_status_col = $8
       found = 1
 
       if (started_at == "") {
@@ -207,8 +208,8 @@ done < <(
         last_next_role = $15
       }
 
-      if ($8 != "") {
-        last_result_status = $8
+      if (result_status_col != "") {
+        last_result_status = result_status_col
       }
 
       if ($9 != "") {
@@ -239,8 +240,8 @@ done < <(
         last_unresolved_risks = $16
       }
 
-      if ($8 != "") {
-        result_counts[$8]++
+      if (result_status_col != "") {
+        result_counts[result_status_col]++
       }
 
       split($7, roles, ",")

@@ -251,6 +251,11 @@ assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/logs/latest-session-sum
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/logs/latest-session-summary.md")" "다음 재진입 phase" "빈 프로젝트 latest summary 재진입 phase"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/logs/latest-session-summary.md")" "다음 시작 전 우선 확인 입력 파일" "빈 프로젝트 latest summary 우선 입력 파일"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/logs/latest-session-summary.md")" "최근 출력 파일" "빈 프로젝트 latest summary 최근 출력 파일"
+EMPTY_VERIFY_OUTPUT="$(
+  cd "$TMP_ROOT/empty-project" && \
+  bash "$HARNESS_SCRIPT_DIR/harness-verify.sh" 2>&1 || true
+)"
+assert_contains "$EMPTY_VERIFY_OUTPUT" "세션 이벤트가 없어 실행 로그 동기화 검사를 건너뜁니다" "빈 프로젝트 verify 로그 검사 건너뜀"
 assert_command_fails_with \
   "$TMP_ROOT/empty-project" \
   "bash \"$HARNESS_SCRIPT_DIR/harness-verify.sh\"" \

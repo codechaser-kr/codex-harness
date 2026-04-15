@@ -298,6 +298,14 @@ check_session_logging_activity() {
   fi
 }
 
+has_session_logging_entries() {
+  local events_file=".harness/logs/session-events.tsv"
+
+  [ -f "$events_file" ] || return 1
+
+  awk -F '\t' 'NR > 1 && $2 != "" { found = 1; exit 0 } END { exit(found ? 0 : 1) }' "$events_file"
+}
+
 check_final_report() {
   local file="$1"
   local label="$2"
@@ -662,7 +670,11 @@ if [ -f ".harness/logs/latest-session-summary.md" ]; then
   check_contains_hint ".harness/logs/latest-session-summary.md" "최근 변경 파일" "최신 세션 요약 최근 변경 파일"
 fi
 
-check_session_logging_activity
+if has_session_logging_entries; then
+  check_session_logging_activity
+else
+  log "세션 이벤트가 없어 실행 로그 동기화 검사를 건너뜁니다"
+fi
 
 if [ -f ".harness/logs/role-frequency.md" ]; then
   check_contains_hint ".harness/logs/role-frequency.md" "역할 호출 빈도" "역할 빈도 보고서"

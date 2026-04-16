@@ -247,11 +247,20 @@ check_session_logging_activity() {
   local events_file=".harness/logs/session-events.tsv"
   local summary_file=".harness/logs/latest-session-summary.md"
   local session_log_file=".harness/logs/session-log.md"
+  local current_session_file=".harness/logs/.current-session"
+  local current_session_id=""
+  local close_hint=""
   local latest_closed_session=""
   local summary_session=""
 
-  if [ -f ".harness/logs/.current-session" ]; then
-    fail "열린 세션이 남아 있습니다: .harness/logs/.current-session"
+  if [ -f "$current_session_file" ]; then
+    current_session_id="$(trim_text "$(cat "$current_session_file" 2>/dev/null || true)")"
+    if [ -n "$current_session_id" ]; then
+      close_hint="bash $HARNESS_SCRIPT_DIR/harness-session-close.sh --session-id $current_session_id"
+    else
+      close_hint="bash $HARNESS_SCRIPT_DIR/harness-session-close.sh"
+    fi
+    fail "열린 세션이 남아 있습니다: $current_session_file (복구: '$close_hint' 실행, 비정상 종료로 남은 경우 '$current_session_file' 수동 삭제)"
   fi
 
   if ! awk -F '\t' 'NR > 1 && $2 != "" { found = 1 } END { exit(found ? 0 : 1) }' "$events_file"; then

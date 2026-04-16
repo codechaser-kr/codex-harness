@@ -92,6 +92,7 @@ fi
 FOUND=0
 ALREADY_CLOSED=0
 ENTRY_COUNT=0
+SCHEMA_ERROR=""
 STARTED_AT=""
 ENTRY_POINT=""
 START_REQUEST=""
@@ -121,6 +122,9 @@ while IFS=$'\t' read -r kind value1 value2; do
           ;;
         entry_count)
           ENTRY_COUNT="$value2"
+          ;;
+        schema_error)
+          SCHEMA_ERROR="$value2"
           ;;
         started_at)
           STARTED_AT="$value2"
@@ -175,76 +179,97 @@ while IFS=$'\t' read -r kind value1 value2; do
   esac
 done < <(
   awk -F '\t' -v target_session="$SESSION_ID" '
-    NR == 1 { next }
-    $2 != target_session { next }
+    function col(name) {
+      if (name in col_idx) {
+        return $(col_idx[name])
+      }
+      return ""
+    }
+    NR == 1 {
+      for (i = 1; i <= NF; i++) {
+        col_idx[$i] = i
+      }
+
+      required_count = split("timestamp session_id status request entry_point planned_roles roles result_status input_summary inputs output_summary outputs changed_files expected_outputs next_role unresolved_risks", required, " ")
+      for (i = 1; i <= required_count; i++) {
+        if (!(required[i] in col_idx)) {
+          if (schema_error != "") {
+            schema_error = schema_error ", "
+          }
+          schema_error = schema_error required[i]
+        }
+      }
+      next
+    }
+    col("session_id") != target_session { next }
     {
-      result_status_col = $8
+      result_status_col = col("result_status")
       found = 1
 
       if (started_at == "") {
-        started_at = $1
+        started_at = col("timestamp")
       }
 
-      if ($3 == "closed") {
+      if (col("status") == "closed") {
         already_closed = 1
         next
       }
 
       entry_count++
 
-      if (start_request == "" && $4 != "") {
-        start_request = $4
+      if (start_request == "" && col("request") != "") {
+        start_request = col("request")
       }
 
-      if (entry_point == "" && $5 != "") {
-        entry_point = $5
+      if (entry_point == "" && col("entry_point") != "") {
+        entry_point = col("entry_point")
       }
 
-      if (planned_roles == "" && $6 != "") {
-        planned_roles = $6
+      if (planned_roles == "" && col("planned_roles") != "") {
+        planned_roles = col("planned_roles")
       }
 
-      if ($15 != "") {
-        last_next_role = $15
+      if (col("next_role") != "") {
+        last_next_role = col("next_role")
       }
 
       if (result_status_col != "") {
         last_result_status = result_status_col
       }
 
-      if ($9 != "") {
-        last_input_summary = $9
+      if (col("input_summary") != "") {
+        last_input_summary = col("input_summary")
       }
 
-      if ($10 != "") {
-        last_inputs = $10
+      if (col("inputs") != "") {
+        last_inputs = col("inputs")
       }
 
-      if ($11 != "") {
-        last_output_summary = $11
+      if (col("output_summary") != "") {
+        last_output_summary = col("output_summary")
       }
 
-      if ($12 != "") {
-        last_outputs = $12
+      if (col("outputs") != "") {
+        last_outputs = col("outputs")
       }
 
-      if ($13 != "") {
-        last_changed_files = $13
+      if (col("changed_files") != "") {
+        last_changed_files = col("changed_files")
       }
 
-      if ($14 != "") {
-        last_expected_outputs = $14
+      if (col("expected_outputs") != "") {
+        last_expected_outputs = col("expected_outputs")
       }
 
-      if ($16 != "") {
-        last_unresolved_risks = $16
+      if (col("unresolved_risks") != "") {
+        last_unresolved_risks = col("unresolved_risks")
       }
 
       if (result_status_col != "") {
         result_counts[result_status_col]++
       }
 
-      split($7, roles, ",")
+      split(col("roles"), roles, ",")
       for (i in roles) {
         gsub(/^[[:space:]]+|[[:space:]]+$/, "", roles[i])
         if (roles[i] != "") {
@@ -252,7 +277,7 @@ done < <(
         }
       }
 
-      split($12, outputs, ",")
+      split(col("outputs"), outputs, ",")
       for (i in outputs) {
         gsub(/^[[:space:]]+|[[:space:]]+$/, "", outputs[i])
         if (outputs[i] != "") {
@@ -264,6 +289,7 @@ done < <(
       printf "META\tfound\t%d\n", found + 0
       printf "META\talready_closed\t%d\n", already_closed + 0
       printf "META\tentry_count\t%d\n", entry_count + 0
+      printf "META\tschema_error\t%s\n", schema_error
       printf "META\tstarted_at\t%s\n", started_at
       printf "META\tentry_point\t%s\n", entry_point
       printf "META\tstart_request\t%s\n", start_request
@@ -293,6 +319,7 @@ done < <(
   ' "$EVENTS_FILE"
 )
 
+[ -z "$SCHEMA_ERROR" ] || fail "session-events.tsv schema missing columns: $SCHEMA_ERROR"
 [ "$FOUND" -eq 1 ] || fail "session not found: $SESSION_ID"
 [ "$ALREADY_CLOSED" -eq 0 ] || fail "session already closed: $SESSION_ID"
 

@@ -242,11 +242,20 @@ assert_not_file "$TMP_ROOT/empty-project/.harness/docs/domain-analysis.md"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/docs/logging-policy.md")" "다음 재진입 phase" "빈 프로젝트 logging policy 재진입 phase"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/docs/logging-policy.md")" "다음 시작 전 우선 확인 입력 파일" "빈 프로젝트 logging policy 우선 입력 파일"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/docs/logging-policy.md")" "최근 출력 파일" "빈 프로젝트 logging policy 최근 출력 파일"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/docs/logging-policy.md")" "필수 완료 조건" "빈 프로젝트 logging policy 필수 완료 조건"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/docs/logging-policy.md")" "timed_out" "빈 프로젝트 logging policy timed_out 상태"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/docs/logging-policy.md")" "세션 종료 사유" "빈 프로젝트 logging policy 종료 사유"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/logs/session-events.tsv")" $'planned_roles\troles\tresult_status\tinput_summary' "빈 프로젝트 session events 확장 헤더"
+assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/logs/session-events.tsv")" $'output_summary\toutputs\tchanged_files\texpected_outputs\tnext_role\tunresolved_risks\tnote' "빈 프로젝트 session events 후반 헤더"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/logs/latest-session-summary.md")" "다음 시작 역할" "빈 프로젝트 latest summary 다음 시작 역할"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/logs/latest-session-summary.md")" "다음 재진입 phase" "빈 프로젝트 latest summary 재진입 phase"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/logs/latest-session-summary.md")" "다음 시작 전 우선 확인 입력 파일" "빈 프로젝트 latest summary 우선 입력 파일"
 assert_contains "$(cat "$TMP_ROOT/empty-project/.harness/logs/latest-session-summary.md")" "최근 출력 파일" "빈 프로젝트 latest summary 최근 출력 파일"
+EMPTY_VERIFY_OUTPUT="$(
+  cd "$TMP_ROOT/empty-project" && \
+  bash "$HARNESS_SCRIPT_DIR/harness-verify.sh" 2>&1 || true
+)"
+assert_contains "$EMPTY_VERIFY_OUTPUT" "세션 이벤트가 없어 실행 로그 동기화 검사를 건너뜁니다" "빈 프로젝트 verify 로그 검사 건너뜀"
 assert_command_fails_with \
   "$TMP_ROOT/empty-project" \
   "bash \"$HARNESS_SCRIPT_DIR/harness-verify.sh\"" \
@@ -441,6 +450,24 @@ assert_command_fails_with \
   "출력 규칙 섹션 누락: .codex/skills/payment-dev/SKILL.md" \
   "역할 스킬 출력 규칙 누락 검증"
 
+log "progress 이벤트 result_status 필수 검증 확인"
+mkdir -p "$TMP_ROOT/result-status-project"
+(
+  cd "$TMP_ROOT/result-status-project" && \
+  bash "$HARNESS_SCRIPT_DIR/harness-init.sh" >/dev/null && \
+  bash "$HARNESS_SCRIPT_DIR/harness-log.sh" \
+    --new-session \
+    --status started \
+    --request "결제 구현 시작" \
+    --entry-point "payment-dev" \
+    --planned-roles "payment-dev, billing-reviewer" >/dev/null
+)
+assert_command_fails_with \
+  "$TMP_ROOT/result-status-project" \
+  "bash \"$HARNESS_SCRIPT_DIR/harness-log.sh\" --status progress --role \"payment-dev\" --output-summary \"결제 API 수정 완료\"" \
+  "result status is required for progress/closed events with execution details" \
+  "progress 이벤트 result_status 누락 검증"
+
 log "세션 종료 요약 재진입 정보 확인"
 mkdir -p "$TMP_ROOT/session-close-project"
 (
@@ -451,19 +478,32 @@ mkdir -p "$TMP_ROOT/session-close-project"
     --status started \
     --request "워크스페이스 변경 검토를 시작한다" \
     --entry-point "second-repo-conductor" \
+    --planned-roles "workspace-boundary-reviewer, release-regression-qa" \
     --role "workspace-boundary-reviewer" \
+    --result-status "completed" \
+    --input-summary "도메인 분석과 팀 스펙을 기준으로 경계 리뷰를 시작했다" \
     --inputs ".harness/docs/domain-analysis.md,.harness/docs/team-spec.md" \
+    --output-summary "오케스트레이션 계획과 플레이북에 리뷰 결과를 반영했다" \
     --outputs ".harness/docs/orchestration-plan.md,.harness/docs/team-playbook.md" \
+    --changed-files ".harness/docs/orchestration-plan.md,.harness/docs/team-playbook.md" \
+    --expected-outputs ".harness/docs/orchestration-plan.md,.harness/docs/team-playbook.md,.harness/logs/latest-session-summary.md" \
     --next-role "release-regression-qa" \
-    --weaknesses "릴리즈 검증과 잔여 위험 정리가 남아 있음" \
+    --unresolved-risks "릴리즈 검증과 잔여 위험 정리가 남아 있음" \
     --note "리뷰 단계 기록" >/dev/null && \
   bash "$HARNESS_SCRIPT_DIR/harness-session-close.sh" --note "리뷰 종료 후 QA 재진입 준비" >/dev/null
 )
+assert_contains "$(cat "$TMP_ROOT/session-close-project/.harness/logs/session-log.md")" "계획 역할: workspace-boundary-reviewer, release-regression-qa" "세션 로그 계획 역할 기록"
+assert_contains "$(cat "$TMP_ROOT/session-close-project/.harness/logs/session-log.md")" "실행 결과 상태: completed" "세션 로그 실행 결과 상태 기록"
+assert_contains "$(cat "$TMP_ROOT/session-close-project/.harness/logs/session-log.md")" "변경 파일: .harness/docs/orchestration-plan.md, .harness/docs/team-playbook.md" "세션 로그 변경 파일 기록"
+assert_contains "$(cat "$TMP_ROOT/session-close-project/.harness/logs/session-events.tsv")" "completed" "세션 이벤트 결과 상태 기록"
 assert_contains "$(cat "$TMP_ROOT/session-close-project/.harness/logs/latest-session-summary.md")" "## 재진입 요약" "세션 종료 latest summary 재진입 요약"
+assert_contains "$(cat "$TMP_ROOT/session-close-project/.harness/logs/latest-session-summary.md")" "계획 역할: workspace-boundary-reviewer, release-regression-qa" "세션 종료 latest summary 계획 역할 값"
+assert_contains "$(cat "$TMP_ROOT/session-close-project/.harness/logs/latest-session-summary.md")" "역할 결과 상태: completed" "세션 종료 latest summary 결과 상태 값"
 assert_contains "$(cat "$TMP_ROOT/session-close-project/.harness/logs/latest-session-summary.md")" "다음 시작 역할: release-regression-qa" "세션 종료 latest summary 다음 시작 역할 값"
 assert_contains "$(cat "$TMP_ROOT/session-close-project/.harness/logs/latest-session-summary.md")" "다음 재진입 phase: Phase 4" "세션 종료 latest summary 다음 재진입 phase 값"
 assert_contains "$(cat "$TMP_ROOT/session-close-project/.harness/logs/latest-session-summary.md")" "다음 시작 전 우선 확인 입력 파일: .harness/docs/domain-analysis.md, .harness/docs/team-spec.md" "세션 종료 latest summary 우선 입력 값"
 assert_contains "$(cat "$TMP_ROOT/session-close-project/.harness/logs/latest-session-summary.md")" "최근 출력 파일: .harness/docs/orchestration-plan.md, .harness/docs/team-playbook.md" "세션 종료 latest summary 최근 출력 값"
+assert_contains "$(cat "$TMP_ROOT/session-close-project/.harness/logs/latest-session-summary.md")" "최근 변경 파일: .harness/docs/orchestration-plan.md, .harness/docs/team-playbook.md" "세션 종료 latest summary 최근 변경 파일 값"
 assert_contains "$(cat "$TMP_ROOT/session-close-project/.harness/logs/latest-session-summary.md")" "세션 종료 메모: 리뷰 종료 후 QA 재진입 준비" "세션 종료 latest summary 종료 메모 값"
 
 cat > "$TMP_ROOT/stack-project/.harness/docs/project-setup.md" <<'EOF'

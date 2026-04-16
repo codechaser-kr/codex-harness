@@ -252,6 +252,7 @@ EOF
 }
 
 load_role_contracts() {
+  local field_sep
   local line
   local role_id
   local role_type
@@ -268,7 +269,9 @@ load_role_contracts() {
   local completion_criteria
   local verification_focus
 
-  while IFS=$'\t' read -r role_id role_type start_paths priority_inputs request_branches start_checklist decision_rules anti_patterns output_contract output_template reentry_triggers exit_criteria completion_criteria verification_focus; do
+  field_sep=$'\034'
+
+  while IFS=$'\034' read -r role_id role_type start_paths priority_inputs request_branches start_checklist decision_rules anti_patterns output_contract output_template reentry_triggers exit_criteria completion_criteria verification_focus; do
     [ -n "${role_id:-}" ] || continue
     ROLE_TYPES["$role_id"]="$(trim "${role_type:-}")"
     ROLE_START_PATHS["$role_id"]="$(trim "${start_paths:-}")"
@@ -283,7 +286,7 @@ load_role_contracts() {
     ROLE_EXIT_CRITERIA["$role_id"]="$(trim "${exit_criteria:-}")"
     ROLE_COMPLETION_CRITERIA["$role_id"]="$(trim "${completion_criteria:-}")"
     ROLE_VERIFICATION_FOCUS["$role_id"]="$(trim "${verification_focus:-}")"
-  done < <(awk '
+  done < <(awk -v sep="$field_sep" '
     function trim(s) {
       gsub(/^[[:space:]]+/, "", s)
       gsub(/[[:space:]]+$/, "", s)
@@ -293,21 +296,7 @@ load_role_contracts() {
       if (role_id == "") {
         return
       }
-      printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
-        role_id,
-        role_type,
-        start_paths,
-        priority_inputs,
-        request_branches,
-        start_checklist,
-        decision_rules,
-        anti_patterns,
-        output_contract,
-        output_template,
-        reentry_triggers,
-        exit_criteria,
-        completion_criteria,
-        verification_focus
+      print role_id sep role_type sep start_paths sep priority_inputs sep request_branches sep start_checklist sep decision_rules sep anti_patterns sep output_contract sep output_template sep reentry_triggers sep exit_criteria sep completion_criteria sep verification_focus
     }
     /^## 역할 스펙 초안/ {
       in_specs = 1

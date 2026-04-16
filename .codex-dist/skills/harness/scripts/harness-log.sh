@@ -14,8 +14,14 @@ STATUS=""
 REQUEST=""
 ENTRY_POINT=""
 NEXT_ROLE=""
-WEAKNESSES=""
 NOTE=""
+PLANNED_ROLES=""
+EXPECTED_OUTPUTS=""
+RESULT_STATUS=""
+INPUT_SUMMARY=""
+OUTPUT_SUMMARY=""
+CHANGED_FILES=""
+UNRESOLVED_RISKS=""
 NEW_SESSION=0
 
 declare -a ROLES=()
@@ -46,14 +52,20 @@ Options:
   --status <started|progress|closed>
   --request <text>
   --entry-point <role>
+  --planned-roles <role1,role2>
   --role <role>
   --roles <role1,role2>
+  --result-status <planned|in_progress|completed|timed_out|failed>
+  --input-summary <text>
   --input <path>
   --inputs <path1,path2>
+  --output-summary <text>
   --output <path>
   --outputs <path1,path2>
+  --changed-files <path1,path2>
+  --expected-outputs <path1,path2>
   --next-role <role>
-  --weaknesses <text>
+  --unresolved-risks <text>
   --note <text>
   --help
 EOF
@@ -96,6 +108,16 @@ join_list() {
   printf '%s' "$joined"
 }
 
+normalize_csv_text() {
+  local value
+  value="$(trim_text "$1")"
+  if [ -z "$value" ]; then
+    printf '%s' ""
+    return
+  fi
+  printf '%s' "$value" | sed 's/[[:space:]]*,[[:space:]]*/, /g'
+}
+
 format_markdown_value() {
   if [ -n "$1" ]; then
     printf '%s' "$1"
@@ -129,6 +151,11 @@ while [ $# -gt 0 ]; do
       ENTRY_POINT="$(trim_text "$2")"
       shift
       ;;
+    --planned-roles)
+      [ $# -ge 2 ] || fail "--planned-roles requires a value"
+      PLANNED_ROLES="$(normalize_csv_text "$2")"
+      shift
+      ;;
     --role)
       [ $# -ge 2 ] || fail "--role requires a value"
       append_value ROLES "$2"
@@ -137,6 +164,16 @@ while [ $# -gt 0 ]; do
     --roles)
       [ $# -ge 2 ] || fail "--roles requires a value"
       append_csv_values ROLES "$2"
+      shift
+      ;;
+    --result-status)
+      [ $# -ge 2 ] || fail "--result-status requires a value"
+      RESULT_STATUS="$(trim_text "$2")"
+      shift
+      ;;
+    --input-summary)
+      [ $# -ge 2 ] || fail "--input-summary requires a value"
+      INPUT_SUMMARY="$(trim_text "$2")"
       shift
       ;;
     --input)
@@ -149,6 +186,11 @@ while [ $# -gt 0 ]; do
       append_csv_values INPUTS "$2"
       shift
       ;;
+    --output-summary)
+      [ $# -ge 2 ] || fail "--output-summary requires a value"
+      OUTPUT_SUMMARY="$(trim_text "$2")"
+      shift
+      ;;
     --output)
       [ $# -ge 2 ] || fail "--output requires a value"
       append_value OUTPUTS "$2"
@@ -159,14 +201,24 @@ while [ $# -gt 0 ]; do
       append_csv_values OUTPUTS "$2"
       shift
       ;;
+    --changed-files)
+      [ $# -ge 2 ] || fail "--changed-files requires a value"
+      CHANGED_FILES="$(normalize_csv_text "$2")"
+      shift
+      ;;
+    --expected-outputs)
+      [ $# -ge 2 ] || fail "--expected-outputs requires a value"
+      EXPECTED_OUTPUTS="$(normalize_csv_text "$2")"
+      shift
+      ;;
     --next-role)
       [ $# -ge 2 ] || fail "--next-role requires a value"
       NEXT_ROLE="$(trim_text "$2")"
       shift
       ;;
-    --weaknesses)
-      [ $# -ge 2 ] || fail "--weaknesses requires a value"
-      WEAKNESSES="$(trim_text "$2")"
+    --unresolved-risks)
+      [ $# -ge 2 ] || fail "--unresolved-risks requires a value"
+      UNRESOLVED_RISKS="$(trim_text "$2")"
       shift
       ;;
     --note)
@@ -225,22 +277,45 @@ if [ "$STATUS" != "closed" ]; then
   printf '%s\n' "$SESSION_ID" > "$CURRENT_SESSION_FILE"
 fi
 
+case "$RESULT_STATUS" in
+  ""|planned|in_progress|completed|timed_out|failed)
+    ;;
+  *)
+    fail "result status must be one of: planned, in_progress, completed, timed_out, failed"
+    ;;
+esac
+
 TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S %z')"
 ROLES_TEXT="$(join_list ', ' "${ROLES[@]:-}")"
 INPUTS_TEXT="$(join_list ', ' "${INPUTS[@]:-}")"
 OUTPUTS_TEXT="$(join_list ', ' "${OUTPUTS[@]:-}")"
 
-printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+HAS_EXECUTION_SIGNAL=0
+if [ "${#ROLES[@]}" -gt 0 ] || [ -n "$INPUT_SUMMARY" ] || [ "${#INPUTS[@]}" -gt 0 ] || [ -n "$OUTPUT_SUMMARY" ] || [ "${#OUTPUTS[@]}" -gt 0 ] || [ -n "$CHANGED_FILES" ] || [ -n "$EXPECTED_OUTPUTS" ] || [ -n "$NEXT_ROLE" ] || [ -n "$UNRESOLVED_RISKS" ]; then
+  HAS_EXECUTION_SIGNAL=1
+fi
+
+if [ "$STATUS" != "started" ] && [ "$HAS_EXECUTION_SIGNAL" -eq 1 ] && [ -z "$RESULT_STATUS" ]; then
+  fail "result status is required for progress/closed events with execution details"
+fi
+
+printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
   "$TIMESTAMP" \
   "$SESSION_ID" \
   "$STATUS" \
   "$REQUEST" \
   "$ENTRY_POINT" \
+  "$PLANNED_ROLES" \
   "$ROLES_TEXT" \
+  "$RESULT_STATUS" \
+  "$INPUT_SUMMARY" \
   "$INPUTS_TEXT" \
+  "$OUTPUT_SUMMARY" \
   "$OUTPUTS_TEXT" \
+  "$CHANGED_FILES" \
+  "$EXPECTED_OUTPUTS" \
   "$NEXT_ROLE" \
-  "$WEAKNESSES" \
+  "$UNRESOLVED_RISKS" \
   "$NOTE" >> "$EVENTS_FILE"
 
 {
@@ -250,11 +325,17 @@ printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
   printf -- '- 상태: %s\n' "$(format_markdown_value "$STATUS")"
   printf -- '- 시작 요청: %s\n' "$(format_markdown_value "$REQUEST")"
   printf -- '- 진입점: %s\n' "$(format_markdown_value "$ENTRY_POINT")"
+  printf -- '- 계획 역할: %s\n' "$(format_markdown_value "$PLANNED_ROLES")"
   printf -- '- 호출 역할: %s\n' "$(format_markdown_value "$ROLES_TEXT")"
+  printf -- '- 실행 결과 상태: %s\n' "$(format_markdown_value "$RESULT_STATUS")"
+  printf -- '- 입력 요약: %s\n' "$(format_markdown_value "$INPUT_SUMMARY")"
   printf -- '- 입력 파일: %s\n' "$(format_markdown_value "$INPUTS_TEXT")"
+  printf -- '- 출력 요약: %s\n' "$(format_markdown_value "$OUTPUT_SUMMARY")"
   printf -- '- 출력 파일: %s\n' "$(format_markdown_value "$OUTPUTS_TEXT")"
+  printf -- '- 변경 파일: %s\n' "$(format_markdown_value "$CHANGED_FILES")"
+  printf -- '- 예상 산출물: %s\n' "$(format_markdown_value "$EXPECTED_OUTPUTS")"
   printf -- '- 다음 권장 역할: %s\n' "$(format_markdown_value "$NEXT_ROLE")"
-  printf -- '- 남은 약점: %s\n' "$(format_markdown_value "$WEAKNESSES")"
+  printf -- '- 남은 위험: %s\n' "$(format_markdown_value "$UNRESOLVED_RISKS")"
   printf -- '- 메모: %s\n' "$(format_markdown_value "$NOTE")"
 } >> "$SESSION_LOG"
 

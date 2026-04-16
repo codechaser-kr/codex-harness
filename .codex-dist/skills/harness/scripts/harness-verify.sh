@@ -243,6 +243,78 @@ fail_if_contains_pattern() {
   fi
 }
 
+check_session_logging_activity() {
+  local events_file=".harness/logs/session-events.tsv"
+  local summary_file=".harness/logs/latest-session-summary.md"
+  local session_log_file=".harness/logs/session-log.md"
+  local current_session_file=".harness/logs/.current-session"
+  local current_session_id=""
+  local close_hint=""
+  local latest_closed_session=""
+  local summary_session=""
+
+  if [ -f "$current_session_file" ]; then
+    current_session_id="$(trim_text "$(cat "$current_session_file" 2>/dev/null || true)")"
+    if [ -n "$current_session_id" ]; then
+      close_hint="bash $HARNESS_SCRIPT_DIR/harness-session-close.sh --session-id $current_session_id"
+    else
+      close_hint="bash $HARNESS_SCRIPT_DIR/harness-session-close.sh"
+    fi
+    fail "열린 세션이 남아 있습니다: $current_session_file (복구: '$close_hint' 실행, 비정상 종료로 남은 경우 '$current_session_file' 수동 삭제)"
+  fi
+
+  if ! awk -F '\t' 'NR > 1 && $2 != "" { found = 1 } END { exit(found ? 0 : 1) }' "$events_file"; then
+    fail "실행 세션 이벤트가 없습니다: $events_file"
+    return
+  fi
+
+  latest_closed_session="$(
+    awk -F '\t' '
+      NR == 1 { next }
+      $3 == "closed" && $2 != "" { session = $2 }
+      END { print session }
+    ' "$events_file"
+  )"
+
+  if [ -z "$latest_closed_session" ]; then
+    fail "종료된 세션 이벤트가 없습니다: $events_file"
+    return
+  fi
+
+  summary_session="$(
+    sed -n 's/^- 세션 ID: //p' "$summary_file" | head -n 1 | tr -d '[:space:]'
+  )"
+
+  if [ -z "$summary_session" ]; then
+    fail "최신 세션 요약에 세션 ID가 없습니다: $summary_file"
+    return
+  fi
+
+  if [ "$summary_session" != "$latest_closed_session" ]; then
+    fail "최신 세션 요약이 마지막 종료 세션과 맞지 않습니다: $summary_file"
+  else
+    log "OK 최신 세션 요약 동기화: $summary_file"
+  fi
+
+  if grep -Fq -- "아직 종료된 세션 집계가 없습니다." "$summary_file"; then
+    fail "최신 세션 요약이 아직 placeholder 상태입니다: $summary_file"
+  fi
+
+  if grep -Fq -- "세션 ID: $latest_closed_session" "$session_log_file"; then
+    log "OK 세션 로그 최신 세션 반영: $session_log_file"
+  else
+    fail "세션 로그에 마지막 종료 세션이 없습니다: $session_log_file"
+  fi
+}
+
+has_session_logging_entries() {
+  local events_file=".harness/logs/session-events.tsv"
+
+  [ -f "$events_file" ] || return 1
+
+  awk -F '\t' 'NR > 1 && $2 != "" { found = 1; exit 0 } END { exit(found ? 0 : 1) }' "$events_file"
+}
+
 check_final_report() {
   local file="$1"
   local label="$2"
@@ -568,24 +640,49 @@ if [ -f ".harness/logs/session-log.md" ]; then
   check_contains_hint ".harness/logs/session-log.md" "상태" "세션 상태 로그"
   check_contains_hint ".harness/logs/session-log.md" "시작 요청" "시작 요청 로그"
   check_contains_hint ".harness/logs/session-log.md" "진입점" "진입점 로그"
+  check_contains_hint ".harness/logs/session-log.md" "계획 역할" "계획 역할 로그"
+  check_contains_hint ".harness/logs/session-log.md" "실행 결과 상태" "역할 실행 결과 상태 로그"
+  check_contains_hint ".harness/logs/session-log.md" "입력 요약" "입력 요약 로그"
+  check_contains_hint ".harness/logs/session-log.md" "출력 요약" "출력 요약 로그"
+  check_contains_hint ".harness/logs/session-log.md" "변경 파일" "변경 파일 로그"
+  check_contains_hint ".harness/logs/session-log.md" "예상 산출물" "예상 산출물 로그"
   check_contains_hint ".harness/logs/session-log.md" "다음 권장 역할" "다음 권장 역할 로그"
+  check_contains_hint ".harness/logs/session-log.md" "남은 위험" "남은 위험 로그"
 fi
 
 if [ -f ".harness/docs/logging-policy.md" ]; then
   check_contains_hint ".harness/docs/logging-policy.md" "다음 재진입 phase" "로그 정책 다음 재진입 phase"
   check_contains_hint ".harness/docs/logging-policy.md" "다음 시작 전 우선 확인 입력 파일" "로그 정책 우선 입력 파일"
   check_contains_hint ".harness/docs/logging-policy.md" "최근 출력 파일" "로그 정책 최근 출력 파일"
+  check_contains_hint ".harness/docs/logging-policy.md" "timed_out" "로그 정책 timed_out 상태"
+  check_contains_hint ".harness/docs/logging-policy.md" "필수 완료 조건" "로그 정책 필수 완료 조건"
 fi
 
 check_contains_hint ".harness/logs/session-events.tsv" "session_id" "세션 이벤트 헤더"
 check_contains_hint ".harness/logs/session-events.tsv" "status" "이벤트 상태 헤더"
+check_contains_hint ".harness/logs/session-events.tsv" "planned_roles" "세션 이벤트 계획 역할 헤더"
+check_contains_hint ".harness/logs/session-events.tsv" "result_status" "세션 이벤트 결과 상태 헤더"
+check_contains_hint ".harness/logs/session-events.tsv" "input_summary" "세션 이벤트 입력 요약 헤더"
+check_contains_hint ".harness/logs/session-events.tsv" "output_summary" "세션 이벤트 출력 요약 헤더"
+check_contains_hint ".harness/logs/session-events.tsv" "changed_files" "세션 이벤트 변경 파일 헤더"
+check_contains_hint ".harness/logs/session-events.tsv" "expected_outputs" "세션 이벤트 예상 산출물 헤더"
+check_contains_hint ".harness/logs/session-events.tsv" "unresolved_risks" "세션 이벤트 남은 위험 헤더"
 
 if [ -f ".harness/logs/latest-session-summary.md" ]; then
   check_contains_hint ".harness/logs/latest-session-summary.md" "세션 요약" "최신 세션 요약"
+  check_contains_hint ".harness/logs/latest-session-summary.md" "계획 역할" "최신 세션 요약 계획 역할"
+  check_contains_hint ".harness/logs/latest-session-summary.md" "역할 결과 상태" "최신 세션 요약 결과 상태"
   check_contains_hint ".harness/logs/latest-session-summary.md" "다음 시작 역할" "최신 세션 요약 다음 시작 역할"
   check_contains_hint ".harness/logs/latest-session-summary.md" "다음 재진입 phase" "최신 세션 요약 다음 재진입 phase"
   check_contains_hint ".harness/logs/latest-session-summary.md" "다음 시작 전 우선 확인 입력 파일" "최신 세션 요약 우선 입력 파일"
   check_contains_hint ".harness/logs/latest-session-summary.md" "최근 출력 파일" "최신 세션 요약 최근 출력 파일"
+  check_contains_hint ".harness/logs/latest-session-summary.md" "최근 변경 파일" "최신 세션 요약 최근 변경 파일"
+fi
+
+if has_session_logging_entries; then
+  check_session_logging_activity
+else
+  log "세션 이벤트가 없어 실행 로그 동기화 검사를 건너뜁니다"
 fi
 
 if [ -f ".harness/logs/role-frequency.md" ]; then

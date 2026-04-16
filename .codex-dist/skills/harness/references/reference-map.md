@@ -23,6 +23,7 @@
 
 - `phase-selection-matrix.md`
 - `agents-sync-guide.md`
+- `reentry-rules.md`
 
 ---
 
@@ -55,6 +56,7 @@
 - `agents-sync-guide.md`
 - `agent-design-patterns.md`
 - `team-spec-schema.md`
+- `team-spec-contract.md`
 
 ---
 
@@ -70,6 +72,7 @@
 
 - `skill-writing-guide.md`
 - `skill-testing-guide.md`
+- `verification-checklist.md`
 
 ---
 
@@ -86,6 +89,8 @@
 - `agents-sync-guide.md`
 - `phase-selection-matrix.md`
 - `quality-evaluation-guide.md`
+- `reentry-rules.md`
+- `logging-contract.md`
 
 ---
 
@@ -120,6 +125,8 @@
 - `quality-evaluation-guide.md`
 - `meta-system-maturity-guide.md`
 - `skill-testing-guide.md`
+- `verification-checklist.md`
+- `logging-contract.md`
 
 ---
 
@@ -133,6 +140,22 @@
 주요 문서:
 
 - `reference-writing-guide.md`
+
+---
+
+## 9. 로그와 세션 재진입
+
+다음 질문에 답해야 할 때 먼저 읽는다.
+
+- 세션 기록을 어떤 문서에 남겨야 하는가
+- 다음 시작 역할과 재진입 Phase를 어디에 남겨야 하는가
+- TSV나 임시 상태 파일 없이도 운영 루프를 유지할 수 있는가
+
+주요 문서:
+
+- `logging-contract.md`
+- `reentry-rules.md`
+- `verification-checklist.md`
 
 ---
 

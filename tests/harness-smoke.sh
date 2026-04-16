@@ -450,6 +450,24 @@ assert_command_fails_with \
   "출력 규칙 섹션 누락: .codex/skills/payment-dev/SKILL.md" \
   "역할 스킬 출력 규칙 누락 검증"
 
+log "progress 이벤트 result_status 필수 검증 확인"
+mkdir -p "$TMP_ROOT/result-status-project"
+(
+  cd "$TMP_ROOT/result-status-project" && \
+  bash "$HARNESS_SCRIPT_DIR/harness-init.sh" >/dev/null && \
+  bash "$HARNESS_SCRIPT_DIR/harness-log.sh" \
+    --new-session \
+    --status started \
+    --request "결제 구현 시작" \
+    --entry-point "payment-dev" \
+    --planned-roles "payment-dev, billing-reviewer" >/dev/null
+)
+assert_command_fails_with \
+  "$TMP_ROOT/result-status-project" \
+  "bash \"$HARNESS_SCRIPT_DIR/harness-log.sh\" --status progress --role \"payment-dev\" --output-summary \"결제 API 수정 완료\"" \
+  "result status is required for progress/closed events with execution details" \
+  "progress 이벤트 result_status 누락 검증"
+
 log "세션 종료 요약 재진입 정보 확인"
 mkdir -p "$TMP_ROOT/session-close-project"
 (

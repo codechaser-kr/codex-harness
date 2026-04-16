@@ -290,6 +290,15 @@ ROLES_TEXT="$(join_list ', ' "${ROLES[@]:-}")"
 INPUTS_TEXT="$(join_list ', ' "${INPUTS[@]:-}")"
 OUTPUTS_TEXT="$(join_list ', ' "${OUTPUTS[@]:-}")"
 
+HAS_EXECUTION_SIGNAL=0
+if [ "${#ROLES[@]}" -gt 0 ] || [ -n "$INPUT_SUMMARY" ] || [ "${#INPUTS[@]}" -gt 0 ] || [ -n "$OUTPUT_SUMMARY" ] || [ "${#OUTPUTS[@]}" -gt 0 ] || [ -n "$CHANGED_FILES" ] || [ -n "$EXPECTED_OUTPUTS" ] || [ -n "$NEXT_ROLE" ] || [ -n "$UNRESOLVED_RISKS" ]; then
+  HAS_EXECUTION_SIGNAL=1
+fi
+
+if [ "$STATUS" != "started" ] && [ "$HAS_EXECUTION_SIGNAL" -eq 1 ] && [ -z "$RESULT_STATUS" ]; then
+  fail "result status is required for progress/closed events with execution details"
+fi
+
 printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
   "$TIMESTAMP" \
   "$SESSION_ID" \

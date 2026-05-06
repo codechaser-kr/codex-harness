@@ -1,6 +1,6 @@
 ---
 name: harness
-description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성, 정렬, 검증할 때 사용하는 메타 스킬입니다. 저장소 재독해를 바탕으로 team-spec, 로컬 agents/skills, 오케스트레이션, QA/운영 감사, 재진입 기준을 함께 다루는 요청에서 트리거합니다. 예: 하네스 구성, 역할 팀 설계, 실행 흐름 재정렬, 운영 기준 보강, 품질 비교와 성숙도 평가. 단일 파일 수정이나 좁은 버그 픽스처럼 하네스 구조 변경이 필요 없는 요청에는 기본적으로 사용하지 않습니다."
+description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성, 정렬, 검증할 때 사용하는 메타 스킬입니다. 저장소 재독해를 바탕으로 team-spec, 로컬 agents/skills, 오케스트레이션, QA/운영 감사, 재진입 기준을 함께 다루는 요청에서 트리거합니다. 예: 하네스 구성, 역할 팀 설계, 실행 흐름 재정렬, 운영 기준 보강, 품질 비교와 타겟 운영 가능성 평가. 단일 파일 수정이나 좁은 버그 픽스처럼 하네스 구조 변경이 필요 없는 요청에는 기본적으로 사용하지 않습니다."
 ---
 
 # Harness — Codex용 Agent Team & Skill Architect
@@ -184,7 +184,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 #### Phase 7: 하네스 피드백 반영
 
 - 입력: 오케스트레이션 실행 로그, QA/운영 감사 피드백, `with-skill` / `without-skill` 비교 관찰
-- 산출: 피드백 반영 변경점, 성숙도 판정, 다음 재진입 Phase 제안
+- 산출: 피드백 반영 변경점, 운영 가능성 판정, 다음 재진입 Phase 제안
 - 다음 단계 조건: 피드백이 에이전트 정의, 역할 스킬, 운영 문서에 반영되고 다음 실행에서 바로 재사용 가능한 상태
 
 1. 실행 로그와 QA/운영 감사 피드백을 기준으로 구조/규칙/문서 변경점을 분리한다.
@@ -357,7 +357,6 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - `references/reference-map.md`
 - `references/generator-readiness-checklist.md`
 - `references/agent-design-patterns.md`
-- `references/meta-system-maturity-guide.md`
 - `references/orchestrator-template.md`
 - `references/skill-writing-guide.md`
 - `references/skill-testing-guide.md`

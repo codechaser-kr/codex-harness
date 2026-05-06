@@ -39,7 +39,7 @@
 ### 4) 검증 실행
 
 - 운영 감사 역할이 `verification-checklist.md`를 기준으로 구조와 최소 규칙을 확인한다.
-- 구조 검증을 통과해도 바로 합격 처리하지 않고, phase 7 관점에서 품질 비교와 성숙도 평가를 한 번 더 남긴다.
+- 구조 검증을 통과해도 바로 합격 처리하지 않고, phase 7 관점에서 품질 비교와 운영 가능성 평가를 한 번 더 남긴다.
 
 ### 5) 판정
 
@@ -246,5 +246,4 @@
 ## 7. 다른 레퍼런스와의 연결
 
 - `quality-evaluation-guide.md`: with-skill / without-skill 비교 문장을 만들 때 사용한다.
-- `meta-system-maturity-guide.md`: 현재 판정을 운영 가능 / 재작성 필요 / 재구성 필요로 정리할 때 사용한다.
 - `phase-selection-matrix.md`: 다음 재진입 phase를 고를 때 사용한다.

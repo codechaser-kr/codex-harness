@@ -120,20 +120,18 @@
 
 ---
 
-## 7. Phase 7 품질 비교와 메타시스템 성숙도 평가
+## 7. Phase 7 피드백 반영과 타겟 평가
 
 다음 질문에 답해야 할 때 먼저 읽는다.
 
 - 생성기가 타겟 프로젝트에서 충분성 평가를 수행할 준비가 돼 있는가
 - 지금 생성된 하네스가 실제 운영 가능한 수준인가
-- 상위 수준의 메타시스템 축을 갖췄는가
 - 부족한 점이 입력 문서 품질 문제인지, 역할 규칙 문제인지, 운영 기준 문제인지
 - 다음 재진입을 어느 Phase로 돌려야 하는가
 
 주요 문서:
 
 - `generator-readiness-checklist.md`
-- `meta-system-maturity-guide.md`
 - `quality-evaluation-guide.md`
 - `target-evaluation-playbook.md`
 
@@ -153,7 +151,6 @@
 - `qa-agent-guide.md`
 - `team-examples.md`
 - `quality-evaluation-guide.md`
-- `meta-system-maturity-guide.md`
 - `skill-testing-guide.md`
 - `verification-checklist.md`
 - `logging-contract.md`
@@ -234,11 +231,10 @@
   - `codex-runtime-contract.md`
   - `team-spec-contract.md`
   - 필요 시 `orchestrator-template.md`
-- Phase 7 품질 비교와 성숙도 평가:
+- Phase 7 피드백 반영과 타겟 평가:
   - `reference-map.md`
   - `quality-evaluation-guide.md`
   - `target-evaluation-playbook.md`
-  - 필요 시 `meta-system-maturity-guide.md`
 - 패턴 선택:
   - `reference-map.md`
   - `agent-design-patterns.md`
@@ -253,11 +249,6 @@
   - `reference-map.md`
   - `qa-agent-guide.md`
   - `quality-evaluation-guide.md`
-- 메타시스템 성숙도 평가:
-  - `reference-map.md`
-  - `generator-readiness-checklist.md`
-  - `meta-system-maturity-guide.md`
-  - 필요 시 `quality-evaluation-guide.md`
 - 메타하네스 생성기 준비도 점검:
   - `reference-map.md`
   - `generator-readiness-checklist.md`

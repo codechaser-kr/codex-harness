@@ -128,7 +128,7 @@
 - 스킬 작성: `skill-writing-guide.md`
 - QA와 검증: `qa-agent-guide.md`, `verification-checklist.md`, `skill-testing-guide.md`
 - 로그와 재진입: `logging-contract.md`, `reentry-rules.md`
-- 품질 비교와 성숙도: `quality-evaluation-guide.md`, `meta-system-maturity-guide.md`, `target-evaluation-playbook.md`
+- 품질 비교와 타겟 평가: `quality-evaluation-guide.md`, `target-evaluation-playbook.md`
 - 레퍼런스 인덱스: `reference-map.md`
 
 새 reference를 추가할 때는 단순 부록으로 두지 말고, `reference-map.md`에서 어떤 판단 축에 쓰이는지 함께 연결한다.

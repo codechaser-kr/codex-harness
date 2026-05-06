@@ -227,7 +227,7 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 - 스킬 정의와 테스트
 - Codex 런타임 계약
 - 메타하네스 생성기 준비도 점검
-- 메타시스템 성숙도 평가
+- 타겟 프로젝트 운영 가능성 평가
 - 상태 점검 / 정렬 / 개선 운영 루프
 - 운영 감사 기준
 
@@ -246,7 +246,7 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 
 즉 현재 단계의 `harness`는 완성된 프로젝트 전용 실행기라기보다, 그런 특화 하네스를 각 저장소 안에서 만들어 갈 수 있게 출발점을 제공하는 메타 하네스에 가깝습니다.
 
-상위 수준의 메타시스템 성숙도를 목표로 볼 때도 기준은 “문서가 많아졌는가”가 아니라 “에이전트 팀 / 실행 패턴 / 운영 기준이 실제로 살아 있는가”입니다. 이 판단은 `references/meta-system-maturity-guide.md` 기준으로 합니다.
+타겟 프로젝트 평가의 기준은 “문서가 많아졌는가”가 아니라 “에이전트 팀 / 실행 패턴 / 운영 기준이 실제로 살아 있는가”입니다. 이 판단은 생성기 저장소가 아니라 실제 타겟 프로젝트의 생성 결과를 읽고 남깁니다.
 
 ## 타겟 프로젝트 평가
 
@@ -257,7 +257,7 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 1. 타겟 프로젝트의 기존 하네스 상태를 먼저 기록합니다.
 2. 시작 진입 역할(`run-harness`)로 필요한 phase부터 다시 들어갑니다.
 3. 역할 작성이 끝난 뒤 운영 감사 역할이 `verification-checklist.md` 기준으로 구조와 최소 규칙을 확인합니다.
-4. 구조 검증을 통과하더라도 바로 합격 처리하지 않고, `quality-evaluation-guide.md`와 `meta-system-maturity-guide.md` 기준으로 `운영 가능 / 재작성 필요 / 재구성 필요`를 판정합니다.
+4. 구조 검증을 통과하더라도 바로 합격 처리하지 않고, `target-evaluation-playbook.md`와 `quality-evaluation-guide.md` 기준으로 `운영 가능 / 재작성 필요 / 재구성 필요`를 판정합니다.
 5. 판정 결과에 따라 다음 재진입 phase를 정합니다.
 
 구체적인 타겟 프로젝트 절차와 체크리스트는 `references/target-evaluation-playbook.md`를 기준으로 봅니다.
@@ -270,7 +270,6 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 - `references/codex-runtime-contract.md`
 - `references/generator-readiness-checklist.md`
 - `references/logging-contract.md`
-- `references/meta-system-maturity-guide.md`
 - `references/orchestrator-template.md`
 - `references/skill-writing-guide.md`
 - `references/skill-testing-guide.md`

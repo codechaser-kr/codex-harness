@@ -89,7 +89,7 @@
 - 시작 진입 역할 출력 규칙 점검
 - 운영 감사 역할 피드백 문구 점검
 - 회귀 점검에서 최소 품질 비교 기준 확인
-- 메타시스템 성숙도 회고 시 `meta-system-maturity-guide.md`와 함께 비교 기준으로 사용
+- 타겟 프로젝트 평가에서 `target-evaluation-playbook.md`와 함께 비교 기준으로 사용
 
 ---
 
@@ -98,4 +98,4 @@
 - `agents-sync-guide.md`: 상위 컨텍스트 정렬이 품질 비교에서 어떤 차이를 만드는지 연결한다.
 - `phase-selection-matrix.md`: 재진입 기준이 with-skill 상태에서 더 선명해지는지 비교할 때 사용한다.
 - `skill-testing-guide.md`: 구조 검증 외에 어떤 품질 비교를 반복 점검 기준으로 둘지 연결한다.
-- `meta-system-maturity-guide.md`: 구조 존재를 넘어 운영 가능한 메타시스템 수준인지 판정할 때 연결한다.
+- `target-evaluation-playbook.md`: 비교 결과를 `운영 가능 / 재작성 필요 / 재구성 필요` 판정으로 연결할 때 사용한다.

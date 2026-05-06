@@ -1,10 +1,10 @@
 # harness (Codex)
 
-`harness`는 Codex용 전역 스킬이자, 현재 프로젝트에 맞는 **로컬 실행 하네스 팀**을 구성하는 `Codex 중심 메타 프레임워크`입니다.
+`harness`는 Codex용 전역 스킬이자, 현재 프로젝트에 맞는 **로컬 실행 하네스 팀**을 구성하는 `Codex용 Team-Architecture Factory`입니다.
 
-이 저장소는 입력 메모와 사용자 입력을 준비한 뒤, 역할 스킬이 루트 기준으로 저장소를 다시 읽어 역할 기반 스킬 팀, 오케스트레이션 흐름, QA/검증 구조, 시작 진입 역할, 운영 루프를 설계하는 도구입니다.
+이 저장소는 `revfactory/harness`의 하네스 생성 방식을 Codex 런타임에 맞게 옮기는 것을 목표로 합니다. 도메인 설명과 저장소 근거를 읽고, 프로젝트별 역할 팀 아키텍처, 에이전트 정의, 역할 스킬, 오케스트레이션 흐름, QA/검증 구조, 운영 루프를 생성합니다.
 
-`harness`는 프로젝트 내부에 실제로 작동하는 실행 기반을 만들고, 상태 점검 / 정렬 / 개선까지 다루는 Codex용 하네스 엔지니어링 시스템입니다.
+원본 하네스가 팀원 간 직접 통신과 공유 작업 목록을 중심으로 팀을 조율한다면, 이 프로젝트는 Codex의 실행 방식에 맞춰 주 에이전트가 오케스트레이션과 통합을 맡고, 독립 입력과 독립 산출이 있는 작업만 subagent로 좁게 위임합니다.
 
 ## 한눈에 보기
 
@@ -15,6 +15,7 @@
 ## 설계 원칙
 
 - 하네스의 본체는 Codex 에이전트 설정, 역할 스킬, 시작 진입 역할, 오케스트레이션 구조입니다.
+- 원본 하네스처럼 파이프라인, 팬아웃/팬인, 전문가 풀, 생성-검증, 감독자, 계층적 위임 패턴을 기본 판단 축으로 사용합니다.
 - `.harness/docs`는 저장소 입력 문서와 하네스 운영 문서가 함께 있습니다.
 - `exploration-notes.md`, `domain-analysis.md`, `qa-strategy.md`는 저장소 입력 문서입니다.
 - `harness-architecture.md`, `orchestration-plan.md`, `team-structure.md`, `team-playbook.md`는 하네스 메타시스템 문서입니다.
@@ -56,8 +57,7 @@ repo/
     ├── logs/
     │   ├── session-log.md
     │   └── latest-session-summary.md
-    ├── scenarios/
-    └── templates/
+    └── scenarios/
 ```
 
 `Phase 2`와 `Phase 3`까지 진행되면 아래 자산이 추가로 채워집니다.
@@ -87,8 +87,7 @@ repo/
         ├── orchestration-plan.md
         ├── qa-strategy.md
         ├── team-playbook.md
-        ├── team-structure.md
-        └── template-candidates.md
+        └── team-structure.md
 ```
 
 대표적인 생성물은 다음과 같습니다.
@@ -104,9 +103,6 @@ repo/
 - `.harness/docs/harness-architecture.md`, `.harness/docs/orchestration-plan.md`, `.harness/docs/team-structure.md`, `.harness/docs/team-playbook.md`: 하네스 운영 문서
 - `.harness/docs/logging-policy.md`: 로그 기록 기준과 세션 종료 요약 기준
 - `.harness/logs/*`: 세션 로그와 최신 세션 요약
-- `.harness/templates/*.md`: 반복 작업 흐름을 재사용할 수 있게 정리한 템플릿 파일
-- `.harness/docs/template-candidates.md`: 반복 작업 흐름 중 템플릿 후보 분석 결과
-
 초기 구성 직후에는 입력 메모, 로그 기준, `team-spec` 같은 시작 문서만 먼저 생기고, 이후 역할 팀이 분석 문서와 로컬 역할 자산을 채우는 구조입니다.
 
 ## 어떻게 쓰는가
@@ -191,17 +187,13 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 
 하네스는 운영 과정에서 Markdown 로그를 남기도록 설계되어 있습니다. 이 로그는 선택 기록이 아니라 실행 완료 조건의 일부입니다. 세션 시작, 역할 완료, 실패, 보류, 종료 요약은 `.harness/logs/session-log.md`와 `.harness/logs/latest-session-summary.md`에 남겨 다음 세션의 입력으로 다시 읽습니다.
 
-로그 기록과 집계는 문서 계약이 우선입니다. 누적된 로그를 바탕으로 세션 요약을 보고, 반복 작업 흐름을 `.harness/docs/template-candidates.md`에 후보로 정리한 뒤, 필요하면 `.harness/templates/*.md` 형태의 재사용 가능한 템플릿으로 발전시킬 수 있습니다.
+로그 기록과 집계는 문서 계약이 우선입니다. 누적된 로그를 바탕으로 세션 요약을 보고, 반복 작업 흐름과 다음 재진입 기준을 운영 문서에 반영합니다.
 
 하네스를 구성한 프로젝트에서는 보통 다음 파일에서 로그 규칙과 최근 세션 요약을 확인합니다.
 
 - `.harness/docs/logging-policy.md`
 - `.harness/logs/session-log.md`
 - `.harness/logs/latest-session-summary.md`
-
-반복 작업 흐름 분석을 실행한 뒤에는 다음 파일도 확인할 수 있습니다.
-
-- `.harness/docs/template-candidates.md`
 
 ## 현재 범위와 한계
 
@@ -245,7 +237,7 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 - 프로젝트 특화 실행 검증기
   실제 검증 로직은 프로젝트의 언어, 프레임워크, 테스트 방식, 배포 구조에 따라 달라집니다. 이런 부분은 공통 생성기보다 프로젝트 로컬 하네스에서 직접 작성하는 것이 더 안전합니다.
 
-이런 영역은 보통 하네스를 구성한 뒤, 프로젝트 내부의 로컬 역할 팀이 프로젝트 담당자와의 대화를 바탕으로 실제 문서와 규칙을 직접 다시 씁니다. 예를 들어 `.harness/docs` 문서에서 중요한 흐름과 실패 유형을 적고, 그 다음 반복되는 읽기 흐름을 시나리오나 프로젝트 로컬 템플릿으로 발전시키며, 필요하면 프로젝트 전용 스킬이나 검증 절차로 확장하는 방식입니다.
+이런 영역은 보통 하네스를 구성한 뒤, 프로젝트 내부의 로컬 역할 팀이 프로젝트 담당자와의 대화를 바탕으로 실제 문서와 규칙을 직접 다시 씁니다. 예를 들어 `.harness/docs` 문서에서 중요한 흐름과 실패 유형을 적고, 반복되는 읽기 흐름을 시나리오, 프로젝트 전용 스킬, 검증 절차로 확장하는 방식입니다.
 
 즉 현재 단계의 `harness`는 완성된 프로젝트 전용 실행기라기보다, 그런 특화 하네스를 각 저장소 안에서 만들어 갈 수 있게 출발점을 제공하는 메타 하네스에 가깝습니다.
 

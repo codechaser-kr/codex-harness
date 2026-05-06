@@ -88,6 +88,5 @@
 
 ## 5. 다른 레퍼런스와의 연결
 
-- `reference-writing-guide.md`: 내부 설계 레퍼런스의 공통 용어와 구조 기준을 제공한다.
 - `agent-design-patterns.md`: 실행 단위와 패턴 선택 기준이 `AGENTS.md`의 상위 운영 기준에 어떻게 반영되는지 연결한다.
 - `orchestrator-template.md`: `AGENTS.md`에서 선언한 진입 규칙이 실제 팀 흐름으로 어떻게 번역되는지 연결한다.

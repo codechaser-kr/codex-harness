@@ -14,15 +14,14 @@
 
 ## 설계 원칙
 
-- 하네스의 본체는 Codex 에이전트 설정, 역할 스킬, 시작 진입 역할, 오케스트레이션 구조입니다.
+- 하네스의 본체는 Codex 에이전트 정의, 역할 스킬, 시작 진입 역할, 오케스트레이션 구조입니다.
 - 원본 하네스처럼 파이프라인, 팬아웃/팬인, 전문가 풀, 생성-검증, 감독자, 계층적 위임 패턴을 기본 판단 축으로 사용합니다.
-- `.harness/docs`는 저장소 입력 문서와 하네스 운영 문서가 함께 있습니다.
-- `exploration-notes.md`, `domain-analysis.md`, `qa-strategy.md`는 저장소 입력 문서입니다.
-- `harness-architecture.md`, `orchestration-plan.md`, `team-structure.md`, `team-playbook.md`는 하네스 메타시스템 문서입니다.
+- `.harness/docs`는 역할 팀과 오케스트레이터가 공유하는 보조 입력과 운영 기준을 담습니다.
+- `.harness/logs`는 실행 결과를 다음 재진입과 개선 판단에 연결하는 운영 기록입니다.
 - 특정 프레임워크에 과하게 고정하지 않습니다.
-- 프로젝트별로 확장 가능한 구조를 기본값으로 둡니다.
-- 언어, 구조, 경계 해석은 루트 기준 저장소 재독해를 기준으로 합니다.
-- 하네스 설계의 주 입력은 입력 메모, 사용자 입력, 그리고 역할 스킬의 저장소 재독해입니다.
+- 프로젝트마다 역할 수, 역할명, 실행 패턴, 검증 흐름이 달라질 수 있다는 전제를 둡니다.
+- 언어, 구조, 경계 해석은 루트 기준 저장소 재독해와 사용자 입력을 기준으로 합니다.
+- 하네스 설계의 주 입력은 저장소 근거, 사용자 입력, 기존 하네스 상태, 세션 로그입니다.
 
 ## 배치
 
@@ -42,12 +41,17 @@ $HOME/.codex/skills/harness
 
 ## 생성 결과
 
-하네스 초기화 직후에는 먼저 아래 구조가 만들어집니다.
+하네스 구성의 핵심 결과는 프로젝트 로컬 에이전트 팀과 역할 스킬입니다. 초기화 직후에는 시작 진입점, 기본 설정, 보조 입력, 로그 기준이 먼저 준비됩니다.
 
 ```text
 repo/
 ├── AGENTS.md
 ├── .codex/
+│   ├── config.toml
+│   ├── agents/
+│   │   └── run-harness.toml
+│   └── skills/
+│       └── run-harness/
 └── .harness/
     ├── docs/
     │   ├── exploration-notes.md
@@ -60,7 +64,7 @@ repo/
     └── scenarios/
 ```
 
-`Phase 2`와 `Phase 3`까지 진행되면 아래 자산이 추가로 채워집니다.
+저장소 분석과 팀 설계가 진행되면 `team-spec`에 맞춘 프로젝트 특화 역할들이 추가됩니다. 아래 목록은 예시이며, 실제 역할 이름과 개수는 타겟 프로젝트의 도메인과 실패 경계에 따라 달라집니다.
 
 ```text
 repo/
@@ -92,18 +96,19 @@ repo/
 
 대표적인 생성물은 다음과 같습니다.
 
-- `AGENTS.md`: 상위 운영 기준과 기본 진입 규칙
-- `.codex/config.toml`: 프로젝트 에이전트 런타임 설정
-- `.codex/agents/*.toml`: 에이전트 역할과 실행 설정
-- `.codex/skills/*`: 역할별 로컬 스킬
+- `AGENTS.md`: 상위 운영 기준과 하네스 진입 규칙
+- `.codex/config.toml`: 프로젝트 로컬 에이전트 런타임 설정
+- `.codex/agents/*.toml`: 프로젝트 특화 역할 정의와 실행 설정
+- `.codex/skills/*`: 각 역할이 실제로 따르는 로컬 스킬
 - `.harness/docs/exploration-notes.md`: 자동 판단 보류를 위한 약한 메모
 - `.harness/docs/project-setup.md`: 사용자 입력과 초기 방향 메모
 - `.harness/docs/team-spec.md`: 프로젝트 맞춤 역할 팀 초안과 최종 역할 인벤토리
-- `.harness/docs/domain-analysis.md`, `.harness/docs/qa-strategy.md`: 저장소 입력 문서
-- `.harness/docs/harness-architecture.md`, `.harness/docs/orchestration-plan.md`, `.harness/docs/team-structure.md`, `.harness/docs/team-playbook.md`: 하네스 운영 문서
+- `.harness/docs/domain-analysis.md`, `.harness/docs/qa-strategy.md`: 역할 팀이 공유하는 저장소 분석과 검증 기준
+- `.harness/docs/harness-architecture.md`, `.harness/docs/orchestration-plan.md`, `.harness/docs/team-structure.md`, `.harness/docs/team-playbook.md`: 오케스트레이터와 운영 감사 역할이 읽는 보조 운영 문서
 - `.harness/docs/logging-policy.md`: 로그 기록 기준과 세션 종료 요약 기준
 - `.harness/logs/*`: 세션 로그와 최신 세션 요약
-초기 구성 직후에는 입력 메모, 로그 기준, `team-spec` 같은 시작 문서만 먼저 생기고, 이후 역할 팀이 분석 문서와 로컬 역할 자산을 채우는 구조입니다.
+
+문서는 역할 자산을 대신하지 않습니다. 초기 구성 직후에는 시작 진입점과 최소 입력만 준비되고, 이후 역할 팀이 저장소를 다시 읽으며 필요한 분석과 운영 기준을 채웁니다.
 
 ## 어떻게 쓰는가
 
@@ -173,13 +178,13 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 이 시스템은 보통 다음 순서로 동작합니다.
 
 0. 현재 하네스 현황을 먼저 감사합니다.
-1. 입력 메모, 역할 설계 규칙, 로그 구조를 생성합니다.
-2. 자동 메모와 사용자 입력 준비 상태를 확인합니다.
-3. 저장소를 읽고 도메인 분석, 팀 스펙, 메타시스템 문서를 작성합니다.
-4. 팀 스펙을 바탕으로 프로젝트 특화 실행 팀을 동적으로 생성합니다.
-5. 생성된 팀이 QA/운영 기준 문서를 완성합니다.
-6. 운영 감사 역할이 구조와 운영 기준을 검증합니다.
-7. 마지막에 품질 비교와 성숙도 평가를 통해 다음 재진입 지점을 정리합니다.
+1. 사용자 입력, 저장소 근거, 기존 로그를 읽고 시작 조건을 정리합니다.
+2. 현재 프로젝트에 맞는 역할 팀 아키텍처와 `team-spec`을 설계합니다.
+3. `team-spec`을 바탕으로 `.codex/agents/*`와 `.codex/skills/*`를 생성합니다.
+4. 시작 진입 역할과 오케스트레이터 흐름을 연결합니다.
+5. QA/운영 감사 역할이 구조, 역할 경계, 실행 흐름을 검증합니다.
+6. 실행 로그를 남기고 다음 재진입 지점을 정리합니다.
+7. 반복 실행에서 드러난 병목을 역할 정의, 스킬, 오케스트레이션에 반영합니다.
 
 ## 로그 운영
 

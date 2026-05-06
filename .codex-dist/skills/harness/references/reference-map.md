@@ -1,11 +1,11 @@
 # Harness Reference Map
 
-이 문서는 `references/` 아래 설계 기준 문서를 어떤 축으로 읽어야 하는지 정리하는 인덱스다.
+이 문서는 `references/` 아래 설계 기준 문서를 어떤 축으로 읽을지 정리하는 인덱스다.
 
 핵심 원칙:
 
 - references는 부록이 아니라 메타시스템 설계 기준 라이브러리다.
-- 시작 진입 역할, 역할 스킬, 운영 감사 역할은 이 문서들을 필요할 때 선택적으로 참조한다.
+- 시작 진입 역할, 역할 스킬, 운영 감사 역할은 이 문서들을 필요할 때 골라 참조한다.
 - 모든 문서를 한 번에 읽기보다, 현재 결정하려는 축에 맞는 문서부터 읽는다.
 
 ---
@@ -15,14 +15,16 @@
 다음 질문에 답해야 할 때 먼저 읽는다.
 
 - 지금 `신규 구축 / 기존 확장 / 운영 유지보수` 중 어디에 가까운가
-- `에이전트 팀 / 단일 역할 / 하이브리드` 중 무엇으로 시작할까
+- Codex에서 주 에이전트 중심으로 시작할지, 좁은 보조 위임을 둘지
 - 어느 Phase부터 재진입해야 하는가
-- 현재 품질 문제가 어떤 Phase의 부족함에서 시작됐는가
+- 현재 품질 문제가 어느 Phase의 부족함에서 시작됐는가
 
 주요 문서:
 
+- `codex-runtime-contract.md`
 - `phase-selection-matrix.md`
 - `agents-sync-guide.md`
+- `reentry-rules.md`
 
 ---
 
@@ -32,9 +34,11 @@
 
 - `파이프라인 / 생성-검증 / 팬아웃·팬인 / 오케스트레이션 중심 / 전문가 풀` 중 무엇이 맞는가
 - 이 저장소에서 다음 역할 결정과 재진입을 어떻게 설계할까
+- 어떤 작업만 서브에이전트로 위임할 수 있는가
 
 주요 문서:
 
+- `codex-runtime-contract.md`
 - `agent-design-patterns.md`
 - `orchestrator-template.md`
 - `team-examples.md`
@@ -46,15 +50,17 @@
 다음 질문에 답해야 할 때 먼저 읽는다.
 
 - `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`을 어떻게 맞출까
-- team-spec에서 정의한 역할 이름과 파일 구성을 어떻게 생성 결과로 옮길까
+- team-spec에 정의한 역할 이름과 파일 구성을 어떻게 생성 결과로 옮길까
 - 상위 운영 기준과 로컬 하네스가 충돌하는가
 - sync가 필요한가
 
 주요 문서:
 
+- `codex-runtime-contract.md`
 - `agents-sync-guide.md`
 - `agent-design-patterns.md`
 - `team-spec-schema.md`
+- `team-spec-contract.md`
 
 ---
 
@@ -64,12 +70,13 @@
 
 - SKILL.md description과 본문을 어떻게 써야 하는가
 - agent 정의와 skill 정의를 어떻게 나눌까
-- 어떤 회귀를 테스트로 고정해야 하는가
+- 어떤 회귀를 테스트로 고정할까
 
 주요 문서:
 
 - `skill-writing-guide.md`
 - `skill-testing-guide.md`
+- `verification-checklist.md`
 
 ---
 
@@ -79,13 +86,15 @@
 
 - 현재 문제는 상태 점검이 필요한가, 정렬이 필요한가, 개선이 필요한가
 - update로 봉합할지, 재구성할지, 패턴을 다시 고를지
-- 새로 드러난 사실을 어떤 문서와 팀 스펙에 반영해야 하는가
+- 새로 드러난 사실을 어느 문서와 팀 스펙에 반영해야 하는가
 
 주요 문서:
 
 - `agents-sync-guide.md`
 - `phase-selection-matrix.md`
 - `quality-evaluation-guide.md`
+- `reentry-rules.md`
+- `logging-contract.md`
 
 ---
 
@@ -120,6 +129,8 @@
 - `quality-evaluation-guide.md`
 - `meta-system-maturity-guide.md`
 - `skill-testing-guide.md`
+- `verification-checklist.md`
+- `logging-contract.md`
 
 ---
 
@@ -136,6 +147,40 @@
 
 ---
 
+## 9. 로그와 세션 재진입
+
+다음 질문에 답해야 할 때 먼저 읽는다.
+
+- 세션 기록을 어느 문서에 남겨야 하는가
+- 다음 시작 역할과 재진입 Phase를 어디에 남겨야 하는가
+- TSV나 임시 상태 파일 없이도 운영 루프를 유지할 수 있는가
+
+주요 문서:
+
+- `logging-contract.md`
+- `reentry-rules.md`
+- `verification-checklist.md`
+
+---
+
+## 10. Codex 런타임 계약
+
+다음 질문에 답해야 할 때 먼저 읽는다.
+
+- 생성 결과의 필수 실행 자산은 무엇인가
+- 셸 스크립트를 어디까지 보조 수단으로 볼 것인가
+- 주 에이전트가 어떤 기준으로 역할을 선택하고 결과를 통합하는가
+- 병렬 위임은 어떤 조건에서만 허용되는가
+
+주요 문서:
+
+- `codex-runtime-contract.md`
+- `team-spec-contract.md`
+- `orchestrator-template.md`
+- `verification-checklist.md`
+
+---
+
 ## 읽기 순서 기본값
 
 기본 읽기 순서는 아래를 따른다.
@@ -148,8 +193,14 @@
 
 - 상태 모드와 재진입 판단:
   - `reference-map.md`
+  - `codex-runtime-contract.md`
   - `phase-selection-matrix.md`
   - 필요 시 `agents-sync-guide.md`
+- Codex 런타임 정렬:
+  - `reference-map.md`
+  - `codex-runtime-contract.md`
+  - `team-spec-contract.md`
+  - 필요 시 `orchestrator-template.md`
 - phase 7 품질 비교와 성숙도 평가:
   - `reference-map.md`
   - `quality-evaluation-guide.md`
@@ -175,4 +226,4 @@
 
 - 새 reference를 추가하면 이 맵에도 축과 역할을 같이 적는다.
 - 같은 기준 문서를 여러 축에서 재사용할 수 있다.
-- references는 늘어나는 것보다, 어떤 축에서 어떤 문서를 읽어야 하는지가 더 중요하다.
+- references는 늘어나는 것보다, 어느 축에서 어떤 문서를 읽어야 하는지가 더 중요하다.

@@ -16,9 +16,7 @@
 - `.harness/logs/session-log.md`
 - `.harness/logs/latest-session-summary.md`
 
-상황에 따라 아래 보조 문서를 둘 수 있다.
-
-- `.harness/docs/template-candidates.md`
+상황에 따라 반복 흐름과 개선 후보는 `.harness/docs/*` 운영 문서나 `latest-session-summary.md`의 다음 조치에 함께 남긴다.
 
 ## session-log.md 계약
 

@@ -2,13 +2,13 @@
 
 이 문서는 `team-spec.md`의 역할과 필수 섹션, 필수 필드를 정의한다.
 
-`team-spec.md`는 임시 메모가 아니다. 이후 `.codex/agents/*.toml`, `.codex/skills/*`, 운영 문서가 따라야 하는 역할 팀의 기준 문서다.
+`team-spec.md`는 임시 메모가 아니다. 이후 `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`, 운영 문서가 따라야 하는 역할 팀의 기준 문서다.
 
 ## 핵심 전제
 
 - `team-spec.md`는 프로젝트 특화 역할 팀의 단일 진실원천이다.
 - 역할 이름, 책임, 입력/출력, 다음 역할은 생성 단계 이전에 `team-spec.md`에서 먼저 확정한다.
-- `.codex/agents/*.toml`과 `.codex/skills/*`는 `team-spec.md`를 구현한 결과물이지, 별도의 기준 문서가 아니다.
+- `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`는 `team-spec.md`를 구현한 결과물이지, 별도의 기준 문서가 아니다.
 - 추상적인 범용 역할명을 복사하지 말고, 현재 저장소의 도메인 용어와 실패 경계를 반영한다.
 
 ## 필수 섹션
@@ -73,9 +73,10 @@
 ## 생성 규칙
 
 - `Phase 2`는 저장소와 입력 문서를 다시 읽고 최종 역할 인벤토리를 작성한다.
-- `Phase 3`은 최종 역할 인벤토리만 읽어 `.codex/agents/*.toml`과 `.codex/skills/*`를 작성한다.
+- `Phase 3`은 최종 역할 인벤토리만 읽어 `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`를 작성한다.
 - 역할 생성 결과가 `team-spec.md`보다 앞서거나 `team-spec.md`를 덮어써서는 안 된다.
 - 역할 추가/삭제/이름 변경은 먼저 `team-spec.md`에서 반영한 뒤 관련 자산을 다시 맞춘다.
+- `.codex/agents/*.toml`은 역할 식별과 실행 메타데이터를 담고, `.codex/skills/*`는 역할별 실행 절차를 담는다. 두 자산은 같은 `agent_file` 값을 기준으로 연결돼야 한다.
 
 ## 프로젝트 특화 역할명 기준
 
@@ -95,6 +96,7 @@
 
 - 역할명이 현재 저장소의 도메인 용어를 반영한다.
 - 입력/출력 연결이 역할 간에 자연스럽다.
+- 최종 역할 인벤토리의 `agent_file` 값이 `.codex/agents/*.toml`과 `.codex/skills/*/SKILL.md` 경로에 그대로 반영된다.
 - QA와 운영 감사 역할이 별도의 책임을 가진다.
 - 시작 진입 역할과 중심 조율 역할이 혼동되지 않는다.
 - 재진입 기준이 역할 수준에서 드러난다.

@@ -79,6 +79,7 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 - `role_id`: snake_case
 - `display_name`: kebab-case 또는 사람이 읽는 짧은 역할명
 - `agent_file`: kebab-case
+- `agent_file`은 `.codex/agents/<agent_file>.toml`과 `.codex/skills/<agent_file>/SKILL.md`를 연결하는 기준값이다.
 - 최종 역할명 선택 이유와 대체 관계는 기계 블록 밖의 설명 섹션에도 남긴다
 
 ### D. 역할별 실행 기준
@@ -171,6 +172,7 @@ team-spec을 바탕으로 아래를 동적으로 생성한다.
 - team-spec이 존재하는가
 - team-spec의 역할 수와 실제 생성된 agent 수가 맞는가
 - team-spec의 역할 이름과 실제 파일명이 맞는가
+- team-spec의 `agent_file` 값이 `.codex/agents/*.toml`과 `.codex/skills/*` 경로에 일관되게 반영됐는가
 - team-spec의 각 역할이 실행 기준 필드를 실제로 채웠는가
 - team-spec의 각 역할이 시작 경로, 요청 분기, 출력 템플릿, 재진입/종료 조건을 실제로 적었는가
 - 시작 진입 역할이 team-spec 기준 시작 역할과 재진입 규칙을 설명하는가

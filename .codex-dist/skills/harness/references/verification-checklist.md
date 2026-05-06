@@ -34,6 +34,7 @@
 
 - `team-spec.md`에 최종 역할 인벤토리가 있다.
 - 각 역할의 `agent_file`에 대응하는 `.codex/agents/*.toml`, `.codex/skills/*`가 존재한다.
+- `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`가 `team-spec.md`의 역할 수, `agent_file`, description 기준과 어긋나지 않는다.
 - description이 실제 요청에서 트리거될 만큼 구체적이다.
 - 시작 진입 역할과 중심 조율 역할이 구분된다.
 - QA 역할과 운영 감사 역할이 구분된다.

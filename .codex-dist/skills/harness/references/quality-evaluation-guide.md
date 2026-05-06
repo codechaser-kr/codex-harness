@@ -52,7 +52,7 @@
 ### 5) 검증 가능성
 
 - without-skill: 결과가 애매해서 검증하기 어려운가
-- with-skill: verify나 운영 감사 역할이 어느 지점을 점검해야 하는지 더 명확한가
+- with-skill: 구조 검증이나 운영 감사 역할이 어느 지점을 점검해야 하는지 더 명확한가
 
 ---
 
@@ -74,7 +74,7 @@
 예:
 
 - with-skill에서는 시작 역할이 저장소 입력 문서 담당 역할로 선명해지고, without-skill보다 초기 질문 수가 줄었다.
-- with-skill에서는 AGENTS.md 충돌을 update 전에 드러내지만, without-skill에서는 뒤늦게 문서 불일치로 드러난다.
+- with-skill에서는 AGENTS.md 충돌을 부분 갱신 전에 드러내지만, without-skill에서는 뒤늦게 문서 불일치로 드러난다.
 
 즉 "좋아졌다"보다  
 "무엇이 어떻게 달라졌는가"를 남긴다.

@@ -18,7 +18,6 @@
 
 상황에 따라 아래 보조 문서를 둘 수 있다.
 
-- `.harness/logs/role-frequency.md`
 - `.harness/docs/template-candidates.md`
 
 ## session-log.md 계약

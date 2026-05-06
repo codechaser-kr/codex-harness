@@ -8,8 +8,7 @@
 
 ## 한눈에 보기
 
-- 전역에 설치되는 `harness` 스킬을 제공합니다.
-- 설치 스크립트와 제거 스크립트를 함께 제공합니다.
+- 전역에서 사용할 수 있는 `harness` 스킬을 제공합니다.
 - 전역 `harness` 스킬 배포본과 참고 문서를 포함합니다.
 - 프로젝트별 실행 하네스 팀을 생성하는 메타 하네스의 소스 저장소입니다.
 
@@ -24,33 +23,21 @@
 - 언어, 구조, 경계 해석은 루트 기준 저장소 재독해를 기준으로 합니다.
 - 하네스 설계의 주 입력은 입력 메모, 사용자 입력, 그리고 역할 스킬의 저장소 재독해입니다.
 
-## 설치
+## 배치
 
-원격 설치:
+이 저장소는 자동 배치용 실행 파일을 제공하지 않습니다. 전역에서 사용하려면 `.codex-dist/skills/harness` 디렉터리를 Codex 스킬 경로에 배치합니다.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/install.sh | bash
-```
-
-저장소를 클론해서 설치:
-
-```bash
-git clone https://github.com/codechaser-kr/codex-harness.git
-cd codex-harness
-./install.sh
-```
-
-설치가 끝나면 전역에 다음 경로가 추가됩니다.
+배치 대상 경로:
 
 ```text
 $HOME/.codex/skills/harness
 ```
 
-설치 스크립트는 다음 원칙을 따릅니다.
+배치 원칙:
 
 - 전역 `AGENTS.md`를 생성하거나 수정하지 않습니다.
 - 기존 전역 설정을 덮어쓰지 않습니다.
-- 설치 대상은 전역 `harness` 스킬 디렉토리입니다.
+- 배치 대상은 전역 `harness` 스킬 디렉터리입니다.
 
 ## 생성 결과
 
@@ -68,9 +55,7 @@ repo/
     │   └── logging-policy.md
     ├── logs/
     │   ├── session-log.md
-    │   ├── session-events.tsv
-    │   ├── latest-session-summary.md
-    │   └── role-frequency.md
+    │   └── latest-session-summary.md
     ├── scenarios/
     └── templates/
 ```
@@ -118,15 +103,15 @@ repo/
 - `.harness/docs/domain-analysis.md`, `.harness/docs/qa-strategy.md`: 저장소 입력 문서
 - `.harness/docs/harness-architecture.md`, `.harness/docs/orchestration-plan.md`, `.harness/docs/team-structure.md`, `.harness/docs/team-playbook.md`: 하네스 운영 문서
 - `.harness/docs/logging-policy.md`: 로그 기록 기준과 세션 종료 요약 기준
-- `.harness/logs/*`: 세션 로그, 이벤트, 요약, 역할 빈도
+- `.harness/logs/*`: 세션 로그와 최신 세션 요약
 - `.harness/templates/*.md`: 반복 작업 흐름을 재사용할 수 있게 정리한 템플릿 파일
 - `.harness/docs/template-candidates.md`: 반복 작업 흐름 중 템플릿 후보 분석 결과
 
-즉 init 직후에는 입력 메모, 로그 기준, `team-spec` 같은 시작 문서만 먼저 생기고, 이후 역할 팀이 분석 문서와 로컬 역할 자산을 채우는 구조입니다.
+초기 구성 직후에는 입력 메모, 로그 기준, `team-spec` 같은 시작 문서만 먼저 생기고, 이후 역할 팀이 분석 문서와 로컬 역할 자산을 채우는 구조입니다.
 
 ## 어떻게 쓰는가
 
-설치한 뒤 아무 프로젝트에서 Codex에게 아래처럼 요청하면 됩니다.
+배치한 뒤 아무 프로젝트에서 Codex에게 아래처럼 요청하면 됩니다.
 
 ```text
 이 프로젝트에 하네스를 구성해줘
@@ -204,19 +189,15 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 
 이 시스템은 역할 호출 흐름이 실제로 어떻게 진행됐는지 남기기 위해 로그를 수집합니다. 핵심 목적은 단순 기록이 아니라, 어떤 역할 조합과 작업 흐름이 반복되는지 축적해서 더 재사용 가능한 운영 방식으로 정리하는 것입니다.
 
-하네스는 운영 과정에서 로그를 남기도록 설계되어 있습니다. 이 로그는 선택 기록이 아니라 실행 완료 조건의 일부입니다. 세션 시작 시에는 `harness-log.sh --new-session`으로 시작 이벤트를 남기고, 각 역할이나 subagent 완료 뒤에는 역할 상태, 입력/출력 요약, 변경 파일, 남은 위험을 누적한 뒤, 최종 응답 전에 `harness-session-close.sh`로 최신 세션 요약을 닫아야 합니다.
+하네스는 운영 과정에서 Markdown 로그를 남기도록 설계되어 있습니다. 이 로그는 선택 기록이 아니라 실행 완료 조건의 일부입니다. 세션 시작, 역할 완료, 실패, 보류, 종료 요약은 `.harness/logs/session-log.md`와 `.harness/logs/latest-session-summary.md`에 남겨 다음 세션의 입력으로 다시 읽습니다.
 
-로그 기록과 집계는 관련 스크립트와 운영 기준을 통해 이루어지며, 누적된 로그를 바탕으로 세션 요약을 보고, 역할 호출 빈도를 집계하고, 반복 작업 흐름을 `.harness/docs/template-candidates.md`에 후보로 정리한 뒤, 필요하면 `.harness/templates/*.md` 형태의 재사용 가능한 템플릿으로 발전시킬 수 있습니다.
+로그 기록과 집계는 문서 계약이 우선입니다. 누적된 로그를 바탕으로 세션 요약을 보고, 반복 작업 흐름을 `.harness/docs/template-candidates.md`에 후보로 정리한 뒤, 필요하면 `.harness/templates/*.md` 형태의 재사용 가능한 템플릿으로 발전시킬 수 있습니다.
 
-필요할 때는 `harness-log.sh`, `harness-session-close.sh`, `harness-role-stats.sh`, `harness-template-candidates.sh`를 보조적으로 실행해 로그나 통계를 다시 정리할 수 있습니다.
-
-하네스를 구성한 프로젝트에서는 보통 다음 파일에서 로그 규칙, 최근 세션 요약, 역할 호출 통계를 확인합니다.
+하네스를 구성한 프로젝트에서는 보통 다음 파일에서 로그 규칙과 최근 세션 요약을 확인합니다.
 
 - `.harness/docs/logging-policy.md`
 - `.harness/logs/session-log.md`
-- `.harness/logs/session-events.tsv`
 - `.harness/logs/latest-session-summary.md`
-- `.harness/logs/role-frequency.md`
 
 반복 작업 흐름 분석을 실행한 뒤에는 다음 파일도 확인할 수 있습니다.
 
@@ -244,9 +225,11 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 - 아키텍처 패턴 선택
 - 에이전트 정의와 상위 규칙 정렬
 - 스킬 정의와 테스트
+- Codex 런타임 계약
+- 메타하네스 생성기 준비도 점검
 - 메타시스템 성숙도 평가
 - 상태 점검 / 정렬 / 개선 운영 루프
-- validator 감사 기준
+- 운영 감사 기준
 
 현재 기본 하네스가 직접 제공하지 않는 것은 다음과 같습니다.
 
@@ -272,9 +255,9 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 권장 절차는 다음과 같습니다.
 
 1. 타겟 프로젝트의 기존 하네스 상태를 먼저 기록합니다.
-2. `harness-init.sh` 또는 `harness-update.sh`/시작 진입 역할로 필요한 phase부터 다시 들어갑니다.
-3. 역할 작성이 끝난 뒤 `harness-verify.sh`를 실행합니다.
-4. verify 통과 후에도 바로 합격 처리하지 않고, `quality-evaluation-guide.md`와 `meta-system-maturity-guide.md` 기준으로 `운영 가능 / 재작성 필요 / 재구성 필요`를 판정합니다.
+2. 시작 진입 역할(`run-harness`)로 필요한 phase부터 다시 들어갑니다.
+3. 역할 작성이 끝난 뒤 운영 감사 역할이 `verification-checklist.md` 기준으로 구조와 최소 규칙을 확인합니다.
+4. 구조 검증을 통과하더라도 바로 합격 처리하지 않고, `quality-evaluation-guide.md`와 `meta-system-maturity-guide.md` 기준으로 `운영 가능 / 재작성 필요 / 재구성 필요`를 판정합니다.
 5. 판정 결과에 따라 다음 재진입 phase를 정합니다.
 
 구체적인 타겟 프로젝트 절차와 체크리스트는 `references/target-evaluation-playbook.md`를 기준으로 봅니다.
@@ -284,34 +267,22 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 전역 `harness` 스킬은 다음 참고 문서를 함께 사용합니다.
 
 - `references/agent-design-patterns.md`
+- `references/codex-runtime-contract.md`
+- `references/generator-readiness-checklist.md`
+- `references/logging-contract.md`
 - `references/meta-system-maturity-guide.md`
 - `references/orchestrator-template.md`
 - `references/skill-writing-guide.md`
 - `references/skill-testing-guide.md`
 - `references/qa-agent-guide.md`
+- `references/reentry-rules.md`
 - `references/team-examples.md`
+- `references/team-spec-contract.md`
 - `references/target-evaluation-playbook.md`
+- `references/verification-checklist.md`
 
 이 문서들은 실행 하네스 팀을 설계하고 다시 쓰기 위한 지식 베이스입니다.
 
 ## 제거
 
-클론한 저장소가 있다면 다음으로 제거할 수 있습니다.
-
-```bash
-./uninstall.sh
-```
-
-저장소를 클론하지 않고 설치했다면:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/uninstall.sh | bash
-```
-
-직접 제거:
-
-```bash
-rm -rf "$HOME/.codex/skills/harness"
-```
-
-제거 스크립트도 전역 `AGENTS.md`를 생성하거나 수정하지 않습니다. 이미 각 프로젝트 내부에 생성된 `.codex/skills/*`, `.harness/*`는 자동으로 삭제하지 않습니다.
+전역 스킬 경로에서 `harness` 디렉터리를 삭제하면 됩니다. 이미 각 프로젝트 내부에 생성된 `.codex/skills/*`, `.harness/*`는 자동으로 삭제하지 않습니다.

@@ -50,7 +50,7 @@
 - 완료 기준
 - 검증/리뷰 초점
 - agent 파일명
-- skill 디렉토리명
+- skill 디렉터리명
 - description 초안
 - 권장 모델 클래스
 - sandbox 정책

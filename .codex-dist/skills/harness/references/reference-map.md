@@ -102,6 +102,7 @@
 
 다음 질문에 답해야 할 때 먼저 읽는다.
 
+- 생성기가 타겟 프로젝트에서 충분성 평가를 수행할 준비가 돼 있는가
 - 지금 생성된 하네스가 실제 운영 가능한 수준인가
 - 상위 수준의 메타시스템 축을 갖췄는가
 - 부족한 점이 입력 문서 품질 문제인지, 역할 규칙 문제인지, 운영 기준 문제인지
@@ -109,6 +110,7 @@
 
 주요 문서:
 
+- `generator-readiness-checklist.md`
 - `meta-system-maturity-guide.md`
 - `quality-evaluation-guide.md`
 - `target-evaluation-playbook.md`
@@ -181,6 +183,25 @@
 
 ---
 
+## 11. 메타하네스 생성기 준비도
+
+다음 질문에 답해야 할 때 먼저 읽는다.
+
+- `SKILL.md`와 reference 묶음이 타겟 프로젝트에서 충분성 평가를 수행할 준비가 돼 있는가
+- 도메인 분석, 팀 설계, 에이전트 정의, 스킬 생성, 오케스트레이션, 검증, 피드백 반영이 하나의 생명주기로 연결되는가
+- 생성 결과가 Codex 로컬 실행 자산으로 설명되는가
+- 스크립트 없이도 주 에이전트가 같은 기준으로 하네스를 구성할 수 있는가
+
+주요 문서:
+
+- `generator-readiness-checklist.md`
+- `codex-runtime-contract.md`
+- `team-spec-contract.md`
+- `orchestrator-template.md`
+- `verification-checklist.md`
+
+---
+
 ## 읽기 순서 기본값
 
 기본 읽기 순서는 아래를 따른다.
@@ -217,8 +238,15 @@
   - `quality-evaluation-guide.md`
 - 메타시스템 성숙도 평가:
   - `reference-map.md`
+  - `generator-readiness-checklist.md`
   - `meta-system-maturity-guide.md`
   - 필요 시 `quality-evaluation-guide.md`
+- 메타하네스 생성기 준비도 점검:
+  - `reference-map.md`
+  - `generator-readiness-checklist.md`
+  - `codex-runtime-contract.md`
+  - `team-spec-contract.md`
+  - 필요 시 `orchestrator-template.md`
 
 ---
 

@@ -364,7 +364,7 @@ handoff:
 ## 17. 다른 레퍼런스와의 연결
 
 - `agent-design-patterns.md`: 실행 단위, 패턴 선택 기준, 역할 분리 기준의 상위 설계 원칙을 제공한다.
-- `generator-readiness-checklist.md`: 생성기 자체 준비도와 타겟 프로젝트 충분성 평가를 구분하는 기준을 제공한다.
+- `generator-readiness-checklist.md`: 생성기 자체 준비도와 타겟 프로젝트 운영 가능성 평가를 구분하는 기준을 제공한다.
 - `qa-agent-guide.md`: QA 질문을 흐름 보완으로 다시 연결해야 하는 지점을 보강한다.
 - `team-examples.md`: 저장소 예시별로 orchestrator가 어느 위치에서 중심 역할이 되는지 보여 준다.
 - `skill-writing-guide.md`: orchestrator 스킬이 입력/출력과 협업 규칙을 어떻게 드러내야 하는지 연결한다.

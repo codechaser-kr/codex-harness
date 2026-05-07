@@ -25,9 +25,19 @@
 
 ## 배치
 
-전역에서 사용하려면 `.codex-dist/skills/harness` 디렉터리를 Codex 스킬 경로에 배치합니다.
+전역에서 사용하려면 설치 스크립트로 `harness` 스킬을 Codex 스킬 경로에 배치합니다.
 
-배치 경로:
+```sh
+curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/install.sh | sh
+```
+
+저장소를 클론한 상태라면 로컬 배포본을 바로 설치할 수 있습니다.
+
+```sh
+./install.sh
+```
+
+설치 경로:
 
 ```text
 소스: .codex-dist/skills/harness
@@ -217,4 +227,14 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 
 ## 제거
 
-전역 스킬을 제거할 때는 `$HOME/.codex/skills/harness` 디렉터리를 삭제합니다. 각 프로젝트 내부에 생성된 `.codex/skills/*`, `.harness/*`는 프로젝트별 자산으로 따로 관리합니다.
+전역 스킬 제거는 `$HOME/.codex/skills/harness`를 대상으로 합니다. 각 프로젝트 내부에 생성된 `.codex/skills/*`, `.harness/*`는 프로젝트별 자산으로 따로 관리합니다.
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/uninstall.sh | sh
+```
+
+저장소를 클론한 상태라면 다음 명령을 사용할 수 있습니다.
+
+```sh
+./uninstall.sh
+```

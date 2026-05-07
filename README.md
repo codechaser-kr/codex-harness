@@ -2,9 +2,9 @@
 
 `harness`는 Codex용 전역 스킬이자, 현재 프로젝트에 맞는 **로컬 실행 하네스 팀**을 구성하는 `Codex용 Team-Architecture Factory`입니다.
 
-이 저장소는 `revfactory/harness`의 하네스 생성 방식을 Codex 런타임에 맞게 옮기는 것을 목표로 합니다. 도메인 설명과 저장소 근거를 읽고, 프로젝트별 역할 팀 아키텍처, 에이전트 정의, 역할 스킬, 오케스트레이션 흐름, QA/검증 구조, 운영 루프를 생성합니다.
+이 저장소는 Codex 런타임에 맞는 프로젝트별 하네스 생성을 목표로 합니다. 도메인 설명과 저장소 근거를 읽고, 프로젝트별 역할 팀 아키텍처, 에이전트 정의, 역할 스킬, 오케스트레이션 흐름, QA/검증 구조, 운영 루프를 생성합니다.
 
-원본 하네스가 팀원 간 직접 통신과 공유 작업 목록을 중심으로 팀을 조율한다면, 이 프로젝트는 Codex의 실행 방식에 맞춰 주 에이전트가 오케스트레이션과 통합을 맡고, 독립 입력과 독립 산출이 있는 작업만 subagent로 좁게 위임합니다.
+이 프로젝트는 Codex의 실행 방식에 맞춰 주 에이전트가 오케스트레이션과 통합을 맡고, 독립 입력과 독립 산출이 있는 작업만 subagent로 좁게 위임합니다.
 
 ## 한눈에 보기
 
@@ -15,7 +15,7 @@
 ## 설계 원칙
 
 - 하네스의 본체는 Codex 에이전트 정의, 역할 스킬, 시작 진입 역할, 오케스트레이션 구조입니다.
-- 원본 하네스처럼 파이프라인, 팬아웃/팬인, 전문가 풀, 생성-검증, 감독자, 계층적 위임 패턴을 기본 판단 축으로 사용합니다.
+- 파이프라인, 팬아웃/팬인, 전문가 풀, 생성-검증, 감독자, 계층적 위임 패턴을 기본 판단 축으로 사용합니다.
 - `.harness/docs`는 역할 팀과 오케스트레이터가 공유하는 보조 입력과 운영 기준을 담습니다.
 - `.harness/logs`는 실행 결과를 다음 재진입과 개선 판단에 연결하는 운영 기록입니다.
 - 특정 프레임워크에 과하게 고정하지 않습니다.
@@ -25,19 +25,27 @@
 
 ## 배치
 
-이 저장소는 자동 배치용 실행 파일을 제공하지 않습니다. 전역에서 사용하려면 `.codex-dist/skills/harness` 디렉터리를 Codex 스킬 경로에 배치합니다.
+전역에서 사용하려면 `.codex-dist/skills/harness` 디렉터리를 Codex 스킬 경로에 배치합니다.
 
-배치 대상 경로:
+배치 경로:
+
+```text
+소스: .codex-dist/skills/harness
+대상: $HOME/.codex/skills/harness
+```
+
+배치한 뒤 대상 디렉터리에 다음 항목이 있는지 확인합니다.
 
 ```text
 $HOME/.codex/skills/harness
+$HOME/.codex/skills/harness/SKILL.md
+$HOME/.codex/skills/harness/references/
 ```
 
-배치 원칙:
+배치 범위:
 
-- 전역 `AGENTS.md`를 생성하거나 수정하지 않습니다.
-- 기존 전역 설정을 덮어쓰지 않습니다.
-- 배치 대상은 전역 `harness` 스킬 디렉터리입니다.
+- 전역 `harness` 스킬 디렉터리를 배치합니다.
+- 프로젝트별 실행 하네스는 각 저장소 안에 생성됩니다.
 
 ## 생성 결과
 
@@ -186,52 +194,13 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 6. 실행 로그를 남기고 다음 재진입 지점을 정리합니다.
 7. 반복 실행에서 드러난 병목을 역할 정의, 스킬, 오케스트레이션에 반영합니다.
 
-## 로그 운영
-
-이 시스템은 역할 호출 흐름이 실제로 어떻게 진행됐는지 남기기 위해 로그를 수집합니다. 핵심 목적은 단순 기록이 아니라, 어떤 역할 조합과 작업 흐름이 반복되는지 축적해서 더 재사용 가능한 운영 방식으로 정리하는 것입니다.
-
-하네스는 운영 과정에서 Markdown 로그를 남기도록 설계되어 있습니다. 이 로그는 선택 기록이 아니라 실행 완료 조건의 일부입니다. 세션 시작, 역할 완료, 실패, 보류, 종료 요약은 `.harness/logs/session-log.md`와 `.harness/logs/latest-session-summary.md`에 남겨 다음 세션의 입력으로 다시 읽습니다.
-
-로그 기록과 집계는 문서 계약이 우선입니다. 누적된 로그를 바탕으로 세션 요약을 보고, 반복 작업 흐름과 다음 재진입 기준을 운영 문서에 반영합니다.
-
-하네스를 구성한 프로젝트에서는 보통 다음 파일에서 로그 규칙과 최근 세션 요약을 확인합니다.
-
-- `.harness/docs/logging-policy.md`
-- `.harness/logs/session-log.md`
-- `.harness/logs/latest-session-summary.md`
-
 ## 현재 범위와 한계
 
 이 저장소의 현재 목표는 **Codex 중심 범용 하네스 메타 프레임워크**입니다.
 
 즉, 이 저장소는 어떤 프로젝트에나 공통으로 적용할 수 있는 역할 팀과 운영 기반을 앞에 두되, 그것을 루트 기준 저장소 재독해와 운영 루프 위에서 설계하는 데 집중합니다. 반대로 프로젝트마다 크게 달라지는 실행 기준과 검증 절차는 기본값으로 고정하지 않습니다.
 
-## references 체계
-
-`references/`는 부록이 아니라 메타시스템 설계 기준 라이브러리입니다.
-
-생성기는 `agent-design-patterns.md`, `orchestrator-template.md`, `skill-writing-guide.md`, `team-examples.md` 같은 레퍼런스의 패턴과 예시를 읽고, 현재 저장소의 `team-spec`과 재독해 결과에 맞게 로컬 실행 자산을 작성합니다.
-
-기본 읽기 순서:
-
-1. `reference-map.md`
-2. 현재 문제 축에 맞는 기준 문서 1~2개
-3. 필요할 때만 예시/비교 문서
-
-대표 축:
-
-- 상태 모드 / 실행 모드 / phase 0~7 게이트
-- 아키텍처 패턴 선택
-- 레퍼런스 패턴 기반 생성
-- 에이전트 정의와 상위 규칙 정렬
-- 스킬 정의와 테스트
-- Codex 런타임 계약
-- 메타하네스 생성기 준비도 점검
-- 타겟 프로젝트 운영 가능성 평가
-- 상태 점검 / 정렬 / 개선 운영 루프
-- 운영 감사 기준
-
-현재 기본 하네스가 직접 제공하지 않는 것은 다음과 같습니다.
+프로젝트별로 확장하는 영역은 다음과 같습니다.
 
 - `expected-state` 비교
   각 프로젝트에서 "어떤 상태를 정상으로 볼 것인가"가 다르기 때문에, 전역 기본 스킬이 공통 규칙으로 단정하기 어렵습니다. 예를 들어 문서 저장소, 웹 애플리케이션, 백엔드 서비스는 기대 상태 자체가 다릅니다.
@@ -246,42 +215,6 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 
 즉 현재 단계의 `harness`는 완성된 프로젝트 전용 실행기라기보다, 그런 특화 하네스를 각 저장소 안에서 만들어 갈 수 있게 출발점을 제공하는 메타 하네스에 가깝습니다.
 
-타겟 프로젝트 평가의 기준은 “문서가 많아졌는가”가 아니라 “에이전트 팀 / 실행 패턴 / 운영 기준이 실제로 살아 있는가”입니다. 이 판단은 생성기 저장소가 아니라 실제 타겟 프로젝트의 생성 결과를 읽고 남깁니다.
-
-## 타겟 프로젝트 평가
-
-생성기 변경 후에는 실제 타겟 프로젝트에서 재생성과 평가를 함께 해야 합니다.
-
-권장 절차는 다음과 같습니다.
-
-1. 타겟 프로젝트의 기존 하네스 상태를 먼저 기록합니다.
-2. 시작 진입 역할(`run-harness`)로 필요한 phase부터 다시 들어갑니다.
-3. 역할 작성이 끝난 뒤 운영 감사 역할이 `verification-checklist.md` 기준으로 구조와 최소 규칙을 확인합니다.
-4. 구조 검증을 통과하더라도 바로 합격 처리하지 않고, `target-evaluation-playbook.md`와 `quality-evaluation-guide.md` 기준으로 `운영 가능 / 재작성 필요 / 재구성 필요`를 판정합니다.
-5. 판정 결과에 따라 다음 재진입 phase를 정합니다.
-
-구체적인 타겟 프로젝트 절차와 체크리스트는 `references/target-evaluation-playbook.md`를 기준으로 봅니다.
-
-## references
-
-전역 `harness` 스킬은 다음 참고 문서를 함께 사용합니다.
-
-- `references/agent-design-patterns.md`
-- `references/codex-runtime-contract.md`
-- `references/generator-readiness-checklist.md`
-- `references/logging-contract.md`
-- `references/orchestrator-template.md`
-- `references/skill-writing-guide.md`
-- `references/skill-testing-guide.md`
-- `references/qa-agent-guide.md`
-- `references/reentry-rules.md`
-- `references/team-examples.md`
-- `references/team-spec-contract.md`
-- `references/target-evaluation-playbook.md`
-- `references/verification-checklist.md`
-
-이 문서들은 실행 하네스 팀을 설계하고 다시 쓰기 위한 지식 베이스입니다.
-
 ## 제거
 
-전역 스킬 경로에서 `harness` 디렉터리를 삭제하면 됩니다. 이미 각 프로젝트 내부에 생성된 `.codex/skills/*`, `.harness/*`는 자동으로 삭제하지 않습니다.
+전역 스킬을 제거할 때는 `$HOME/.codex/skills/harness` 디렉터리를 삭제합니다. 각 프로젝트 내부에 생성된 `.codex/skills/*`, `.harness/*`는 프로젝트별 자산으로 따로 관리합니다.

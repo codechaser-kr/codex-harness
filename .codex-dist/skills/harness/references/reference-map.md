@@ -128,12 +128,15 @@
 - 지금 생성된 하네스가 실제 운영 가능한 수준인가
 - 부족한 점이 입력 문서 품질 문제인지, 역할 규칙 문제인지, 운영 기준 문제인지
 - 다음 재진입을 어느 Phase로 돌려야 하는가
+- 예전 `meta-system-maturity-guide.md`가 다루던 메타시스템 성숙도 판정을 어떤 기준으로 이어서 볼 것인가
 
 주요 문서:
 
 - `generator-readiness-checklist.md`
 - `quality-evaluation-guide.md`
 - `target-evaluation-playbook.md`
+
+성숙도 판정은 생성기 자체 준비도와 타겟 하네스 운영 가능성으로 나누어 본다. 생성기 기준은 `generator-readiness-checklist.md`, 실제 생성 결과 기준은 `target-evaluation-playbook.md`와 `quality-evaluation-guide.md`를 따른다.
 
 ---
 

@@ -1,0 +1,90 @@
+# Verification Checklist
+
+이 문서는 의존성 없는 하네스에서 운영 감사 역할이 확인할 최소 검증 기준을 정의한다.
+
+예전 셸 검증기의 동작을 그대로 복제하려는 문서가 아니다. 목적은 역할 계약, 오케스트레이션, 보조 운영 문서, 로그가 실제로 맞물리는지 점검하는 데 있다.
+
+## 핵심 전제
+
+- 검증은 파일 존재 확인보다 역할 계약과 실행 흐름의 일관성 확인을 우선한다.
+- 통과/실패보다 어떤 항목이 왜 약한지 설명할 수 있어야 한다.
+- 운영 감사는 단순 문서 검사자가 아니라 메타시스템 감사자다.
+
+## 1. 구조 검증
+
+최소한 다음 구조가 필요하다.
+
+- `AGENTS.md`
+- `.codex/config.toml`
+- `.codex/agents/`
+- `.codex/skills/`
+- `.harness/docs/`
+- `.harness/logs/`
+- `team-spec.md`
+- `project-setup.md`
+- `exploration-notes.md`
+
+필요한 Phase까지 진행됐다면 아래 문서도 검토한다.
+
+- `domain-analysis.md`
+- `qa-strategy.md`
+- `harness-architecture.md`
+- `orchestration-plan.md`
+- `team-structure.md`
+- `team-playbook.md`
+
+## 2. 역할 계약 검증
+
+- `team-spec.md`에 최종 역할 인벤토리가 있다.
+- 각 역할의 `agent_file`에 대응하는 `.codex/agents/*.toml`, `.codex/skills/*`가 존재한다.
+- `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`가 `team-spec.md`의 역할 수, `agent_file`, description 기준과 어긋나지 않는다.
+- description이 실제 요청에서 트리거될 만큼 구체적이다.
+- 시작 진입 역할과 중심 조율 역할이 구분된다.
+- QA 역할과 운영 감사 역할이 구분된다.
+
+## 3. 보조 운영 문서 검증
+
+- 보조 운영 문서가 역할 자산과 오케스트레이션을 대신하지 않는다.
+- `domain-analysis.md`는 저장소 근거와 실패 경계를 설명한다.
+- `orchestration-plan.md`는 역할 순서와 재진입 흐름을 설명한다.
+- `team-playbook.md`는 운영 루프와 실제 작업 전달 기준을 남긴다.
+
+## 4. 로그 검증
+
+- `session-log.md`에 현재 세션의 진행과 종료가 남아 있다.
+- `latest-session-summary.md`가 마지막 종료 세션 기준으로 갱신돼 있다.
+- 두 로그 문서가 같은 세션 ID를 기준으로 현재 작업을 설명한다.
+- 최신 요약에 다음 시작 역할과 다음 재진입 Phase가 있다.
+- 최신 요약에 다음 시작 전 우선 확인 입력 파일과 최근 출력 파일이 있다.
+
+세부 기준은 `logging-contract.md`를 따른다.
+
+## 5. 재진입 검증
+
+- 현재 부족한 부분을 `Phase 1`~`Phase 7` 중 어디로 되돌려야 하는지 설명할 수 있다.
+- 재진입 사유가 저장소 입력, 역할 경계, 에이전트 정의, 역할 스킬, 오케스트레이션, 운영 감사, 피드백 반영 중 무엇인지 구분돼 있다.
+- 최신 세션 요약에 재진입 정보가 반영돼 있다.
+
+세부 기준은 `reentry-rules.md`를 따른다.
+
+## 6. 품질 비교 검증
+
+- 가능하면 `with-skill` 대비 `without-skill` 비교 관찰이 남아 있다.
+- 시작 역할 판단, 질문 절제, 다음 역할 안내, 저장소 근거 연결, 검증 가능성이 나아졌는지 설명할 수 있다.
+- 운영 가능 / 재작성 필요 / 재구성 필요 중 하나로 현재 상태를 설명할 수 있다.
+
+## 7. 판정 형식
+
+운영 감사 결과는 최소한 아래 형식으로 남긴다.
+
+- 통과한 항목
+- 수정 필요한 항목
+- 재진입 권장 Phase
+- 남은 위험
+
+## 다른 레퍼런스와의 연결
+
+- `team-spec-contract.md`: 역할 인벤토리와 생성 결과의 일관성을 검토할 때 쓴다.
+- `logging-contract.md`: 로그 문서 기준을 검토할 때 쓴다.
+- `reentry-rules.md`: 어떤 Phase로 되돌릴지 판단할 때 쓴다.
+- `quality-evaluation-guide.md`: 품질 비교 관찰을 정리할 때 쓴다.

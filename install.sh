@@ -1,111 +1,92 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env sh
+set -eu
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DIST_DIR="$ROOT_DIR/.codex-dist"
-LOCAL_SOURCE_DIR="$DIST_DIR/skills/harness"
-CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-TARGET_BASE="$CODEX_HOME/skills"
-TARGET_DIR="$TARGET_BASE/harness"
-BOOTSTRAP_REPO="${HARNESS_INSTALL_REPO:-codechaser-kr/codex-harness}"
-BOOTSTRAP_REF="${HARNESS_INSTALL_REF:-main}"
-BOOTSTRAP_URL="${HARNESS_INSTALL_ARCHIVE_URL:-https://github.com/${BOOTSTRAP_REPO}/archive/refs/heads/${BOOTSTRAP_REF}.tar.gz}"
-BOOTSTRAP_TMPDIR=""
-SOURCE_DIR=""
+REPO="${CODEX_HARNESS_REPO:-codechaser-kr/codex-harness}"
+REF="${CODEX_HARNESS_REF:-main}"
+CODEX_HOME="${CODEX_HOME:-"$HOME/.codex"}"
+DEST="${CODEX_HARNESS_DEST:-"$CODEX_HOME/skills/harness"}"
+TMP_ROOT="${TMPDIR:-/tmp}/codex-harness-install.$$"
 
-log() {
-  printf '[harness][install] %s\n' "$1"
+cleanup() {
+  rm -rf "$TMP_ROOT"
 }
 
-fail() {
-  printf '[harness][install][error] %s\n' "$1" >&2
+die() {
+  printf '%s\n' "install.sh: $*" >&2
   exit 1
 }
 
-cleanup() {
-  if [ -n "$BOOTSTRAP_TMPDIR" ] && [ -d "$BOOTSTRAP_TMPDIR" ]; then
-    rm -rf "$BOOTSTRAP_TMPDIR"
+download() {
+  url="$1"
+  out="$2"
+
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$url" -o "$out"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -qO "$out" "$url"
+  else
+    die "curl 또는 wget이 필요합니다."
   fi
 }
 
-has_command() {
-  command -v "$1" >/dev/null 2>&1
-}
+find_local_source() {
+  script_dir=$(CDPATH= cd "$(dirname "$0")" 2>/dev/null && pwd || printf '.')
+  candidate="$script_dir/.codex-dist/skills/harness"
 
-download_to() {
-  local url="$1"
-  local output_path="$2"
-
-  if has_command curl; then
-    curl -fsSL "$url" -o "$output_path"
-    return
+  if [ -f "$candidate/SKILL.md" ]; then
+    printf '%s\n' "$candidate"
+    return 0
   fi
 
-  if has_command wget; then
-    wget -qO "$output_path" "$url"
-    return
-  fi
-
-  fail "부트스트랩 설치에 curl 또는 wget이 필요합니다"
+  return 1
 }
 
-bootstrap_source_dir() {
-  local archive_path
-  local extract_dir
-  local repository_root
-
-  has_command tar || fail "부트스트랩 설치에 tar가 필요합니다"
-  has_command mktemp || fail "부트스트랩 설치에 mktemp가 필요합니다"
-
-  BOOTSTRAP_TMPDIR="$(mktemp -d)"
-  archive_path="$BOOTSTRAP_TMPDIR/codex-harness.tar.gz"
-  extract_dir="$BOOTSTRAP_TMPDIR/extracted"
-
-  log "로컬 배포본 없음, 다운로드 시작: ${BOOTSTRAP_REPO}@${BOOTSTRAP_REF}"
-  download_to "$BOOTSTRAP_URL" "$archive_path"
+find_remote_source() {
+  archive="$TMP_ROOT/source.tar.gz"
+  extract_dir="$TMP_ROOT/source"
+  archive_url="https://github.com/$REPO/archive/$REF.tar.gz"
 
   mkdir -p "$extract_dir"
-  tar -xzf "$archive_path" -C "$extract_dir"
+  download "$archive_url" "$archive"
+  tar -xzf "$archive" -C "$extract_dir"
 
-  repository_root="$(find "$extract_dir" -mindepth 1 -maxdepth 1 -type d -print -quit)"
-  [ -n "$repository_root" ] || fail "압축 해제된 저장소 디렉토리를 찾을 수 없습니다"
+  skill_file=$(find "$extract_dir" -type f -name SKILL.md | grep '/\.codex-dist/skills/harness/SKILL\.md$' | head -n 1)
+  [ -n "$skill_file" ] || die "아카이브에서 harness 스킬을 찾지 못했습니다: $archive_url"
 
-  SOURCE_DIR="$repository_root/.codex-dist/skills/harness"
-  [ -d "$SOURCE_DIR" ] || fail "원격 배포본에 .codex-dist/skills/harness가 없습니다"
+  dirname "$skill_file"
 }
 
-resolve_source_dir() {
-  if [ -d "$LOCAL_SOURCE_DIR" ]; then
-    SOURCE_DIR="$LOCAL_SOURCE_DIR"
-    log "로컬 배포본 사용: $SOURCE_DIR"
-    return
+install_source() {
+  source_dir="$1"
+  stage="$TMP_ROOT/harness"
+
+  [ -f "$source_dir/SKILL.md" ] || die "SKILL.md가 없습니다: $source_dir"
+  [ -d "$source_dir/references" ] || die "references 디렉터리가 없습니다: $source_dir"
+
+  mkdir -p "$stage"
+  cp -R "$source_dir/." "$stage/"
+  mkdir -p "$(dirname "$DEST")"
+
+  if [ -e "$DEST" ]; then
+    backup="$DEST.backup.$(date +%Y%m%d%H%M%S).$$"
+    mv "$DEST" "$backup"
+    printf '%s\n' "기존 harness 스킬 백업: $backup"
   fi
 
-  bootstrap_source_dir
-  log "다운로드 배포본 사용: $SOURCE_DIR"
+  mv "$stage" "$DEST"
 }
 
-trap cleanup EXIT
+trap cleanup EXIT INT TERM
+mkdir -p "$TMP_ROOT"
 
-log "설치 시작"
-resolve_source_dir
-
-mkdir -p "$TARGET_BASE"
-
-if [ -e "$TARGET_DIR" ]; then
-  log "기존 설치 제거: $TARGET_DIR"
-  rm -rf "$TARGET_DIR"
+if source_dir=$(find_local_source); then
+  printf '%s\n' "로컬 배포본을 설치합니다: $source_dir"
+else
+  printf '%s\n' "원격 배포본을 설치합니다: $REPO@$REF"
+  source_dir=$(find_remote_source)
 fi
 
-log "스킬 파일 복사 중"
-cp -R "$SOURCE_DIR" "$TARGET_DIR"
+install_source "$source_dir"
 
-if [ -d "$TARGET_DIR/scripts" ]; then
-  log "셸 스크립트 실행 권한 설정 중"
-  find "$TARGET_DIR/scripts" -type f -name "*.sh" -exec chmod +x {} \;
-fi
-
-log "설치 완료"
-printf '\n'
-printf '설치 경로: %s\n' "$TARGET_DIR"
-printf 'AGENTS.md 파일은 생성하거나 수정하지 않습니다.\n'
+printf '%s\n' "설치 완료: $DEST"
+printf '%s\n' "확인: $DEST/SKILL.md"

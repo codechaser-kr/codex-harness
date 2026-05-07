@@ -19,10 +19,21 @@
 - 예시는 기술 이름 자체보다 경계 수, 검증 비용, 역할 연결 복잡도, 운영 모드 차이를 보여줘야 한다.
 - 예시는 고정 답안이 아니라 어떤 조건에서 역할을 줄이거나 늘리는지 설명하는 기준이어야 한다.
 - 같은 저장소 유형이라도 탐색 결과와 운영 요구가 다르면 다른 팀 구조가 나올 수 있다.
+- 원본 하네스처럼 예시는 `팀 아키텍처`, `실행 모드`, `역할 구성`, `오케스트레이션 흐름`을 함께 보여줘야 한다.
+- Codex용 예시에서 실행 모드는 `주 에이전트 중심 실행`, `병렬 보조 위임`, `단일 보조 위임` 중 하나로 적는다.
 
 ---
 
 ## 예시 1. 일반적인 프론트엔드 애플리케이션
+
+### 팀 아키텍처
+
+- `파이프라인 + 생성-검증`
+
+### 실행 모드
+
+- `주 에이전트 중심 실행`
+- 화면/상태/검증 경계가 독립적인 경우 일부 분석만 `병렬 보조 위임`
 
 ### 특징
 
@@ -32,11 +43,13 @@
 
 ### 권장 역할 팀
 
-- `ui-flow-analyst`
-- `workspace-architect`
-- `regression-qa`
-- `delivery-orchestrator`
-- `release-auditor`
+| 역할 | 책임 | 주요 출력 |
+|------|------|-----------|
+| `ui-flow-analyst` | 사용자 흐름과 상태 변화를 분석 | `domain-analysis.md` |
+| `workspace-architect` | 화면/상태/설정 경계를 하네스 구조로 설계 | `harness-architecture.md` |
+| `regression-qa` | UI 흐름과 상태 전이의 QA 질문 설계 | `qa-strategy.md` |
+| `delivery-orchestrator` | 역할 handoff와 재진입 흐름 조율 | `orchestration-plan.md` |
+| `release-auditor` | 운영 기준과 로그 완결성 감사 | 감사 결과 |
 
 ### 중심 역할
 
@@ -66,9 +79,28 @@
 - orchestration-plan.md
 - team-structure.md
 
+### 오케스트레이션 흐름
+
+```text
+ui-flow-analyst
+  -> workspace-architect
+  -> regression-qa
+  -> delivery-orchestrator
+  -> release-auditor
+```
+
 ---
 
 ## 예시 2. 단순 라이브러리 또는 유틸리티 패키지
+
+### 팀 아키텍처
+
+- `파이프라인`
+- 필요 시 `생성-검증`
+
+### 실행 모드
+
+- `주 에이전트 중심 실행`
 
 ### 특징
 
@@ -78,14 +110,15 @@
 
 ### 권장 역할 팀
 
-- `api-surface-analyst`
-- `package-architect`
-- `contract-qa`
-- `release-auditor`
+| 역할 | 책임 | 주요 출력 |
+|------|------|-----------|
+| `api-surface-analyst` | 공개 API와 사용 흐름 분석 | `domain-analysis.md` |
+| `package-architect` | API 경계와 역할 구조 설계 | `harness-architecture.md` |
+| `contract-qa` | API 계약과 문서 예시의 QA 질문 설계 | `qa-strategy.md` |
+| `release-auditor` | 최소 구조와 재진입 가능성 감사 | 감사 결과 |
 
 ### 생략 또는 약화 가능 역할
 
-- 스킬 규칙 정렬 역할
 - 흐름 조율 역할
 
 ### 중심 역할
@@ -100,9 +133,27 @@
 즉 이 경우에는  
 “실행 하네스 팀”이라 해도 **작은 팀 구조**가 더 자연스럽다.
 
+### 오케스트레이션 흐름
+
+```text
+api-surface-analyst
+  -> package-architect
+  -> contract-qa
+  -> release-auditor
+```
+
 ---
 
 ## 예시 3. 모노레포
+
+### 팀 아키텍처
+
+- `팬아웃/팬인 + 감독자`
+
+### 실행 모드
+
+- `주 에이전트 중심 실행`
+- 하위 워크스페이스가 독립적이면 `병렬 보조 위임`으로 영역별 메모를 수집하고, 중심 역할이 다시 통합
 
 ### 특징
 
@@ -112,11 +163,13 @@
 
 ### 권장 역할 팀
 
-- `workspace-map-analyst`
-- `boundary-architect`
-- `cross-package-qa`
-- `team-orchestrator`
-- `integration-auditor`
+| 역할 | 책임 | 주요 출력 |
+|------|------|-----------|
+| `workspace-map-analyst` | 앱/패키지/공통 모듈 경계 분석 | `domain-analysis.md` |
+| `boundary-architect` | 경계별 역할 팀 구조 설계 | `harness-architecture.md` |
+| `cross-package-qa` | 패키지 간 계약과 통합 위험 질문 설계 | `qa-strategy.md` |
+| `team-orchestrator` | 팬아웃 입력을 통합하고 다음 역할 조율 | `orchestration-plan.md` |
+| `integration-auditor` | 경계 불일치와 로그 완결성 감사 | 감사 결과 |
 
 ### 중심 역할
 
@@ -138,9 +191,29 @@
 즉 이 유형은  
 여러 특화 역할이 함께 움직이는 구조에서 흐름 조율 역할의 중요성이 특히 크다.
 
+### 오케스트레이션 흐름
+
+```text
+workspace-map-analyst
+  -> boundary-architect
+  -> cross-package-qa
+  -> team-orchestrator
+  -> integration-auditor
+```
+
 ---
 
 ## 예시 4. CLI 도구
+
+### 팀 아키텍처
+
+- `파이프라인`
+- 서브커맨드가 많으면 `전문가 풀`
+
+### 실행 모드
+
+- `주 에이전트 중심 실행`
+- 단일 명령 검토는 `단일 보조 위임` 가능
 
 ### 특징
 
@@ -150,10 +223,12 @@
 
 ### 권장 역할 팀
 
-- `command-flow-analyst`
-- `cli-contract-architect`
-- `command-qa`
-- `release-auditor`
+| 역할 | 책임 | 주요 출력 |
+|------|------|-----------|
+| `command-flow-analyst` | 명령어 흐름과 입력/출력 분석 | `domain-analysis.md` |
+| `cli-contract-architect` | 옵션, 출력, 오류 계약 설계 | `harness-architecture.md` |
+| `command-qa` | 명령어 계약과 실제 동작의 QA 질문 설계 | `qa-strategy.md` |
+| `release-auditor` | 최소 구조와 재진입 가능성 감사 | 감사 결과 |
 
 ### 선택 역할
 
@@ -173,9 +248,28 @@ CLI는 사용자 흐름이 비교적 단순한 경우가 많기 때문에,
 다만 서브커맨드가 많거나,  
 여러 단계의 흐름이 연결되면 흐름 조율 역할을 포함하는 편이 좋다.
 
+### 오케스트레이션 흐름
+
+```text
+command-flow-analyst
+  -> cli-contract-architect
+  -> command-qa
+  -> release-auditor
+```
+
 ---
 
 ## 예시 5. 옵시디언 유사 앱
+
+### 팀 아키텍처
+
+- `감독자 + 생성-검증`
+- 복합 경계가 커지면 `팬아웃/팬인` 일부 사용
+
+### 실행 모드
+
+- `주 에이전트 중심 실행`
+- 에디터, 파일 트리, 링크 갱신 경계가 분리되면 보조 분석만 `병렬 보조 위임`
 
 ### 특징
 
@@ -185,11 +279,13 @@ CLI는 사용자 흐름이 비교적 단순한 경우가 많기 때문에,
 
 ### 권장 역할 팀
 
-- `workspace-flow-analyst`
-- `editor-boundary-architect`
-- `interaction-qa`
-- `workspace-orchestrator`
-- `release-auditor`
+| 역할 | 책임 | 주요 출력 |
+|------|------|-----------|
+| `workspace-flow-analyst` | 워크스페이스와 파일 흐름 분석 | `domain-analysis.md` |
+| `editor-boundary-architect` | 에디터/파일/링크 경계 설계 | `harness-architecture.md` |
+| `interaction-qa` | 상호작용과 상태 정합성 질문 설계 | `qa-strategy.md` |
+| `workspace-orchestrator` | 복합 흐름과 재진입 기준 조율 | `orchestration-plan.md` |
+| `release-auditor` | 운영 가능성 감사 | 감사 결과 |
 
 ### 중심 역할
 
@@ -212,6 +308,16 @@ CLI는 사용자 흐름이 비교적 단순한 경우가 많기 때문에,
 특히 품질 전략 역할이  
 “어떤 연결이 중요한가”를 정리하지 못하면,
 후속 실행 레이어도 흐려질 수 있다.
+
+### 오케스트레이션 흐름
+
+```text
+workspace-flow-analyst
+  -> editor-boundary-architect
+  -> interaction-qa
+  -> workspace-orchestrator
+  -> release-auditor
+```
 
 ---
 
@@ -256,7 +362,7 @@ CLI는 사용자 흐름이 비교적 단순한 경우가 많기 때문에,
 
 - 역할 수는 많을수록 좋은 것이 아니다
 - 역할 팀은 운영 가능한 크기를 유지해야 한다
-- 스킬 규칙 정렬 역할은 기본값이 아니므로, 정렬 상황이 아니면 애초에 팀에 넣지 않아도 된다
+- 정렬 전용 역할은 기본값이 아니므로, 운영 불일치가 실제로 있을 때만 추가한다
 
 ---
 

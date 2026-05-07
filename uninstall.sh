@@ -1,23 +1,16 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/usr/bin/env sh
+set -eu
 
-CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-TARGET_DIR="$CODEX_HOME/skills/harness"
+CODEX_HOME="${CODEX_HOME:-"$HOME/.codex"}"
+DEST="${CODEX_HARNESS_DEST:-"$CODEX_HOME/skills/harness"}"
 
-log() {
-  printf '[harness][uninstall] %s\n' "$1"
-}
-
-log "제거 시작"
-
-if [ -e "$TARGET_DIR" ]; then
-  log "제거 중: $TARGET_DIR"
-  rm -rf "$TARGET_DIR"
-else
-  log "제거 대상 없음: $TARGET_DIR"
+if [ ! -e "$DEST" ]; then
+  printf '%s\n' "삭제할 harness 스킬이 없습니다: $DEST"
+  exit 0
 fi
 
-log "제거 완료"
-printf '\n'
-printf '제거 경로: %s\n' "$TARGET_DIR"
-printf 'AGENTS.md 파일은 생성하거나 수정하지 않습니다.\n'
+backup="$DEST.removed.$(date +%Y%m%d%H%M%S).$$"
+mv "$DEST" "$backup"
+
+printf '%s\n' "harness 스킬을 제거했습니다."
+printf '%s\n' "백업 위치: $backup"

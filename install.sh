@@ -50,7 +50,7 @@ find_remote_source() {
   download "$archive_url" "$archive"
   tar -xzf "$archive" -C "$extract_dir"
 
-  skill_file=$(find "$extract_dir" -path '*/.codex-dist/skills/harness/SKILL.md' -type f | head -n 1)
+  skill_file=$(find "$extract_dir" -type f -name SKILL.md | grep '/\.codex-dist/skills/harness/SKILL\.md$' | head -n 1)
   [ -n "$skill_file" ] || die "아카이브에서 harness 스킬을 찾지 못했습니다: $archive_url"
 
   dirname "$skill_file"

@@ -229,16 +229,17 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - `references/verification-checklist.md`
 - `references/evolution-contract.md`
 
-- 최초 하네스 구성 요청이면 `Phase 0` 감사 뒤에 `exploration-notes.md`, `project-setup.md`, `team-spec.md`, `logging-policy.md` 같은 시작 문서를 먼저 준비한다.
+- 최초 하네스 구성 요청이면 `Phase 0` 감사 뒤에 `exploration-notes.md`, `project-setup.md`, `team-spec.md`, `logging-policy.md` 같은 시작 문서를 먼저 준비한다. `logging-policy.md`는 삭제 가능한 예전 스크립트 안내가 아니라, 현재 하네스가 따를 Markdown 로그 계약 문서다.
 - 시작 문서가 생성된 상태는 완료가 아니라 자동 판단 보류 메모와 역할 입력이 준비된 상태로 본다.
 - `Phase 2`는 `team-spec.md`의 최종 역할 인벤토리를 만들고, `Phase 3`은 `.codex/config.toml`, `.codex/agents/*.toml`을, `Phase 4`는 `.codex/skills/*`를 작성해야 한다.
 - `Phase 5`는 시작 진입 역할과 오케스트레이션 흐름을 연결하고, `Phase 6`은 운영 감사 역할이 구조와 실행 가능성을 검증한다.
 - `.codex/config.toml`과 `.codex/agents/*.toml`은 별도 진실원천이 아니라 `team-spec.md`를 구현한 결과물이다.
-- 세션 기록은 `references/logging-contract.md`를 따라 `.harness/logs/session-log.md`와 `.harness/logs/latest-session-summary.md`에 남긴다.
+- 세션 기록은 `references/logging-contract.md`를 따라 `.harness/docs/logging-policy.md`, `.harness/logs/session-log.md`, `.harness/logs/latest-session-summary.md`가 같은 계약을 말하도록 남긴다.
 - 신규 구축에서는 `references/initial-generation-contract.md`를 따라 초기 생성물 안에 학습 후보 기록 위치, 승격 대상 기준, 다음 재진입 Phase를 반드시 남긴다.
 - 세션 시작 기록에는 최소한 `세션 ID`, `시작 요청`, `진입점`, `계획 역할`, `예상 산출물`을 남긴다.
 - 각 역할 또는 subagent 완료 뒤에는 호출 역할, 결과 상태, 입력/출력 요약, 변경 파일, 남은 위험을 같은 세션 기록에 누적한다.
 - 역할 출력이나 세션 로그에는 필요 시 `evolution-contract.md` 기준의 학습 후보, 반복 신호, 승격 대상, 생성기 환류 후보를 남긴다.
+- 생성된 로그 정책 문서와 로그 예시는 별도 스크립트, TSV 이벤트 파일, 자동 append 도구를 필수 전제로 삼지 않는다.
 - 비동기 subagent는 최종 완료 전에 모두 `completed` 또는 `timed_out`으로 정리한다. 늦게 끝난 결과는 후속 로그 보강 대상으로 남긴다.
 - 하네스 구성이 끝났다고 판단하기 전에 운영 감사 역할이 `references/verification-checklist.md`를 기준으로 현재 상태를 검토해야 한다.
 - 최종 응답 전에는 `latest-session-summary.md`에 다음 시작 역할, 다음 재진입 Phase, 다시 읽을 입력, 최근 출력을 남긴다.

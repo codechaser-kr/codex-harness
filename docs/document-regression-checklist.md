@@ -59,6 +59,8 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 
 로그나 오케스트레이션 문서를 바꿨다면 아래를 확인한다.
 
+- `logging-policy.md`가 필수 로그 문서로 설명되는가
+- 로그 정책이 별도 스크립트나 TSV 이벤트 파일을 필수 전제로 삼지 않는가
 - handoff 형식에 입력, 출력, 다음 역할, 재진입 Phase가 남는가
 - 보류나 실패가 다음 세션에서 다시 읽을 수 있는 상태로 남는가
 - 학습 후보가 있으면 어느 문서/스킬로 승격할지 남는가
@@ -81,6 +83,7 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 ```sh
 git diff --check
 rg -n "initial-generation-contract|초기 생성|신규 구축" .codex-dist/skills/harness README.md docs
+rg -n "logging-policy|Markdown 로그|TSV|스크립트" .codex-dist/skills/harness README.md docs
 rg -n "학습 후보|승격 대상|생성기 환류 후보" .codex-dist/skills/harness README.md docs
 find docs/evaluations -type f | sort
 ```
@@ -100,5 +103,6 @@ test -f /tmp/gwk-install-test/.codex/skills/harness/SKILL.md
 - 새 reference가 고립돼 있지 않고 `reference-map.md`나 관련 문서에 연결돼 있다.
 - 초기 생성 계약을 바꿨다면 신규 구축 결과의 자기진화성이 완료 기준에 반영돼 있다.
 - 학습 후보와 승격 대상이 역할 출력, 로그, 운영 감사 기준 중 적어도 하나에서 확인된다.
+- 로그 정책을 바꿨다면 `logging-policy.md`가 스크립트 없는 Markdown 계약으로 유지된다.
 - 타겟 평가 결과가 있다면 로컬 보강과 생성기 환류 후보가 분리돼 있다.
 - `git diff --check`가 통과한다.

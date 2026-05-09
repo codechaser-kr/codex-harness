@@ -23,6 +23,7 @@
 - `team-spec.md`
 - `project-setup.md`
 - `exploration-notes.md`
+- `logging-policy.md`
 
 필요한 Phase까지 진행됐다면 아래 문서도 검토한다.
 
@@ -53,6 +54,8 @@
 
 - `session-log.md`에 현재 세션의 진행과 종료가 남아 있다.
 - `latest-session-summary.md`가 마지막 종료 세션 기준으로 갱신돼 있다.
+- `logging-policy.md`가 세션 로그와 최신 요약을 어떻게 남길지 설명한다.
+- 로그 정책이 별도 스크립트, TSV 이벤트 파일, 자동 append 도구를 필수 조건으로 삼지 않는다.
 - 두 로그 문서가 같은 세션 ID를 기준으로 현재 작업을 설명한다.
 - 최신 요약에 다음 시작 역할과 다음 재진입 Phase가 있다.
 - 최신 요약에 다음 시작 전 우선 확인 입력 파일과 최근 출력 파일이 있다.

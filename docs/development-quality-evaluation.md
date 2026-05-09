@@ -28,6 +28,7 @@
 - `references/target-evaluation-playbook.md`
 - `references/quality-evaluation-guide.md`
 - `references/generator-readiness-checklist.md`
+- `references/initial-generation-contract.md`
 - `references/evolution-contract.md`
 
 이 문서들은 생성기 저장소에서 품질을 판단하고 다음 수정 방향을 정할 때 쓰는 개발자용 기준입니다.
@@ -44,6 +45,7 @@
 
 타겟 프로젝트 평가에서는 아래를 함께 확인합니다.
 
+- 신규 구축 결과가 다음 시작 역할과 다음 재진입 Phase를 설명하는가
 - 역할 출력이나 로그에 학습 후보를 남길 위치가 있는가
 - 학습 후보가 어느 Phase와 어느 문서/스킬로 승격될지 설명하는가
 - 단일 타겟 프로젝트 관찰을 곧바로 생성기 규칙으로 일반화하지 않는가

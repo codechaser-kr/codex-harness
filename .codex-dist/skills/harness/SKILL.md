@@ -115,7 +115,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 12. `analyst`, `architect`, `orchestrator`, `validator` 같은 추상 직무명만 단독으로 역할명에 쓰지 않고, 반드시 저장소 고유 용어나 책임 축을 붙인다.
 
 이 단계의 핵심은 문서를 늘리는 데 있지 않다. **운영 가능한 역할 팀 아키텍처**를 설계하는 데 있다.
-흐름과 위임 기준은 `references/reference-map.md`를 먼저 읽고, `references/orchestrator-template.md`, `references/team-spec-schema.md`를 필요할 때 참고한다.
+흐름과 위임 기준은 `references/reference-map.md`를 먼저 읽고, `references/initial-generation-contract.md`, `references/orchestrator-template.md`, `references/team-spec-schema.md`를 필요할 때 참고한다.
 
 #### Phase 3: 에이전트 정의
 
@@ -147,7 +147,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 
 `skill-scaffolder`는 핵심 보고서 작성 흐름의 기본 단계가 아니다. 이 역할은 로컬 스킬 설명 불일치, 구조 문구 불일치, 스킬 규칙 재정렬이 필요할 때만 보조적으로 사용한다.
 
-스킬 작성 기준은 `references/reference-map.md`, `references/skill-writing-guide.md`, `references/team-spec-schema.md`를 순서대로 참고한다.
+스킬 작성 기준은 `references/reference-map.md`, `references/initial-generation-contract.md`, `references/skill-writing-guide.md`, `references/team-spec-schema.md`를 순서대로 참고한다.
 
 #### Phase 5: 통합 및 오케스트레이터 구성
 
@@ -180,7 +180,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 5. 실행 로그와 최신 세션 요약이 다음 실행의 입력으로 읽힐 수 있는지 확인한다.
 6. 부족한 축이 역할 정의 문제인지, 스킬 절차 문제인지, 오케스트레이션 문제인지 분류한다.
 
-검증 기준은 `references/reference-map.md`, `references/verification-checklist.md`, `references/qa-agent-guide.md`, `references/skill-testing-guide.md`를 순서대로 참고한다.
+검증 기준은 `references/reference-map.md`, `references/initial-generation-contract.md`, `references/verification-checklist.md`, `references/qa-agent-guide.md`, `references/skill-testing-guide.md`를 순서대로 참고한다.
 
 #### Phase 7: 하네스 피드백 반영
 
@@ -222,6 +222,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 아래 문서들은 현재 `harness` 스킬 디렉터리 기준 상대 경로다.
 
 - `references/team-spec-contract.md`
+- `references/initial-generation-contract.md`
 - `references/logging-contract.md`
 - `references/reentry-rules.md`
 - `references/verification-checklist.md`
@@ -233,6 +234,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - `Phase 5`는 시작 진입 역할과 오케스트레이션 흐름을 연결하고, `Phase 6`은 운영 감사 역할이 구조와 실행 가능성을 검증한다.
 - `.codex/config.toml`과 `.codex/agents/*.toml`은 별도 진실원천이 아니라 `team-spec.md`를 구현한 결과물이다.
 - 세션 기록은 `references/logging-contract.md`를 따라 `.harness/logs/session-log.md`와 `.harness/logs/latest-session-summary.md`에 남긴다.
+- 신규 구축에서는 `references/initial-generation-contract.md`를 따라 초기 생성물 안에 학습 후보 기록 위치, 승격 대상 기준, 다음 재진입 Phase를 반드시 남긴다.
 - 세션 시작 기록에는 최소한 `세션 ID`, `시작 요청`, `진입점`, `계획 역할`, `예상 산출물`을 남긴다.
 - 각 역할 또는 subagent 완료 뒤에는 호출 역할, 결과 상태, 입력/출력 요약, 변경 파일, 남은 위험을 같은 세션 기록에 누적한다.
 - 역할 출력이나 세션 로그에는 필요 시 `evolution-contract.md` 기준의 학습 후보, 반복 신호, 승격 대상, 생성기 환류 후보를 남긴다.
@@ -340,6 +342,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 7. 마지막 실행 세션이 `.harness/logs/session-log.md`, `.harness/logs/latest-session-summary.md`에 같은 세션 ID로 남아 있다.
 8. 모든 필수 역할과 subagent가 `completed` 또는 `timed_out`으로 정리되고, `timed_out` 또는 `failed` 항목은 남은 위험과 후속 보강 대상으로 기록돼 있다.
 9. 운영 감사 역할이 새 학습 후보의 반영 위치를 설명하거나, 이번 작업에는 학습 후보가 없다고 명시할 수 있다.
+10. 신규 구축 결과는 `references/initial-generation-contract.md` 기준으로 첫 세션부터 자기진화 루프를 이어 갈 수 있다고 설명할 수 있다.
 
 시작 문서가 준비된 상태는 완료가 아니다. **자동 판단 보류 메모와 역할 입력이 준비된 상태**다.
 
@@ -359,6 +362,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - [ ] 이후 프로젝트 특화 실행 하네스로 확장할 수 있는 구조다.
 - [ ] 현재 상태를 운영 가능 / 재작성 필요 / 재구성 필요 중 하나로 설명할 수 있다.
 - [ ] 학습 후보와 승격 대상을 남길 위치가 있으며, 스크립트나 외부 의존성 없이 다음 실행에 반영할 수 있다.
+- [ ] 신규 구축 결과라면 초기 생성물만 읽어도 다음 시작 역할, 다음 재진입 Phase, 학습 후보 기록 위치를 알 수 있다.
 
 ---
 
@@ -371,6 +375,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - `references/skill-writing-guide.md`
 - `references/skill-testing-guide.md`
 - `references/team-spec-contract.md`
+- `references/initial-generation-contract.md`
 - `references/evolution-contract.md`
 - `references/logging-contract.md`
 - `references/reentry-rules.md`

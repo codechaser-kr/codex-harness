@@ -36,7 +36,17 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 - 로컬 보강과 생성기 reference 보강 후보를 섞어 쓰지 않는가
 - 자기진화 루프가 별도 스크립트나 외부 실행기에 의존하지 않는가
 
-## 3. Team Spec 생성 계약 점검
+## 3. 초기 생성 계약 점검
+
+초기 생성 관련 문서를 바꿨다면 아래를 확인한다.
+
+- `initial-generation-contract.md`가 신규 구축 결과의 필수 계약을 설명하는가
+- 초기 생성물만 읽어도 다음 시작 역할, 다음 재진입 Phase, 학습 후보 기록 위치를 알 수 있는가
+- 역할 스킬 출력 형식에 학습 후보와 승격 대상이 처음부터 포함되는가
+- 초기 문서 골격을 완료물처럼 설명하지 않고, 보류한 판단과 다음 입력을 남기도록 되어 있는가
+- 초기 자기진화 루프가 스크립트나 외부 실행기에 의존하지 않는가
+
+## 4. Team Spec 생성 계약 점검
 
 `team-spec` 관련 reference를 바꿨다면 아래를 확인한다.
 
@@ -45,7 +55,7 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 - 시작 진입 역할, 중심 조율 역할, QA 역할, 운영 감사 역할의 경계가 유지되는가
 - 학습 후보 기록 규칙과 승격 대상 기준이 역할 스킬 생성으로 이어지는가
 
-## 4. 로그와 Handoff 점검
+## 5. 로그와 Handoff 점검
 
 로그나 오케스트레이션 문서를 바꿨다면 아래를 확인한다.
 
@@ -54,7 +64,7 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 - 학습 후보가 있으면 어느 문서/스킬로 승격할지 남는가
 - 관찰이 없을 때는 `없음`으로 짧게 정리할 수 있는가
 
-## 5. 타겟 평가 코퍼스 점검
+## 6. 타겟 평가 코퍼스 점검
 
 타겟 평가 문서를 추가했다면 아래를 확인한다.
 
@@ -64,12 +74,13 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 - 타겟 로컬 보강 후보와 생성기 환류 후보가 분리돼 있는가
 - 타겟 프로젝트 파일을 직접 수정하지 않았다는 점이 드러나는가
 
-## 6. 최소 보조 명령
+## 7. 최소 보조 명령
 
 아래 명령은 의존성 없는 보조 점검으로만 사용한다.
 
 ```sh
 git diff --check
+rg -n "initial-generation-contract|초기 생성|신규 구축" .codex-dist/skills/harness README.md docs
 rg -n "학습 후보|승격 대상|생성기 환류 후보" .codex-dist/skills/harness README.md docs
 find docs/evaluations -type f | sort
 ```
@@ -87,6 +98,7 @@ test -f /tmp/gwk-install-test/.codex/skills/harness/SKILL.md
 
 - 수정한 문서가 같은 용어와 같은 운영 모델을 말한다.
 - 새 reference가 고립돼 있지 않고 `reference-map.md`나 관련 문서에 연결돼 있다.
+- 초기 생성 계약을 바꿨다면 신규 구축 결과의 자기진화성이 완료 기준에 반영돼 있다.
 - 학습 후보와 승격 대상이 역할 출력, 로그, 운영 감사 기준 중 적어도 하나에서 확인된다.
 - 타겟 평가 결과가 있다면 로컬 보강과 생성기 환류 후보가 분리돼 있다.
 - `git diff --check`가 통과한다.

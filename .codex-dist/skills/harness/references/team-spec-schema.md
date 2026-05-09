@@ -190,4 +190,5 @@ team-spec을 바탕으로 아래를 동적으로 생성한다.
 - `orchestrator-template.md`: 다음 역할 연결과 재진입 규칙을 팀 스펙에 어떻게 담을지 본다.
 - `phase-selection-matrix.md`: 재진입 판단을 어떤 phase로 연결할지 본다.
 - `target-evaluation-playbook.md`: 타겟 프로젝트에서 team-spec 기반 생성 결과를 어떻게 평가할지 본다.
+- `initial-generation-contract.md`: 신규 구축 team-spec이 첫 세션부터 학습 후보와 재진입 기준을 담는지 본다.
 - `evolution-contract.md`: 역할별 학습 후보와 승격 대상 기준을 team-spec에 어떻게 담을지 본다.

@@ -234,6 +234,8 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 
 이 기준은 `.codex-dist/skills/harness/references/evolution-contract.md`에서 관리합니다.
 
+생성기 개발 중 타겟 평가 결과는 `docs/evaluations/targets/` 아래에 남깁니다. 이 기록은 단일 타겟 프로젝트 관찰과 반복 결함을 구분하고, 생성기 reference 보강이 필요한지 판단하는 근거로 씁니다.
+
 ## 제거
 
 전역 스킬 제거는 `$HOME/.codex/skills/harness`를 대상으로 합니다. 각 프로젝트 내부에 생성된 `.codex/skills/*`, `.harness/*`는 프로젝트별 자산으로 따로 관리합니다.

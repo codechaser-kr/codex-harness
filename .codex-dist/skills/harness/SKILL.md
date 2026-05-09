@@ -113,6 +113,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 10. team-spec 상단에는 왜 그 역할명이 현재 저장소의 도메인과 실패 경계를 더 잘 설명하는지 도메인 근거를 함께 남긴다.
 11. 새 역할명을 만들 때는 저장소 용어와 실패 경계를 드러내는 이름을 우선하고, `role_id`는 snake_case, 표시 이름과 파일명은 kebab-case로 정리한다.
 12. `analyst`, `architect`, `orchestrator`, `validator` 같은 추상 직무명만 단독으로 역할명에 쓰지 않고, 반드시 저장소 고유 용어나 책임 축을 붙인다.
+13. `## 최종 역할 인벤토리`는 반드시 fenced `text` 블록으로 남긴다. 헤더와 모든 역할 행은 같은 블록 안에 있어야 하며, inline code 행을 여러 줄 나열한 결과는 Phase 2 미완료로 본다.
 
 이 단계의 핵심은 문서를 늘리는 데 있지 않다. **운영 가능한 역할 팀 아키텍처**를 설계하는 데 있다.
 흐름과 위임 기준은 `references/reference-map.md`를 먼저 읽고, `references/initial-generation-contract.md`, `references/orchestrator-template.md`, `references/team-spec-schema.md`를 필요할 때 참고한다.
@@ -162,6 +163,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 5. 마지막 종료 세션이 `session-log.md`와 `latest-session-summary.md`에 남도록 운영 루틴을 고정한다.
 6. 역할 스킬이 작성해야 하는 보조 문서가 있다면, 그 문서의 목적과 담당 역할을 오케스트레이션 흐름 안에서만 정의한다.
 7. `.harness/docs/*` 문서가 생성되거나 수정되면 같은 세션 로그에도 반영 역할, QA 관점, 남은 위험을 함께 남긴다.
+8. 기존 하네스 문서를 보존하면서 역할명이나 진입점이 새 `team-spec`과 다르면, 원문을 바로 고치기보다 `orchestration-plan.md`나 `team-playbook.md`에 이전 역할명 -> 현재 역할명 호환성 매핑과 우선 기준을 남긴다.
 
 이 단계의 목적은 문서 묶음을 완성하는 것이 아니다. 생성된 역할 팀이 실제 요청에서 어떤 순서로 움직이고, 어디서 멈추며, 어떤 기준으로 다시 들어갈지를 실행 가능한 형태로 고정하는 것이다.
 
@@ -231,7 +233,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 
 - 최초 하네스 구성 요청이면 `Phase 0` 감사 뒤에 `exploration-notes.md`, `project-setup.md`, `team-spec.md`, `logging-policy.md` 같은 시작 문서를 먼저 준비한다. `logging-policy.md`는 삭제 가능한 예전 스크립트 안내가 아니라, 현재 하네스가 따를 Markdown 로그 계약 문서다.
 - 시작 문서가 생성된 상태는 완료가 아니라 자동 판단 보류 메모와 역할 입력이 준비된 상태로 본다.
-- `Phase 2`는 `team-spec.md`의 최종 역할 인벤토리를 만들고, `Phase 3`은 `.codex/config.toml`, `.codex/agents/*.toml`을, `Phase 4`는 `.codex/skills/*`를 작성해야 한다.
+- `Phase 2`는 `team-spec.md`의 최종 역할 인벤토리를 fenced `text` 블록으로 만들고, `Phase 3`은 `.codex/config.toml`, `.codex/agents/*.toml`을, `Phase 4`는 `.codex/skills/*`를 작성해야 한다.
 - `Phase 5`는 시작 진입 역할과 오케스트레이션 흐름을 연결하고, `Phase 6`은 운영 감사 역할이 구조와 실행 가능성을 검증한다.
 - `.codex/config.toml`과 `.codex/agents/*.toml`은 별도 진실원천이 아니라 `team-spec.md`를 구현한 결과물이다.
 - 세션 기록은 `references/logging-contract.md`를 따라 `.harness/docs/logging-policy.md`, `.harness/logs/session-log.md`, `.harness/logs/latest-session-summary.md`가 같은 계약을 말하도록 남긴다.

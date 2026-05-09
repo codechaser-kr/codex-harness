@@ -169,6 +169,29 @@
 
 파일 기반 산출물은 가능한 한 저장소 기준 상대 경로로 적는다. 절대경로나 사용자 홈 경로를 남기지 않는다.
 
+### 보존 문서 호환성 메모
+
+기존 `.harness/docs/*` 문서를 보존하면서 새 역할 팀을 만들면, 예전 역할명이나 진입점이 새 `team-spec`과 다를 수 있다. 이때 흐름 조율 역할은 보존 문서 원문을 즉시 고치지 않는다. 먼저 `orchestration-plan.md`나 `team-playbook.md`에 호환성 메모를 남겨 다음 실행이 같은 충돌을 다시 해석하지 않게 한다.
+
+호환성 메모에는 아래 항목이 필요하다.
+
+- 보존 문서 경로
+- 문서 안의 이전 역할명 또는 진입점
+- 현재 `team-spec`의 역할명 또는 진입점
+- 이번 실행에서 우선할 기준
+- 원문 처리 방침: 보존 / 사용자 승인 후 정렬 / 다음 재진입에서 재작성
+
+예:
+
+```text
+preserved-doc-compatibility:
+- source: .harness/docs/team-playbook.md
+- previous: qa-specialist, orchestration-lead
+- current: release-regression-qa, delivery-orchestrator
+- priority: 현재 team-spec과 .codex/agents/* 기준을 우선한다.
+- action: 원문은 보존하고, Phase 5 재진입 때 사용자 승인 후 정렬한다.
+```
+
 예:
 
 ```text

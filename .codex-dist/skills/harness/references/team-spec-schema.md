@@ -70,9 +70,12 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 - role description 초안
 
 또한 생성기는 team-spec 안의 기계 판독 블록도 읽을 수 있어야 한다.
-현재 기본 형식은 아래와 같다.
+현재 기본 형식은 fenced `text` 블록이다.
 
-`role_id|display_name|agent_file|model|reasoning|sandbox|description`
+```text
+role_id|display_name|agent_file|model|reasoning|sandbox|description
+run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네스 상태를 읽고 시작 역할과 재진입 Phase를 안내한다.
+```
 
 형식 규칙은 아래를 기본으로 한다.
 
@@ -81,6 +84,8 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 - `agent_file`: kebab-case
 - `agent_file`은 `.codex/agents/<agent_file>.toml`과 `.codex/skills/<agent_file>/SKILL.md`를 연결하는 기준값이다.
 - 최종 역할명 선택 이유와 대체 관계는 기계 블록 밖의 설명 섹션에도 남긴다
+- 헤더와 모든 역할 행은 같은 fenced `text` 블록 안에 둔다.
+- 역할 행을 inline code로 흩어 놓은 결과는 기계 판독 블록으로 보지 않는다.
 
 ### D. 역할별 실행 기준
 
@@ -159,8 +164,8 @@ team-spec을 바탕으로 아래를 동적으로 생성한다.
 즉 `Phase 3`은 고정 파일 복사가 아니라  
 `team-spec -> Codex 자산 생성` 단계다.
 
-초기 구성 시점에는 역할 설계 규칙만 존재하고, 최종 역할 인벤토리는 비어 있어야 한다.
-초기 문서 골격이 있더라도 역할 이름을 미리 넣지 않고, `Phase 2`가 현재 저장소를 읽어 최종 역할 블록을 직접 작성해야 한다.
+배포본의 초기 문서 골격에는 역할 설계 규칙만 둔다.
+타겟 프로젝트에서 하네스 생성을 실행한 뒤에는 `Phase 2`가 현재 저장소를 읽어 최종 역할 블록을 직접 작성해야 한다. 생성 완료 결과의 최종 역할 인벤토리가 비어 있으면 안 된다.
 
 `Phase 3`은 그 최종 역할 블록만 읽고 agent/skill/config 자산을 생성한다.
 
@@ -175,6 +180,7 @@ team-spec을 바탕으로 아래를 동적으로 생성한다.
 - team-spec이 존재하는가
 - team-spec의 역할 수와 실제 생성된 agent 수가 맞는가
 - team-spec의 역할 이름과 실제 파일명이 맞는가
+- `## 최종 역할 인벤토리`가 fenced `text` 블록이고, 헤더와 모든 역할 행이 같은 블록 안에 있는가
 - team-spec의 `agent_file` 값이 `.codex/agents/*.toml`과 `.codex/skills/*` 경로에 일관되게 반영됐는가
 - team-spec의 각 역할이 실행 기준 필드를 실제로 채웠는가
 - team-spec의 각 역할이 시작 경로, 요청 분기, 출력 형식 기준, 재진입/종료 조건을 실제로 적었는가

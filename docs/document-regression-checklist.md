@@ -51,6 +51,8 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 `team-spec` 관련 reference를 바꿨다면 아래를 확인한다.
 
 - 역할 스펙 필드가 `.codex/agents/*`와 `.codex/skills/*` 생성에 필요한 정보를 충분히 담는가
+- `## 최종 역할 인벤토리`가 fenced `text` 블록이며, 헤더와 역할 행이 같은 블록 안에 있는가
+- 역할 행을 inline code로 흩어 놓은 예시가 남아 있지 않은가
 - 역할별 출력 형식이 `team-spec`의 실행 기준과 연결되는가
 - 시작 진입 역할, 중심 조율 역할, QA 역할, 운영 감사 역할의 경계가 유지되는가
 - 학습 후보 기록 규칙, 승격 대상 기준, 생성기 환류 후보 기준이 역할 스킬 생성으로 이어지는가
@@ -63,6 +65,7 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 - 로그 정책이 별도 스크립트나 TSV 이벤트 파일을 필수 전제로 삼지 않는가
 - handoff 형식에 입력, 출력, 다음 역할, 재진입 Phase가 남는가
 - 보류나 실패가 다음 세션에서 다시 읽을 수 있는 상태로 남는가
+- 보존 문서의 이전 역할명이나 진입점이 현재 `team-spec`과 다르면 호환성 매핑과 우선 기준이 남는가
 - 학습 후보가 있으면 어느 문서/스킬로 승격할지 남는가
 - 관찰이 없을 때는 `없음`으로 짧게 정리할 수 있는가
 
@@ -74,6 +77,7 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 - 현재 판정이 `운영 가능 / 재작성 필요 / 재구성 필요` 중 하나인가
 - 가장 약한 축과 다음 재진입 Phase가 연결되는가
 - 재검토 결과가 있다면 이전 판정과 새로 확인한 결함이 구분돼 있는가
+- 이전 생성 결과와 새 생성 결과를 비교할 수 있다면 해결된 결함과 남은 결함을 분리했는가
 - 타겟에서 확인한 결함이 생성기 회귀 점검 항목으로 반영됐는가
 - 타겟 로컬 보강 후보와 생성기 환류 후보가 분리돼 있는가
 - 타겟 프로젝트 파일을 직접 수정하지 않았다는 점이 드러나는가
@@ -87,6 +91,7 @@ git diff --check
 rg -n "initial-generation-contract|초기 생성|신규 구축" .codex-dist/skills/harness README.md docs
 rg -n "logging-policy|Markdown 로그|TSV|스크립트" .codex-dist/skills/harness README.md docs
 rg -n "학습 후보|승격 대상|생성기 환류 후보" .codex-dist/skills/harness README.md docs
+rg -n "보존 문서|호환성|역할명|최종 역할 인벤토리|fenced" .codex-dist/skills/harness README.md docs
 find docs/evaluations -type f | sort
 ```
 
@@ -105,6 +110,7 @@ test -f /tmp/gwk-install-test/.codex/skills/harness/SKILL.md
 - 새 reference가 고립돼 있지 않고 `reference-map.md`나 관련 문서에 연결돼 있다.
 - 초기 생성 계약을 바꿨다면 신규 구축 결과의 자기진화성이 완료 기준에 반영돼 있다.
 - 학습 후보와 승격 대상이 역할 출력, 로그, 운영 감사 기준 중 적어도 하나에서 확인된다.
+- 보존 문서 호환성이나 역할 인벤토리 형식을 바꿨다면 회귀 점검 항목과 타겟 평가 기준이 함께 갱신돼 있다.
 - 로그 정책을 바꿨다면 `logging-policy.md`가 스크립트 없는 Markdown 계약으로 유지된다.
 - 타겟 평가 결과가 있다면 로컬 보강과 생성기 환류 후보가 분리되고, 재검토 결함이 회귀 점검에 반영돼 있다.
 - `git diff --check`가 통과한다.

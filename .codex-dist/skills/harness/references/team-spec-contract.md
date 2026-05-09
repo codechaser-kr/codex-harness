@@ -61,11 +61,14 @@
 
 ## 최종 역할 인벤토리 계약
 
-`## 최종 역할 인벤토리`에는 생성기가 읽을 수 있는 고정 형식 블록을 둔다.
+`## 최종 역할 인벤토리`에는 생성기가 읽을 수 있는 고정 형식 블록을 둔다. 이 블록은 반드시 fenced `text` 블록이어야 한다.
 
-권장 헤더:
+권장 형식:
 
-`role_id|display_name|agent_file|model|reasoning|sandbox|description`
+```text
+role_id|display_name|agent_file|model|reasoning|sandbox|description
+run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네스 상태를 읽고 시작 역할과 재진입 Phase를 안내한다.
+```
 
 각 행은 다음 규칙을 따른다.
 
@@ -73,6 +76,9 @@
 - `display_name`과 `agent_file`은 kebab-case
 - `agent_file`은 `.codex/agents/<agent_file>.toml`, `.codex/skills/<agent_file>/SKILL.md`와 일치해야 한다
 - description은 실제 요청에서 트리거될 만큼 구체적이어야 한다
+- 헤더와 모든 역할 행은 같은 fenced `text` 블록 안에 있어야 한다
+- 각 역할 행을 inline code로 따로 나열하지 않는다
+- fenced `text` 블록이 없으면 `Phase 2` 결과를 완료로 보지 않고 다시 쓴다
 
 ## 생성 규칙
 

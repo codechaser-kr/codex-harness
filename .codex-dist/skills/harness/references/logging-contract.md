@@ -70,6 +70,15 @@
 - 승격 대상
 - 생성기 환류 후보
 
+권장 형식:
+
+```markdown
+- 학습 후보: `<facts or 없음>`
+- 반복 신호: `<pattern or 없음>`
+- 승격 대상: `<Phase and target or 없음>`
+- 생성기 환류 후보: `<yes/no and reason>`
+```
+
 ## 결과 상태 규약
 
 역할 결과 상태는 아래 값 중 하나를 쓴다.

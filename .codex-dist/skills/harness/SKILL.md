@@ -184,14 +184,17 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 #### Phase 7: 하네스 피드백 반영
 
 - 입력: 오케스트레이션 실행 로그, QA/운영 감사 피드백, `with-skill` / `without-skill` 비교 관찰
-- 산출: 피드백 반영 변경점, 운영 가능성 판정, 다음 재진입 Phase 제안
+- 산출: 피드백 반영 변경점, 운영 가능성 판정, 다음 재진입 Phase 제안, 학습 후보와 승격 대상
 - 다음 단계 조건: 피드백이 에이전트 정의, 역할 스킬, 운영 문서에 반영되고 다음 실행에서 바로 재사용 가능한 상태
 
 1. 실행 로그와 QA/운영 감사 피드백을 기준으로 구조/규칙/문서 변경점을 분리한다.
 2. `without-skill` 기준선과 비교해 시작 역할 판단, 질문 절제, 다음 역할 안내, 저장소 근거 연결이 실제로 개선됐는지 확인한다.
 3. 부족한 축이 입력 문서 품질 문제인지, 역할 규칙 문제인지, 오케스트레이션 문제인지 분류한다.
 4. 필요한 경우 다음 재진입 시작점을 `Phase 1`~`Phase 6` 중 어디로 둘지 다시 제안한다.
-5. 생성기 자체 준비도는 `generator-readiness-checklist.md`로 점검하고, 타겟 하네스 운영 가능성은 실제 생성 결과가 있는 타겟 프로젝트에서만 평가한다.
+5. 새로 확인한 저장소 사실, 반복될 수 있는 판단, 하네스 갱신 후보, 생성기 환류 후보를 `evolution-contract.md` 기준으로 나눈다.
+6. 타겟 로컬 보강으로 충분한 항목은 `team-spec`, 역할 스킬, 운영 문서, 로그 중 어디에 반영할지 지정한다.
+7. 여러 타겟 프로젝트에서 반복될 가능성이 있는 항목만 전역 `SKILL.md` 또는 reference 보강 후보로 남긴다.
+8. 생성기 자체 준비도는 `generator-readiness-checklist.md`로 점검하고, 타겟 하네스 운영 가능성은 실제 생성 결과가 있는 타겟 프로젝트에서만 평가한다.
 
 이 단계는 결과 보고가 아니다. 다음 실행 품질을 높이기 위한 메타시스템 업데이트 단계다.
 
@@ -200,6 +203,8 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 1. `상태 점검`: 현재 약해진 역할, 문서, 운영 기준, 로그 상태를 읽는다.
 2. `정렬`: `AGENTS.md`, 에이전트 정의, 역할 스킬, 보조 운영 문서를 같은 규칙으로 다시 맞춘다.
 3. `개선`: 반복 패턴, 검증 비용, 다음 역할 병목을 바탕으로 역할 팀, 실행 모드, 실행 패턴을 다시 고른다.
+
+이 루프는 별도 스크립트나 외부 실행기에 의존하지 않는다. 역할 출력, Markdown 로그, 운영 감사 결과에 학습 후보와 승격 대상을 남기고, 주 에이전트가 승인 가능한 문서/스킬 변경으로 반영한다.
 
 시작 진입 역할(`run-harness`)은 이 루프의 진입점이고, 운영 감사 역할은 감사자이며, `skill-scaffolder`는 정렬이 필요한 예외 상황에서만 보조적으로 개입한다.
 
@@ -219,6 +224,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - `references/logging-contract.md`
 - `references/reentry-rules.md`
 - `references/verification-checklist.md`
+- `references/evolution-contract.md`
 
 - 최초 하네스 구성 요청이면 `Phase 0` 감사 뒤에 `exploration-notes.md`, `project-setup.md`, `team-spec.md`, `logging-policy.md` 같은 시작 문서를 먼저 준비한다.
 - 시작 문서가 생성된 상태는 완료가 아니라 자동 판단 보류 메모와 역할 입력이 준비된 상태로 본다.
@@ -228,6 +234,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - 세션 기록은 `references/logging-contract.md`를 따라 `.harness/logs/session-log.md`와 `.harness/logs/latest-session-summary.md`에 남긴다.
 - 세션 시작 기록에는 최소한 `세션 ID`, `시작 요청`, `진입점`, `계획 역할`, `예상 산출물`을 남긴다.
 - 각 역할 또는 subagent 완료 뒤에는 호출 역할, 결과 상태, 입력/출력 요약, 변경 파일, 남은 위험을 같은 세션 기록에 누적한다.
+- 역할 출력이나 세션 로그에는 필요 시 `evolution-contract.md` 기준의 학습 후보, 반복 신호, 승격 대상, 생성기 환류 후보를 남긴다.
 - 비동기 subagent는 최종 완료 전에 모두 `completed` 또는 `timed_out`으로 정리한다. 늦게 끝난 결과는 후속 로그 보강 대상으로 남긴다.
 - 하네스 구성이 끝났다고 판단하기 전에 운영 감사 역할이 `references/verification-checklist.md`를 기준으로 현재 상태를 검토해야 한다.
 - 최종 응답 전에는 `latest-session-summary.md`에 다음 시작 역할, 다음 재진입 Phase, 다시 읽을 입력, 최근 출력을 남긴다.
@@ -331,6 +338,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 6. 운영 감사 역할이 `references/verification-checklist.md` 기준으로 구조 누락과 골격 잔존이 없다고 설명할 수 있다.
 7. 마지막 실행 세션이 `.harness/logs/session-log.md`, `.harness/logs/latest-session-summary.md`에 같은 세션 ID로 남아 있다.
 8. 모든 필수 역할과 subagent가 `completed` 또는 `timed_out`으로 정리되고, `timed_out` 또는 `failed` 항목은 남은 위험과 후속 보강 대상으로 기록돼 있다.
+9. 운영 감사 역할이 새 학습 후보의 반영 위치를 설명하거나, 이번 작업에는 학습 후보가 없다고 명시할 수 있다.
 
 시작 문서가 준비된 상태는 완료가 아니다. **자동 판단 보류 메모와 역할 입력이 준비된 상태**다.
 
@@ -349,6 +357,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - [ ] 보조 문서와 로그가 역할 자산과 오케스트레이션을 보조한다.
 - [ ] 이후 프로젝트 특화 실행 하네스로 확장할 수 있는 구조다.
 - [ ] 현재 상태를 운영 가능 / 재작성 필요 / 재구성 필요 중 하나로 설명할 수 있다.
+- [ ] 학습 후보와 승격 대상을 남길 위치가 있으며, 스크립트나 외부 의존성 없이 다음 실행에 반영할 수 있다.
 
 ---
 
@@ -361,6 +370,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - `references/skill-writing-guide.md`
 - `references/skill-testing-guide.md`
 - `references/team-spec-contract.md`
+- `references/evolution-contract.md`
 - `references/logging-contract.md`
 - `references/reentry-rules.md`
 - `references/verification-checklist.md`

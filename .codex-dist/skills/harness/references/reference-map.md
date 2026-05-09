@@ -109,9 +109,11 @@
 - 현재 문제는 상태 점검이 필요한가, 정렬이 필요한가, 개선이 필요한가
 - 부분 갱신으로 봉합할지, 재구성할지, 패턴을 다시 고를지
 - 새로 드러난 사실을 어느 문서와 팀 스펙에 반영해야 하는가
+- 실제 작업 관찰을 로컬 하네스 보강과 생성기 환류 후보 중 어디로 보낼까
 
 주요 문서:
 
+- `evolution-contract.md`
 - `agents-sync-guide.md`
 - `phase-selection-matrix.md`
 - `quality-evaluation-guide.md`
@@ -128,10 +130,12 @@
 - 지금 생성된 하네스가 실제 운영 가능한 수준인가
 - 부족한 점이 입력 문서 품질 문제인지, 역할 규칙 문제인지, 운영 기준 문제인지
 - 다음 재진입을 어느 Phase로 돌려야 하는가
+- 타겟 관찰은 로컬 보강으로 충분한가, 생성기 reference 보강 후보로 봐야 하는가
 - 예전 `meta-system-maturity-guide.md`가 다루던 메타시스템 성숙도 판정을 어떤 기준으로 이어서 볼 것인가
 
 주요 문서:
 
+- `evolution-contract.md`
 - `generator-readiness-checklist.md`
 - `quality-evaluation-guide.md`
 - `target-evaluation-playbook.md`
@@ -148,9 +152,11 @@
 - 운영 기준 감사는 무엇을 봐야 하는가
 - QA와 운영 감사 역할의 경계를 어떻게 나눌까
 - QA가 파일 존재 확인을 넘어 경계면 교차 비교를 수행하는가
+- 새 학습 후보를 다음 실행에 반영할 위치가 있는가
 
 주요 문서:
 
+- `evolution-contract.md`
 - `qa-agent-guide.md`
 - `team-examples.md`
 - `quality-evaluation-guide.md`
@@ -167,9 +173,11 @@
 - 세션 기록을 어느 문서에 남겨야 하는가
 - 다음 시작 역할과 재진입 Phase를 어디에 남겨야 하는가
 - TSV나 임시 상태 파일 없이도 운영 루프를 유지할 수 있는가
+- 학습 후보, 반복 신호, 승격 대상을 어디에 남길 것인가
 
 주요 문서:
 
+- `evolution-contract.md`
 - `logging-contract.md`
 - `reentry-rules.md`
 - `verification-checklist.md`
@@ -203,9 +211,11 @@
 - 생성 결과가 Codex 로컬 실행 자산으로 설명되는가
 - 주 에이전트가 같은 기준으로 하네스를 구성할 수 있는가
 - 원본 하네스의 동작 축인 팀 아키텍처, 오케스트레이터, 스킬 작성/검증, QA, 팀 예시가 Codex 런타임에 맞게 모두 대응되는가
+- 타겟 프로젝트에서 확인한 차이를 다음 생성기 개선 후보로 환류할 기준이 있는가
 
 주요 문서:
 
+- `evolution-contract.md`
 - `generator-readiness-checklist.md`
 - `codex-runtime-contract.md`
 - `team-spec-contract.md`
@@ -236,6 +246,7 @@
   - 필요 시 `orchestrator-template.md`
 - Phase 7 피드백 반영과 타겟 평가:
   - `reference-map.md`
+  - `evolution-contract.md`
   - `quality-evaluation-guide.md`
   - `target-evaluation-playbook.md`
 - 패턴 선택:
@@ -250,10 +261,12 @@
   - 필요 시 `team-examples.md`
 - 운영 감사 강화:
   - `reference-map.md`
+  - `evolution-contract.md`
   - `qa-agent-guide.md`
   - `quality-evaluation-guide.md`
 - 메타하네스 생성기 준비도 점검:
   - `reference-map.md`
+  - `evolution-contract.md`
   - `generator-readiness-checklist.md`
   - `codex-runtime-contract.md`
   - `team-spec-contract.md`

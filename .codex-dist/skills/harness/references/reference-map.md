@@ -102,16 +102,37 @@
 
 ---
 
-## 6. 상태 점검 / 정렬 / 개선 운영 루프
+## 6. 초기 생성 자기진화 계약
+
+다음 질문에 답해야 할 때 먼저 읽는다.
+
+- 타겟 프로젝트에 하네스를 처음 만들 때 무엇을 반드시 생성해야 하는가
+- 초기 생성물만으로 다음 시작 역할과 다음 재진입 Phase를 알 수 있는가
+- 생성된 역할 스킬이 처음부터 학습 후보와 승격 대상을 남길 수 있는가
+- 초기 문서 골격이 완료물인지, 자동 판단 보류와 다음 입력을 남긴 상태인지 구분되는가
+
+주요 문서:
+
+- `initial-generation-contract.md`
+- `team-spec-contract.md`
+- `skill-writing-guide.md`
+- `logging-contract.md`
+- `verification-checklist.md`
+
+---
+
+## 7. 상태 점검 / 정렬 / 개선 운영 루프
 
 다음 질문에 답해야 할 때 먼저 읽는다.
 
 - 현재 문제는 상태 점검이 필요한가, 정렬이 필요한가, 개선이 필요한가
 - 부분 갱신으로 봉합할지, 재구성할지, 패턴을 다시 고를지
 - 새로 드러난 사실을 어느 문서와 팀 스펙에 반영해야 하는가
+- 실제 작업 관찰을 로컬 하네스 보강과 생성기 환류 후보 중 어디로 보낼까
 
 주요 문서:
 
+- `evolution-contract.md`
 - `agents-sync-guide.md`
 - `phase-selection-matrix.md`
 - `quality-evaluation-guide.md`
@@ -120,7 +141,7 @@
 
 ---
 
-## 7. Phase 7 피드백 반영과 타겟 평가
+## 8. Phase 7 피드백 반영과 타겟 평가
 
 다음 질문에 답해야 할 때 먼저 읽는다.
 
@@ -128,10 +149,12 @@
 - 지금 생성된 하네스가 실제 운영 가능한 수준인가
 - 부족한 점이 입력 문서 품질 문제인지, 역할 규칙 문제인지, 운영 기준 문제인지
 - 다음 재진입을 어느 Phase로 돌려야 하는가
+- 타겟 관찰은 로컬 보강으로 충분한가, 생성기 reference 보강 후보로 봐야 하는가
 - 예전 `meta-system-maturity-guide.md`가 다루던 메타시스템 성숙도 판정을 어떤 기준으로 이어서 볼 것인가
 
 주요 문서:
 
+- `evolution-contract.md`
 - `generator-readiness-checklist.md`
 - `quality-evaluation-guide.md`
 - `target-evaluation-playbook.md`
@@ -140,7 +163,7 @@
 
 ---
 
-## 8. 운영 감사 기준
+## 9. 운영 감사 기준
 
 다음 질문에 답해야 할 때 먼저 읽는다.
 
@@ -148,9 +171,12 @@
 - 운영 기준 감사는 무엇을 봐야 하는가
 - QA와 운영 감사 역할의 경계를 어떻게 나눌까
 - QA가 파일 존재 확인을 넘어 경계면 교차 비교를 수행하는가
+- 새 학습 후보를 다음 실행에 반영할 위치가 있는가
 
 주요 문서:
 
+- `evolution-contract.md`
+- `initial-generation-contract.md`
 - `qa-agent-guide.md`
 - `team-examples.md`
 - `quality-evaluation-guide.md`
@@ -160,23 +186,25 @@
 
 ---
 
-## 9. 로그와 세션 재진입
+## 10. 로그와 세션 재진입
 
 다음 질문에 답해야 할 때 먼저 읽는다.
 
 - 세션 기록을 어느 문서에 남겨야 하는가
 - 다음 시작 역할과 재진입 Phase를 어디에 남겨야 하는가
 - TSV나 임시 상태 파일 없이도 운영 루프를 유지할 수 있는가
+- 학습 후보, 반복 신호, 승격 대상을 어디에 남길 것인가
 
 주요 문서:
 
+- `evolution-contract.md`
 - `logging-contract.md`
 - `reentry-rules.md`
 - `verification-checklist.md`
 
 ---
 
-## 10. Codex 런타임 계약
+## 11. Codex 런타임 계약
 
 다음 질문에 답해야 할 때 먼저 읽는다.
 
@@ -188,24 +216,29 @@
 주요 문서:
 
 - `codex-runtime-contract.md`
+- `initial-generation-contract.md`
 - `team-spec-contract.md`
 - `orchestrator-template.md`
 - `verification-checklist.md`
 
 ---
 
-## 11. 메타하네스 생성기 준비도
+## 12. 메타하네스 생성기 준비도
 
 다음 질문에 답해야 할 때 먼저 읽는다.
 
 - `SKILL.md`와 레퍼런스 묶음이 타겟 프로젝트에서 운영 가능성 평가를 수행할 준비가 돼 있는가
 - 도메인 분석, 팀 설계, 에이전트 정의, 스킬 생성, 오케스트레이션, 검증, 피드백 반영이 하나의 생명주기로 연결되는가
 - 생성 결과가 Codex 로컬 실행 자산으로 설명되는가
+- 신규 구축 결과가 첫 세션부터 자기진화 루프를 이어 갈 수 있는가
 - 주 에이전트가 같은 기준으로 하네스를 구성할 수 있는가
 - 원본 하네스의 동작 축인 팀 아키텍처, 오케스트레이터, 스킬 작성/검증, QA, 팀 예시가 Codex 런타임에 맞게 모두 대응되는가
+- 타겟 프로젝트에서 확인한 차이를 다음 생성기 개선 후보로 환류할 기준이 있는가
 
 주요 문서:
 
+- `evolution-contract.md`
+- `initial-generation-contract.md`
 - `generator-readiness-checklist.md`
 - `codex-runtime-contract.md`
 - `team-spec-contract.md`
@@ -236,6 +269,7 @@
   - 필요 시 `orchestrator-template.md`
 - Phase 7 피드백 반영과 타겟 평가:
   - `reference-map.md`
+  - `evolution-contract.md`
   - `quality-evaluation-guide.md`
   - `target-evaluation-playbook.md`
 - 패턴 선택:
@@ -245,15 +279,25 @@
   - 필요 시 `orchestrator-template.md`
 - 레퍼런스 패턴 기반 생성:
   - `reference-map.md`
+  - `initial-generation-contract.md`
   - `orchestrator-template.md`
   - `skill-writing-guide.md`
   - 필요 시 `team-examples.md`
+- 초기 생성 자기진화 계약:
+  - `reference-map.md`
+  - `initial-generation-contract.md`
+  - `team-spec-contract.md`
+  - `skill-writing-guide.md`
+  - 필요 시 `verification-checklist.md`
 - 운영 감사 강화:
   - `reference-map.md`
+  - `initial-generation-contract.md`
+  - `evolution-contract.md`
   - `qa-agent-guide.md`
   - `quality-evaluation-guide.md`
 - 메타하네스 생성기 준비도 점검:
   - `reference-map.md`
+  - `evolution-contract.md`
   - `generator-readiness-checklist.md`
   - `codex-runtime-contract.md`
   - `team-spec-contract.md`

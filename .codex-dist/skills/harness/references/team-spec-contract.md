@@ -10,6 +10,7 @@
 - 역할 이름, 책임, 입력/출력, 다음 역할은 생성 단계 이전에 `team-spec.md`에서 먼저 확정한다.
 - `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`는 `team-spec.md`를 구현한 결과물이지, 별도의 기준 문서가 아니다.
 - 추상적인 범용 역할명을 복사하지 말고, 현재 저장소의 도메인 용어와 실패 경계를 반영한다.
+- 신규 구축에서도 `team-spec.md`는 첫 세션부터 학습 후보, 승격 대상, 다음 재진입 Phase를 남길 수 있는 역할 계약을 제공해야 한다.
 
 ## 필수 섹션
 
@@ -45,6 +46,9 @@
 - 금지 판단/피해야 할 오해
 - 출력 규칙
 - 산출 형식 기준
+- 학습 후보 기록 규칙
+- 승격 대상 기준
+- 생성기 환류 후보 기준
 - 재진입 트리거
 - 종료 판정 기준
 - 완료 기준
@@ -57,11 +61,14 @@
 
 ## 최종 역할 인벤토리 계약
 
-`## 최종 역할 인벤토리`에는 생성기가 읽을 수 있는 고정 형식 블록을 둔다.
+`## 최종 역할 인벤토리`에는 생성기가 읽을 수 있는 고정 형식 블록을 둔다. 이 블록은 반드시 fenced `text` 블록이어야 한다.
 
-권장 헤더:
+권장 형식:
 
-`role_id|display_name|agent_file|model|reasoning|sandbox|description`
+```text
+role_id|display_name|agent_file|model|reasoning|sandbox|description
+run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네스 상태를 읽고 시작 역할과 재진입 Phase를 안내한다.
+```
 
 각 행은 다음 규칙을 따른다.
 
@@ -69,6 +76,9 @@
 - `display_name`과 `agent_file`은 kebab-case
 - `agent_file`은 `.codex/agents/<agent_file>.toml`, `.codex/skills/<agent_file>/SKILL.md`와 일치해야 한다
 - description은 실제 요청에서 트리거될 만큼 구체적이어야 한다
+- 헤더와 모든 역할 행은 같은 fenced `text` 블록 안에 있어야 한다
+- 각 역할 행을 inline code로 따로 나열하지 않는다
+- fenced `text` 블록이 없으면 `Phase 2` 결과를 완료로 보지 않고 다시 쓴다
 
 ## 생성 규칙
 
@@ -77,6 +87,8 @@
 - 역할 생성 결과가 `team-spec.md`보다 앞서거나 `team-spec.md`를 덮어써서는 안 된다.
 - 역할 추가/삭제/이름 변경은 먼저 `team-spec.md`에서 반영한 뒤 관련 자산을 다시 맞춘다.
 - `.codex/agents/*.toml`은 역할 식별과 실행 메타데이터를 담고, `.codex/skills/*`는 역할별 실행 절차를 담는다. 두 자산은 같은 `agent_file` 값을 기준으로 연결돼야 한다.
+- 각 역할 스킬의 출력 형식은 `team-spec.md`의 학습 후보 기록 규칙, 승격 대상 기준, 생성기 환류 후보 기준을 반영해야 한다.
+- 신규 구축에서 입력이 부족하면 역할 생성을 완료처럼 보이게 하지 말고, 보류한 판단과 다음 질문을 `team-spec.md`와 로그에 남긴다.
 
 ## 프로젝트 특화 역할명 기준
 
@@ -100,6 +112,9 @@
 - QA와 운영 감사 역할이 별도의 책임을 가진다.
 - 시작 진입 역할과 중심 조율 역할이 혼동되지 않는다.
 - 재진입 기준이 역할 수준에서 드러난다.
+- 새로 확인한 저장소 사실과 반복될 수 있는 판단을 어느 역할이 기록하고 어디로 승격할지 드러나야 한다.
+- 초기 생성물만으로 다음 시작 역할과 재진입 Phase를 설명할 수 있다.
+- 각 역할 스킬에 공통 학습 출력 블록이 빠짐없이 생성된다.
 
 ## 다른 레퍼런스와의 연결
 
@@ -108,3 +123,5 @@
 - `qa-agent-guide.md`: QA와 운영 감사 역할의 책임 경계를 설계할 때 쓴다.
 - `verification-checklist.md`: `team-spec.md`와 생성 결과의 일관성을 검토할 때 쓴다.
 - `reentry-rules.md`: 어떤 Phase로 되돌아가 `team-spec.md`를 다시 써야 하는지 판단할 때 쓴다.
+- `initial-generation-contract.md`: 신규 구축 결과가 처음부터 자기진화 루프를 갖췄는지 볼 때 쓴다.
+- `evolution-contract.md`: 학습 후보와 승격 대상 기준을 역할 스펙에 포함할 때 쓴다.

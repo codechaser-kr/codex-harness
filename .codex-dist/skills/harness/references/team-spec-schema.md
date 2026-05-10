@@ -70,9 +70,12 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 - role description 초안
 
 또한 생성기는 team-spec 안의 기계 판독 블록도 읽을 수 있어야 한다.
-현재 기본 형식은 아래와 같다.
+현재 기본 형식은 fenced `text` 블록이다.
 
-`role_id|display_name|agent_file|model|reasoning|sandbox|description`
+```text
+role_id|display_name|agent_file|model|reasoning|sandbox|description
+run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네스 상태를 읽고 시작 역할과 재진입 Phase를 안내한다.
+```
 
 형식 규칙은 아래를 기본으로 한다.
 
@@ -81,6 +84,8 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 - `agent_file`: kebab-case
 - `agent_file`은 `.codex/agents/<agent_file>.toml`과 `.codex/skills/<agent_file>/SKILL.md`를 연결하는 기준값이다.
 - 최종 역할명 선택 이유와 대체 관계는 기계 블록 밖의 설명 섹션에도 남긴다
+- 헤더와 모든 역할 행은 같은 fenced `text` 블록 안에 둔다.
+- 역할 행을 inline code로 흩어 놓은 결과는 기계 판독 블록으로 보지 않는다.
 
 ### D. 역할별 실행 기준
 
@@ -95,6 +100,9 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 - 금지 판단 또는 피해야 할 오해
 - 출력 규칙
 - 산출 형식 기준
+- 학습 후보 기록 규칙
+- 승격 대상 기준
+- 생성기 환류 후보 기준
 - 재진입 트리거
 - 종료 판정 기준
 - 완료 기준
@@ -104,8 +112,8 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 
 - 구현형 역할은 어떤 디렉터리와 파일부터 읽을지, 어떤 변경 유형에서 하위 분기가 갈리는지, 구현 후 어떤 형식으로 검증 메모를 남길지가 중요하다.
 - 리뷰형 역할은 리스크 우선순위, finding 출력 형식, 승인/반려 기준, 재검토 재진입 조건이 중요하다.
-- QA형 역할은 수동/자동 검증 분리, 실패 비용 우선순위, 미실행 위험 기록, 종료 시 잔여 위험 형식이 중요하다.
-- 조율형 역할은 시작 역할 판단, 다음 역할 연결, 요청 유형별 분기, 재진입 기준, 세션 종료 조건이 중요하다.
+- QA형 역할은 수동/자동 검증 분리, 실패 비용 우선순위, 미실행 위험 기록, 종료 시 잔여 위험 형식, 반복 검증 공백의 학습 후보 기록이 중요하다.
+- 조율형 역할은 시작 역할 판단, 다음 역할 연결, 요청 유형별 분기, 재진입 기준, 세션 종료 조건, 학습 후보의 승격 위치 지정이 중요하다.
 
 team-spec이 이 정보를 담지 못하면, 생성된 `.codex/skills/*/SKILL.md`는 이름만 특화되고 본문은 범용적인 껍데기로 남는다.
 
@@ -156,8 +164,8 @@ team-spec을 바탕으로 아래를 동적으로 생성한다.
 즉 `Phase 3`은 고정 파일 복사가 아니라  
 `team-spec -> Codex 자산 생성` 단계다.
 
-초기 구성 시점에는 역할 설계 규칙만 존재하고, 최종 역할 인벤토리는 비어 있어야 한다.
-초기 문서 골격이 있더라도 역할 이름을 미리 넣지 않고, `Phase 2`가 현재 저장소를 읽어 최종 역할 블록을 직접 작성해야 한다.
+배포본의 초기 문서 골격에는 역할 설계 규칙만 둔다.
+타겟 프로젝트에서 하네스 생성을 실행한 뒤에는 `Phase 2`가 현재 저장소를 읽어 최종 역할 블록을 직접 작성해야 한다. 생성 완료 결과의 최종 역할 인벤토리가 비어 있으면 안 된다.
 
 `Phase 3`은 그 최종 역할 블록만 읽고 agent/skill/config 자산을 생성한다.
 
@@ -172,12 +180,15 @@ team-spec을 바탕으로 아래를 동적으로 생성한다.
 - team-spec이 존재하는가
 - team-spec의 역할 수와 실제 생성된 agent 수가 맞는가
 - team-spec의 역할 이름과 실제 파일명이 맞는가
+- `## 최종 역할 인벤토리`가 fenced `text` 블록이고, 헤더와 모든 역할 행이 같은 블록 안에 있는가
 - team-spec의 `agent_file` 값이 `.codex/agents/*.toml`과 `.codex/skills/*` 경로에 일관되게 반영됐는가
 - team-spec의 각 역할이 실행 기준 필드를 실제로 채웠는가
 - team-spec의 각 역할이 시작 경로, 요청 분기, 출력 형식 기준, 재진입/종료 조건을 실제로 적었는가
+- team-spec의 각 역할이 학습 후보를 어디에 남기고 어느 문서/스킬로 승격할지 적었는가
+- team-spec의 각 역할이 단일 타겟 로컬 보강과 생성기 환류 후보를 어떻게 구분할지 적었는가
 - 시작 진입 역할이 team-spec 기준 시작 역할과 재진입 규칙을 설명하는가
 - 운영 감사 역할이 team-spec과 산출물의 불일치를 지적할 수 있는가
-- 생성된 `.codex/skills/*/SKILL.md`가 역할별 시작 체크리스트, 판단 기준, 완료 기준, 다음 역할 기준을 포함하는가
+- 생성된 `.codex/skills/*/SKILL.md`가 역할별 시작 체크리스트, 판단 기준, 완료 기준, 다음 역할 기준, 공통 학습 출력 블록을 포함하는가
 
 ---
 
@@ -187,3 +198,5 @@ team-spec을 바탕으로 아래를 동적으로 생성한다.
 - `orchestrator-template.md`: 다음 역할 연결과 재진입 규칙을 팀 스펙에 어떻게 담을지 본다.
 - `phase-selection-matrix.md`: 재진입 판단을 어떤 phase로 연결할지 본다.
 - `target-evaluation-playbook.md`: 타겟 프로젝트에서 team-spec 기반 생성 결과를 어떻게 평가할지 본다.
+- `initial-generation-contract.md`: 신규 구축 team-spec이 첫 세션부터 학습 후보와 재진입 기준을 담는지 본다.
+- `evolution-contract.md`: 역할별 학습 후보와 승격 대상 기준을 team-spec에 어떻게 담을지 본다.

@@ -24,6 +24,16 @@
 
 `logging-policy.md`는 프로젝트 로컬 하네스가 어떤 로그를 왜 남기는지 설명하는 운영 문서다. 예전 스크립트 사용법을 복사하는 문서가 아니며, 자동 append 도구나 TSV 이벤트 파일을 필수 조건으로 적지 않는다.
 
+### 생성 책임
+
+`logging-policy.md` 초안은 `Phase 0` 감사 뒤 시작 문서를 준비할 때 시작 진입 역할(`run-harness`)이 만든다. 이 문서는 초기에는 최소 로그 정책을 고정하는 문서이며, `Phase 5`에서 흐름 조율 역할이 `session-log.md`, `latest-session-summary.md`와 맞춰 갱신한다. `Phase 6`에서는 운영 감사 역할이 세 문서가 같은 로그 계약을 말하는지 검증한다.
+
+역할별 책임은 아래처럼 나눈다.
+
+- `Phase 0` / 시작 진입 역할: `logging-policy.md` 초안을 만들고 필수 로그 문서와 기록 목적을 고정한다.
+- `Phase 5` / 흐름 조율 역할: 실제 handoff, 재진입 흐름, 세션 종료 기준에 맞춰 로그 정책과 로그 예시를 정렬한다.
+- `Phase 6` / 운영 감사 역할: `logging-policy.md`, `session-log.md`, `latest-session-summary.md`가 같은 필드와 완료 기준을 말하는지 검증한다.
+
 최소 포함 항목:
 
 - 로그 목적

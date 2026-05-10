@@ -110,6 +110,7 @@
 
 - 신규 구축인지 기존 확장인지 먼저 판단한다.
 - 기존 자산이 없으면 바로 역할명을 확정하지 않고, 입력 상태와 보류 판단을 남긴다.
+- 시작 진입 역할(`run-harness`)이 `logging-policy.md` 초안을 만들고, 필수 로그 문서와 기록 목적을 고정한다.
 
 ### Phase 1
 
@@ -136,10 +137,12 @@
 
 - handoff가 입력, 출력, 다음 역할, 재진입 Phase를 전달해야 한다.
 - 보류와 실패도 다음 세션에서 이어 읽을 수 있어야 한다.
+- 흐름 조율 역할이 `logging-policy.md`, `session-log.md`, `latest-session-summary.md`를 같은 handoff와 세션 종료 기준으로 정렬한다.
 
 ### Phase 6
 
 - 운영 감사는 파일 존재가 아니라 초기 생성물의 자기진화성을 판정한다.
+- 운영 감사 역할은 `logging-policy.md`, `session-log.md`, `latest-session-summary.md`가 같은 로그 계약을 말하는지 확인한다.
 - 판정은 `운영 가능 / 재작성 필요 / 재구성 필요` 중 하나로 남긴다.
 
 ## 완료 기준

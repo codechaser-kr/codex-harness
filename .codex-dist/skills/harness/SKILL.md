@@ -231,7 +231,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - `references/verification-checklist.md`
 - `references/evolution-contract.md`
 
-- 최초 하네스 구성 요청이면 `Phase 0` 감사 뒤에 `exploration-notes.md`, `project-setup.md`, `team-spec.md`, `logging-policy.md` 같은 시작 문서를 먼저 준비한다. `logging-policy.md`는 삭제 가능한 예전 스크립트 안내가 아니라, 현재 하네스가 따를 Markdown 로그 계약 문서다.
+- 최초 하네스 구성 요청이면 `Phase 0` 감사 뒤에 시작 진입 역할(`run-harness`)이 `exploration-notes.md`, `project-setup.md`, `team-spec.md`, `logging-policy.md` 같은 시작 문서를 먼저 준비한다. `logging-policy.md`는 삭제 가능한 예전 스크립트 안내가 아니라, 현재 하네스가 따를 Markdown 로그 계약 문서다.
 - 시작 문서가 생성된 상태는 완료가 아니라 자동 판단 보류 메모와 역할 입력이 준비된 상태로 본다.
 - `Phase 2`는 `team-spec.md`의 최종 역할 인벤토리를 fenced `text` 블록으로 만들고, `Phase 3`은 `.codex/config.toml`, `.codex/agents/*.toml`을, `Phase 4`는 `.codex/skills/*`를 작성해야 한다.
 - `Phase 5`는 시작 진입 역할과 오케스트레이션 흐름을 연결하고, `Phase 6`은 운영 감사 역할이 구조와 실행 가능성을 검증한다.

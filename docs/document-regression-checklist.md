@@ -43,6 +43,8 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 초기 생성 관련 문서를 바꿨다면 아래를 확인한다.
 
 - `initial-generation-contract.md`가 신규 구축 결과의 필수 계약을 설명하는가
+- 저장소 근거가 적은 초기 단계도 신규 구축 흐름 안에서 다루고, 사용자 도메인 설명을 `project-setup.md`에 고정하는가
+- 초기 입력 질문이 과도해지지 않고 제품/도메인, 첫 성공 시나리오, 실패 비용 중심으로 제한되는가
 - 초기 생성물만 읽어도 다음 시작 역할, 다음 재진입 Phase, 학습 후보 기록 위치를 알 수 있는가
 - 모든 역할 스킬 출력 형식에 공통 학습 출력 블록이 처음부터 포함되는가
 - 초기 문서 골격을 완료물처럼 설명하지 않고, 보류한 판단과 다음 입력을 남기도록 되어 있는가
@@ -91,6 +93,7 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 ```sh
 git diff --check
 rg -n "initial-generation-contract|초기 생성|신규 구축" .codex-dist/skills/harness README.md docs
+rg -n "도메인 설명|첫 성공 시나리오|저장소 근거가 적" .codex-dist/skills/harness README.md docs
 rg -n "logging-policy|Markdown 로그|TSV|스크립트" .codex-dist/skills/harness README.md docs
 rg -n "학습 후보|승격 대상|생성기 환류 후보" .codex-dist/skills/harness README.md docs
 rg -n "보존 문서|호환성|역할명|최종 역할 인벤토리|fenced" .codex-dist/skills/harness README.md docs

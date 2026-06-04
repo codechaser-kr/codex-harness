@@ -92,6 +92,7 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 
 ```sh
 git diff --check
+# rg 패턴 안의 | 는 쉘 파이프가 아니라 정규식 OR 조건이다.
 rg -n "initial-generation-contract|초기 생성|신규 구축" .codex-dist/skills/harness README.md docs
 rg -n "도메인 설명|첫 성공 시나리오|저장소 근거가 적" .codex-dist/skills/harness README.md docs
 rg -n "logging-policy|Markdown 로그|TSV|스크립트" .codex-dist/skills/harness README.md docs

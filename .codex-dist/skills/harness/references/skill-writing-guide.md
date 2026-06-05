@@ -158,7 +158,7 @@ Codex는 description을 보고
 
 ## 5. Progressive Disclosure 원칙
 
-원본 하네스처럼 스킬은 단계적으로 정보를 공개해야 한다.
+스킬은 단계적으로 정보를 공개해야 한다.
 
 ### 1) Metadata
 
@@ -177,7 +177,7 @@ Codex는 description을 보고
 - SKILL.md 본문에는 언제 어떤 reference를 읽을지 포인터를 남긴다.
 - 모든 reference를 한 번에 읽게 하지 말고, 현재 판단 축에 맞는 문서만 읽게 한다.
 
-이 구조는 원본 하네스의 핵심 동작과 같다. Codex용 하네스에서도 SKILL.md 하나가 모든 내용을 품는 방식이 아니라, 본문과 reference가 함께 역할을 수행해야 한다.
+Codex용 하네스에서는 SKILL.md 하나가 모든 내용을 품는 방식이 아니라, 본문과 reference가 함께 역할을 수행해야 한다.
 
 ---
 

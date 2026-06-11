@@ -89,6 +89,10 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 
 - `Phase 2`는 저장소와 입력 문서를 다시 읽고 최종 역할 인벤토리를 작성한다.
 - 역할별 `우선 입력 문서`에 등장하는 설계/정책/사양 문서는 `설계 원천 우선순위` 또는 `설계 원천 인벤토리`에 포함한다.
+- 역할 목적, 책임, primary scope에 정책 도메인이 포함되면 관련 정책 문서를 우선 입력 문서에 포함한다.
+- 정책 도메인 키워드는 MCP, MCP Tool, MCP 토큰, 감사 로그, AuditLog, AI Credit, LLM Provider, 고급 코칭, 로그 제외, 민감정보, 보안 정책 같은 표현을 포함한다.
+- 관련 정책 문서는 고정 경로로 가정하지 말고 `docs/03-ai-mcp-policy.md`, `docs/*ai*mcp*.md`, `docs/*security*.md`, `docs/*audit*.md`, `docs/*policy*.md`, 앱별 `AGENTS.md`가 참조하는 정책 문서 후보를 탐색한다.
+- 정책 도메인을 맡는 역할이 있는데 정책 문서가 없으면 대체 원천과 보류 판단을 `team-spec.md` 또는 로그에 남긴다.
 - 운영 로그, 세션 요약, 임시 산출물처럼 재진입 상태를 설명하는 문서는 설계 원천 우선순위에 넣지 않는다.
 - 역할이 정책 판단 기준으로 사용하는 문서가 상단 원천 목록에 없으면 `Phase 2` 결과를 완료로 보지 않는다.
 - `Phase 3`은 최종 역할 인벤토리만 읽어 `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`를 작성한다.
@@ -117,6 +121,9 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 
 - 역할명이 현재 저장소의 도메인 용어를 반영한다.
 - 역할별 우선 입력의 설계/정책/사양 문서가 상단 설계 원천 목록에 빠짐없이 포함된다.
+- 보안, 감사, AI, MCP, 결제, 개인정보 같은 정책 도메인을 맡은 역할이 관련 정책 문서를 우선 입력으로 읽는다.
+- 같은 정책 도메인을 맡는 역할들이 같은 정책 원천을 공유한다.
+- 정책 문서가 없을 경우 대체 원천 또는 보류 판단이 명시된다.
 - 문서 간 충돌 시 어떤 설계 원천을 우선해야 하는지 `team-spec.md`만 보고 판단할 수 있다.
 - 입력/출력 연결이 역할 간에 자연스럽다.
 - 최종 역할 인벤토리의 `agent_file` 값이 `.codex/agents/*.toml`과 `.codex/skills/*/SKILL.md` 경로에 그대로 반영된다.

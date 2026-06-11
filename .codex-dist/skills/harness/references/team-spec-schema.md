@@ -115,7 +115,7 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - QA형 역할은 수동/자동 검증 분리, 실패 비용 우선순위, 미실행 위험 기록, 종료 시 잔여 위험 형식, 반복 검증 공백의 학습 후보 기록이 중요하다.
 - 조율형 역할은 시작 역할 판단, 다음 역할 연결, 요청 유형별 분기, 재진입 기준, 세션 종료 조건, 학습 후보의 승격 위치 지정이 중요하다.
 
-team-spec이 이 정보를 담지 못하면, 생성된 `.codex/skills/*/SKILL.md`는 이름만 특화되고 본문은 범용적인 껍데기로 남는다.
+team-spec이 이 정보를 담지 못하면, 생성된 `.codex/skills/*/SKILL.md`는 올바른 `role_id`를 가리키더라도 실행 기준을 찾을 수 없는 껍데기로 남는다.
 
 ### E. 운영 기준
 
@@ -188,7 +188,8 @@ team-spec을 바탕으로 아래를 동적으로 생성한다.
 - team-spec의 각 역할이 단일 타겟 로컬 보강과 생성기 환류 후보를 어떻게 구분할지 적었는가
 - 시작 진입 역할이 team-spec 기준 시작 역할과 재진입 규칙을 설명하는가
 - 운영 감사 역할이 team-spec과 산출물의 불일치를 지적할 수 있는가
-- 생성된 `.codex/skills/*/SKILL.md`가 역할별 시작 체크리스트, 판단 기준, 완료 기준, 다음 역할 기준, 공통 학습 출력 블록을 포함하는가
+- 생성된 `.codex/skills/*/SKILL.md`가 해당 `role_id`의 team-spec 섹션과 공통 학습 출력 블록을 명확히 참조하는가
+- 생성된 `.codex/agents/*.toml`과 `.codex/skills/*/SKILL.md`가 역할별 시작 체크리스트, 판단 기준, 완료 기준, 다음 역할 기준을 중복 복제하지 않는가
 
 ---
 

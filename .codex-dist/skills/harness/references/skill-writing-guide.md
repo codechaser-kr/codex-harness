@@ -186,17 +186,17 @@ Codex용 하네스에서는 프로젝트 로컬 역할 `SKILL.md` 하나가 모�
 
 ```markdown
 ---
-name: api-server-dev
-description: Implement and verify Kotlin/Spring Boot API Server, authorization, MCP module, and audit-log work in apps/api.
+name: runtime-boundary-dev
+description: Implement and verify a repository-specific runtime boundary using the role contract in team-spec.
 ---
 
-# api-server-dev
+# runtime-boundary-dev
 
-이 스킬은 얇은 역할 포인터다. 역할의 목적, 우선 입력, 출력, 다음 역할, 종료 기준은 `.harness/docs/team-spec.md`의 `api_server_dev` 섹션을 단일 원천으로 따른다.
+이 스킬은 얇은 역할 포인터다. 역할의 목적, 우선 입력, 출력, 다음 역할, 종료 기준은 `.harness/docs/team-spec.md`의 `runtime_boundary_dev` 섹션을 단일 원천으로 따른다.
 
 ## 실행 규칙
 
-1. 먼저 `.harness/docs/team-spec.md`를 읽고 `api_server_dev` 섹션을 확인한다.
+1. 먼저 `.harness/docs/team-spec.md`를 읽고 `runtime_boundary_dev` 섹션을 확인한다.
 2. 이 파일에 역할별 입력 문서나 절차를 새로 복제하지 않는다.
 3. 작업 종료 시 `team-spec`의 공통 출력 블록을 따른다.
 ```

@@ -46,8 +46,8 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 - 제품 정책 문서
 - 기술 설계 문서
 - 데이터 모델 문서
-- AI/MCP 정책 문서
-- 랜딩/프론트엔드 사양 문서
+- AI/MCP/보안 정책 문서
+- 프론트엔드/화면 사양 문서
 - 로드맵 문서
 - 앱별 구현 컨벤션
 
@@ -126,8 +126,8 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 
 역할별 실행 기준을 작성할 때는 역할 목적, 책임, primary scope의 정책 도메인과 우선 입력 문서가 맞는지도 확인한다.
 
-- MCP, MCP Tool, MCP 토큰, 감사 로그, AuditLog, AI Credit, LLM Provider, 고급 코칭, 로그 제외, 민감정보, 보안 정책 같은 표현이 있으면 관련 AI/MCP/보안/감사 정책 문서를 우선 입력에 포함한다.
-- 관련 정책 문서는 `docs/03-ai-mcp-policy.md`, `docs/*ai*mcp*.md`, `docs/*security*.md`, `docs/*audit*.md`, `docs/*policy*.md`, 앱별 `AGENTS.md`가 참조하는 정책 문서 후보에서 찾는다.
+- MCP, 외부 Tool 호출, 토큰/키 관리, 감사 로그, AuditLog, AI 사용량/쿼터, LLM Provider, 프롬프트/응답 로그 제외, 민감정보, 보안 정책 같은 표현이 있으면 관련 AI/MCP/보안/감사 정책 문서를 우선 입력에 포함한다.
+- 관련 정책 문서는 고정 파일명이나 경로 패턴이 아니라 저장소의 문서 제목, 본문 키워드, 목차, 앱별 `AGENTS.md` 참조를 읽어 의미상 AI/MCP/보안/감사/개인정보 정책 원천에 해당하는 후보에서 찾는다.
 - 같은 정책 도메인을 맡는 역할은 같은 정책 원천을 공유해야 한다.
 - 정책 문서가 없으면 대체 원천과 보류 판단을 역할 스펙에 남긴다.
 

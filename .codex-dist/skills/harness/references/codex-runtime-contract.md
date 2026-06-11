@@ -9,7 +9,7 @@ Codex용 Harness는 주 에이전트가 역할 계약을 읽고, 필요한 작�
 ## 핵심 전제
 
 - Harness의 기준 런타임은 Codex다.
-- 생성 결과에서 반드시 실행 기준으로 삼을 자산은 `AGENTS.md`, `.harness/docs/team-spec.md`, `.codex/skills/*`, `.harness/docs/*`다.
+- 생성 결과에서 반드시 실행 기준으로 삼을 자산은 `AGENTS.md`, `.codex/skills/*`, `.harness/docs/*`다. 이 중 역할 기준의 중심은 `team-spec.md`다.
 - `.codex/config.toml`과 `.codex/agents/*.toml`은 `team-spec.md`를 구현한 역할 메타데이터다. 생성 대상에는 포함하지만, 역할들이 자동으로 서로 통신한다고 가정하는 실행 근거로 삼지는 않는다.
 - 생성된 역할들이 서로 자동 통신한다고 가정하지 않는다.
 - 역할 간 연결은 `run-harness`와 `orchestration-plan.md`가 설명하는 주 에이전트 중심 handoff로 표현한다.

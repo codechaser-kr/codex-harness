@@ -119,7 +119,7 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - 재진입 기준이 역할 수준에서 드러난다.
 - 새로 확인한 저장소 사실과 반복될 수 있는 판단을 어느 역할이 기록하고 어디로 승격할지 드러나야 한다.
 - 초기 생성물만으로 다음 시작 역할과 재진입 Phase를 설명할 수 있다.
-- 각 역할 스킬이 `team-spec.md`의 해당 역할 섹션과 공통 학습 출력 블록을 명확히 참조한다.
+- 각 역할 스킬이 `team-spec.md`의 해당 역할 섹션과 공통 출력 블록을 명확히 참조한다.
 - `.codex/agents/*.toml`과 `.codex/skills/*/SKILL.md`가 역할별 우선 입력, 절차, 다음 역할, 종료 기준을 별도 기준처럼 복제하지 않는다.
 
 ## 다른 레퍼런스와의 연결

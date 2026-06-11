@@ -188,7 +188,7 @@ team-spec을 바탕으로 아래를 동적으로 생성한다.
 - team-spec의 각 역할이 단일 타겟 로컬 보강과 생성기 환류 후보를 어떻게 구분할지 적었는가
 - 시작 진입 역할이 team-spec 기준 시작 역할과 재진입 규칙을 설명하는가
 - 운영 감사 역할이 team-spec과 산출물의 불일치를 지적할 수 있는가
-- 생성된 `.codex/skills/*/SKILL.md`가 해당 `role_id`의 team-spec 섹션과 공통 학습 출력 블록을 명확히 참조하는가
+- 생성된 `.codex/skills/*/SKILL.md`가 해당 `role_id`의 team-spec 섹션과 공통 출력 블록을 명확히 참조하는가
 - 생성된 `.codex/agents/*.toml`과 `.codex/skills/*/SKILL.md`가 역할별 시작 체크리스트, 판단 기준, 완료 기준, 다음 역할 기준을 중복 복제하지 않는가
 
 ---

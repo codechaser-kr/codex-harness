@@ -169,6 +169,7 @@ QA는 마지막 한 번만 개입하면 늦다.
 - "흐름 조율 역할이 중심 역할인데, 설명과 산출물 모두 그 위치를 드러내는가?"
 - "리포트가 본체처럼 커지고 역할 팀이 약해지는 징후가 있는가?"
 - "team-spec의 역할별 입력/출력 계약을 실제 로컬 역할 스킬이 올바른 role_id로 참조하는가?"
+- "역할별 우선 입력의 설계/정책/사양 문서가 team-spec 상단 원천 우선순위에 빠짐없이 포함되었는가?"
 - "역할별 우선 입력, 절차, 다음 역할이 agent/skill 파일에 중복 복제되어 drift 위험을 만들지 않는가?"
 - "오케스트레이션 문서의 다음 역할과 latest-session-summary의 재진입 Phase가 같은 방향을 가리키는가?"
 
@@ -187,6 +188,7 @@ QA는 프로젝트 유형에 맞는 교차 비교 축을 만든다.
 | `team-spec.md` | `.codex/agents/*.toml` | 역할 인벤토리와 agent 파일 수가 맞고, `role_id`와 description이 올바른 역할 섹션을 가리키는가 |
 | `team-spec.md` | `.codex/skills/*/SKILL.md` | 스킬 파일 수가 맞고, 해당 `role_id` 섹션과 공통 출력 블록을 명확히 참조하는가 |
 | `team-spec.md` | `.codex/agents/*.toml`, `.codex/skills/*/SKILL.md` | 역할별 우선 입력, 절차, 다음 역할, 종료 기준이 밖에 중복 복제되어 있지 않은가 |
+| `team-spec.md` 역할별 우선 입력 | `team-spec.md` 설계 원천 우선순위 | 역할이 정책 판단에 쓰는 설계/정책/사양 문서가 상단 원천 목록에 포함되고, 로그/세션 요약은 제외됐는가 |
 | `orchestration-plan.md` | `latest-session-summary.md` | 다음 역할과 재진입 Phase가 어긋나지 않는가 |
 | `qa-strategy.md` | 운영 감사 결과 | QA 질문이 실제 감사 지적과 연결되는가 |
 | 역할 출력 | `latest-session-summary.md` | 새 학습 후보와 승격 대상이 다음 실행 입력으로 이어지는가 |

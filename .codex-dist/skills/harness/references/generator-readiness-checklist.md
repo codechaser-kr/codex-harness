@@ -2,7 +2,7 @@
 
 이 문서는 `harness` 생성기가 Codex에서 실행 가능한 메타하네스 시스템을 만들 준비가 됐는지 점검하는 기준이다.
 
-여기서 말하는 준비도는 타겟 프로젝트에 생성된 하네스가 운영 가능한지에 대한 판정과 다르다. 실제 판정은 타겟 프로젝트에 하네스를 생성한 뒤, 생성된 `.harness/docs/*`, `.codex/agents/*`, `.codex/skills/*`, 세션 로그, 재진입 요약을 읽어야 가능하다.
+여기서 말하는 준비도는 타겟 프로젝트에 생성된 하네스가 운영 가능한지에 대한 판정과 다르다. 실제 판정은 타겟 프로젝트에 하네스를 생성한 뒤, 생성된 `.harness/docs/*`, `.codex/agents/*`, `.agents/skills/*`, 세션 로그, 재진입 요약을 읽어야 가능하다.
 
 이 문서의 목적은 제한적이다. 이 저장소 안에서는 **생성기가 타겟 프로젝트에서 운영 가능성 평가를 수행할 기준과 절차를 갖췄는가**만 본다.
 
@@ -63,8 +63,9 @@
 ### 3) 역할 스펙 진실원천
 
 - `team-spec`이 역할 인벤토리와 생성 결과의 단일 기준으로 작동한다.
-- `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`가 `team-spec`을 구현한 결과로 설명된다.
-- `.codex/agents/*.toml`은 역할 발견과 실행 메타데이터로, `.codex/skills/*/SKILL.md`는 해당 역할 섹션을 읽게 하는 포인터로 설명된다.
+- `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`가 `team-spec`을 구현한 결과로 설명된다.
+- `.codex/agents/*.toml`은 역할 발견과 실행 메타데이터로, `.agents/skills/*/SKILL.md`는 해당 역할 섹션을 읽게 하는 포인터로 설명된다.
+- `.codex/config.toml`과 `.codex/agents/*.toml`은 최신 Codex schema를 따른다. `[agents] directory`, `skills_directory`, agent TOML의 `reasoning`, `sandbox` 키가 남아 있으면 준비도 미달로 본다.
 - 각 역할에는 이름, 책임, 입력, 출력, 다음 역할, 시작 조건, 종료 조건, 재진입 트리거, 금지 판단이 포함된다.
 - 추상 직무명만 복사하지 않고, 저장소 고유 용어와 실패 경계를 역할명에 반영한다.
 
@@ -174,7 +175,7 @@
 - `logging-policy.md`가 없거나, 예전 스크립트/TSV 자동화 사용법을 필수 조건처럼 설명한다.
 - 로그와 역할 출력에 학습 후보와 승격 대상을 남길 위치가 없다.
 - 일부 역할 스킬이 `team-spec`의 해당 역할 섹션이나 공통 출력 블록을 참조하지 않는다.
-- 역할별 우선 입력, 절차, 다음 역할, 종료 기준이 `.codex/agents/*.toml`이나 `.codex/skills/*/SKILL.md`에 중복 복제되어 있다.
+- 역할별 우선 입력, 절차, 다음 역할, 종료 기준이 `.codex/agents/*.toml`이나 `.agents/skills/*/SKILL.md`에 중복 복제되어 있다.
 - 초기 생성물이 다음 시작 역할, 다음 재진입 Phase, 학습 후보 기록 위치를 설명하지 못한다.
 - 단일 타겟 관찰을 곧바로 범용 생성기 규칙으로 일반화한다.
 - 생성 판단의 본체가 `team-spec`과 문서 계약이 아닌 다른 실행 파일이나 복제된 역할 스킬 본문처럼 설명된다.

@@ -17,7 +17,7 @@
 - `AGENTS.md`
 - `.codex/config.toml`
 - `.codex/agents/`
-- `.codex/skills/`
+- `.agents/skills/`
 - `.harness/docs/`
 - `.harness/logs/`
 - `team-spec.md`
@@ -39,11 +39,13 @@
 - `team-spec.md`에 최종 역할 인벤토리가 있다.
 - 최종 역할 인벤토리는 fenced `text` 블록이며, 헤더와 모든 역할 행이 같은 블록 안에 있다.
 - 역할 행이 inline code로 흩어져 있으면 `Phase 2` 재작성 대상으로 본다.
-- 각 역할의 `agent_file`에 대응하는 `.codex/agents/*.toml`, `.codex/skills/*`가 존재한다.
-- `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`가 `team-spec.md`의 역할 수, `agent_file`, description 기준과 어긋나지 않는다.
+- 각 역할의 `agent_file`에 대응하는 `.codex/agents/*.toml`, `.agents/skills/*`가 존재한다.
+- `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`가 `team-spec.md`의 역할 수, `agent_file`, description 기준과 어긋나지 않는다.
+- `.codex/config.toml`에 `[agents] directory` 또는 `skills_directory`가 없고, 역할 연결은 `[agents.<role_id>] config_file` 형식을 따른다.
+- `.codex/agents/*.toml`은 `model_reasoning_effort`, `sandbox_mode`를 사용하며 `reasoning`, `sandbox` 키를 사용하지 않는다.
 - 모든 역할 스킬이 `team-spec.md`의 해당 `role_id` 섹션을 참조한다.
 - 모든 역할 스킬이 `team-spec.md`의 공통 출력 블록을 따르도록 지시한다.
-- `.codex/agents/*.toml`과 `.codex/skills/*/SKILL.md`에 역할별 우선 입력, 절차, 다음 역할, 종료 기준이 중복 복제되어 있지 않다.
+- `.codex/agents/*.toml`과 `.agents/skills/*/SKILL.md`에 역할별 우선 입력, 절차, 다음 역할, 종료 기준이 중복 복제되어 있지 않다.
 - description이 실제 요청에서 트리거될 만큼 구체적이다.
 - 시작 진입 역할과 중심 조율 역할이 구분된다.
 - QA 역할과 운영 감사 역할이 구분된다.
@@ -102,7 +104,7 @@
 - 역할 출력이나 로그에 새로 확인한 저장소 사실을 남길 위치가 있다.
 - 모든 역할 스킬이 `team-spec.md`의 해당 `role_id` 섹션을 참조한다. 누락된 역할이 있으면 `Phase 4` 재작성 필요로 판정한다.
 - 모든 역할 스킬이 `team-spec.md`의 공통 출력 블록을 따르도록 지시한다.
-- `.codex/agents/*.toml`과 `.codex/skills/*/SKILL.md`가 역할 세부 기준을 별도 기준처럼 복제하면 drift 위험으로 기록한다.
+- `.codex/agents/*.toml`과 `.agents/skills/*/SKILL.md`가 역할 세부 기준을 별도 기준처럼 복제하면 drift 위험으로 기록한다.
 - 학습 후보가 있으면 어느 Phase로 재진입하고 어느 문서/스킬에 반영할지 설명한다.
 - 보존 문서, 운영 문서, 역할 스킬이 서로 다른 진입점이나 역할명을 말하면 충돌로 기록한다.
 - 보존 문서 충돌이 있으면 원문을 임의로 덮어쓰기보다 호환성 메모, 재진입 Phase, 사용자 승인 필요 여부를 함께 남긴다.

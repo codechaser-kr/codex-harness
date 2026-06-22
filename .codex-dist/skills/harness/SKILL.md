@@ -9,7 +9,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 
 이 스킬은 도메인 설명과 저장소 근거를 프로젝트별 역할 팀 아키텍처로 바꾸는 메타 스킬이다. Codex에서는 주 에이전트가 오케스트레이션과 통합을 맡고, 독립 입력과 독립 산출이 있는 좁은 작업만 Codex subagent로 위임한다.
 
-저장소를 탐색해 근거를 수집하고, 그 결과를 공통 입력으로 삼아 역할 팀, 운영 구조, QA/검증 흐름, 시작 진입 역할(`run-harness`), 상태 점검 / 정렬 / 개선 루프를 설계한다. 생성 결과의 중심은 `.codex/agents/*`와 `.codex/skills/*`이며, `.harness/docs/*`와 `.harness/logs/*`는 역할 팀이 공유하는 보조 입력과 운영 기록으로 남긴다.
+저장소를 탐색해 근거를 수집하고, 그 결과를 공통 입력으로 삼아 역할 팀, 운영 구조, QA/검증 흐름, 시작 진입 역할(`run-harness`), 상태 점검 / 정렬 / 개선 루프를 설계한다. 생성 결과의 중심은 `.codex/agents/*`와 `.agents/skills/*`이며, `.harness/docs/*`와 `.harness/logs/*`는 역할 팀이 공유하는 보조 입력과 운영 기록으로 남긴다.
 
 ---
 
@@ -18,7 +18,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 1. 이 스킬은 현재 저장소에 맞는 **프로젝트 특화 실행 하네스 팀**을 만들고, 에이전트 정의와 스킬을 생성한다.
 2. 하네스의 본체는 역할 팀 아키텍처다. 문서 수를 늘리는 것이 아니라, 누가 어떤 기준으로 어떤 순서에 따라 일하는지 고정한다.
 3. Codex에서는 주 에이전트가 흐름을 잡고, 독립 입력과 독립 산출이 있는 좁은 작업만 서브에이전트로 병렬 위임한다.
-4. `AGENTS.md`에는 하네스 포인터와 진입 규칙만 간결하게 남기고, 역할별 목적, 우선 입력, 출력, 다음 역할, 종료 기준, 공통 출력 블록은 `team-spec.md`를 단일 원천으로 둔다. `.codex/agents/*`는 역할 발견과 실행 메타데이터, `.codex/skills/*`는 해당 `team-spec` 역할 섹션을 읽게 하는 얇은 실행 포인터만 맡는다. `.harness/docs/*`는 판단 근거와 운영 기준을 보조한다.
+4. `AGENTS.md`에는 하네스 포인터와 진입 규칙만 간결하게 남기고, 역할별 목적, 우선 입력, 출력, 다음 역할, 종료 기준, 공통 출력 블록은 `team-spec.md`를 단일 원천으로 둔다. `.codex/agents/*`는 역할 발견과 실행 메타데이터, `.agents/skills/*`는 해당 `team-spec` 역할 섹션을 읽게 하는 얇은 실행 포인터만 맡는다. `.harness/docs/*`는 판단 근거와 운영 기준을 보조한다.
 5. 하네스는 고정물이 아니라 진화하는 시스템이다. 실행할 때마다 피드백을 반영해 에이전트 정의, 역할 스킬, 오케스트레이션 문서, `AGENTS.md`를 현재 상태에 맞게 갱신한다.
 
 ## 워크플로우
@@ -29,7 +29,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 
 하네스 스킬이 트리거되면, 실제 생성 전에 현재 저장소의 하네스 현황을 확인한다.
 
-1. `AGENTS.md`, `.codex/config.toml`, `.codex/agents/`, `.codex/skills/`, `.harness/docs/`, `.harness/logs/`를 읽는다.
+1. `AGENTS.md`, `.codex/config.toml`, `.codex/agents/`, `.agents/skills/`, `.harness/docs/`, `.harness/logs/`를 읽는다.
 2. 현재 상태를 `신규 구축 / 기존 확장 / 운영 유지보수`로 나누고, 상태에 맞는 시작 Phase를 정한다.
 3. 기존 에이전트/스킬 인벤토리와 `AGENTS.md` 불일치를 감지해 정리한다.
 4. 감사 결과를 요약하고, 이번 턴에서 수행할 실행 범위(전체 실행 또는 부분 재진입)를 확정한다.
@@ -57,7 +57,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 ##### 운영 루프
 
 - `상태 점검`: 산출물, 역할 설명, 운영 기준이 서로 맞지 않는 지점을 읽고 재진입 지점을 정한다. 새롭게 드러난 경계, 실패 비용, 도메인 용어도 함께 기록한다.
-- `정렬`: 새로 확인된 사실을 `team-spec`, 입력 문서, 운영 문서에 반영해 기준선을 갱신한다. `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`, 보조 운영 문서가 같은 기준을 말하도록 다시 맞춘다.
+- `정렬`: 새로 확인된 사실을 `team-spec`, 입력 문서, 운영 문서에 반영해 기준선을 갱신한다. `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`, 보조 운영 문서가 같은 기준을 말하도록 다시 맞춘다.
 - `개선`: 반복 패턴, 검증 비용, 다음 역할 병목과 새롭게 드러난 사실을 바탕으로 역할 팀, 실행 모드, 실행 패턴을 다시 설계한다.
 
 이 세 루프는 부가 기능이 아니다. 시작 진입 역할(`run-harness`)과 운영 감사 역할이 계속 다루는 메타시스템 본체다.
@@ -139,7 +139,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 #### Phase 4: 로컬 역할 스킬 생성
 
 - 입력: `Phase 3` 에이전트 정의, `team-spec`, `harness-architecture.md`
-- 산출: `.codex/skills/*` 역할별 `SKILL.md`
+- 산출: `.agents/skills/*` 역할별 `SKILL.md`
 - 다음 단계 조건: 역할별 실행 기준은 `team-spec`에 남고, 스킬 본문은 해당 역할 섹션과 공통 출력 블록을 명확히 참조함
 
 1. team-spec과 에이전트 정의에 맞춰 역할별 로컬 `SKILL.md`를 만든다.
@@ -178,7 +178,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - 산출: 구조 검증 결과, 누락/충돌 목록, 재작성 또는 재진입 판단
 - 다음 단계 조건: 운영 감사 역할이 현재 하네스를 `운영 가능 / 재작성 필요 / 재구성 필요` 중 하나로 설명할 수 있음
 
-1. `team-spec`의 역할 인벤토리와 `.codex/agents/*`, `.codex/skills/*`가 같은 역할 집합을 말하는지 확인한다.
+1. `team-spec`의 역할 인벤토리와 `.codex/agents/*`, `.agents/skills/*`가 같은 역할 집합을 말하는지 확인한다.
 2. 시작 진입 역할, 중심 조율 역할, QA 역할, 운영 감사 역할의 책임이 서로 겹치지 않는지 본다.
 3. 정상 흐름, 보류 흐름, 실패 흐름, 재진입 흐름이 오케스트레이션에 모두 남아 있는지 확인한다.
 4. `.harness/docs/*`가 역할 자산을 대신하는 골격 문서로 남아 있지 않은지 검토한다.
@@ -238,7 +238,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 
 - 최초 하네스 구성 요청이면 `Phase 0` 감사 뒤에 시작 진입 역할(`run-harness`)이 `exploration-notes.md`, `project-setup.md`, `team-spec.md`, `logging-policy.md` 같은 시작 문서를 먼저 준비한다. `logging-policy.md`는 삭제 가능한 예전 스크립트 안내가 아니라, 현재 하네스가 따를 Markdown 로그 계약 문서다.
 - 시작 문서가 생성된 상태는 완료가 아니라 자동 판단 보류 메모와 역할 입력이 준비된 상태로 본다.
-- `Phase 2`는 `team-spec.md`의 최종 역할 인벤토리를 fenced `text` 블록으로 만들고, `Phase 3`은 `.codex/config.toml`, `.codex/agents/*.toml`을, `Phase 4`는 `.codex/skills/*`를 작성해야 한다.
+- `Phase 2`는 `team-spec.md`의 최종 역할 인벤토리를 fenced `text` 블록으로 만들고, `Phase 3`은 `.codex/config.toml`, `.codex/agents/*.toml`을, `Phase 4`는 `.agents/skills/*`를 작성해야 한다.
 - `Phase 5`는 시작 진입 역할과 오케스트레이션 흐름을 연결하고, `Phase 6`은 운영 감사 역할이 구조와 실행 가능성을 검증한다.
 - `.codex/config.toml`과 `.codex/agents/*.toml`은 별도 진실원천이 아니라 `team-spec.md`를 구현한 결과물이다.
 - 세션 기록은 `references/logging-contract.md`를 따라 `.harness/docs/logging-policy.md`, `.harness/logs/session-log.md`, `.harness/logs/latest-session-summary.md`가 같은 계약을 말하도록 남긴다.
@@ -306,7 +306,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 
 ### 프로젝트 로컬 역할 스킬
 
-- `.codex/skills/<team-spec의 agent_file>/SKILL.md`
+- `.agents/skills/<team-spec의 agent_file>/SKILL.md`
 - 각 스킬은 `Phase 2`가 설계한 프로젝트 특화 역할 하나를 맡는다.
 - 생성기는 역할 개수를 미리 가정하지 않고, `team-spec`의 최종 역할 인벤토리만 읽는다.
 - 중심 조율 역할 또는 시작 진입 역할은 오케스트레이터 역할을 맡는다. Codex에서는 팀원 간 직접 메시지 대신 파일 기반 handoff, 세션 로그, 주 에이전트 통합 규칙을 명시한다.
@@ -318,7 +318,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - `.codex/agents/<team-spec의 agent_file>.toml`
 - 역할 수와 파일 목록은 `Phase 2`가 설계한 팀 스펙에 따라 달라진다.
 
-`AGENTS.md`는 상위 진입 규칙을, `.codex/agents/*.toml`은 역할 발견과 실행 메타데이터를, `.codex/skills/*`는 해당 `team-spec` 역할 섹션으로 연결하는 실행 포인터를 담당한다.
+`AGENTS.md`는 상위 진입 규칙을, `.codex/agents/*.toml`은 역할 발견과 실행 메타데이터를, `.agents/skills/*`는 해당 `team-spec` 역할 섹션으로 연결하는 실행 포인터를 담당한다.
 
 ### 보조 운영 문서와 로그
 
@@ -344,7 +344,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 
 1. `exploration-notes.md`가 자동 판단 보류를 위한 약한 메모로 존재한다.
 2. `team-spec.md`가 프로젝트 특화 역할 인벤토리와 역할 경계를 설명한다.
-3. `.codex/agents/*`와 `.codex/skills/*`가 `team-spec`의 역할 집합을 구현한다.
+3. `.codex/agents/*`와 `.agents/skills/*`가 `team-spec`의 역할 집합을 구현한다.
 4. 시작 진입 역할(`run-harness`)이 현재 상태를 읽고 시작 역할, 다음 역할, 미해결 질문을 분명히 제시할 수 있다.
 5. 오케스트레이션 흐름이 정상, 보류, 실패, 재진입 상황을 모두 다룬다.
 6. 운영 감사 역할이 `references/verification-checklist.md` 기준으로 구조 누락과 골격 잔존이 없다고 설명할 수 있다.

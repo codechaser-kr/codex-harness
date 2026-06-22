@@ -54,7 +54,7 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 
 `team-spec` 관련 reference를 바꿨다면 아래를 확인한다.
 
-- 역할 스펙 필드가 `.codex/agents/*`와 `.codex/skills/*` 생성에 필요한 정보를 충분히 담는가
+- 역할 스펙 필드가 `.codex/agents/*`와 `.agents/skills/*` 생성에 필요한 정보를 충분히 담는가
 - `## 최종 역할 인벤토리`가 fenced `text` 블록이며, 헤더와 역할 행이 같은 블록 안에 있는가
 - 역할 행을 inline code로 흩어 놓은 예시가 남아 있지 않은가
 - 역할별 출력 형식이 `team-spec`의 실행 기준과 연결되는가

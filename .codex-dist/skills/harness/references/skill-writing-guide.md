@@ -348,7 +348,7 @@ Codex의 서브에이전트 활용을 염두에 둘 때,
 → 이 프로젝트의 목표는 외부 실행 파일에 기대지 않는 메타 하네스다. 반복 판단은 문서 계약과 역할 스킬로 남긴다.
 
 ### 실수 8: 역할 세부 기준을 여러 파일에 복제함
-→ 역할별 우선 입력, 절차, 다음 역할, 종료 기준은 `team-spec.md`에만 둔다. `.codex/agents/*.toml`과 `.codex/skills/*/SKILL.md`는 role_id 연결과 실행 포인터만 맡는다.
+→ 역할별 우선 입력, 절차, 다음 역할, 종료 기준은 `team-spec.md`에만 둔다. `.codex/agents/*.toml`과 `.agents/skills/*/SKILL.md`는 role_id 연결과 실행 포인터만 맡는다.
 
 ---
 

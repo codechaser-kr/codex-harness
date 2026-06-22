@@ -46,10 +46,12 @@
 - 각 description이 실제 요청에서 트리거될 만큼 구체적이다.
 - `developer_instructions`가 해당 역할의 `team-spec.md` 섹션을 단일 원천으로 따르도록 안내한다.
 - 역할별 우선 입력, 절차, 출력 형식, 다음 역할, 종료 기준을 `.toml`에 반복 복제하지 않는다.
+- `.codex/config.toml`은 `[agents]` 아래에 `directory` 또는 `skills_directory`를 두지 않고, 필요한 경우 `[agents.<role_id>]`와 `config_file = "agents/<agent_file>.toml"`만 사용한다.
+- agent TOML은 `model_reasoning_effort`와 `sandbox_mode`를 사용하고, `reasoning` 또는 `sandbox` 키를 쓰지 않는다.
 
 고정 역할명을 강제하지 않는다. 타겟 프로젝트의 도메인과 실패 경계를 반영한 이름이 우선이다.
 
-### 3. `.codex/skills/*/SKILL.md`
+### 3. `.agents/skills/*/SKILL.md`
 
 역할 스킬은 처음부터 실행 가능한 판단 단위로 연결되는 얇은 포인터여야 한다.
 

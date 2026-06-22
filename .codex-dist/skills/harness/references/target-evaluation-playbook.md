@@ -71,7 +71,7 @@
 
 ### C. 에이전트 팀 규칙
 
-- `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`가 같은 팀 규칙을 말하는가
+- `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`가 같은 팀 규칙을 말하는가
 - 프로젝트 맞춤 역할명이 실제 저장소의 요청 유형과 실패 경계를 설명하는가
 - 시작 진입 역할이 현재 시작 역할, 다음 역할, 다음 재진입 phase를 실제로 제시할 수 있는가
 - `team-spec.md`의 최종 역할 인벤토리가 fenced `text` 블록으로 되어 있고, 그 블록만으로 agent/skill 생성 대상을 읽을 수 있는가
@@ -185,7 +185,7 @@
 
 예시:
 
-- `.codex/skills/*/SKILL.md`가 해당 `role_id`의 team-spec 섹션을 명확히 참조하지 않는다
+- `.agents/skills/*/SKILL.md`가 해당 `role_id`의 team-spec 섹션을 명확히 참조하지 않는다
 - `team-spec`의 시작 경로, 출력 형식, 재진입 규칙이 약하다
 - 역할별 우선 입력, 절차, 다음 역할이 skill/agent 파일에 중복 복제되어 있다
 
@@ -237,7 +237,7 @@
 예시:
 
 - 보존된 `.harness/docs/*` 문서가 예전 역할명이나 진입점을 계속 말한다
-- 새 `team-spec`, `.codex/agents/*`, `.codex/skills/*`는 다른 역할명을 쓰지만 연결 메모가 없다
+- 새 `team-spec`, `.codex/agents/*`, `.agents/skills/*`는 다른 역할명을 쓰지만 연결 메모가 없다
 - 평가자가 어느 이름을 우선해야 하는지 문서만 보고 판단하기 어렵다
 
 우선 재진입:

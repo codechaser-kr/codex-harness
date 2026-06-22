@@ -66,8 +66,9 @@ repo/
 ├── AGENTS.md
 ├── .codex/
 │   ├── config.toml
-│   ├── agents/
-│   │   └── run-harness.toml
+│   └── agents/
+│       └── run-harness.toml
+├── .agents/
 │   └── skills/
 │       └── run-harness/
 └── .harness/
@@ -88,13 +89,14 @@ repo/
 repo/
 ├── .codex/
 │   ├── config.toml
-│   ├── agents/
-│   │   ├── intake-router.toml
-│   │   ├── workspace-map-analyst.toml
-│   │   ├── boundary-architect.toml
-│   │   ├── interaction-qa.toml
-│   │   ├── release-auditor.toml
-│   │   └── team-orchestrator.toml
+│   └── agents/
+│       ├── intake-router.toml
+│       ├── workspace-map-analyst.toml
+│       ├── boundary-architect.toml
+│       ├── interaction-qa.toml
+│       ├── release-auditor.toml
+│       └── team-orchestrator.toml
+├── .agents/
 │   └── skills/
 │       ├── intake-router/
 │       ├── workspace-map-analyst/
@@ -117,7 +119,7 @@ repo/
 - `AGENTS.md`: 상위 운영 기준과 하네스 진입 규칙
 - `.codex/config.toml`: 프로젝트 로컬 에이전트 런타임 설정
 - `.codex/agents/*.toml`: 프로젝트 특화 역할 정의와 실행 설정
-- `.codex/skills/*`: 각 역할이 실제로 따르는 로컬 스킬
+- `.agents/skills/*`: 각 역할이 실제로 따르는 프로젝트 로컬 역할 스킬
 - `.harness/docs/exploration-notes.md`: 자동 판단 보류를 위한 약한 메모
 - `.harness/docs/project-setup.md`: 사용자 입력과 초기 방향 메모
 - `.harness/docs/team-spec.md`: 프로젝트 맞춤 역할 팀 초안과 최종 역할 인벤토리
@@ -205,7 +207,7 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 0. 현재 하네스 현황을 먼저 감사합니다.
 1. 사용자 입력, 저장소 근거, 기존 로그를 읽고 시작 조건을 정리합니다.
 2. 현재 프로젝트에 맞는 역할 팀 아키텍처와 `team-spec`을 설계합니다.
-3. `team-spec`을 바탕으로 `.codex/agents/*`와 `.codex/skills/*`를 생성합니다.
+3. `team-spec`을 바탕으로 `.codex/agents/*`와 `.agents/skills/*`를 생성합니다.
 4. 시작 진입 역할과 오케스트레이터 흐름을 연결합니다.
 5. QA/운영 감사 역할이 구조, 역할 경계, 실행 흐름을 검증합니다.
 6. 실행 로그를 남기고 다음 재진입 지점을 정리합니다.
@@ -249,7 +251,7 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 
 ## 제거
 
-전역 스킬 제거는 `$HOME/.codex/skills/harness`를 대상으로 합니다. 각 프로젝트 내부에 생성된 `.codex/skills/*`, `.harness/*`는 프로젝트별 자산으로 따로 관리합니다.
+전역 스킬 제거는 `$HOME/.codex/skills/harness`를 대상으로 합니다. 각 프로젝트 내부에 생성된 `.agents/skills/*`, `.harness/*`는 프로젝트별 자산으로 따로 관리합니다.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/uninstall.sh | sh

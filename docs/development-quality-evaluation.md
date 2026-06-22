@@ -14,7 +14,7 @@
 
 - `AGENTS.md`
 - `.codex/agents/*`
-- `.codex/skills/*`
+- `.agents/skills/*`
 - `.harness/docs/*`
 - `.harness/logs/session-log.md`
 - `.harness/logs/latest-session-summary.md`

@@ -2,15 +2,15 @@
 
 이 문서는 `team-spec.md`의 역할과 필수 섹션, 필수 필드를 정의한다.
 
-`team-spec.md`는 임시 메모가 아니다. 이후 `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`, 운영 문서가 따라야 하는 역할 팀의 기준 문서이며, 역할별 실행 기준의 단일 원천이다.
+`team-spec.md`는 임시 메모가 아니다. 이후 `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`, 운영 문서가 따라야 하는 역할 팀의 기준 문서이며, 역할별 실행 기준의 단일 원천이다.
 
 ## 핵심 전제
 
 - `team-spec.md`는 프로젝트 특화 역할 팀의 단일 진실원천이다.
 - 역할 이름, 목적, 책임, 우선 입력, 절차, 출력, 다음 역할, 종료 기준, 공통 출력 블록은 생성 단계 이전에 `team-spec.md`에서 먼저 확정한다.
-- `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`는 `team-spec.md`를 구현한 결과물이지, 별도의 기준 문서가 아니다.
+- `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`는 `team-spec.md`를 구현한 결과물이지, 별도의 기준 문서가 아니다.
 - `.codex/agents/*.toml`은 역할 발견과 실행 메타데이터만 담는다.
-- `.codex/skills/*/SKILL.md`는 해당 역할의 `team-spec` 섹션과 공통 출력 블록을 읽게 하는 실행 포인터다.
+- `.agents/skills/*/SKILL.md`는 해당 역할의 `team-spec` 섹션과 공통 출력 블록을 읽게 하는 실행 포인터다.
 - agent/skill 자산에 역할별 우선 입력, 절차, 다음 역할, 종료 기준을 반복 복제하지 않는다.
 - 추상적인 범용 역할명을 복사하지 말고, 현재 저장소의 도메인 용어와 실패 경계를 반영한다.
 - 신규 구축에서도 `team-spec.md`는 첫 세션부터 학습 후보, 승격 대상, 다음 재진입 Phase를 남길 수 있는 역할 계약을 제공해야 한다.
@@ -79,7 +79,7 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 
 - `role_id`는 snake_case
 - `display_name`과 `agent_file`은 kebab-case
-- `agent_file`은 `.codex/agents/<agent_file>.toml`, `.codex/skills/<agent_file>/SKILL.md`와 일치해야 한다
+- `agent_file`은 `.codex/agents/<agent_file>.toml`, `.agents/skills/<agent_file>/SKILL.md`와 일치해야 한다
 - description은 실제 요청에서 트리거될 만큼 구체적이어야 한다
 - 헤더와 모든 역할 행은 같은 fenced `text` 블록 안에 있어야 한다
 - 각 역할 행을 inline code로 따로 나열하지 않는다
@@ -105,10 +105,12 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - 운영 로그, 세션 요약, 임시 산출물처럼 재진입 상태를 설명하는 문서는 설계 원천 우선순위에 넣지 않는다.
 - 역할이 정책 판단 기준으로 사용하는 문서가 상단 원천 목록에 없으면 `Phase 2` 결과를 완료로 보지 않는다.
 - 역할 우선 입력에 포함된 문서는 해당 역할의 판단이나 출력 근거로 설명 가능해야 한다.
-- `Phase 3`은 최종 역할 인벤토리만 읽어 `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`를 작성한다.
+- `Phase 3`은 최종 역할 인벤토리만 읽어 `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`를 작성한다.
+- `.codex/config.toml`은 `[agents]` 아래에 `directory` 또는 `skills_directory`를 두지 않고, `[agents.<role_id>]`와 `config_file = "agents/<agent_file>.toml"` 형식으로 역할을 연결한다.
+- 최종 역할 인벤토리의 `reasoning`과 `sandbox` 값은 agent TOML에서 `model_reasoning_effort`, `sandbox_mode`로 매핑한다. agent TOML에 `reasoning` 또는 `sandbox` 키를 직접 쓰지 않는다.
 - 역할 생성 결과가 `team-spec.md`보다 앞서거나 `team-spec.md`를 덮어써서는 안 된다.
 - 역할 추가/삭제/이름 변경과 실행 기준 변경은 먼저 `team-spec.md`에서 반영한 뒤 관련 자산을 다시 맞춘다.
-- `.codex/agents/*.toml`은 역할 식별과 실행 메타데이터를 담고, `.codex/skills/*`는 `team-spec` 역할 섹션을 가리키는 실행 포인터를 담는다. 두 자산은 같은 `agent_file` 값과 `role_id`를 기준으로 연결돼야 한다.
+- `.codex/agents/*.toml`은 역할 식별과 실행 메타데이터를 담고, `.agents/skills/*`는 `team-spec` 역할 섹션을 가리키는 실행 포인터를 담는다. 두 자산은 같은 `agent_file` 값과 `role_id`를 기준으로 연결돼야 한다.
 - 각 역할 스킬은 `team-spec.md`의 해당 역할 섹션, 학습 후보 기록 규칙, 승격 대상 기준, 생성기 환류 후보 기준, 공통 출력 블록을 따르도록 지시해야 한다.
 - 각 역할 스킬 자체에 역할별 우선 입력, 절차, 다음 역할, 종료 기준을 다시 쓰면 drift 위험으로 보고 재작성한다.
 - 신규 구축에서 입력이 부족하면 역할 생성을 완료처럼 보이게 하지 말고, 보류한 판단과 다음 질문을 `team-spec.md`와 로그에 남긴다.
@@ -140,14 +142,14 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - 정책 문서가 없을 경우 대체 원천 또는 보류 판단이 명시된다.
 - 문서 간 충돌 시 어떤 설계 원천을 우선해야 하는지 `team-spec.md`만 보고 판단할 수 있다.
 - 입력/출력 연결이 역할 간에 자연스럽다.
-- 최종 역할 인벤토리의 `agent_file` 값이 `.codex/agents/*.toml`과 `.codex/skills/*/SKILL.md` 경로에 그대로 반영된다.
+- 최종 역할 인벤토리의 `agent_file` 값이 `.codex/agents/*.toml`과 `.agents/skills/*/SKILL.md` 경로에 그대로 반영된다.
 - QA와 운영 감사 역할이 별도의 책임을 가진다.
 - 시작 진입 역할과 중심 조율 역할이 혼동되지 않는다.
 - 재진입 기준이 역할 수준에서 드러난다.
 - 새로 확인한 저장소 사실과 반복될 수 있는 판단을 어느 역할이 기록하고 어디로 승격할지 드러나야 한다.
 - 초기 생성물만으로 다음 시작 역할과 재진입 Phase를 설명할 수 있다.
 - 각 역할 스킬이 `team-spec.md`의 해당 역할 섹션과 공통 출력 블록을 명확히 참조한다.
-- `.codex/agents/*.toml`과 `.codex/skills/*/SKILL.md`가 역할별 우선 입력, 절차, 다음 역할, 종료 기준을 별도 기준처럼 복제하지 않는다.
+- `.codex/agents/*.toml`과 `.agents/skills/*/SKILL.md`가 역할별 우선 입력, 절차, 다음 역할, 종료 기준을 별도 기준처럼 복제하지 않는다.
 
 ## 다른 레퍼런스와의 연결
 

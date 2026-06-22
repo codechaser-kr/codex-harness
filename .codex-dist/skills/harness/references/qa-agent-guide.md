@@ -117,7 +117,7 @@ Codex용 하네스에서도 같은 원칙을 적용한다. 다만 검증 대상�
 - 이 프로젝트에서 서로 맞물려야 하는 생산자와 소비자는 무엇인가
 - 한쪽만 보면 정상처럼 보이지만 함께 읽으면 깨질 수 있는 계약은 무엇인가
 - 역할 출력과 `.codex/agents/*.toml`의 `role_id`가 같은 `team-spec.md` 역할 섹션으로 연결되는가
-- `team-spec.md`의 역할 인벤토리와 `.codex/skills/*/SKILL.md`의 역할 포인터가 맞는가
+- `team-spec.md`의 역할 인벤토리와 `.agents/skills/*/SKILL.md`의 역할 포인터가 맞는가
 - 역할 세부 기준이 `team-spec.md` 밖에 중복되어 drift 위험을 만들지 않는가
 - `orchestration-plan.md`의 handoff와 `latest-session-summary.md`의 다음 재진입 정보가 맞물리는가
 
@@ -195,8 +195,8 @@ QA는 프로젝트 유형에 맞는 교차 비교 축을 만든다.
 | 왼쪽 | 오른쪽 | 확인 질문 |
 |------|--------|-----------|
 | `team-spec.md` | `.codex/agents/*.toml` | 역할 인벤토리와 agent 파일 수가 맞고, `role_id`와 description이 올바른 역할 섹션을 가리키는가 |
-| `team-spec.md` | `.codex/skills/*/SKILL.md` | 스킬 파일 수가 맞고, 해당 `role_id` 섹션과 공통 출력 블록을 명확히 참조하는가 |
-| `team-spec.md` | `.codex/agents/*.toml`, `.codex/skills/*/SKILL.md` | 역할별 우선 입력, 절차, 다음 역할, 종료 기준이 밖에 중복 복제되어 있지 않은가 |
+| `team-spec.md` | `.agents/skills/*/SKILL.md` | 스킬 파일 수가 맞고, 해당 `role_id` 섹션과 공통 출력 블록을 명확히 참조하는가 |
+| `team-spec.md` | `.codex/agents/*.toml`, `.agents/skills/*/SKILL.md` | 역할별 우선 입력, 절차, 다음 역할, 종료 기준이 밖에 중복 복제되어 있지 않은가 |
 | `team-spec.md` 역할별 우선 입력 | `team-spec.md` 설계 원천 우선순위 | 역할이 정책 판단에 쓰는 설계/정책/사양 문서가 상단 원천 목록에 포함되고, 로그/세션 요약은 제외됐는가 |
 | `team-spec.md` 상세 기준 | `team-spec.md` 역할별 우선 입력 | 역할별 원천 선택 기준이 상세 기준을 참조하고, 다른 문서에 중복 기준을 만들지 않았는가 |
 | 변경 diff | QA 역할 우선 입력 | QA가 변경 범위별 원천 선택을 `team-spec.md` 상세 기준으로 판단하도록 정의됐는가 |

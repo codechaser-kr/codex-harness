@@ -34,7 +34,7 @@ Codex용 하네스에서는 이 원칙을 다음처럼 옮긴다.
 | 저장소 사실 누락 | 실제 런타임 경계, 핵심 사용자 흐름, 검증 비용을 놓침 | Phase 1 | `domain-analysis.md`, `project-setup.md` | `exploration-model.md`, `target-evaluation-playbook.md` |
 | 역할 라우팅 오판 | 시작 역할이 반복해서 잘못 선택됨 | Phase 2, Phase 5 | `team-spec.md`, `orchestration-plan.md`, `run-harness` 스킬 | `team-spec-schema.md`, `orchestrator-template.md` |
 | 역할 경계 충돌 | 시작 진입, 조율, QA, 감사 책임이 섞임 | Phase 2 | `team-spec.md`, `.codex/agents/*`, 역할 스킬 | `agent-design-patterns.md`, `team-spec-contract.md` |
-| 역할 스킬 실행성 부족 | 스킬이 너무 얕아 다음 행동을 못 정함 | Phase 4 | `.codex/skills/*/SKILL.md` | `skill-writing-guide.md`, `skill-testing-guide.md` |
+| 역할 스킬 실행성 부족 | 스킬이 너무 얕아 다음 행동을 못 정함 | Phase 4 | `.agents/skills/*/SKILL.md` | `skill-writing-guide.md`, `skill-testing-guide.md` |
 | QA 승격 기준 부족 | 테스트 명령, 수동 검증, 무거운 빌드 판단이 반복적으로 모호함 | Phase 4, Phase 5 | `qa-strategy.md`, QA 역할 스킬 | `qa-agent-guide.md`, `verification-checklist.md` |
 | 보존 문서 충돌 | 예전 문서의 역할명/진입점이 새 운영 모델과 충돌하거나 호환성 매핑이 없음 | Phase 5, Phase 6 | `orchestration-plan.md`, `team-playbook.md`, 해당 보존 문서 메타데이터 | `orchestrator-template.md`, `target-evaluation-playbook.md`, `verification-checklist.md` |
 | 로그 재사용성 부족 | 다음 시작 역할, 최근 출력, 남은 위험, 학습 후보가 없음 | Phase 5, Phase 6 | `session-log.md`, `latest-session-summary.md` | `logging-contract.md`, `reentry-rules.md` |

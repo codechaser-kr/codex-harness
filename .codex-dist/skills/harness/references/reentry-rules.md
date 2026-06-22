@@ -42,7 +42,7 @@
 
 ### Phase 4로 재진입
 
-- `.codex/skills/*/SKILL.md`가 해당 `role_id`의 team-spec 섹션을 명확히 참조하지 못한다
+- `.agents/skills/*/SKILL.md`가 해당 `role_id`의 team-spec 섹션을 명확히 참조하지 못한다
 - 역할 스킬이 `team-spec`의 공통 출력 블록을 따르도록 지시하지 않는다
 - 역할별 우선 입력, 절차, 다음 역할, 종료 기준이 역할 스킬 본문에 중복 복제되어 drift 위험을 만든다
 

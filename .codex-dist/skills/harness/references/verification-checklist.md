@@ -43,6 +43,8 @@
 - `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`가 `team-spec.md`의 역할 수, `agent_file`, description 기준과 어긋나지 않는다.
 - `.codex/config.toml`에 `[agents] directory` 또는 `skills_directory`가 없고, 역할 연결은 `[agents.<role_id>] config_file` 형식을 따른다.
 - `.codex/agents/*.toml`은 `model_reasoning_effort`, `sandbox_mode`를 사용하며 `reasoning`, `sandbox` 키를 사용하지 않는다.
+- QA, 운영 감사, cross-check, 문서/구현/로그/정책 교차 검증, 하네스 정합성 검토 역할은 team-spec에서 `reasoning = high`이고 agent TOML에서 `model_reasoning_effort = "high"`로 매핑돼 있다.
+- 일반 구현/문서/콘텐츠 역할과 시작 진입 역할은 특별한 복잡도 근거가 없으면 `reasoning = medium`으로 남아 있다.
 - 모든 역할 스킬이 `team-spec.md`의 해당 `role_id` 섹션을 참조한다.
 - 모든 역할 스킬이 `team-spec.md`의 공통 출력 블록을 따르도록 지시한다.
 - `.codex/agents/*.toml`과 `.agents/skills/*/SKILL.md`에 역할별 우선 입력, 절차, 다음 역할, 종료 기준이 중복 복제되어 있지 않다.

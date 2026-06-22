@@ -81,6 +81,7 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 - agent 파일명
 - skill 디렉터리명
 - description 초안
+- reasoning 기본값
 - sandbox 정책
 - 권장 모델 클래스
 - role description 초안
@@ -100,6 +101,8 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - `agent_file`: kebab-case
 - `agent_file`은 `.codex/agents/<agent_file>.toml`과 `.agents/skills/<agent_file>/SKILL.md`를 연결하는 기준값이다.
 - `reasoning`과 `sandbox`는 team-spec의 추상 컬럼명으로만 쓰고, agent TOML 생성 시 각각 `model_reasoning_effort`, `sandbox_mode`로 매핑한다.
+- `reasoning`은 역할 유형별 기본값을 따른다. 일반 구현/문서/콘텐츠 역할과 시작 진입 역할은 `medium`, QA/운영 감사/cross-check/하네스 정합성 검토 역할은 `high`를 기본값으로 쓴다.
+- 중심 조율 역할은 기본 `medium`이지만, 다중 역할 조율, 보존 문서 충돌, 정책 원천 충돌, 로그/문서/구현 상태의 교차 정렬을 맡으면 `high`로 올린다.
 - 최종 역할명 선택 이유와 대체 관계는 기계 블록 밖의 설명 섹션에도 남긴다
 - 헤더와 모든 역할 행은 같은 fenced `text` 블록 안에 둔다.
 - 역할 행을 inline code로 흩어 놓은 결과는 기계 판독 블록으로 보지 않는다.
@@ -134,6 +137,7 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - QA 역할의 우선 입력에는 변경 diff, 대상 앱 또는 패키지의 `AGENTS.md`, team-spec의 설계 원천 우선순위 또는 설계 원천 인벤토리, 변경 범위에 해당하는 설계/정책/계약 문서, 최신 세션 요약 또는 재진입 상태를 포함한다.
 - QA 역할은 변경 범위가 제품/운영 정책, 인터페이스 계약, 구조화된 데이터, 보안/추적성/비용/외부 연동, 표현 계층 사양, 로드맵 상태 중 어디에 닿는지 보고 필요한 설계 원천을 선택해 읽도록 정의한다.
 - 변경 범위에 필요한 원천 문서가 없으면 QA 역할은 보류 판단, 미확인 위험, 다음 재진입 역할을 남겨야 한다.
+- QA형, 운영 감사형, 교차 검증형 역할은 여러 입력의 충돌을 찾는 판단 비용이 크므로 `reasoning = high`로 둔다. 이 값은 agent TOML 생성 시 `model_reasoning_effort = "high"`로 매핑한다.
 - 표현 계층 역할이 상태, 권한, 도메인 객체, 계약 필드, 분류값, 표시 라벨처럼 구조화된 데이터에 의존하는 출력을 맡으면 데이터 모델 또는 인터페이스 계약 원천을 우선 입력에 포함한다.
 - 표현 계층 데이터 원천은 저장소 재독해 결과를 바탕으로 문서화된 데이터 모델, 인터페이스 계약, 공유 타입 원천, 생산자 영역의 응답/전달 타입, 영역별 `AGENTS.md`가 지정한 타입 원천 중에서 결정한다.
 - 표현 계층 역할은 구조화된 상태값이나 필드명을 임의로 새로 만들지 않고 저장소의 기존 타입/계약 원천을 우선 사용하도록 정의한다.
@@ -149,6 +153,7 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - 리뷰형 역할은 리스크 우선순위, finding 출력 형식, 승인/반려 기준, 재검토 재진입 조건이 중요하다.
 - QA형 역할은 수동/자동 검증 분리, 실패 비용 우선순위, 미실행 위험 기록, 종료 시 잔여 위험 형식, 반복 검증 공백의 학습 후보 기록이 중요하다.
 - 조율형 역할은 시작 역할 판단, 다음 역할 연결, 요청 유형별 분기, 재진입 기준, 세션 종료 조건, 학습 후보의 승격 위치 지정이 중요하다.
+- reasoning 기본값도 이 역할 유형을 따른다. 구현형/문서형/콘텐츠형은 대체로 `medium`, QA형/운영 감사형/교차 검증형은 `high`, 조율형은 기본 `medium`이되 충돌 조율 부담이 크면 `high`다.
 
 team-spec이 이 정보를 담지 못하면, 생성된 `.agents/skills/*/SKILL.md`는 올바른 `role_id`를 가리키더라도 실행 기준을 찾을 수 없는 껍데기로 남는다.
 

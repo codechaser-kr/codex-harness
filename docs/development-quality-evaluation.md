@@ -14,7 +14,7 @@
 
 - `AGENTS.md`
 - `.codex/agents/*`
-- `.codex/skills/*`
+- `.agents/skills/*`
 - `.harness/docs/*`
 - `.harness/logs/session-log.md`
 - `.harness/logs/latest-session-summary.md`
@@ -45,9 +45,9 @@
 
 타겟 프로젝트 평가에서는 아래를 함께 확인합니다.
 
-- 신규 구축 결과가 다음 시작 역할과 다음 재진입 Phase를 설명하는가
+- 신규 구축 결과가 다음 시작 역할과 다음 하네스 재진입 Phase를 설명하는가
 - 역할 출력이나 로그에 학습 후보를 남길 위치가 있는가
-- 학습 후보가 어느 Phase와 어느 문서/스킬로 승격될지 설명하는가
+- 학습 후보가 어느 하네스 Phase와 어느 문서/스킬로 승격될지 설명하는가
 - 단일 타겟 프로젝트 관찰을 곧바로 생성기 규칙으로 일반화하지 않는가
 - 반복 결함만 생성기 reference 보강 후보로 남기는가
 - 위 흐름이 스크립트나 외부 실행기에 의존하지 않는가

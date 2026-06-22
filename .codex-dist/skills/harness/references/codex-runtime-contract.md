@@ -9,8 +9,10 @@ Codex용 Harness는 주 에이전트가 역할 계약을 읽고, 필요한 작�
 ## 핵심 전제
 
 - Harness의 기준 런타임은 Codex다.
-- 생성 결과에서 반드시 실행 기준으로 삼을 자산은 `AGENTS.md`, `.codex/skills/*`, `.harness/docs/*`다. 이 중 역할 기준의 중심은 `team-spec.md`다.
+- 생성 결과에서 반드시 실행 기준으로 삼을 자산은 `AGENTS.md`, `.agents/skills/*`, `.harness/docs/*`다. 이 중 역할 기준의 중심은 `team-spec.md`다.
 - `.codex/config.toml`과 `.codex/agents/*.toml`은 `team-spec.md`를 구현한 역할 메타데이터다. 생성 대상에는 포함하지만, 역할들이 자동으로 서로 통신한다고 가정하는 실행 근거로 삼지는 않는다.
+- `.codex/config.toml`의 `[agents]`에는 `max_threads`, `max_depth`, `[agents.<role_id>]`, `config_file = "agents/<agent_file>.toml"` 형식을 사용하고, `directory` 또는 `skills_directory` 포인터를 두지 않는다.
+- `.codex/agents/*.toml`은 `model_reasoning_effort`와 `sandbox_mode` 필드를 사용하고, `reasoning` 또는 `sandbox` 키를 쓰지 않는다.
 - 생성된 역할들이 서로 자동 통신한다고 가정하지 않는다.
 - 역할 간 연결은 `run-harness`와 `orchestration-plan.md`가 설명하는 주 에이전트 중심 handoff로 표현한다.
 - 생성 판단은 `team-spec.md`와 문서 계약이 담당하고, 역할 스킬은 해당 역할 섹션을 읽게 하는 실행 포인터로 작동한다.
@@ -23,7 +25,7 @@ Codex용 Harness는 다음 흐름을 기본으로 한다.
 2. `run-harness`가 `team-spec.md`, `domain-analysis.md`, `orchestration-plan.md`를 기준으로 시작 역할과 다음 역할을 정한다.
 3. 각 역할 스킬은 자신의 `role_id`에 해당하는 `team-spec.md` 섹션을 읽고, 그 섹션의 절차, 입력, 출력, 완료 기준을 따른다.
 4. 필요한 경우에만 주 에이전트가 독립적이고 경계가 분명한 작업을 보조 서브에이전트에 위임한다.
-5. 결과 통합, 재진입 Phase 결정, 최신 세션 요약 갱신은 주 에이전트 책임으로 남긴다.
+5. 결과 통합, 하네스 재진입 Phase 결정, 최신 세션 요약 갱신은 주 에이전트 책임으로 남긴다.
 
 ## 병렬 위임 기준
 
@@ -43,8 +45,8 @@ Codex용 Harness의 생성 책임은 다음 순서로 정리한다.
 
 1. `team-spec.md`가 역할 팀의 단일 진실원천이다.
 2. `AGENTS.md`는 상위 운영 기준과 진입 규칙을 담는다.
-3. `.codex/config.toml`과 `.codex/agents/*.toml`은 역할 식별, 모델/추론 설정, sandbox 정책 같은 실행 메타데이터를 담는다.
-4. `.codex/skills/*`는 각 역할의 `team-spec.md` 섹션과 공통 출력 블록을 참조하는 실행 포인터를 담는다.
+3. `.codex/config.toml`과 `.codex/agents/*.toml`은 역할 식별, 모델/추론 설정, sandbox 정책 같은 실행 메타데이터를 담는다. `team-spec`의 `reasoning`과 `sandbox` 값은 agent TOML에서 각각 `model_reasoning_effort`, `sandbox_mode`로 매핑한다.
+4. `.agents/skills/*`는 각 역할의 `team-spec.md` 섹션과 공통 출력 블록을 참조하는 실행 포인터를 담는다.
 5. `.harness/docs/*`는 저장소 입력, 오케스트레이션, 검증, 재진입 상태를 담는다.
 6. 생성 절차는 위 계약을 기준으로 주 에이전트가 직접 수행한다.
 
@@ -56,7 +58,7 @@ Codex 런타임 정렬이 끝났다고 보려면 아래 조건을 만족해야 �
 - `run-harness`가 주 에이전트 중심 진입점으로 설명돼 있다.
 - `team-spec.md`가 역할, handoff, 검증, 재진입 기준의 기준 문서로 남아 있다.
 - `.codex/config.toml`과 `.codex/agents/*.toml`이 생성됐다면 `team-spec.md`의 역할 인벤토리와 같은 역할 식별자를 말한다.
-- `.codex/skills/*/SKILL.md`가 `team-spec.md`의 해당 역할 섹션과 공통 출력 블록을 참조한다.
+- `.agents/skills/*/SKILL.md`가 `team-spec.md`의 해당 역할 섹션과 공통 출력 블록을 참조한다.
 - Codex가 문서와 스킬 계약만 읽고 생성 절차를 수행할 수 있다.
 
 ## 다른 레퍼런스와의 연결

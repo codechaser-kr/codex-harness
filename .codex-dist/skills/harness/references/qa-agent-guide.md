@@ -18,7 +18,7 @@ QA는 실행 하네스 팀이 실제로 의미 있는 품질 기준을 갖고 �
 - QA 판단은 탐색 결과, 역할 구조, orchestration 흐름을 함께 읽고 내려야 한다.
 - 좋은 QA 문서는 지적 목록보다 반복 검토 가능한 질문과 구조 보완 포인트를 남겨야 한다.
 - QA의 핵심은 단일 파일 확인이 아니라 **경계면 교차 비교**다.
-- Codex용 QA는 읽기 전용 관찰에 머물지 않고, 주 에이전트가 다음 수정 역할과 재진입 Phase를 정할 수 있는 근거를 남겨야 한다.
+- Codex용 QA는 읽기 전용 관찰에 머물지 않고, 주 에이전트가 다음 수정 역할과 하네스 재진입 Phase를 정할 수 있는 근거를 남겨야 한다.
 - QA 역할은 변경 diff와 변경 범위에 맞는 설계 원천을 함께 읽어야 한다. 구체적인 원천 선택 기준은 `team-spec-contract.md`와 `team-spec-schema.md`의 역할별 우선 입력 정합성 규칙을 따른다.
 
 ---
@@ -117,7 +117,7 @@ Codex용 하네스에서도 같은 원칙을 적용한다. 다만 검증 대상�
 - 이 프로젝트에서 서로 맞물려야 하는 생산자와 소비자는 무엇인가
 - 한쪽만 보면 정상처럼 보이지만 함께 읽으면 깨질 수 있는 계약은 무엇인가
 - 역할 출력과 `.codex/agents/*.toml`의 `role_id`가 같은 `team-spec.md` 역할 섹션으로 연결되는가
-- `team-spec.md`의 역할 인벤토리와 `.codex/skills/*/SKILL.md`의 역할 포인터가 맞는가
+- `team-spec.md`의 역할 인벤토리와 `.agents/skills/*/SKILL.md`의 역할 포인터가 맞는가
 - 역할 세부 기준이 `team-spec.md` 밖에 중복되어 drift 위험을 만들지 않는가
 - `orchestration-plan.md`의 handoff와 `latest-session-summary.md`의 다음 재진입 정보가 맞물리는가
 
@@ -125,7 +125,7 @@ Codex용 하네스에서도 같은 원칙을 적용한다. 다만 검증 대상�
 
 QA 역할은 변경 diff, 대상 영역의 `AGENTS.md`, `team-spec.md`의 설계 원천 우선순위 또는 설계 원천 인벤토리, 최신 세션 요약 또는 재진입 상태를 기본 입력으로 읽는다. 그다음 변경 범위에 맞는 원천을 선택했는지, 필요한 원천이 없을 때 보류 판단과 다음 재진입 역할을 남겼는지 확인한다.
 
-원천 선택의 세부 조건은 이 문서에 반복하지 않는다. `team-spec-contract.md`의 생성 규칙과 `team-spec-schema.md`의 역할별 실행 기준을 기준으로 감사한다.
+원천 선택의 세부 조건은 이 문서에 반복하지 않는다. `team-spec-contract.md`의 생성 규칙과 `team-spec-schema.md`의 역할별 실행 기준을 기준으로 감사(audit)를 수행한다.
 
 즉 QA는 “있다/없다”보다 “서로 맞는가”를 우선 본다.
 
@@ -180,7 +180,7 @@ QA는 마지막 한 번만 개입하면 늦다.
 - "역할의 목적, 책임, 주요 출력과 우선 입력 문서가 서로 맞물리는가?"
 - "추가 원천 선택이 필요한 역할이 `team-spec.md` 상세 기준을 직접 참조하고, 자체 기준을 중복 작성하지 않는가?"
 - "역할별 우선 입력, 절차, 다음 역할이 agent/skill 파일에 중복 복제되어 drift 위험을 만들지 않는가?"
-- "오케스트레이션 문서의 다음 역할과 latest-session-summary의 재진입 Phase가 같은 방향을 가리키는가?"
+- "오케스트레이션 문서의 다음 역할과 latest-session-summary의 하네스 재진입 Phase가 같은 방향을 가리키는가?"
 
 ---
 
@@ -195,12 +195,12 @@ QA는 프로젝트 유형에 맞는 교차 비교 축을 만든다.
 | 왼쪽 | 오른쪽 | 확인 질문 |
 |------|--------|-----------|
 | `team-spec.md` | `.codex/agents/*.toml` | 역할 인벤토리와 agent 파일 수가 맞고, `role_id`와 description이 올바른 역할 섹션을 가리키는가 |
-| `team-spec.md` | `.codex/skills/*/SKILL.md` | 스킬 파일 수가 맞고, 해당 `role_id` 섹션과 공통 출력 블록을 명확히 참조하는가 |
-| `team-spec.md` | `.codex/agents/*.toml`, `.codex/skills/*/SKILL.md` | 역할별 우선 입력, 절차, 다음 역할, 종료 기준이 밖에 중복 복제되어 있지 않은가 |
+| `team-spec.md` | `.agents/skills/*/SKILL.md` | 스킬 파일 수가 맞고, 해당 `role_id` 섹션과 공통 출력 블록을 명확히 참조하는가 |
+| `team-spec.md` | `.codex/agents/*.toml`, `.agents/skills/*/SKILL.md` | 역할별 우선 입력, 절차, 다음 역할, 종료 기준이 밖에 중복 복제되어 있지 않은가 |
 | `team-spec.md` 역할별 우선 입력 | `team-spec.md` 설계 원천 우선순위 | 역할이 정책 판단에 쓰는 설계/정책/사양 문서가 상단 원천 목록에 포함되고, 로그/세션 요약은 제외됐는가 |
 | `team-spec.md` 상세 기준 | `team-spec.md` 역할별 우선 입력 | 역할별 원천 선택 기준이 상세 기준을 참조하고, 다른 문서에 중복 기준을 만들지 않았는가 |
 | 변경 diff | QA 역할 우선 입력 | QA가 변경 범위별 원천 선택을 `team-spec.md` 상세 기준으로 판단하도록 정의됐는가 |
-| `orchestration-plan.md` | `latest-session-summary.md` | 다음 역할과 재진입 Phase가 어긋나지 않는가 |
+| `orchestration-plan.md` | `latest-session-summary.md` | 다음 역할과 하네스 재진입 Phase가 어긋나지 않는가 |
 | `qa-strategy.md` | 운영 감사 결과 | QA 질문이 실제 감사 지적과 연결되는가 |
 | 역할 출력 | `latest-session-summary.md` | 새 학습 후보와 승격 대상이 다음 실행 입력으로 이어지는가 |
 

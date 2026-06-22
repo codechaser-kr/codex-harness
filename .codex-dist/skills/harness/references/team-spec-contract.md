@@ -2,18 +2,20 @@
 
 이 문서는 `team-spec.md`의 역할과 필수 섹션, 필수 필드를 정의한다.
 
-`team-spec.md`는 임시 메모가 아니다. 이후 `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`, 운영 문서가 따라야 하는 역할 팀의 기준 문서이며, 역할별 실행 기준의 단일 원천이다.
+`team-spec.md`는 임시 메모가 아니다. 이후 `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`, 운영 문서가 따라야 하는 역할 팀의 기준 문서이며, 역할별 실행 기준의 단일 원천이다.
 
 ## 핵심 전제
 
 - `team-spec.md`는 프로젝트 특화 역할 팀의 단일 진실원천이다.
 - 역할 이름, 목적, 책임, 우선 입력, 절차, 출력, 다음 역할, 종료 기준, 공통 출력 블록은 생성 단계 이전에 `team-spec.md`에서 먼저 확정한다.
-- `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`는 `team-spec.md`를 구현한 결과물이지, 별도의 기준 문서가 아니다.
+- `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`는 `team-spec.md`를 구현한 결과물이지, 별도의 기준 문서가 아니다.
 - `.codex/agents/*.toml`은 역할 발견과 실행 메타데이터만 담는다.
-- `.codex/skills/*/SKILL.md`는 해당 역할의 `team-spec` 섹션과 공통 출력 블록을 읽게 하는 실행 포인터다.
+- `.agents/skills/*/SKILL.md`는 해당 역할의 `team-spec` 섹션과 공통 출력 블록을 읽게 하는 실행 포인터다.
 - agent/skill 자산에 역할별 우선 입력, 절차, 다음 역할, 종료 기준을 반복 복제하지 않는다.
 - 추상적인 범용 역할명을 복사하지 말고, 현재 저장소의 도메인 용어와 실패 경계를 반영한다.
-- 신규 구축에서도 `team-spec.md`는 첫 세션부터 학습 후보, 승격 대상, 다음 재진입 Phase를 남길 수 있는 역할 계약을 제공해야 한다.
+- 신규 구축에서도 `team-spec.md`는 첫 세션부터 학습 후보, 승격 대상, 다음 하네스 재진입 Phase를 남길 수 있는 역할 계약을 제공해야 한다.
+- `team-spec.md`, 역할 인벤토리, 로그 예시는 하네스 생명주기 단계와 저장소의 제품/로드맵 단계를 namespace로 구분해야 한다. 하네스 단계는 `하네스 Phase N`, 제품 단계는 `제품 로드맵 Phase N` 또는 저장소 도메인에 맞는 수식어를 붙인다.
+- 한국어만으로 뜻이 모호한 기술 용어는 영어 용어를 괄호 안에 병기한다. audit 뜻의 `감사`는 `감사(audit)` 또는 `감사(audit)를 수행한다`로 쓰고, 감사 인사로 오해될 수 있는 종결 표현은 피한다.
 
 ## 필수 섹션
 
@@ -62,6 +64,7 @@
 - skill 디렉터리명
 - description 초안
 - 권장 모델 클래스
+- reasoning 기본값
 - sandbox 정책
 
 ## 최종 역할 인벤토리 계약
@@ -72,29 +75,32 @@
 
 ```text
 role_id|display_name|agent_file|model|reasoning|sandbox|description
-run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네스 상태를 읽고 시작 역할과 재진입 Phase를 안내한다.
+run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네스 상태를 읽고 시작 역할과 하네스 재진입 Phase를 안내한다.
 ```
 
 각 행은 다음 규칙을 따른다.
 
 - `role_id`는 snake_case
 - `display_name`과 `agent_file`은 kebab-case
-- `agent_file`은 `.codex/agents/<agent_file>.toml`, `.codex/skills/<agent_file>/SKILL.md`와 일치해야 한다
+- `agent_file`은 `.codex/agents/<agent_file>.toml`, `.agents/skills/<agent_file>/SKILL.md`와 일치해야 한다
 - description은 실제 요청에서 트리거될 만큼 구체적이어야 한다
+- `reasoning`은 역할 유형과 검증 부담에 맞춰 정한다. 일반 구현/문서/콘텐츠 역할과 시작 진입 역할(`run_harness`)은 기본 `medium`이다. 중심 조율 역할은 기본 `medium`이지만, 역할 수가 많거나 보존 문서, 정책 원천, 로그 상태, 다중 패키지 충돌을 함께 조율하면 `high`를 쓴다. QA, 운영 감사, cross-check, 하네스 정합성 검토 역할은 기본 `high`다.
 - 헤더와 모든 역할 행은 같은 fenced `text` 블록 안에 있어야 한다
 - 각 역할 행을 inline code로 따로 나열하지 않는다
-- fenced `text` 블록이 없으면 `Phase 2` 결과를 완료로 보지 않고 다시 쓴다
+- fenced `text` 블록이 없으면 `하네스 Phase 2` 결과를 완료로 보지 않고 다시 쓴다
 
 ## 생성 규칙
 
-- `Phase 2`는 저장소와 입력 문서를 다시 읽고 최종 역할 인벤토리를 작성한다.
+- `하네스 Phase 2`는 저장소와 입력 문서를 다시 읽고 최종 역할 인벤토리를 작성한다.
 - 역할별 `우선 입력 문서`에 등장하는 설계/정책/사양 문서는 `설계 원천 우선순위` 또는 `설계 원천 인벤토리`에 포함한다.
 - 역할 목적, 책임, 주요 출력에서 필요한 판단 근거를 역산해 우선 입력 문서를 정한다.
+- 역할별 출력 규칙에는 하네스 용어 원칙을 반영한다. 하네스 생명주기 단계는 `하네스 Phase N`으로 쓰고, 제품/로드맵/개발 단계에는 도메인 수식어를, 한국어만으로 뜻이 모호한 기술 용어에는 영어 병기를 붙인다.
 - 선행 정책, 구현 순서, 라우팅 판단, 보류 질문처럼 다음 실행을 좌우하는 출력을 맡는 역할은 그 판단에 필요한 정책/설계/로드맵 원천을 우선 입력 문서에 포함한다.
 - 이 정합성 검사는 구현 역할뿐 아니라 계획 역할, 조율 역할, 시작 진입 역할, 운영 감사 역할에도 동일하게 적용한다.
 - QA 역할은 변경 diff, 대상 앱 또는 패키지의 `AGENTS.md`, team-spec의 설계 원천 우선순위 또는 설계 원천 인벤토리, 변경 범위에 해당하는 설계/정책/계약 문서, 최신 세션 요약 또는 재진입 상태를 우선 입력 문서에 포함한다.
 - QA 역할은 제품/운영 정책, 인터페이스 계약, 구조화된 데이터, 보안/추적성/비용/외부 연동, 표현 계층 사양, 로드맵 상태 중 변경 범위에 맞는 원천을 선택해 읽도록 정의한다.
 - QA 역할이 변경 범위에 필요한 원천 문서를 찾지 못하면 보류 판단, 미확인 위험, 다음 재진입 역할을 남기도록 정의한다.
+- QA, 운영 감사, cross-check, 문서/구현/로그/정책 교차 검증, 하네스 자체 정합성 검토를 맡는 역할은 최종 역할 인벤토리의 `reasoning`을 `high`로 둔다.
 - 표현 계층 역할이 상태, 권한, 도메인 객체, 계약 필드, 분류값, 표시 라벨처럼 구조화된 데이터에 의존하는 출력을 맡으면 데이터 모델 또는 인터페이스 계약 원천을 우선 입력 문서에 포함한다.
 - 표현 계층의 데이터 원천은 고정 문서명이나 기술명으로 가정하지 말고, 저장소 재독해 결과에서 문서화된 데이터 모델, 인터페이스 계약, 공유 타입 원천, 생산자 영역의 응답/전달 타입, 영역별 `AGENTS.md`가 지정한 타입 원천 중 실제 원천을 찾는다.
 - 표현 계층 역할은 구조화된 상태값이나 필드명을 임의로 새로 만들지 않고 저장소의 기존 타입/계약 원천을 우선 사용하며, 데이터 원천이 없으면 생산자 역할 재진입 조건 또는 보류 판단을 남기도록 정의한다.
@@ -103,12 +109,14 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - 관련 정책 문서는 고정 파일명이나 경로 패턴으로 가정하지 말고, 저장소의 문서 제목, 본문 키워드, 목차, 영역별 `AGENTS.md` 참조를 읽어 의미상 해당 정책 원천에 해당하는 후보를 탐색한다.
 - 정책성 책임을 맡는 역할이 있는데 정책 문서가 없으면 대체 원천과 보류 판단을 `team-spec.md` 또는 로그에 남긴다.
 - 운영 로그, 세션 요약, 임시 산출물처럼 재진입 상태를 설명하는 문서는 설계 원천 우선순위에 넣지 않는다.
-- 역할이 정책 판단 기준으로 사용하는 문서가 상단 원천 목록에 없으면 `Phase 2` 결과를 완료로 보지 않는다.
+- 역할이 정책 판단 기준으로 사용하는 문서가 상단 원천 목록에 없으면 `하네스 Phase 2` 결과를 완료로 보지 않는다.
 - 역할 우선 입력에 포함된 문서는 해당 역할의 판단이나 출력 근거로 설명 가능해야 한다.
-- `Phase 3`은 최종 역할 인벤토리만 읽어 `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/skills/*`를 작성한다.
+- `하네스 Phase 3`은 최종 역할 인벤토리만 읽어 `.codex/config.toml`, `.codex/agents/*.toml`, `.agents/skills/*`를 작성한다.
+- `.codex/config.toml`은 `[agents]` 아래에 `directory` 또는 `skills_directory`를 두지 않고, `[agents.<role_id>]`와 `config_file = "agents/<agent_file>.toml"` 형식으로 역할을 연결한다.
+- 최종 역할 인벤토리의 `reasoning`과 `sandbox` 값은 agent TOML에서 `model_reasoning_effort`, `sandbox_mode`로 매핑한다. agent TOML에 `reasoning` 또는 `sandbox` 키를 직접 쓰지 않는다.
 - 역할 생성 결과가 `team-spec.md`보다 앞서거나 `team-spec.md`를 덮어써서는 안 된다.
 - 역할 추가/삭제/이름 변경과 실행 기준 변경은 먼저 `team-spec.md`에서 반영한 뒤 관련 자산을 다시 맞춘다.
-- `.codex/agents/*.toml`은 역할 식별과 실행 메타데이터를 담고, `.codex/skills/*`는 `team-spec` 역할 섹션을 가리키는 실행 포인터를 담는다. 두 자산은 같은 `agent_file` 값과 `role_id`를 기준으로 연결돼야 한다.
+- `.codex/agents/*.toml`은 역할 식별과 실행 메타데이터를 담고, `.agents/skills/*`는 `team-spec` 역할 섹션을 가리키는 실행 포인터를 담는다. 두 자산은 같은 `agent_file` 값과 `role_id`를 기준으로 연결돼야 한다.
 - 각 역할 스킬은 `team-spec.md`의 해당 역할 섹션, 학습 후보 기록 규칙, 승격 대상 기준, 생성기 환류 후보 기준, 공통 출력 블록을 따르도록 지시해야 한다.
 - 각 역할 스킬 자체에 역할별 우선 입력, 절차, 다음 역할, 종료 기준을 다시 쓰면 drift 위험으로 보고 재작성한다.
 - 신규 구축에서 입력이 부족하면 역할 생성을 완료처럼 보이게 하지 말고, 보류한 판단과 다음 질문을 `team-spec.md`와 로그에 남긴다.
@@ -139,15 +147,16 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - 같은 정책 도메인을 맡는 역할들이 같은 정책 원천을 공유한다.
 - 정책 문서가 없을 경우 대체 원천 또는 보류 판단이 명시된다.
 - 문서 간 충돌 시 어떤 설계 원천을 우선해야 하는지 `team-spec.md`만 보고 판단할 수 있다.
+- 하네스 Phase, 제품/로드맵 Phase, `감사(audit)`처럼 오해 가능성이 있는 기술 용어가 생성 문서와 로그에서 일관되게 표기된다.
 - 입력/출력 연결이 역할 간에 자연스럽다.
-- 최종 역할 인벤토리의 `agent_file` 값이 `.codex/agents/*.toml`과 `.codex/skills/*/SKILL.md` 경로에 그대로 반영된다.
+- 최종 역할 인벤토리의 `agent_file` 값이 `.codex/agents/*.toml`과 `.agents/skills/*/SKILL.md` 경로에 그대로 반영된다.
 - QA와 운영 감사 역할이 별도의 책임을 가진다.
 - 시작 진입 역할과 중심 조율 역할이 혼동되지 않는다.
 - 재진입 기준이 역할 수준에서 드러난다.
 - 새로 확인한 저장소 사실과 반복될 수 있는 판단을 어느 역할이 기록하고 어디로 승격할지 드러나야 한다.
-- 초기 생성물만으로 다음 시작 역할과 재진입 Phase를 설명할 수 있다.
+- 초기 생성물만으로 다음 시작 역할과 하네스 재진입 Phase를 설명할 수 있다.
 - 각 역할 스킬이 `team-spec.md`의 해당 역할 섹션과 공통 출력 블록을 명확히 참조한다.
-- `.codex/agents/*.toml`과 `.codex/skills/*/SKILL.md`가 역할별 우선 입력, 절차, 다음 역할, 종료 기준을 별도 기준처럼 복제하지 않는다.
+- `.codex/agents/*.toml`과 `.agents/skills/*/SKILL.md`가 역할별 우선 입력, 절차, 다음 역할, 종료 기준을 별도 기준처럼 복제하지 않는다.
 
 ## 다른 레퍼런스와의 연결
 
@@ -155,6 +164,6 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - `orchestrator-template.md`: 중심 조율 역할과 다음 역할 흐름을 설계할 때 쓴다.
 - `qa-agent-guide.md`: QA와 운영 감사 역할의 책임 경계를 설계할 때 쓴다.
 - `verification-checklist.md`: `team-spec.md`와 생성 결과의 일관성을 검토할 때 쓴다.
-- `reentry-rules.md`: 어떤 Phase로 되돌아가 `team-spec.md`를 다시 써야 하는지 판단할 때 쓴다.
+- `reentry-rules.md`: 어떤 하네스 Phase로 되돌아가 `team-spec.md`를 다시 써야 하는지 판단할 때 쓴다.
 - `initial-generation-contract.md`: 신규 구축 결과가 처음부터 자기진화 루프를 갖췄는지 볼 때 쓴다.
 - `evolution-contract.md`: 학습 후보와 승격 대상 기준을 역할 스펙에 포함할 때 쓴다.

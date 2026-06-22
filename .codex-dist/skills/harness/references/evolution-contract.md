@@ -22,7 +22,7 @@ Codex용 하네스에서는 이 원칙을 다음처럼 옮긴다.
 
 1. 실제 작업에서 새 저장소 사실, 실패 비용, 검증 공백, 역할 오판을 관찰한다.
 2. 관찰을 역할 출력과 `session-log.md`에 남긴다.
-3. `latest-session-summary.md`에 다음 재진입 Phase와 학습 후보를 남긴다.
+3. `latest-session-summary.md`에 다음 하네스 재진입 Phase와 학습 후보를 남긴다.
 4. 운영 감사 역할이 관찰을 아래 분류표에 맞춰 승격 위치로 연결한다.
 5. 필요한 경우 `team-spec`, 역할 스킬, 운영 문서, QA 기준을 갱신한다.
 6. 반복 타겟에서 같은 결함이 확인되면 생성기 reference 또는 전역 `SKILL.md` 보강 후보로 기록한다.
@@ -31,14 +31,14 @@ Codex용 하네스에서는 이 원칙을 다음처럼 옮긴다.
 
 | 관찰 유형 | 예시 | 우선 재진입 | 로컬 승격 위치 | 생성기 환류 후보 |
 | --- | --- | --- | --- | --- |
-| 저장소 사실 누락 | 실제 런타임 경계, 핵심 사용자 흐름, 검증 비용을 놓침 | Phase 1 | `domain-analysis.md`, `project-setup.md` | `exploration-model.md`, `target-evaluation-playbook.md` |
-| 역할 라우팅 오판 | 시작 역할이 반복해서 잘못 선택됨 | Phase 2, Phase 5 | `team-spec.md`, `orchestration-plan.md`, `run-harness` 스킬 | `team-spec-schema.md`, `orchestrator-template.md` |
-| 역할 경계 충돌 | 시작 진입, 조율, QA, 감사 책임이 섞임 | Phase 2 | `team-spec.md`, `.codex/agents/*`, 역할 스킬 | `agent-design-patterns.md`, `team-spec-contract.md` |
-| 역할 스킬 실행성 부족 | 스킬이 너무 얕아 다음 행동을 못 정함 | Phase 4 | `.agents/skills/*/SKILL.md` | `skill-writing-guide.md`, `skill-testing-guide.md` |
-| QA 승격 기준 부족 | 테스트 명령, 수동 검증, 무거운 빌드 판단이 반복적으로 모호함 | Phase 4, Phase 5 | `qa-strategy.md`, QA 역할 스킬 | `qa-agent-guide.md`, `verification-checklist.md` |
-| 보존 문서 충돌 | 예전 문서의 역할명/진입점이 새 운영 모델과 충돌하거나 호환성 매핑이 없음 | Phase 5, Phase 6 | `orchestration-plan.md`, `team-playbook.md`, 해당 보존 문서 메타데이터 | `orchestrator-template.md`, `target-evaluation-playbook.md`, `verification-checklist.md` |
-| 로그 재사용성 부족 | 다음 시작 역할, 최근 출력, 남은 위험, 학습 후보가 없음 | Phase 5, Phase 6 | `session-log.md`, `latest-session-summary.md` | `logging-contract.md`, `reentry-rules.md` |
-| 생성기 반복 결함 | 여러 타겟 프로젝트에서 같은 종류의 약점이 반복됨 | Phase 7 | 타겟 평가 기록 | 전역 `SKILL.md`, 관련 reference |
+| 저장소 사실 누락 | 실제 런타임 경계, 핵심 사용자 흐름, 검증 비용을 놓침 | 하네스 Phase 1 | `domain-analysis.md`, `project-setup.md` | `exploration-model.md`, `target-evaluation-playbook.md` |
+| 역할 라우팅 오판 | 시작 역할이 반복해서 잘못 선택됨 | 하네스 Phase 2, 하네스 Phase 5 | `team-spec.md`, `orchestration-plan.md`, `run-harness` 스킬 | `team-spec-schema.md`, `orchestrator-template.md` |
+| 역할 경계 충돌 | 시작 진입, 조율, QA, 감사 책임이 섞임 | 하네스 Phase 2 | `team-spec.md`, `.codex/agents/*`, 역할 스킬 | `agent-design-patterns.md`, `team-spec-contract.md` |
+| 역할 스킬 실행성 부족 | 스킬이 너무 얕아 다음 행동을 못 정함 | 하네스 Phase 4 | `.agents/skills/*/SKILL.md` | `skill-writing-guide.md`, `skill-testing-guide.md` |
+| QA 승격 기준 부족 | 테스트 명령, 수동 검증, 무거운 빌드 판단이 반복적으로 모호함 | 하네스 Phase 4, 하네스 Phase 5 | `qa-strategy.md`, QA 역할 스킬 | `qa-agent-guide.md`, `verification-checklist.md` |
+| 보존 문서 충돌 | 예전 문서의 역할명/진입점이 새 운영 모델과 충돌하거나 호환성 매핑이 없음 | 하네스 Phase 5, 하네스 Phase 6 | `orchestration-plan.md`, `team-playbook.md`, 해당 보존 문서 메타데이터 | `orchestrator-template.md`, `target-evaluation-playbook.md`, `verification-checklist.md` |
+| 로그 재사용성 부족 | 다음 시작 역할, 최근 출력, 남은 위험, 학습 후보가 없음 | 하네스 Phase 5, 하네스 Phase 6 | `session-log.md`, `latest-session-summary.md` | `logging-contract.md`, `reentry-rules.md` |
+| 생성기 반복 결함 | 여러 타겟 프로젝트에서 같은 종류의 약점이 반복됨 | 하네스 Phase 7 | 타겟 평가 기록 | 전역 `SKILL.md`, 관련 reference |
 
 ## 역할 출력에 남길 학습 항목
 
@@ -47,7 +47,7 @@ Codex용 하네스에서는 이 원칙을 다음처럼 옮긴다.
 - 새로 확인한 저장소 사실
 - 반복될 수 있는 판단
 - 하네스 갱신 후보
-- 권장 재진입 Phase
+- 권장 하네스 재진입 Phase
 - 생성기 환류 후보 여부
 
 모든 역할이 매번 긴 학습 보고서를 쓸 필요는 없다. 관찰이 없으면 `없음`으로 짧게 남긴다. 관찰이 있으면 다음 역할이 바로 판단할 수 있도록 경로와 이유를 함께 적는다.

@@ -1,9 +1,9 @@
 # Team Spec Schema
 
-이 문서는 `Phase 2 프로젝트 맞춤 에이전트 팀 설계`의 핵심 산출물인 `team-spec`이 무엇을 담아야 하는지 정의한다.
+이 문서는 `하네스 Phase 2 프로젝트 맞춤 에이전트 팀 설계`의 핵심 산출물인 `team-spec`이 무엇을 담아야 하는지 정의한다.
 
-목표는 타겟 프로젝트 도메인을 읽고 그 프로젝트에 필요한 특화 에이전트 팀을 설계한 뒤,  
-그 설계 결과를 `Phase 3`에서 실제 `.codex/agents/*.toml`, `.agents/skills/*`, `.codex/config.toml` 생성으로 연결하는 것이다.
+목표는 타겟 프로젝트 도메인을 읽고 그 프로젝트에 필요한 특화 에이전트 팀을 설계한 뒤,
+그 설계 결과를 `하네스 Phase 3`에서 실제 `.codex/agents/*.toml`, `.agents/skills/*`, `.codex/config.toml` 생성으로 연결하는 것이다.
 
 ---
 
@@ -20,8 +20,8 @@ team-spec은 단순 설명 문서가 아니다.
 
 를 고정하는 생성용 스펙이다.
 
-즉 `Phase 2`의 결과는 보고서만이 아니라,  
-`Phase 3 동적 생성`의 직접 입력이어야 한다.
+즉 `하네스 Phase 2`의 결과는 보고서만이 아니라,
+`하네스 Phase 3 동적 생성`의 직접 입력이어야 한다.
 
 ---
 
@@ -90,7 +90,7 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 
 ```text
 role_id|display_name|agent_file|model|reasoning|sandbox|description
-run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네스 상태를 읽고 시작 역할과 재진입 Phase를 안내한다.
+run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네스 상태를 읽고 시작 역할과 하네스 재진입 Phase를 안내한다.
 ```
 
 형식 규칙은 아래를 기본으로 한다.
@@ -107,7 +107,7 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 ### D. 역할별 실행 기준
 
 각 역할은 이름과 입출력만으로 끝나면 안 된다.
-`Phase 3` 생성기가 실제 역할 스킬을 만들 수 있도록, 최소한 아래 실행 기준을 함께 가져야 한다.
+`하네스 Phase 3` 생성기가 실제 역할 스킬을 만들 수 있도록, 최소한 아래 실행 기준을 함께 가져야 한다.
 
 - 대표 시작 경로
 - 우선 입력 문서
@@ -177,7 +177,7 @@ team-spec이 이 정보를 담지 못하면, 생성된 `.agents/skills/*/SKILL.m
 
 ## 4. Phase 연결
 
-### Phase 2
+### 하네스 Phase 2
 
 - `domain-analysis.md`
 - 입력 상태
@@ -187,7 +187,7 @@ team-spec이 이 정보를 담지 못하면, 생성된 `.agents/skills/*/SKILL.m
 
 을 바탕으로 team-spec을 설계한다.
 
-### Phase 3
+### 하네스 Phase 3
 
 team-spec을 바탕으로 아래를 동적으로 생성한다.
 
@@ -196,13 +196,13 @@ team-spec을 바탕으로 아래를 동적으로 생성한다.
 - `.codex/agents/*.toml`
 - `.agents/skills/*`
 
-즉 `Phase 3`은 고정 파일 복사가 아니라  
+즉 `하네스 Phase 3`은 고정 파일 복사가 아니라
 `team-spec -> Codex 자산 생성` 단계다.
 
 배포본의 초기 문서 골격에는 역할 설계 규칙만 둔다.
-타겟 프로젝트에서 하네스 생성을 실행한 뒤에는 `Phase 2`가 현재 저장소를 읽어 최종 역할 블록을 직접 작성해야 한다. 생성 완료 결과의 최종 역할 인벤토리가 비어 있으면 안 된다.
+타겟 프로젝트에서 하네스 생성을 실행한 뒤에는 `하네스 Phase 2`가 현재 저장소를 읽어 최종 역할 블록을 직접 작성해야 한다. 생성 완료 결과의 최종 역할 인벤토리가 비어 있으면 안 된다.
 
-`Phase 3`은 그 최종 역할 블록만 읽고 agent/skill/config 자산을 생성한다.
+`하네스 Phase 3`은 그 최종 역할 블록만 읽고 agent/skill/config 자산을 생성한다.
 
 ---
 

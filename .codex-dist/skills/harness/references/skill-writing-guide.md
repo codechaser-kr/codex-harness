@@ -227,7 +227,7 @@ description: Implement and verify a repository-specific runtime boundary using t
 ```
 
 출력 형식은 고정 파일을 복사하라는 뜻이 아니다. 다음 역할이 같은 의미로 읽을 수 있도록 산출물의 계약을 고정하는 것이다.
-학습 후보가 없으면 `없음`으로 짧게 남긴다. 학습 후보가 있으면 `evolution-contract.md` 기준으로 재진입 Phase와 승격 대상을 함께 적는다.
+학습 후보가 없으면 `없음`으로 짧게 남긴다. 학습 후보가 있으면 `evolution-contract.md` 기준으로 하네스 재진입 Phase와 승격 대상을 함께 적는다.
 
 ### 공통 출력 블록
 
@@ -237,11 +237,11 @@ description: Implement and verify a repository-specific runtime boundary using t
 - 새로 확인한 저장소 사실: `<facts or 없음>`
 - 반복될 수 있는 판단: `<pattern or 없음>`
 - 하네스 갱신 후보: `<local docs/skills or 없음>`
-- 승격 대상: `<Phase and target or 없음>`
+- 승격 대상: `<하네스 Phase and target or 없음>`
 - 생성기 환류 후보: `<yes/no and reason>`
 ```
 
-이 블록은 모든 역할이 긴 메타 보고서를 쓰라는 뜻이 아니다. 구현, QA, 조율, 감사 중 어느 역할에서든 다음 실행에 영향을 줄 사실이 드러났을 때 같은 형식으로 전달하기 위한 최소 계약이다. 역할 스킬 생성 뒤 `team-spec` 공통 출력 블록 참조가 없는 파일이 하나라도 있으면 `Phase 4`를 다시 수행한다.
+이 블록은 모든 역할이 긴 메타 보고서를 쓰라는 뜻이 아니다. 구현, QA, 조율, 감사 중 어느 역할에서든 다음 실행에 영향을 줄 사실이 드러났을 때 같은 형식으로 전달하기 위한 최소 계약이다. 역할 스킬 생성 뒤 `team-spec` 공통 출력 블록 참조가 없는 파일이 하나라도 있으면 `하네스 Phase 4`를 다시 수행한다.
 
 ---
 

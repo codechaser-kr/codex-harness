@@ -25,7 +25,7 @@
 - `exploration-notes.md`
 - `logging-policy.md`
 
-필요한 Phase까지 진행됐다면 아래 문서도 검토한다.
+필요한 하네스 Phase까지 진행됐다면 아래 문서도 검토한다.
 
 - `domain-analysis.md`
 - `qa-strategy.md`
@@ -132,5 +132,5 @@
 - `initial-generation-contract.md`: 신규 구축 결과가 첫 세션부터 자기진화 루프를 갖췄는지 검토할 때 쓴다.
 - `evolution-contract.md`: 자기진화 루프와 학습 후보 승격 기준을 검토할 때 쓴다.
 - `logging-contract.md`: 로그 문서 기준을 검토할 때 쓴다.
-- `reentry-rules.md`: 어떤 Phase로 되돌릴지 판단할 때 쓴다.
+- `reentry-rules.md`: 어떤 하네스 Phase로 되돌릴지 판단할 때 쓴다.
 - `quality-evaluation-guide.md`: 품질 비교 관찰을 정리할 때 쓴다.

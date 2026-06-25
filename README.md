@@ -134,7 +134,7 @@ $HOME/.codex/skills/harness/references/
 
 요청을 받으면 전역 스킬은 저장소 근거와 사용자 입력을 읽으며 로컬 실행 팀을 단계적으로 구성합니다.
 
-보통 다음 순서로 동작합니다.
+보통 다음 순서로 동작합니다. 아래 번호는 하네스 Phase 번호가 아니라 타겟 프로젝트에서 보이는 실행 순서입니다.
 
 0. 현재 하네스 현황부터 감사(audit)를 수행합니다.
 1. 사용자 입력, 저장소 근거, 기존 로그를 읽고 시작 조건을 정리합니다.
@@ -144,7 +144,8 @@ $HOME/.codex/skills/harness/references/
 5. QA/운영 감사 역할이 구조, 역할 경계, 실행 흐름을 검증합니다.
 6. 실행 로그를 남기고 다음 재진입 지점을 정리합니다.
 7. 반복 실행에서 드러난 병목과 학습 후보를 역할 정의, 스킬, 오케스트레이션에 반영합니다.
-8. 여러 타겟 프로젝트에서 반복되는 결함만 생성기 reference 보강 후보로 승격합니다.
+
+이후 여러 타겟 프로젝트에서 같은 결함이 반복될 때만 생성기 reference 보강 후보로 승격합니다. 이 승격 판단은 별도 하네스 Phase가 아니라 메타 저장소 차원의 후속 관리입니다.
 
 세부 하네스 Phase 선택 기준은 `.codex-dist/skills/harness/references/phase-selection-matrix.md`에서 관리하고, 초기 생성물이 갖춰야 할 기준은 `.codex-dist/skills/harness/references/initial-generation-contract.md`에서 관리합니다.
 

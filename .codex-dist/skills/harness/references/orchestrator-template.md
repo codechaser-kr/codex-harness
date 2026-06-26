@@ -311,8 +311,26 @@ handoff:
 
 대표 보조 운영 문서는 다음과 같다.
 
+- 초기 입력과 운영 원천: `exploration-notes.md`, `project-setup.md`, `team-spec.md`, `logging-policy.md`
 - 저장소 근거와 검증 기준: `domain-analysis.md`, `qa-strategy.md`
 - 역할 연결과 운영 흐름: `harness-architecture.md`, `orchestration-plan.md`, `team-structure.md`, `team-playbook.md`
+
+### 보조 운영 문서 경계
+
+보조 운영 문서는 같은 사실을 반복하지 않고, 각자 다른 질문에 답해야 한다.
+
+- `exploration-notes.md`: 자동 판단을 보류하고 다음 확인 질문을 남기는 약한 메모다. 최종 도메인 분석이나 역할 설계를 대신하지 않는다.
+- `project-setup.md`: 사용자 입력과 초기 방향, 아직 확인되지 않은 전제를 정리한다. 저장소 재독해 결과나 팀 구조를 확정하지 않는다.
+- `team-spec.md`: 역할 인벤토리, 책임 경계, 우선 입력, 출력, 다음 역할, 완료 기준의 단일 원천이다. 분석 보고서나 실행 로그가 되지 않는다.
+- `logging-policy.md`: 세션 로그와 최신 요약을 어떻게 남길지 정한다. 개별 세션의 실제 진행 기록을 대신하지 않는다.
+- `domain-analysis.md`: 이 프로젝트의 정체, 도메인, 사용자 흐름, 실패 비용, 저장소 경계를 설명한다. 역할 목록, 실행 순서, 운영 매뉴얼을 대신하지 않는다.
+- `qa-strategy.md`: 무엇을 검증하고 어떤 위험을 우선 볼지 정한다. 구현 절차나 역할 handoff 절차를 대신하지 않는다.
+- `harness-architecture.md`: 왜 이 팀 구조와 실행 패턴을 선택했는지 설명한다. 역할별 상세 책임이나 handoff 절차를 반복하지 않는다.
+- `team-structure.md`: 어떤 역할이 있고 각 역할의 책임 경계가 무엇인지 정리한다. 아키텍처 선택 이유나 실행 순서를 길게 설명하지 않는다.
+- `orchestration-plan.md`: 역할이 어떤 순서, 조건, handoff, 정상/보류/실패/재진입 흐름으로 이어지는지 정의한다. 역할 설명서나 운영 매뉴얼이 되지 않는다.
+- `team-playbook.md`: 실제 요청에서 팀을 어떻게 운용할지 설명한다. 아키텍처 근거나 전체 역할 스펙을 다시 쓰지 않는다.
+
+중복이 생기면 해당 질문에 가장 직접 답하는 문서에만 남기고, 다른 문서는 짧은 참조로 줄인다.
 
 흐름 조율 역할은 이 문서들이 역할 팀과 같은 운영 기준을 말하도록 관리한다.
 
@@ -390,7 +408,7 @@ handoff:
 ## 17. 다른 레퍼런스와의 연결
 
 - `agent-design-patterns.md`: 실행 단위, 패턴 선택 기준, 역할 분리 기준의 상위 설계 원칙을 제공한다.
-- `generator-readiness-checklist.md`: 생성기 자체 준비도와 타겟 프로젝트 운영 가능성 평가를 구분하는 기준을 제공한다.
+- `generator-readiness-checklist.md`: 생성기 자체 준비도와 타겟 프로젝트 운영 감사 판정, 품질 비교를 구분하는 기준을 제공한다.
 - `qa-agent-guide.md`: QA 질문을 흐름 보완으로 다시 연결해야 하는 지점을 보강한다.
 - `team-examples.md`: 저장소 예시별로 orchestrator가 어느 위치에서 중심 역할이 되는지 보여 준다.
 - `skill-writing-guide.md`: orchestrator 스킬이 입력/출력과 협업 규칙을 어떻게 드러내야 하는지 연결한다.

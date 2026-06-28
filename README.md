@@ -29,6 +29,7 @@
 - `install.sh`, `uninstall.sh`: 전역 Codex 스킬 경로에 배포본을 설치하거나 제거하는 스크립트
 - `docs/development-quality-evaluation.md`: 하네스 생성기 품질 평가 기준
 - `docs/document-regression-checklist.md`: README와 reference 문서 변경 후 회귀 점검 기준
+- `docs/github-workflow-engine.md`: GitHub 이슈/PR 기반 Workflow Engine 설계
 - `docs/evaluations/*`: 타겟 프로젝트 평가 기록과 반복 결함 승격 판단 근거
 - `.github/*`: 이 저장소의 이슈/PR 협업 템플릿
 - `AGENTS.md`, `.gemini/styleguide.md`: 이 저장소에서 자동 리뷰 도구가 따르는 리뷰 코멘트 작성 지침

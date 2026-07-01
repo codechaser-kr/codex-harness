@@ -603,6 +603,7 @@ GitHub Template Bootstrap은 GitHub Workflow Engine을 타겟 레포에 적용�
 - Pull Request 템플릿
 - GitHub Workflow Engine 운영 문서
 - Workflow Skill 설치 구조
+- Issue Creation Skill 설치 구조
 - 기능 개발 계획 Skill 설치 구조
 - Fix Plan Skill 설치 구조
 - Branch Name Skill 설치 구조
@@ -641,6 +642,8 @@ codex-harness/
     └── skills/
         ├── github-workflow-engine/
         │   └── SKILL.md
+        ├── issue-creation/
+        │   └── SKILL.md
         ├── feature-plan/
         │   └── SKILL.md
         ├── fix-plan/
@@ -670,6 +673,8 @@ target-repo/
 ├── .codex/
 │   └── skills/
 │       ├── github-workflow-engine/
+│       │   └── SKILL.md
+│       ├── issue-creation/
 │       │   └── SKILL.md
 │       ├── feature-plan/
 │       │   └── SKILL.md

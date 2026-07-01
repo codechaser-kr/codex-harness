@@ -19,7 +19,7 @@
 - `.harness/logs/session-log.md`
 - `.harness/logs/latest-session-summary.md`
 
-평가 결과는 `docs/evaluations/targets/<target-repo>/` 아래에 남깁니다. 이 기록은 생성기 변경이 실제 타겟 결과를 어떻게 바꿨는지 비교하는 코퍼스 역할을 합니다.
+평가 결과는 `.harness/evaluations/targets/<target-repo>/` 아래에 남깁니다. 이 기록은 생성기 변경이 실제 타겟 결과를 어떻게 바꿨는지 비교하는 코퍼스 역할을 합니다.
 
 ## 평가 기준 문서
 
@@ -54,7 +54,7 @@
 
 ## 문서 회귀 점검
 
-생성기 문서나 reference를 수정했다면 `docs/document-regression-checklist.md`를 함께 봅니다. 이 점검은 새 스크립트를 추가하는 절차가 아니라, 문서 계약과 reference 연결이 같은 운영 모델을 유지하는지 확인하는 기준입니다.
+생성기 문서나 reference를 수정했다면 `.harness/document-regression-checklist.md`를 함께 봅니다. 이 점검은 새 스크립트를 추가하는 절차가 아니라, 문서 계약과 reference 연결이 같은 운영 모델을 유지하는지 확인하는 기준입니다.
 
 ## 레퍼런스 동기화 점검
 

@@ -288,7 +288,7 @@ Claude Code Review Skill은 다음 책임을 가진다.
 - PR 번호, 기준 브랜치, 작업 브랜치, 연결 이슈, 변경 diff, 완료 기준, 검토 제외 범위를 입력으로 받는다.
 - 파일 수정, GitHub comment 작성, review thread 게시, PR merge를 수행하지 않는다.
 - 버그, 회귀, 보안, 테스트 누락, 설계 불일치를 우선 검토한다.
-- 각 피드백을 파일 위치, diff 위치, 문제, 근거, 위험도, 추천 분류, 권장 대응, 확신도로 정리한다.
+- 각 피드백을 파일 위치, diff 위치, 문제, 근거, 위험도, 추천 분류, 확신도로 정리한다.
 - 라인에 붙일 수 없는 전체 설계 피드백은 review summary 후보로 분리한다.
 - Codex가 후속 처리할 수 있도록 구조화된 리뷰 결과를 반환한다.
 
@@ -303,7 +303,7 @@ Review Comment Skill은 다음 책임을 가진다.
 - PR 번호와 Claude Code Review Skill 리뷰 결과를 입력으로 받는다.
 - 파일 경로와 diff line이 있는 피드백은 GitHub Pull Request review thread로 게시할 수 있는 형식으로 정리한다.
 - 같은 리뷰 결과가 중복 게시되지 않도록 기존 review thread와 보조 PR comment를 확인한다.
-- 각 review thread에 문제, 근거, 위험도, 추천 분류, 권장 대응, 확신도를 함께 게시한다.
+- 각 review thread에 문제, 근거, 위험도, 추천 분류, 확신도를 함께 게시한다.
 - 파일 경로와 diff line이 없어 review thread로 게시할 수 없는 피드백은 review summary 또는 일반 PR comment로 게시하되, 해결/미해결 추적 대상과 분리한다.
 - 리뷰 피드백의 적용 여부를 결정하거나 파일을 수정하지 않는다.
 
@@ -419,7 +419,6 @@ Claude Code Review Skill은 다음 시점에 실행한다.
 - diff 위치 또는 라인 정보
 - 위험도
 - 추천 분류: 적용 / 보류 / 거절 / 정책검토 필요 / 사람 승인 필요
-- 권장 대응
 - 확신도
 
 Claude Code Review Skill은 review thread 게시, PR comment 게시, 파일 수정을 직접 수행하지 않는다. Review Comment Skill은 리뷰 결과를 review thread 또는 보조 PR comment로 게시한다. Codex는 미해결 review thread를 수집해 사용자에게 대응 방향을 제안하고, 사람이 승인한 항목만 수정한다.
@@ -445,7 +444,6 @@ Review Feedback Triage는 리뷰 피드백을 바로 수정 명령으로 보지 
 - 예상 영향
 - 적용/보류/거절/정책검토 필요/사람 승인 필요 분류
 - 추천 액션
-- 권장 대응
 - 확신도
 - 자동 수정 시 위험 요소
 
@@ -549,7 +547,7 @@ PR 리뷰 과정에서 Claude Code Review Skill은 피드백을 포함한 리뷰
 | PR 초안 작성        | PR 생성 필요        | 세부 구현 계획의 모든 커밋 단위 완료          | PR Proposal Skill이 PR 제목과 설명 초안 작성                                                                       | PR 제목과 설명 승인          | 승인된 PR 제목과 설명을 기준으로 PR 템플릿을 작성한다.                                                                                                                                                              |
 | PR 생성             | PR 생성 필요        | PR 제목과 설명 승인 완료                      | PR Creation Skill이 PR 생성                                                                                        | 없음                         | 승인된 PR 템플릿으로 PR을 생성한다.                                                                                                                                                                                 |
 | Claude 리뷰 실행    | PR open             | PR 생성 완료                                  | Claude Code Review Skill 실행                                                                                      | 없음                         | Claude Code Review Skill 리뷰 결과를 Review Comment Skill의 입력으로 사용한다.                                                                                                                                      |
-| 리뷰 코멘트 게시    | PR open             | Claude Code Review Skill 리뷰 결과 존재       | Review Comment Skill이 리뷰 결과를 review thread 또는 보조 PR comment로 게시                                       | 없음                         | 파일 경로와 diff line이 있는 피드백은 review thread에 문제, 근거, 위험도, 추천 분류, 권장 대응, 확신도와 함께 기록한다. review thread로 게시할 수 없는 피드백은 보조 PR comment로 기록하고 해결/미해결 추적 대상에서 제외한다. |
+| 리뷰 코멘트 게시    | PR open             | Claude Code Review Skill 리뷰 결과 존재       | Review Comment Skill이 리뷰 결과를 review thread 또는 보조 PR comment로 게시                                       | 없음                         | 파일 경로와 diff line이 있는 피드백은 review thread에 문제, 근거, 위험도, 추천 분류, 확신도와 함께 기록한다. review thread로 게시할 수 없는 피드백은 보조 PR comment로 기록하고 해결/미해결 추적 대상에서 제외한다. |
 | 피드백 대응 제안    | PR open             | `isResolved`가 false인 review thread가 있음   | Codex가 해결되지 않은 피드백별 설명, 개선 방향, 커밋 메시지 제안                                                   | 피드백 대응 승인             | 승인된 대응 방향과 커밋 메시지를 기준으로 후속 작업을 진행한다.                                                                                                                                                     |
 | 승인 피드백 반영    | PR open             | 승인된 피드백 존재                            | Codex가 승인된 피드백만 반영하고 해당 review thread를 해결로 처리                                                  | 없음                         | 반영 완료한 피드백은 GitHub GraphQL `resolveReviewThread`로 해결 처리한다. 아직 처리되지 않은 review thread는 미해결 상태로 두고, `isResolved`가 false인 thread가 남아 있으면 `피드백 대응 제안` 액션으로 돌아간다. |
 | PR merge 대기       | PR open             | 모든 리뷰 피드백 처리 완료                    | 사용자가 GitHub에서 PR merge                                                                                       | PR merge                     | 별도 템플릿 섹션을 갱신하지 않는다. merge 결과는 GitHub PR 상태로 확인한다.                                                                                                                                         |

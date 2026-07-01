@@ -9,7 +9,7 @@ GitHub 템플릿은 이슈와 PR에 필요한 정보를 적는 양식이다. 이
 - GitHub를 프로젝트 작업 상태의 기준 저장소로 사용한다.
 - 사람이 보는 작업 상태와 Agent가 읽는 작업 상태를 일치시킨다.
 - 정책 판단, 설계 변경, 고위험 작업은 사람이 확인하고 승인한다.
-- 파일 작성과 수정은 Codex가 맡고, PR 리뷰는 `open-code-review`가 맡는다.
+- 파일 작성과 수정은 Codex가 맡고, PR 리뷰 생성은 Claude Code Review Skill이 맡는다.
 - 이슈 생성은 Issue Creation Skill 규칙을 따른다.
 - 워크플로우는 GitHub에 기록된 상태를 기준으로 중단하고 재개할 수 있어야 한다.
 - 상태 전이는 즉흥 판단이 아니라 문서에 정의한 규칙을 따른다.
@@ -24,7 +24,7 @@ GitHub 템플릿은 이슈와 PR에 필요한 정보를 적는 양식이다. 이
 - State Transition Table 형식
 - Human Checkpoint 기준
 - 도구 역할 구분
-- `open-code-review` 연동 정책
+- Claude Code Review Skill 연동 정책
 - Review Feedback Triage 기준
 - 리뷰 피드백을 사람에게 전달할 때 포함해야 할 맥락 형식
 - 타겟 프로젝트에 GitHub 기반 Workflow Engine을 생성하는 저장소 구조
@@ -76,7 +76,7 @@ State Transition Rule은 모든 이슈 유형에서 같은 필드 형식을 따�
 | 액션 이름        | 해당 액션을 식별하는 이름                                                                                                                                 |
 | 현재 상태        | GitHub Run State에서 읽은 이슈/PR 상태                                                                                                                    |
 | 조건             | 현재 액션을 선택하기 위한 판정 조건                                                                                                                       |
-| 작업 내용        | Workflow Skill, Issue Creation Skill, Codex, `open-code-review`, 또는 사용자가 실제로 진행할 작업                                                         |
+| 작업 내용        | Workflow Skill, Issue Creation Skill, Codex, Claude Code Review Skill, 또는 사용자가 실제로 진행할 작업                                                   |
 | Human Checkpoint | 해당 액션을 진행하거나 확정하기 위해 사용자에게 받아야 하는 승인 또는 결정. 조건에 이미 사용자 결정이 포함되어 있거나 단순 기록만 남기면 `없음`으로 쓴다. |
 | 기록 지침        | 해당 액션을 진행할 때 Issue, PR, Comment, Checklist 중 어디에 무엇을 반영해야 하는지                                                                      |
 
@@ -93,7 +93,7 @@ Human Checkpoint가 필요한 경우는 다음과 같다.
 - 리뷰 피드백별 추천 액션 설명을 검토하고 대응 방향 승인
 - PR 제목과 설명 검토 및 승인
 - PR merge
-- Codex와 `open-code-review`의 판단 충돌
+- Codex와 Claude Code Review Skill의 판단 충돌
 
 Human Checkpoint가 필요한 경우 Workflow Skill 또는 Issue Creation Skill은 다음 정보를 사람에게 전달한다.
 
@@ -132,7 +132,7 @@ Workflow Skill은 State Transition Rule의 특정 행을 선택해 액션에 진
 - Human Checkpoint에서 사용자가 아직 결정하지 않았다.
 - 판단에 필요한 정보가 부족하다.
 - 외부 리뷰, 설계 검토, 사용자 확인, 실행 결과를 기다려야 한다.
-- Codex 또는 `open-code-review` 실행 중 오류나 충돌이 발생해 사람 판단이 필요하다.
+- Codex 또는 Claude Code Review Skill 실행 중 오류나 충돌이 발생해 사람 판단이 필요하다.
 
 중단이나 보류가 발생하면 Workflow Skill은 현재 GitHub 상태를 유지한다. 필요한 경우 마지막 액션 진입 로그에 중단 정보를 덧붙이거나 별도 중단 로그를 남긴다. 이 기록이 없어도 Workflow Skill은 GitHub Run State를 다시 읽어 현재 위치를 판단할 수 있어야 한다.
 
@@ -277,15 +277,30 @@ PR Creation Skill은 다음 책임을 가진다.
 - 승인된 PR 템플릿 본문으로 GitHub PR을 생성한다.
 - 생성된 PR 번호와 URL을 Workflow Skill에 반환한다.
 - PR merge 방식 선택이나 merge 수행은 하지 않는다.
-- PR 생성 이후 리뷰 진행은 기능 구현 흐름의 `OCR 리뷰 실행` 액션으로 넘긴다.
+- PR 생성 이후 리뷰 진행은 기능 구현 흐름의 `Claude 리뷰 실행` 액션으로 넘긴다.
+
+### Claude Code Review Skill
+
+Claude Code Review Skill은 Codex가 비대화형 `claude` CLI 호출로 실행하는 리뷰 생성 규칙이다. 이 스킬은 PR diff 또는 브랜치 diff를 검토해 리뷰 결과만 생성한다.
+
+Claude Code Review Skill은 다음 책임을 가진다.
+
+- PR 번호, 기준 브랜치, 작업 브랜치, 연결 이슈, 변경 diff, 완료 기준, 검토 제외 범위를 입력으로 받는다.
+- 파일 수정, GitHub comment 작성, review thread 게시, PR merge를 수행하지 않는다.
+- 버그, 회귀, 보안, 테스트 누락, 설계 불일치를 우선 검토한다.
+- 각 피드백을 파일 위치, diff 위치, 문제, 근거, 위험도, 추천 분류, 권장 대응, 확신도로 정리한다.
+- 라인에 붙일 수 없는 전체 설계 피드백은 review summary 후보로 분리한다.
+- Codex가 후속 처리할 수 있도록 구조화된 리뷰 결과를 반환한다.
+
+Claude Code Review Skill은 Claude Code 구독 또는 인증 상태를 사용해 실행된다. Workflow Engine은 Claude 호출 결과를 리뷰 생성 결과로만 취급하며, GitHub 게시와 피드백 반영은 각각 Review Comment Skill과 Codex가 담당한다.
 
 ### Review Comment Skill
 
-Review Comment Skill은 `open-code-review`가 생성한 리뷰 결과를 GitHub Pull Request review thread로 게시하는 실행 규칙이다.
+Review Comment Skill은 Claude Code Review Skill이 생성한 리뷰 결과를 GitHub Pull Request review thread로 게시하는 실행 규칙이다.
 
 Review Comment Skill은 다음 책임을 가진다.
 
-- PR 번호와 `open-code-review` 리뷰 결과를 입력으로 받는다.
+- PR 번호와 Claude Code Review Skill 리뷰 결과를 입력으로 받는다.
 - 파일 경로와 diff line이 있는 피드백은 GitHub Pull Request review thread로 게시할 수 있는 형식으로 정리한다.
 - 같은 리뷰 결과가 중복 게시되지 않도록 기존 review thread와 보조 PR comment를 확인한다.
 - 각 review thread에 문제, 근거, 위험도, 추천 분류를 함께 게시한다.
@@ -298,14 +313,14 @@ Review Comment Skill은 다음 책임을 가진다.
 
 현재 기준 역할은 다음과 같다.
 
-| 역할             | 도구                 | 책임                                                                                          |
-| ---------------- | -------------------- | --------------------------------------------------------------------------------------------- |
-| 파일 수정        | Codex                | 이슈 범위에 따라 설계 문서와 실제 코드를 수정한다.                                            |
-| 리뷰 생성        | `open-code-review`   | PR 변경사항을 검토하고 리뷰 결과를 생성한다.                                                  |
-| 리뷰 코멘트 게시 | Review Comment Skill | `open-code-review` 리뷰 결과를 review thread 또는 보조 PR comment로 게시한다.                 |
-| 피드백 대응 진행 | Codex                | 미해결 review thread를 수집해 추천 대응 방향을 설명하고, 사용자 승인 후 후속 작업을 수행한다. |
+| 역할             | 도구                     | 책임                                                                                          |
+| ---------------- | ------------------------ | --------------------------------------------------------------------------------------------- |
+| 파일 수정        | Codex                    | 이슈 범위에 따라 설계 문서와 실제 코드를 수정한다.                                            |
+| 리뷰 생성        | Claude Code Review Skill | PR 변경사항을 검토하고 리뷰 결과를 생성한다.                                                  |
+| 리뷰 코멘트 게시 | Review Comment Skill     | Claude Code Review Skill 리뷰 결과를 review thread 또는 보조 PR comment로 게시한다.           |
+| 피드백 대응 진행 | Codex                    | 미해결 review thread를 수집해 추천 대응 방향을 설명하고, 사용자 승인 후 후속 작업을 수행한다. |
 
-Workflow Skill은 GitHub 상태를 읽고 현재 조건에서 진행할 액션을 제안한다. 실제 파일 수정은 Codex가 맡고, 리뷰 생성은 `open-code-review`가 맡으며, 리뷰 코멘트 게시는 Review Comment Skill이 맡는다.
+Workflow Skill은 GitHub 상태를 읽고 현재 조건에서 진행할 액션을 제안한다. 실제 파일 수정은 Codex가 맡고, 리뷰 생성은 Claude Code Review Skill이 맡으며, 리뷰 코멘트 게시는 Review Comment Skill이 맡는다.
 
 각 도구는 다음 입출력 기준을 지킨다.
 
@@ -378,11 +393,11 @@ PR은 성격에 따라 정책검토, 기능변경, 기능결함 이슈와 연결
 - 기능 구현 PR은 기능변경 이슈와 연결한다.
 - 결함 해결 PR은 기능결함 이슈와 연결한다.
 
-### open-code-review 연동 정책
+### Claude Code Review Skill 연동 정책
 
-`open-code-review`는 변경사항을 독립적으로 검토하고 리뷰 결과를 생성하는 역할이다. 리뷰 결과를 review thread 또는 보조 PR comment로 게시하는 작업은 Review Comment Skill이 담당하고, 파일 수정과 피드백 대응 진행은 Codex가 담당한다.
+Claude Code Review Skill은 변경사항을 독립적으로 검토하고 리뷰 결과를 생성하는 역할이다. Codex는 PR diff 또는 브랜치 diff와 연결 이슈 맥락을 준비하고, 비대화형 `claude` CLI 호출로 Claude Code Review Skill을 실행한다. 리뷰 결과를 review thread 또는 보조 PR comment로 게시하는 작업은 Review Comment Skill이 담당하고, 파일 수정과 피드백 대응 진행은 Codex가 담당한다.
 
-`open-code-review`는 다음 시점에 실행한다.
+Claude Code Review Skill은 다음 시점에 실행한다.
 
 - 정책검토, 기능변경 또는 기능결함 PR이 생성된 뒤
 - 사람이 별도 리뷰를 요청한 뒤
@@ -401,10 +416,13 @@ PR은 성격에 따라 정책검토, 기능변경, 기능결함 이슈와 연결
 
 - 발견한 문제
 - 근거 파일 또는 문서 위치
+- diff 위치 또는 라인 정보
 - 위험도
 - 추천 분류: 적용 / 보류 / 거절 / 정책검토 필요 / 사람 승인 필요
+- 권장 대응
+- 확신도
 
-`open-code-review`는 review thread 게시, PR comment 게시, 파일 수정을 직접 수행하지 않는다. Review Comment Skill은 리뷰 결과를 review thread 또는 보조 PR comment로 게시한다. Codex는 미해결 review thread를 수집해 사용자에게 대응 방향을 제안하고, 사람이 승인한 항목만 수정한다.
+Claude Code Review Skill은 review thread 게시, PR comment 게시, 파일 수정을 직접 수행하지 않는다. Review Comment Skill은 리뷰 결과를 review thread 또는 보조 PR comment로 게시한다. Codex는 미해결 review thread를 수집해 사용자에게 대응 방향을 제안하고, 사람이 승인한 항목만 수정한다.
 
 ### Review Feedback Triage
 
@@ -517,7 +535,7 @@ Workflow Skill은 다음 순서로 작업 대상을 판단한다.
 
 Workflow Skill은 PR merge를 상시 감시하지 않는다. 사용자가 PR이 merge되었다고 알리거나, 다음 계획 요청으로 GitHub Run State를 다시 읽을 때 merge된 PR을 확인하고 연결 이슈의 후속 전이를 적용한다.
 
-PR 리뷰 과정에서 `open-code-review`는 피드백을 포함한 리뷰 결과를 만든다. Review Comment Skill은 파일 경로와 diff line이 있는 피드백을 review thread로 게시하고, 라인에 붙일 수 없는 피드백은 review summary 또는 보조 PR comment로 게시한다. Codex는 미해결 review thread를 모아 피드백별 추천 액션과 근거를 설명할 수 있다. 적용/보류/거절/정책검토 필요/사람 승인 필요 중 어떤 액션을 선택할지는 사람이 확정한다.
+PR 리뷰 과정에서 Claude Code Review Skill은 피드백을 포함한 리뷰 결과를 만든다. Review Comment Skill은 파일 경로와 diff line이 있는 피드백을 review thread로 게시하고, 라인에 붙일 수 없는 피드백은 review summary 또는 보조 PR comment로 게시한다. Codex는 미해결 review thread를 모아 피드백별 추천 액션과 근거를 설명할 수 있다. 적용/보류/거절/정책검토 필요/사람 승인 필요 중 어떤 액션을 선택할지는 사람이 확정한다.
 
 | 액션 이름           | 현재 상태           | 조건                                          | 작업 내용                                                                                                          | Human Checkpoint             | 기록 지침                                                                                                                                                                                                           |
 | ------------------- | ------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -528,8 +546,8 @@ PR 리뷰 과정에서 `open-code-review`는 피드백을 포함한 리뷰 결�
 | 커밋 생성           | 기능 구현 브랜치    | 변경 내용과 커밋 메시지 승인 완료             | 승인된 변경 내용과 커밋 메시지로 커밋 생성                                                                         | 없음                         | 남은 커밋 단위가 있으면 `기능 구현 작업` 액션으로 돌아가고, 없으면 `PR 초안 작성` 액션으로 이동한다.                                                                                                                |
 | PR 초안 작성        | PR 생성 필요        | 세부 구현 계획의 모든 커밋 단위 완료          | PR Proposal Skill이 PR 제목과 설명 초안 작성                                                                       | PR 제목과 설명 승인          | 승인된 PR 제목과 설명을 기준으로 PR 템플릿을 작성한다.                                                                                                                                                              |
 | PR 생성             | PR 생성 필요        | PR 제목과 설명 승인 완료                      | PR Creation Skill이 PR 생성                                                                                        | 없음                         | 승인된 PR 템플릿으로 PR을 생성한다.                                                                                                                                                                                 |
-| OCR 리뷰 실행       | PR open             | PR 생성 완료                                  | `open-code-review` 실행                                                                                            | 없음                         | `open-code-review` 리뷰 결과를 Review Comment Skill의 입력으로 사용한다.                                                                                                                                            |
-| 리뷰 코멘트 게시    | PR open             | `open-code-review` 리뷰 결과 존재             | Review Comment Skill이 리뷰 결과를 review thread 또는 보조 PR comment로 게시                                       | 없음                         | 파일 경로와 diff line이 있는 피드백은 review thread에 문제, 근거, 위험도, 추천 분류와 함께 기록한다. review thread로 게시할 수 없는 피드백은 보조 PR comment로 기록하고 해결/미해결 추적 대상에서 제외한다.         |
+| Claude 리뷰 실행    | PR open             | PR 생성 완료                                  | Claude Code Review Skill 실행                                                                                      | 없음                         | Claude Code Review Skill 리뷰 결과를 Review Comment Skill의 입력으로 사용한다.                                                                                                                                      |
+| 리뷰 코멘트 게시    | PR open             | Claude Code Review Skill 리뷰 결과 존재       | Review Comment Skill이 리뷰 결과를 review thread 또는 보조 PR comment로 게시                                       | 없음                         | 파일 경로와 diff line이 있는 피드백은 review thread에 문제, 근거, 위험도, 추천 분류와 함께 기록한다. review thread로 게시할 수 없는 피드백은 보조 PR comment로 기록하고 해결/미해결 추적 대상에서 제외한다.         |
 | 피드백 대응 제안    | PR open             | `isResolved`가 false인 review thread가 있음   | Codex가 해결되지 않은 피드백별 설명, 개선 방향, 커밋 메시지 제안                                                   | 피드백 대응 승인             | 승인된 대응 방향과 커밋 메시지를 기준으로 후속 작업을 진행한다.                                                                                                                                                     |
 | 승인 피드백 반영    | PR open             | 승인된 피드백 존재                            | Codex가 승인된 피드백만 반영하고 해당 review thread를 해결로 처리                                                  | 없음                         | 반영 완료한 피드백은 GitHub GraphQL `resolveReviewThread`로 해결 처리한다. 아직 처리되지 않은 review thread는 미해결 상태로 두고, `isResolved`가 false인 thread가 남아 있으면 `피드백 대응 제안` 액션으로 돌아간다. |
 | PR merge 대기       | PR open             | 모든 리뷰 피드백 처리 완료                    | 사용자가 GitHub에서 PR merge                                                                                       | PR merge                     | 별도 템플릿 섹션을 갱신하지 않는다. merge 결과는 GitHub PR 상태로 확인한다.                                                                                                                                         |
@@ -552,8 +570,8 @@ PR 리뷰 과정에서 `open-code-review`는 피드백을 포함한 리뷰 결�
   -> PR Proposal Skill이 PR 제목과 설명 초안 작성
   -> 사용자가 PR 제목과 설명 승인
   -> PR Creation Skill이 PR 생성
-  -> open-code-review 실행
-  -> open-code-review가 리뷰 결과 생성
+  -> Claude Code Review Skill 실행
+  -> Claude Code Review Skill이 리뷰 결과 생성
   -> Review Comment Skill이 라인 피드백을 review thread로 게시하고, 라인에 붙일 수 없는 피드백은 보조 PR comment로 게시
   -> 해결되지 않은 review thread가 있는 동안 반복
      -> Codex가 피드백별 설명, 개선 방향, 커밋 메시지 제시
@@ -566,7 +584,7 @@ PR 리뷰 과정에서 `open-code-review`는 피드백을 포함한 리뷰 결�
   -> 이슈 유형별 PR merged 전이로 이동
 ```
 
-리뷰 피드백의 액션 분류와 전달 맥락은 Review Feedback Triage를 따른다. `open-code-review`와 Codex는 액션을 추천할 수는 있지만 확정하지 않는다. 확정 권한은 사람에게 있다.
+리뷰 피드백의 액션 분류와 전달 맥락은 Review Feedback Triage를 따른다. Claude Code Review Skill과 Codex는 액션을 추천할 수는 있지만 확정하지 않는다. 확정 권한은 사람에게 있다.
 
 ## 적용과 관리 구조
 
@@ -591,6 +609,7 @@ GitHub Template Bootstrap은 GitHub Workflow Engine을 타겟 레포에 적용�
 - Commit Message Skill 설치 구조
 - PR Proposal Skill 설치 구조
 - PR Creation Skill 설치 구조
+- Claude Code Review Skill 설치 구조
 - Review Comment Skill 설치 구조
 - 기본 라벨 세트
 
@@ -634,6 +653,8 @@ codex-harness/
         │   └── SKILL.md
         ├── pr-creation/
         │   └── SKILL.md
+        ├── claude-code-review/
+        │   └── SKILL.md
         └── review-comment/
             └── SKILL.md
 ```
@@ -661,6 +682,8 @@ target-repo/
 │       ├── pr-proposal/
 │       │   └── SKILL.md
 │       ├── pr-creation/
+│       │   └── SKILL.md
+│       ├── claude-code-review/
 │       │   └── SKILL.md
 │       └── review-comment/
 │           └── SKILL.md

@@ -289,22 +289,23 @@ Claude Code Review Skill은 다음 책임을 가진다.
 - 파일 수정, GitHub comment 작성, review thread 게시, PR merge를 수행하지 않는다.
 - 버그, 회귀, 보안, 테스트 누락, 설계 불일치를 우선 검토한다.
 - 각 피드백을 파일 위치, diff 위치, 문제, 근거, 위험도, 추천 분류, 확신도로 정리한다.
-- 라인에 붙일 수 없는 전체 설계 피드백은 review summary 후보로 분리한다.
+- 라인에 붙일 수 없는 전체 설계 피드백은 요약 피드백 후보로 분리한다.
 - Codex가 후속 처리할 수 있도록 구조화된 리뷰 결과를 반환한다.
 
 Claude Code Review Skill은 Claude Code 구독 또는 인증 상태를 사용해 실행된다. Workflow Engine은 Claude 호출 결과를 리뷰 생성 결과로만 취급하며, GitHub 게시와 피드백 반영은 각각 Review Comment Skill과 Codex가 담당한다.
 
 ### Review Comment Skill
 
-Review Comment Skill은 Claude Code Review Skill이 생성한 리뷰 결과를 GitHub Pull Request review thread로 게시하는 실행 규칙이다.
+Review Comment Skill은 Claude Code Review Skill이 생성한 리뷰 결과를 GitHub Pull Request review thread 또는 요약 피드백 댓글로 게시하는 실행 규칙이다.
 
 Review Comment Skill은 다음 책임을 가진다.
 
 - PR 번호와 Claude Code Review Skill 리뷰 결과를 입력으로 받는다.
 - 파일 경로와 diff line이 있는 피드백은 GitHub Pull Request review thread로 게시할 수 있는 형식으로 정리한다.
-- 같은 리뷰 결과가 중복 게시되지 않도록 기존 review thread와 보조 PR comment를 확인한다.
+- 같은 리뷰 결과가 중복 게시되지 않도록 기존 review thread와 요약 피드백 댓글을 확인한다.
 - 각 review thread에 문제, 근거, 위험도, 추천 분류, 확신도를 함께 게시한다.
-- 파일 경로와 diff line이 없어 review thread로 게시할 수 없는 피드백은 review summary 또는 일반 PR comment로 게시하되, 해결/미해결 추적 대상과 분리한다.
+- 파일 경로와 diff line이 없어 review thread로 게시할 수 없는 피드백은 marker가 있는 요약 피드백 댓글의 체크리스트로 게시한다.
+- 요약 피드백 댓글에는 `<!-- codex-harness:summary-feedback v1 -->` marker를 포함한다.
 - 리뷰 피드백의 적용 여부를 결정하거나 파일을 수정하지 않는다.
 
 ### 도구 역할 구분
@@ -317,8 +318,8 @@ Review Comment Skill은 다음 책임을 가진다.
 | ---------------- | ------------------------ | --------------------------------------------------------------------------------------------- |
 | 파일 수정        | Codex                    | 이슈 범위에 따라 설계 문서와 실제 코드를 수정한다.                                            |
 | 리뷰 생성        | Claude Code Review Skill | PR 변경사항을 검토하고 리뷰 결과를 생성한다.                                                  |
-| 리뷰 코멘트 게시 | Review Comment Skill     | Claude Code Review Skill 리뷰 결과를 review thread 또는 보조 PR comment로 게시한다.           |
-| 피드백 대응 진행 | Codex                    | 미해결 review thread를 수집해 추천 대응 방향을 설명하고, 사용자 승인 후 후속 작업을 수행한다. |
+| 리뷰 코멘트 게시 | Review Comment Skill     | Claude Code Review Skill 리뷰 결과를 review thread 또는 요약 피드백 댓글로 게시한다.          |
+| 피드백 대응 진행 | Codex                    | 미해결 review thread와 미체크 요약 피드백을 수집해 추천 대응 방향을 설명하고, 사용자 승인 후 후속 작업을 수행한다. |
 
 Workflow Skill은 GitHub 상태를 읽고 현재 조건에서 진행할 액션을 제안한다. 실제 파일 수정은 Codex가 맡고, 리뷰 생성은 Claude Code Review Skill이 맡으며, 리뷰 코멘트 게시는 Review Comment Skill이 맡는다.
 
@@ -460,7 +461,7 @@ PR Proposal Skill은 PR 템플릿 섹션을 다음 기준으로 작성한다. �
 
 ### Claude Code Review Skill 연동 정책
 
-Claude Code Review Skill은 변경사항을 독립적으로 검토하고 리뷰 결과를 생성하는 역할이다. Codex는 PR diff 또는 브랜치 diff와 연결 이슈 맥락을 준비하고, 비대화형 `claude` CLI 호출로 Claude Code Review Skill을 실행한다. 리뷰 결과를 review thread 또는 보조 PR comment로 게시하는 작업은 Review Comment Skill이 담당하고, 파일 수정과 피드백 대응 진행은 Codex가 담당한다.
+Claude Code Review Skill은 변경사항을 독립적으로 검토하고 리뷰 결과를 생성하는 역할이다. Codex는 PR diff 또는 브랜치 diff와 연결 이슈 맥락을 준비하고, 비대화형 `claude` CLI 호출로 Claude Code Review Skill을 실행한다. 리뷰 결과를 review thread 또는 요약 피드백 댓글로 게시하는 작업은 Review Comment Skill이 담당하고, 파일 수정과 피드백 대응 진행은 Codex가 담당한다.
 
 Claude Code Review Skill은 다음 시점에 실행한다.
 
@@ -486,13 +487,15 @@ Claude Code Review Skill은 다음 시점에 실행한다.
 - 추천 분류: 적용 / 보류 / 거절 / 정책검토 필요 / 사람 승인 필요
 - 확신도
 
-Claude Code Review Skill은 review thread 게시, PR comment 게시, 파일 수정을 직접 수행하지 않는다. Review Comment Skill은 리뷰 결과를 review thread 또는 보조 PR comment로 게시한다. Codex는 미해결 review thread를 수집해 사용자에게 대응 방향을 제안하고, 사람이 승인한 항목만 수정한다.
+Claude Code Review Skill은 review thread 게시, PR comment 게시, 파일 수정을 직접 수행하지 않는다. Review Comment Skill은 리뷰 결과를 review thread 또는 요약 피드백 댓글로 게시한다. Codex는 미해결 review thread와 미체크 요약 피드백을 수집해 사용자에게 대응 방향을 제안하고, 사람이 승인한 항목만 수정한다.
 
 ### Review Feedback Triage
 
 Review Feedback Triage는 리뷰 피드백을 바로 수정 명령으로 보지 않고, 사람이 액션을 결정할 수 있도록 분류와 맥락을 제공하는 절차다.
 
-이 분류는 대응 방향을 정하기 위한 판단 기준이다. GitHub 처리 상태는 Pull Request review thread의 `isResolved` 값으로 관리한다. review thread로 게시할 수 없는 보조 PR comment는 해결/미해결 추적 대상에서 제외한다.
+이 분류는 대응 방향을 정하기 위한 판단 기준이다. GitHub 처리 상태는 Pull Request review thread의 `isResolved` 값과 요약 피드백 댓글의 체크리스트 상태로 관리한다.
+
+라인 피드백은 review thread로 게시하고 `isResolved`로 해결 여부를 추적한다. 라인에 붙일 수 없는 설계/정책 수준 피드백은 일반 PR comment 전체를 의미 분석해 수집하지 않는다. Review Comment Skill이 `<!-- codex-harness:summary-feedback v1 -->` marker가 있는 요약 피드백 댓글로 게시하고, Workflow Skill은 PR의 issue comments 중 이 marker가 있는 댓글만 찾아 체크리스트의 미체크 항목을 미해결 요약 피드백으로 본다. 사용자가 대응 방향을 승인하면 Codex가 필요한 작업을 수행하고 같은 요약 피드백 댓글의 체크항목을 체크한다.
 
 | 분류           | 의미                            | 후속 액션                     |
 | -------------- | ------------------------------- | ----------------------------- |
@@ -600,7 +603,7 @@ Workflow Skill은 다음 순서로 작업 대상을 판단한다.
 
 Workflow Skill은 PR merge를 상시 감시하지 않는다. 사용자가 PR이 merge되었다고 알리거나, 다음 계획 요청으로 GitHub Run State를 다시 읽을 때 merge된 PR을 확인하고 연결 이슈의 후속 전이를 적용한다.
 
-PR 리뷰 과정에서 Claude Code Review Skill은 피드백을 포함한 리뷰 결과를 만든다. Review Comment Skill은 파일 경로와 diff line이 있는 피드백을 review thread로 게시하고, 라인에 붙일 수 없는 피드백은 review summary 또는 보조 PR comment로 게시한다. Codex는 미해결 review thread를 모아 피드백별 추천 액션과 근거를 설명할 수 있다. 적용/보류/거절/정책검토 필요/사람 승인 필요 중 어떤 액션을 선택할지는 사람이 확정한다.
+PR 리뷰 과정에서 Claude Code Review Skill은 피드백을 포함한 리뷰 결과를 만든다. Review Comment Skill은 파일 경로와 diff line이 있는 피드백을 review thread로 게시하고, 라인에 붙일 수 없는 피드백은 marker가 있는 요약 피드백 댓글의 체크리스트로 게시한다. Codex는 미해결 review thread와 미체크 요약 피드백을 모아 피드백별 추천 액션과 근거를 설명할 수 있다. 적용/보류/거절/정책검토 필요/사람 승인 필요 중 어떤 액션을 선택할지는 사람이 확정한다.
 
 | 액션 이름           | 현재 상태           | 조건                                          | 작업 내용                                                                                                                         | Human Checkpoint             | 기록 지침                                                                                                                                                                                                           |
 | ------------------- | ------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -612,10 +615,10 @@ PR 리뷰 과정에서 Claude Code Review Skill은 피드백을 포함한 리뷰
 | PR 초안 작성        | PR 생성 필요        | 세부 구현 계획의 모든 커밋 단위 완료          | PR Proposal Skill이 PR 제목과 설명 초안 작성                                                                                      | PR 제목과 설명 승인          | 승인된 PR 제목과 설명을 기준으로 PR 템플릿을 작성한다.                                                                                                                                                              |
 | PR 생성             | PR 생성 필요        | PR 제목과 설명 승인 완료                      | PR Creation Skill이 PR 생성                                                                                                       | 없음                         | 승인된 PR 템플릿으로 PR을 생성한다.                                                                                                                                                                                 |
 | Claude 리뷰 실행    | PR open             | PR 생성 완료                                  | Claude Code Review Skill 실행                                                                                                     | 없음                         | Claude Code Review Skill 리뷰 결과를 Review Comment Skill의 입력으로 사용한다.                                                                                                                                      |
-| 리뷰 코멘트 게시    | PR open             | Claude Code Review Skill 리뷰 결과 존재       | Review Comment Skill이 리뷰 결과를 review thread 또는 보조 PR comment로 게시                                                      | 없음                         | 파일 경로와 diff line이 있는 피드백은 review thread에 문제, 근거, 위험도, 추천 분류, 확신도와 함께 기록한다. review thread로 게시할 수 없는 피드백은 보조 PR comment로 기록하고 해결/미해결 추적 대상에서 제외한다. |
-| 피드백 대응 제안    | PR open             | `isResolved`가 false인 review thread가 있음   | Codex가 해결되지 않은 피드백별 설명, 개선 방향, 커밋 메시지 제안                                                                  | 피드백 대응 승인             | 승인된 대응 방향과 커밋 메시지를 기준으로 후속 작업을 진행한다.                                                                                                                                                     |
-| 승인 피드백 반영    | PR open             | 승인된 피드백 존재                            | Codex가 승인된 피드백만 반영하고 해당 review thread를 해결로 처리                                                                 | 없음                         | 반영 완료한 피드백은 GitHub GraphQL `resolveReviewThread`로 해결 처리한다. 아직 처리되지 않은 review thread는 미해결 상태로 두고, `isResolved`가 false인 thread가 남아 있으면 `피드백 대응 제안` 액션으로 돌아간다. |
-| PR merge 대기       | PR open             | 모든 리뷰 피드백 처리 완료                    | 사용자가 GitHub에서 PR merge                                                                                                      | PR merge                     | 별도 템플릿 섹션을 갱신하지 않는다. merge 결과는 GitHub PR 상태로 확인한다.                                                                                                                                         |
+| 리뷰 코멘트 게시    | PR open             | Claude Code Review Skill 리뷰 결과 존재       | Review Comment Skill이 리뷰 결과를 review thread 또는 요약 피드백 댓글로 게시                                                     | 없음                         | 파일 경로와 diff line이 있는 피드백은 review thread에 문제, 근거, 위험도, 추천 분류, 확신도와 함께 기록한다. review thread로 게시할 수 없는 피드백은 `<!-- codex-harness:summary-feedback v1 -->` marker가 있는 요약 피드백 댓글의 체크리스트로 기록한다. |
+| 피드백 대응 제안    | PR open             | `isResolved`가 false인 review thread가 있거나 marker가 있는 요약 피드백 댓글에 미체크 항목이 있음 | Codex가 해결되지 않은 피드백별 설명, 개선 방향, 커밋 메시지 제안                                                                  | 피드백 대응 승인             | 승인된 대응 방향과 커밋 메시지를 기준으로 후속 작업을 진행한다.                                                                                                                                                     |
+| 승인 피드백 반영    | PR open             | 승인된 피드백 존재                            | Codex가 승인된 피드백만 반영하고 해당 피드백을 해결로 처리                                                                        | 없음                         | 라인 피드백은 GitHub GraphQL `resolveReviewThread`로 해결 처리한다. 요약 피드백은 marker가 있는 요약 피드백 댓글의 해당 체크항목을 체크한다. 아직 처리되지 않은 review thread나 미체크 요약 피드백이 남아 있으면 `피드백 대응 제안` 액션으로 돌아간다. |
+| PR merge 대기       | PR open             | 모든 리뷰 피드백 처리 완료                    | 사용자가 GitHub에서 PR merge                                                                                                      | PR merge                     | `isResolved`가 false인 review thread가 없고, marker가 있는 요약 피드백 댓글에 미체크 항목이 없어야 한다. merge 결과는 GitHub PR 상태로 확인한다.                                                                 |
 | PR merge 반영       | PR merged           | GitHub Run State에서 PR이 merge됨             | Workflow Skill이 GitHub PR의 base branch로 전환한 뒤 원격 base branch를 pull하고, 연결 이슈의 이슈 유형별 `PR merged` 전이로 이동 | 없음                         | 로컬 base branch가 merge된 PR을 포함하는 상태인지 확인한다. 연결 이슈 체크리스트 갱신은 이슈 유형별 `PR merged` 전이에서 처리한다.                                                                                  |
 
 기본 흐름은 다음과 같다.
@@ -637,8 +640,8 @@ PR 리뷰 과정에서 Claude Code Review Skill은 피드백을 포함한 리뷰
   -> PR Creation Skill이 PR 생성
   -> Claude Code Review Skill 실행
   -> Claude Code Review Skill이 리뷰 결과 생성
-  -> Review Comment Skill이 라인 피드백을 review thread로 게시하고, 라인에 붙일 수 없는 피드백은 보조 PR comment로 게시
-  -> 해결되지 않은 review thread가 있는 동안 반복
+  -> Review Comment Skill이 라인 피드백을 review thread로 게시하고, 라인에 붙일 수 없는 피드백은 요약 피드백 댓글 체크리스트로 게시
+  -> 해결되지 않은 review thread나 미체크 요약 피드백이 있는 동안 반복
      -> Codex가 피드백별 설명, 개선 방향, 커밋 메시지 제시
      -> 사용자가 피드백별 대응 방향과 커밋 메시지 승인
      -> 승인된 피드백만 Codex가 반영

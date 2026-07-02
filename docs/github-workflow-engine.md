@@ -276,7 +276,7 @@ PR Creation Skill은 승인된 PR 제목과 설명으로 GitHub PR을 생성하�
 
 PR Creation Skill은 다음 책임을 가진다.
 
-- 승인된 PR 제목, 설명, 기준 브랜치, 작업 브랜치를 입력으로 받는다.
+- 승인된 PR 제목, 설명, 기준 브랜치, 원격 head branch를 입력으로 받는다.
 - 승인된 PR 템플릿 본문으로 GitHub PR을 생성한다.
 - 생성된 PR 번호와 URL을 Workflow Skill에 반환한다.
 - PR merge 방식 선택이나 merge 수행은 하지 않는다.
@@ -621,7 +621,8 @@ PR 리뷰 과정에서 Claude Code Review Skill은 피드백을 포함한 리뷰
 | 커밋 메시지 제안    | 작업 브랜치         | 커밋 단위 변경 작업 완료                      | Commit Message Skill이 변경 내용에 맞는 커밋 메시지 제안                                                                          | 변경 내용과 커밋 메시지 승인 | 변경 내용과 커밋 메시지를 함께 승인받고 커밋 생성의 입력으로 사용한다.                                                                                                                                              |
 | 커밋 생성           | 작업 브랜치         | 변경 내용과 커밋 메시지 승인 완료             | 승인된 변경 내용과 커밋 메시지로 커밋 생성                                                                                        | 없음                         | 남은 커밋 단위가 있으면 `구현 작업` 액션으로 돌아가고, 없으면 `PR 초안 작성` 액션으로 이동한다.                                                                                                                    |
 | PR 초안 작성        | PR 생성 필요        | 세부 구현 계획의 모든 커밋 단위 완료          | PR Proposal Skill이 PR 제목과 설명 초안 작성                                                                                      | PR 제목과 설명 승인          | 승인된 PR 제목과 설명을 기준으로 PR 템플릿을 작성한다.                                                                                                                                                              |
-| PR 생성             | PR 생성 필요        | PR 제목과 설명 승인 완료                      | PR Creation Skill이 PR 생성                                                                                                       | 없음                         | 승인된 PR 템플릿으로 PR을 생성한다.                                                                                                                                                                                 |
+| 작업 브랜치 push    | PR 생성 필요        | PR 제목과 설명 승인 완료                      | 승인된 작업 브랜치를 원격에 push하고 GitHub에서 head branch가 참조 가능한지 확인                                                   | 없음                         | 원격 head branch가 존재해야 PR Creation Skill의 입력으로 사용할 수 있다. push 실패나 원격 브랜치 충돌이 있으면 PR을 생성하지 않고 사용자에게 원인과 선택지를 제시한다.                                             |
+| PR 생성             | PR 생성 필요        | 원격 head branch 확인 완료                    | PR Creation Skill이 PR 생성                                                                                                       | 없음                         | 승인된 PR 템플릿과 원격 head branch로 PR을 생성한다.                                                                                                                                                                |
 | Claude 리뷰 실행    | PR open             | PR 생성 완료                                  | Claude Code Review Skill 실행                                                                                                     | 없음                         | Claude Code Review Skill 리뷰 결과를 Review Comment Skill의 입력으로 사용한다.                                                                                                                                      |
 | 리뷰 코멘트 게시    | PR open             | Claude Code Review Skill 리뷰 결과 존재       | Review Comment Skill이 리뷰 결과를 review thread 또는 요약 피드백 댓글로 게시                                                     | 없음                         | 파일 경로와 diff line이 있는 피드백은 review thread에 문제, 근거, 위험도, 추천 분류, 확신도와 함께 기록한다. review thread로 게시할 수 없는 피드백은 `<!-- codex-harness:summary-feedback v1 -->` marker가 있는 요약 피드백 댓글의 체크리스트로 기록한다. |
 | 피드백 대응 제안    | PR open             | `isResolved`가 false인 review thread가 있거나 marker가 있는 요약 피드백 댓글에 미체크 항목이 있음 | Codex가 해결되지 않은 피드백별 설명, 개선 방향, 커밋 메시지 제안                                                                  | 피드백 대응 승인             | 승인된 대응 방향과 커밋 메시지를 기준으로 후속 작업을 진행한다.                                                                                                                                                     |
@@ -645,6 +646,7 @@ PR 리뷰 과정에서 Claude Code Review Skill은 피드백을 포함한 리뷰
      -> 승인된 변경 내용과 커밋 메시지로 커밋 생성
   -> PR Proposal Skill이 PR 제목과 설명 초안 작성
   -> 사용자가 PR 제목과 설명 승인
+  -> 승인된 작업 브랜치를 원격에 push하고 head branch 확인
   -> PR Creation Skill이 PR 생성
   -> Claude Code Review Skill 실행
   -> Claude Code Review Skill이 리뷰 결과 생성

@@ -109,7 +109,7 @@ Human Checkpoint가 필요한 경우 Workflow Skill 또는 Issue Creation Skill�
 
 전역 실행 로그는 현재 어떤 워크플로우가 어느 액션에 있는지 빠르게 확인하기 위한 로컬 기록이다. 이 로그는 GitHub 상태를 대체하지 않는다. 프로젝트 상태의 기준은 GitHub의 열린 이슈, PR, 체크리스트, 리뷰 상태다.
 
-Workflow Skill은 State Transition Rule의 특정 행을 선택해 액션에 진입할 때마다 `.harness/logs/github-workflow.md`에 액션 진입 로그를 남긴다.
+Workflow Skill은 State Transition Rule의 특정 행을 선택해 액션에 진입할 때마다 `.harness/logs/github-workflow-log.md`에 액션 진입 로그를 남긴다.
 
 액션 진입 로그에는 다음 정보를 남긴다.
 
@@ -146,7 +146,7 @@ Workflow Skill은 State Transition Rule의 특정 행을 선택해 액션에 진
 - 추천 액션과 근거
 - 재개 시 먼저 확인해야 할 항목
 
-재개할 때 Workflow Skill은 `.harness/logs/github-workflow.md` 실행 로그를 먼저 참고한다. 로그가 없으면 GitHub Run State를 직접 읽어 현재 위치를 판단한다. 재개는 새 워크플로우를 시작하는 것이 아니라 마지막으로 확인 가능한 상태에서 이어가는 일이다. 닫힌 이슈는 기본적으로 재개 대상이 아니며, 사용자가 다시 열거나 새 이슈로 작성해 달라고 요청한 경우에만 재개 후보가 된다.
+재개할 때 Workflow Skill은 `.harness/logs/github-workflow-log.md` 실행 로그를 먼저 참고한다. 로그가 없으면 GitHub Run State를 직접 읽어 현재 위치를 판단한다. 재개는 새 워크플로우를 시작하는 것이 아니라 마지막으로 확인 가능한 상태에서 이어가는 일이다. 닫힌 이슈는 기본적으로 재개 대상이 아니며, 사용자가 다시 열거나 새 이슈로 작성해 달라고 요청한 경우에만 재개 후보가 된다.
 
 중단과 재개는 특정 이슈 유형에만 적용되지 않는다. 정책검토, 기능제안, 기능변경, 기능결함, 연결 PR의 어느 액션에서도 같은 기준을 따른다.
 
@@ -172,7 +172,7 @@ Workflow Skill은 다음 책임을 가진다.
 - 진행 중이거나 멈춰 있는 계획이 있으면 신규 후보보다 해당 계획의 재개를 우선한다.
 - 재개할 계획이 없을 때만 새로 진행할 수 있는 열린 이슈 후보를 수집한다.
 - 선택된 이슈의 유형과 상태에 맞는 State Transition Rule을 적용한다.
-- State Transition Rule의 각 액션에 진입할 때 `.harness/logs/github-workflow.md`에 액션 진입 로그를 남긴다.
+- State Transition Rule의 각 액션에 진입할 때 `.harness/logs/github-workflow-log.md`에 액션 진입 로그를 남긴다.
 - 액션에 새 이슈 생성이 필요하면 Issue Creation Skill에 이슈 유형과 생성 근거를 전달한다.
 - 모든 상태에서 중단 요청, 정보 부족, Human Checkpoint 미승인, 보류 결정을 처리한다.
 - 재개 요청이 들어오면 마지막 액션 진입 로그, 중단 사유, 남은 판단 질문, 액션 후보를 먼저 복원한다.
@@ -467,7 +467,7 @@ Workflow Skill은 다음 순서로 작업 대상을 판단한다.
 | ------------------ | -------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PR merge 안내      | 1        | merge 대기 PR            | 리뷰 피드백 처리가 끝났지만 아직 merge되지 않은 열린 PR이 있다.                                                                                                                    | 새 계획 후보를 제안하지 않고, 사용자가 GitHub에서 PR merge를 수행한 뒤 다시 알려주거나 다음 계획을 요청해야 한다고 안내한다.                                                                  |
 | PR 진행 재개       | 2        | 진행 중 PR               | merge 대기 상태는 아니지만 리뷰, 피드백 대응, CI, 사용자 확인 등 아직 완료되지 않은 열린 PR이 있다.                                                                                | 새 계획 후보를 제안하지 않고, 해당 PR의 기능 구현 흐름에서 현재 상태와 남은 액션을 보여준다.                                                                                                  |
-| 열린 계획 이어가기 | 3        | 이어갈 수 있는 열린 계획 | 진행 중인 열린 PR은 없고, `.harness/logs/github-workflow.md` 실행 로그가 있거나 GitHub Run State에서 전환되지 않은 열린 이슈 또는 열린 기능변경/기능결함 이슈의 완료 기준에 아직 반영되지 않은 merge된 PR이 확인된다. | 현재 상태, 남은 판단 질문, 진행할 액션을 보여준다. merge된 PR이 아직 연결 이슈에 반영되지 않았다면 `main` 브랜치로 전환한 뒤 원격 `main`을 pull하고, 이슈 유형별 `PR merged` 전이를 적용한다. |
+| 열린 계획 이어가기 | 3        | 이어갈 수 있는 열린 계획 | 진행 중인 열린 PR은 없고, `.harness/logs/github-workflow-log.md` 실행 로그가 있거나 GitHub Run State에서 전환되지 않은 열린 이슈 또는 열린 기능변경/기능결함 이슈의 완료 기준에 아직 반영되지 않은 merge된 PR이 확인된다. | 현재 상태, 남은 판단 질문, 진행할 액션을 보여준다. merge된 PR이 아직 연결 이슈에 반영되지 않았다면 `main` 브랜치로 전환한 뒤 원격 `main`을 pull하고, 이슈 유형별 `PR merged` 전이를 적용한다. |
 | 기능제안 요청 연결 | 4        | 새 계획 없음             | 진행 중인 작업도 없고 이어갈 수 있는 열린 계획도 없다.                                                                                                                             | 사용자에게 새 기능제안 요청을 받아 Issue Creation Skill의 기능제안 이슈 초안 작성 흐름으로 연결한다.                                                                                          |
 
 이어갈 수 있는 열린 계획은 새 기능제안 이슈 작성 흐름보다 항상 우선한다. Workflow Skill은 기능제안 이슈를 임의로 진행하지 않고, 진행/중단/정책검토/기능변경 선택지를 제시한 뒤 사용자가 결정한 경우에만 다음 액션으로 넘어간다.
@@ -602,21 +602,22 @@ GitHub Template Bootstrap은 GitHub Workflow Engine을 타겟 레포에 적용�
 - 기능결함 이슈 템플릿
 - Pull Request 템플릿
 - GitHub Workflow Engine 운영 문서
-- Workflow Skill 설치 구조
-- Issue Creation Skill 설치 구조
-- 기능 개발 계획 Skill 설치 구조
-- Fix Plan Skill 설치 구조
-- Branch Name Skill 설치 구조
-- Commit Message Skill 설치 구조
-- PR Proposal Skill 설치 구조
-- PR Creation Skill 설치 구조
-- Claude Code Review Skill 설치 구조
-- Review Comment Skill 설치 구조
+- Workflow Skill 전역 스킬 기본형
+- Issue Creation Skill 전역 스킬 기본형
+- 기능 개발 계획 Skill 전역 스킬 기본형
+- Fix Plan Skill 전역 스킬 기본형
+- Branch Name Skill 전역 스킬 기본형
+- Commit Message Skill 전역 스킬 기본형
+- PR Proposal Skill 전역 스킬 기본형
+- PR Creation Skill 전역 스킬 기본형
+- Claude Code Review Skill 전역 스킬 기본형
+- Review Comment Skill 전역 스킬 기본형
 - 기본 라벨 세트
 
 GitHub Template Bootstrap은 다음 원칙을 따른다.
 
 - `codex-harness`는 표준 기본형과 생성 규칙의 원천이다.
+- Workflow Engine 스킬은 Codex 전역 스킬로 설치하고 관리한다.
 - 타겟 레포는 적용된 템플릿과 프로젝트별 변형의 소유자다.
 - GitHub Workflow 운영 구조 생성은 사용자의 타겟 프로젝트 구축 요청 범위 안에서 수행한다.
 - 기존 타겟 레포 템플릿을 덮어쓸 수 있으면 diff와 영향 범위를 사용자에게 보여준다.
@@ -625,7 +626,7 @@ GitHub Template Bootstrap은 다음 원칙을 따른다.
 
 ### codex-harness 관리 구조
 
-`codex-harness`는 GitHub Workflow Engine 기본형을 다음 구조로 관리한다.
+`codex-harness`는 GitHub Workflow Engine 기본형과 전역 스킬 배포본을 다음 구조로 관리한다.
 
 ```text
 codex-harness/
@@ -662,36 +663,16 @@ codex-harness/
             └── SKILL.md
 ```
 
-이 구조는 표준 기본형이다. 실제 타겟 레포에 적용된 템플릿은 타겟 레포의 맥락에 맞게 달라질 수 있다. 공통화할 가치가 있다고 사용자가 판단한 경우에만 `codex-harness` 기본형으로 승격한다.
+이 구조는 표준 기본형이다. `.codex-dist/skills/*` 아래의 Workflow Engine 스킬은 Codex 전역 스킬 경로에 설치되어 타겟 레포를 읽고 실행된다. 타겟 레포에 로컬 스킬로 복사하지 않는다.
 
-### 타겟 프로젝트 생성 구조
+실제 타겟 레포에 적용된 템플릿은 타겟 레포의 맥락에 맞게 달라질 수 있다. 공통화할 가치가 있다고 사용자가 판단한 경우에만 `codex-harness` 기본형으로 승격한다.
+
+### 타겟 프로젝트 적용 구조
 
 `codex-harness`가 타겟 프로젝트에 GitHub Workflow Engine 운영 기준을 생성할 때는 다음 자산을 적용 후보로 둔다.
 
 ```text
 target-repo/
-├── .codex/
-│   └── skills/
-│       ├── github-workflow-engine/
-│       │   └── SKILL.md
-│       ├── issue-creation/
-│       │   └── SKILL.md
-│       ├── feature-plan/
-│       │   └── SKILL.md
-│       ├── fix-plan/
-│       │   └── SKILL.md
-│       ├── branch-name/
-│       │   └── SKILL.md
-│       ├── commit-message/
-│       │   └── SKILL.md
-│       ├── pr-proposal/
-│       │   └── SKILL.md
-│       ├── pr-creation/
-│       │   └── SKILL.md
-│       ├── claude-code-review/
-│       │   └── SKILL.md
-│       └── review-comment/
-│           └── SKILL.md
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── proposal_template.md
@@ -699,11 +680,14 @@ target-repo/
 │   │   ├── feature_template.md
 │   │   └── fix_template.md
 │   └── pull_request_template.md
-└── docs/
-    └── github-workflow-engine.md
+└── .harness/
+    └── logs/
+        └── github-workflow-log.md
 ```
 
-타겟 프로젝트의 도메인과 기존 운영 방식에 따라 문서 경로는 달라질 수 있다. 중요한 기준은 GitHub Issue와 PR이 프로젝트 상태의 기준이며, 별도 Runtime 상태 저장소가 필수가 아니라는 점이다.
+타겟 프로젝트에는 Workflow Engine 스킬을 생성하지 않는다. 전역 Workflow Engine 스킬이 타겟 레포의 GitHub Issue, PR, 템플릿, 실행 로그를 읽고 상태 전이를 수행한다.
+
+타겟 프로젝트의 도메인과 기존 운영 방식에 따라 운영 문서 경로는 달라질 수 있다. 중요한 기준은 GitHub Issue와 PR이 프로젝트 상태의 기준이며, 별도 Runtime 상태 저장소가 필수가 아니라는 점이다.
 
 ## 운영 메모
 
@@ -716,7 +700,7 @@ target-repo/
 - 기능결함 이슈는 사용자가 직접 작성하거나 Issue Creation Skill의 도움을 받아 생성할 수 있다.
 - 기능결함 이슈가 생성되면 “다음 계획” 요청을 기다리지 않고 Workflow Skill이 열린 기능결함 이슈로 읽고 상태 전이를 적용한다.
 - “다음 계획” 요청은 병렬 워크플로우를 전제로 하지 않으며, 진행 중인 작업이 없는 상태에서 이어갈 수 있는 열린 계획이 있는지 판단하기 위한 요청이다.
-- 모든 액션 진입은 `.harness/logs/github-workflow.md`에 로컬 실행 로그로 남기고, 중단 시 GitHub 상태는 유지하며 같은 로그에 중단 사유와 재개 기준을 남긴다.
+- 모든 액션 진입은 `.harness/logs/github-workflow-log.md`에 로컬 실행 로그로 남기고, 중단 시 GitHub 상태는 유지하며 같은 로그에 중단 사유와 재개 기준을 남긴다.
 - 재개는 새 워크플로우 시작이 아니라 GitHub Run State와 마지막 실행 로그를 기준으로 이어서 진행하는 것이다.
 - 이슈 생성은 항상 이슈 유형별 템플릿, 필수 항목, 라벨, 연관 이슈 규칙을 따른다.
 - 이슈는 사용자 승인 없이 생성하지 않는다.

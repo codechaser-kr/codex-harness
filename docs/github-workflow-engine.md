@@ -631,8 +631,9 @@ PR 리뷰 과정에서 Claude Code Review Skill은 피드백을 포함한 리뷰
 | 피드백 커밋 메시지 제안 | PR open          | 피드백 수정 완료                              | Commit Message Skill이 피드백 수정 내용에 맞는 커밋 메시지 제안                                                                    | 변경 내용과 커밋 메시지 승인 | 변경 내용과 커밋 메시지를 함께 승인받고 피드백 커밋 생성의 입력으로 사용한다.                                                                                                                                      |
 | 피드백 커밋 생성    | PR open             | 피드백 수정 내용과 커밋 메시지 승인 완료      | 승인된 피드백 수정 내용과 커밋 메시지로 커밋 생성                                                                                  | 없음                         | 생성된 커밋을 원격 PR branch에 push하기 전까지 해당 피드백은 미해결 상태로 둔다.                                                                                                                                   |
 | 피드백 브랜치 push  | PR open             | 피드백 커밋 생성 완료                         | 피드백 수정 커밋을 원격 head branch에 push하고 GitHub PR diff에 반영되었는지 확인                                                  | 없음                         | push 실패나 원격 브랜치 충돌이 있으면 피드백을 해결 처리하지 않고 사용자에게 원인과 선택지를 제시한다.                                                                                                             |
-| 비적용 대응 처리    | PR open             | 승인된 피드백 대응 방향이 `보류`, `거절`, `정책검토 필요`, `사람 승인 필요` 중 하나임 | Codex가 승인된 대응 방향에 따라 보류, 거절, 정책검토 이슈 생성 또는 사람 승인 후속 처리를 수행                                    | 없음                         | `보류`와 `거절`은 사유와 근거를 PR 또는 이슈에 기록한다. `정책검토 필요`는 정책검토 이슈를 생성하거나 연결한다. `사람 승인 필요`는 추가 승인이 끝나기 전까지 미해결로 둔다.                                     |
-| 피드백 해결 처리    | PR open             | 피드백 수정 커밋이 원격 head branch에 push되었거나 비적용 대응 근거 기록이 완료됨 | 처리 완료된 피드백을 해결 상태로 전환                                                                                              | 없음                         | 라인 피드백은 GitHub GraphQL `resolveReviewThread`로 해결 처리하고, 요약 피드백은 marker가 있는 요약 피드백 댓글의 해당 체크항목을 체크한다. 아직 처리되지 않은 review thread나 미체크 요약 피드백이 남아 있으면 `피드백 대응 제안` 액션으로 돌아간다. |
+| 비적용 대응 처리    | PR open             | 승인된 피드백 대응 방향이 `보류`, `거절`, `정책검토 필요` 중 하나임 | Codex가 승인된 대응 방향에 따라 보류, 거절 또는 정책검토 이슈 생성을 수행                                                          | 없음                         | `보류`와 `거절`은 사유와 근거를 PR 또는 이슈에 기록한다. `정책검토 필요`는 정책검토 이슈를 생성하거나 연결한다.                                                                                              |
+| 사람 승인 대기      | PR open             | 승인된 피드백 대응 방향이 `사람 승인 필요`임 | 추가 사용자 승인 또는 외부 사람 판단을 기다림                                                                                       | 사람 승인                    | 추가 승인이 끝나기 전까지 해당 review thread나 요약 피드백 체크항목은 미해결로 둔다.                                                                                                                            |
+| 피드백 해결 처리    | PR open             | 피드백 수정 커밋이 원격 head branch에 push되었거나, 보류/거절 근거 기록이 완료되었거나, 정책검토 이슈 생성/연결이 완료되었거나, 사람 추가 승인이 완료됨 | 처리 완료된 피드백을 해결 상태로 전환                                                                                              | 없음                         | 라인 피드백은 GitHub GraphQL `resolveReviewThread`로 해결 처리하고, 요약 피드백은 marker가 있는 요약 피드백 댓글의 해당 체크항목을 체크한다. 아직 처리되지 않은 review thread나 미체크 요약 피드백이 남아 있으면 `피드백 대응 제안` 액션으로 돌아간다. |
 | PR merge 대기       | PR open             | 모든 리뷰 피드백 처리 완료, 필수 checks 통과, GitHub PR merge 가능 상태 | 사용자가 GitHub에서 PR merge                                                                                                      | PR merge                     | `isResolved`가 false인 review thread가 없고, marker가 있는 요약 피드백 댓글에 미체크 항목이 없으며, 필수 checks가 통과했고, GitHub PR이 merge 가능한 상태여야 한다. merge 결과는 GitHub PR 상태로 확인한다.                                                                 |
 | PR merge 반영       | PR merged           | GitHub Run State에서 PR이 merge됨             | Workflow Skill이 GitHub PR의 base branch로 전환한 뒤 원격 base branch를 pull하고, 연결 이슈의 이슈 유형별 `PR merged` 전이로 이동 | 없음                         | 로컬 base branch가 merge된 PR을 포함하는 상태인지 확인한다. 연결 이슈 체크리스트 갱신은 이슈 유형별 `PR merged` 전이에서 처리한다.                                                                                  |
 
@@ -661,8 +662,9 @@ PR 리뷰 과정에서 Claude Code Review Skill은 피드백을 포함한 리뷰
      -> Codex가 피드백별 설명, 개선 방향, 커밋 메시지 제시
      -> 사용자가 피드백별 대응 방향과 필요한 커밋 메시지 승인
      -> 적용 피드백이면 수정, 커밋 메시지 승인, 커밋 생성, 원격 head branch push
-     -> 비적용 피드백이면 보류, 거절, 정책검토 이슈 생성 또는 사람 승인 후속 처리
-     -> 원격 push 또는 비적용 대응 근거 기록 후 피드백 해결 처리
+     -> 비적용 피드백이면 보류, 거절 또는 정책검토 이슈 생성 처리
+     -> 사람 승인 필요 피드백이면 추가 승인 전까지 미해결 유지
+     -> 원격 push, 비적용 대응 근거 기록, 정책검토 이슈 생성/연결 또는 사람 추가 승인 완료 후 피드백 해결 처리
   -> 사용자가 GitHub에서 PR merge
   -> 사용자가 PR merge를 알리거나 다음 계획 요청
   -> Workflow Skill이 GitHub Run State를 다시 읽고 GitHub PR의 base branch로 전환한 뒤 원격 base branch를 pull

@@ -649,7 +649,6 @@ PR 리뷰 과정에서 Claude Code Review Skill은 피드백을 포함한 리뷰
      -> Codex가 피드백별 설명, 개선 방향, 커밋 메시지 제시
      -> 사용자가 피드백별 대응 방향과 커밋 메시지 승인
      -> Codex가 승인된 대응 방향에 따라 수정, 보류, 거절, 정책검토 이슈 생성 또는 사람 승인 후속 처리
-  -> 필요하면 재리뷰
   -> 사용자가 GitHub에서 PR merge
   -> 사용자가 PR merge를 알리거나 다음 계획 요청
   -> Workflow Skill이 GitHub Run State를 다시 읽고 GitHub PR의 base branch로 전환한 뒤 원격 base branch를 pull

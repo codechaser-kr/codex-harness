@@ -699,7 +699,9 @@ GitHub Template Bootstrap은 다음 원칙을 따른다.
 
 ### codex-harness 관리 구조
 
-`codex-harness`는 GitHub Workflow Engine 기본형과 전역 스킬 배포본을 다음 구조로 관리한다.
+현재 `codex-harness`의 전역 배포본은 `harness` 스킬이다. `harness` 스킬은 타겟 레포의 하네스 구조를 설계, 생성, 정렬, 검증하는 기반 스킬이며, GitHub Workflow Engine도 이 기반 위에서 템플릿과 운영 기준을 적용한다.
+
+Workflow Engine 전용 스킬은 `harness` 스킬을 대체하지 않는다. 상태 전이, 이슈 생성, 계획 수립, PR 제안, 리뷰 코멘트 게시처럼 반복 실행이 필요한 책임을 분리하기 위한 후속 확장이다. 전용 스킬 배포본과 설치 스크립트 확장이 준비되면 `codex-harness`는 다음 목표 구조로 관리한다.
 
 ```text
 codex-harness/
@@ -736,7 +738,7 @@ codex-harness/
             └── SKILL.md
 ```
 
-이 구조는 표준 기본형이다. `.codex-dist/skills/*` 아래의 Workflow Engine 스킬은 Codex 전역 스킬 경로에 설치되어 타겟 레포를 읽고 실행된다. 타겟 레포에 로컬 스킬로 복사하지 않는다.
+이 구조는 목표 표준 기본형이다. 현재는 `harness` 스킬이 설치 가능한 기반 배포본이고, Workflow Engine 전용 스킬이 준비되면 `.codex-dist/skills/*` 아래 스킬을 Codex 전역 스킬 경로에 추가 설치해 타겟 레포를 읽고 실행한다. 타겟 레포에 로컬 스킬로 복사하지 않는다.
 
 실제 타겟 레포에 적용된 템플릿은 타겟 레포의 맥락에 맞게 달라질 수 있다. 공통화할 가치가 있다고 사용자가 판단한 경우에만 `codex-harness` 기본형으로 승격한다.
 

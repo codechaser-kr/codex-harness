@@ -467,7 +467,7 @@ Workflow Skill은 다음 순서로 작업 대상을 판단한다.
 | ------------------ | -------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PR merge 안내      | 1        | merge 대기 PR            | 리뷰 피드백 처리가 끝났지만 아직 merge되지 않은 열린 PR이 있다.                                                                                                                    | 새 계획 후보를 제안하지 않고, 사용자가 GitHub에서 PR merge를 수행한 뒤 다시 알려주거나 다음 계획을 요청해야 한다고 안내한다.                                                                  |
 | PR 진행 재개       | 2        | 진행 중 PR               | merge 대기 상태는 아니지만 리뷰, 피드백 대응, CI, 사용자 확인 등 아직 완료되지 않은 열린 PR이 있다.                                                                                | 새 계획 후보를 제안하지 않고, 해당 PR의 기능 구현 흐름에서 현재 상태와 남은 액션을 보여준다.                                                                                                  |
-| 열린 계획 이어가기 | 3        | 이어갈 수 있는 열린 계획 | 진행 중인 열린 PR은 없고, `.harness/logs/github-workflow-log.md` 실행 로그가 있거나 GitHub Run State에서 전환되지 않은 열린 이슈 또는 열린 기능변경/기능결함 이슈의 완료 기준에 아직 반영되지 않은 merge된 PR이 확인된다. | 현재 상태, 남은 판단 질문, 진행할 액션을 보여준다. merge된 PR이 아직 연결 이슈에 반영되지 않았다면 `main` 브랜치로 전환한 뒤 원격 `main`을 pull하고, 이슈 유형별 `PR merged` 전이를 적용한다. |
+| 열린 계획 이어가기 | 3        | 이어갈 수 있는 열린 계획 | 진행 중인 열린 PR은 없고, `.harness/logs/github-workflow-log.md` 실행 로그가 있거나 GitHub Run State에서 전환되지 않은 열린 이슈 또는 열린 기능변경/기능결함 이슈의 완료 기준에 아직 반영되지 않은 merge된 PR이 확인된다. | 현재 상태, 남은 판단 질문, 진행할 액션을 보여준다. merge된 PR이 아직 연결 이슈에 반영되지 않았다면 GitHub PR의 base branch로 전환한 뒤 원격 base branch를 pull하고, 이슈 유형별 `PR merged` 전이를 적용한다. |
 | 기능제안 요청 연결 | 4        | 새 계획 없음             | 진행 중인 작업도 없고 이어갈 수 있는 열린 계획도 없다.                                                                                                                             | 사용자에게 새 기능제안 요청을 받아 Issue Creation Skill의 기능제안 이슈 초안 작성 흐름으로 연결한다.                                                                                          |
 
 이어갈 수 있는 열린 계획은 새 기능제안 이슈 작성 흐름보다 항상 우선한다. Workflow Skill은 기능제안 이슈를 임의로 진행하지 않고, 진행/중단/정책검토/기능변경 선택지를 제시한 뒤 사용자가 결정한 경우에만 다음 액션으로 넘어간다.
@@ -551,7 +551,7 @@ PR 리뷰 과정에서 Claude Code Review Skill은 피드백을 포함한 리뷰
 | 피드백 대응 제안    | PR open             | `isResolved`가 false인 review thread가 있음   | Codex가 해결되지 않은 피드백별 설명, 개선 방향, 커밋 메시지 제안                                                   | 피드백 대응 승인             | 승인된 대응 방향과 커밋 메시지를 기준으로 후속 작업을 진행한다.                                                                                                                                                     |
 | 승인 피드백 반영    | PR open             | 승인된 피드백 존재                            | Codex가 승인된 피드백만 반영하고 해당 review thread를 해결로 처리                                                  | 없음                         | 반영 완료한 피드백은 GitHub GraphQL `resolveReviewThread`로 해결 처리한다. 아직 처리되지 않은 review thread는 미해결 상태로 두고, `isResolved`가 false인 thread가 남아 있으면 `피드백 대응 제안` 액션으로 돌아간다. |
 | PR merge 대기       | PR open             | 모든 리뷰 피드백 처리 완료                    | 사용자가 GitHub에서 PR merge                                                                                       | PR merge                     | 별도 템플릿 섹션을 갱신하지 않는다. merge 결과는 GitHub PR 상태로 확인한다.                                                                                                                                         |
-| PR merge 반영       | PR merged           | GitHub Run State에서 PR이 merge됨             | Workflow Skill이 `main` 브랜치로 전환한 뒤 원격 `main`을 pull하고, 연결 이슈의 이슈 유형별 `PR merged` 전이로 이동 | 없음                         | 로컬 `main`이 merge된 PR을 포함하는 상태인지 확인한다. 연결 이슈 체크리스트 갱신은 이슈 유형별 `PR merged` 전이에서 처리한다.                                                                                       |
+| PR merge 반영       | PR merged           | GitHub Run State에서 PR이 merge됨             | Workflow Skill이 GitHub PR의 base branch로 전환한 뒤 원격 base branch를 pull하고, 연결 이슈의 이슈 유형별 `PR merged` 전이로 이동 | 없음                         | 로컬 base branch가 merge된 PR을 포함하는 상태인지 확인한다. 연결 이슈 체크리스트 갱신은 이슈 유형별 `PR merged` 전이에서 처리한다.                                                                                  |
 
 기본 흐름은 다음과 같다.
 
@@ -580,7 +580,7 @@ PR 리뷰 과정에서 Claude Code Review Skill은 피드백을 포함한 리뷰
   -> 필요하면 재리뷰
   -> 사용자가 GitHub에서 PR merge
   -> 사용자가 PR merge를 알리거나 다음 계획 요청
-  -> Workflow Skill이 GitHub Run State를 다시 읽고 main 브랜치로 전환한 뒤 원격 main을 pull
+  -> Workflow Skill이 GitHub Run State를 다시 읽고 GitHub PR의 base branch로 전환한 뒤 원격 base branch를 pull
   -> 이슈 유형별 PR merged 전이로 이동
 ```
 

@@ -545,10 +545,11 @@ Review Feedback Triage는 리뷰 피드백을 바로 수정 명령으로 보지 
 
 - 피드백 원문
 - 관련 파일 또는 문서 위치
+- Severity label
 - 예상 영향
 - 적용/보류/거절/사람 승인 필요 분류
 - 추천 액션
-- 확신도
+- Verdict 또는 Review Comment Skill의 보류 질문
 - 자동 수정 시 위험 요소
 
 Triage 결과는 자동 수정 승인으로 해석하지 않는다. 사람이 액션을 확정한 뒤에만 수정 작업으로 넘긴다.

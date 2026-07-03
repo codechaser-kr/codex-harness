@@ -27,9 +27,10 @@
 - `.codex-dist/skills/harness/SKILL.md`: Codex에 설치되는 전역 `harness` 스킬 진입점
 - `.codex-dist/skills/harness/references/*`: 하네스 Phase 선택 기준, 역할 설계, 에이전트 생성, QA, 로그, 재진입, 자기진화 기준
 - `install.sh`, `uninstall.sh`: 전역 Codex 스킬 경로에 배포본을 설치하거나 제거하는 스크립트
-- `docs/development-quality-evaluation.md`: 하네스 생성기 품질 평가 기준
-- `docs/document-regression-checklist.md`: README와 reference 문서 변경 후 회귀 점검 기준
-- `docs/evaluations/*`: 타겟 프로젝트 평가 기록과 반복 결함 승격 판단 근거
+- `.harness/development-quality-evaluation.md`: 하네스 생성기 품질 평가 기준
+- `.harness/document-regression-checklist.md`: README와 reference 문서 변경 후 회귀 점검 기준
+- `docs/github-workflow-engine.md`: GitHub 이슈/PR 기반 Workflow Engine 설계
+- `.harness/evaluations/*`: 타겟 프로젝트 평가 기록과 반복 결함 승격 판단 근거
 - `.github/*`: 이 저장소의 이슈/PR 협업 템플릿
 - `AGENTS.md`, `.gemini/styleguide.md`: 이 저장소에서 자동 리뷰 도구가 따르는 리뷰 코멘트 작성 지침
 
@@ -281,9 +282,9 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 
 이 기준은 `.codex-dist/skills/harness/references/evolution-contract.md`에서 관리합니다.
 
-생성기 개발 중 타겟 평가 결과는 `docs/evaluations/targets/` 아래에 남깁니다. 이 기록은 단일 타겟 프로젝트 관찰과 반복 결함을 구분하고, 생성기 reference 보강이 필요한지 판단하는 근거로 씁니다.
+생성기 개발 중 타겟 평가 결과는 `.harness/evaluations/targets/` 아래에 남깁니다. 이 기록은 단일 타겟 프로젝트 관찰과 반복 결함을 구분하고, 생성기 reference 보강이 필요한지 판단하는 근거로 씁니다.
 
-문서와 reference를 수정한 뒤에는 `docs/document-regression-checklist.md`를 기준으로 회귀를 점검합니다. 이 점검은 새 스크립트를 도입하지 않고, Markdown 계약과 reference 연결이 같은 운영 모델을 유지하는지 확인하는 절차입니다.
+문서와 reference를 수정한 뒤에는 `.harness/document-regression-checklist.md`를 기준으로 회귀를 점검합니다. 이 점검은 새 스크립트를 도입하지 않고, Markdown 계약과 reference 연결이 같은 운영 모델을 유지하는지 확인하는 절차입니다.
 
 ## 제거
 

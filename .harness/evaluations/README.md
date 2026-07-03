@@ -18,7 +18,7 @@
 ## 권장 구조
 
 ```text
-docs/evaluations/
+.harness/evaluations/
 ├── README.md
 └── targets/
     └── <target-repo-name>/

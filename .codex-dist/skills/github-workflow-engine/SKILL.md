@@ -42,7 +42,7 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 `commit`과 Claude `code-review-skill`은 이 저장소에서 관리하지 않는다. Workflow Engine은 해당 액션에 들어가기 전에 설치 여부를 확인한다.
 
 - 커밋 메시지 제안 전에 `$CODEX_HOME/skills/commit/SKILL.md` 또는 `$HOME/.codex/skills/commit/SKILL.md`가 있는지 확인한다.
-- Claude 리뷰 실행 전에 `$CLAUDE_HOME/skills/code-review-skill/SKILL.md` 또는 `$HOME/.claude/skills/code-review-skill/SKILL.md`가 있는지 확인한다.
+- Claude 리뷰 실행 전에 `$CLAUDE_CONFIG_DIR/skills/code-review-skill/SKILL.md` 또는 `$HOME/.claude/skills/code-review-skill/SKILL.md`가 있는지 확인한다. `CLAUDE_CONFIG_DIR`가 없으면 `$HOME/.claude`를 기본값으로 본다.
 - 의존 스킬이 없으면 설치 안내와 필요한 경로를 사용자에게 알리고, 현재 액션을 중단한다.
 - 누락 상태에서는 대체 커밋 메시지 생성이나 대체 리뷰 생성을 진행하지 않는다.
 

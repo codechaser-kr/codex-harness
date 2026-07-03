@@ -105,7 +105,9 @@ GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장�
 외부 의존 스킬은 이 저장소가 설치하거나 관리하지 않습니다. Workflow Engine은 필요한 액션에 들어가기 전에 설치 여부를 확인하고, 없으면 설치 안내 후 워크플로우를 중단합니다.
 
 - Codex 전역 `commit`: `$CODEX_HOME/skills/commit/SKILL.md` 또는 `$HOME/.codex/skills/commit/SKILL.md`
-- Claude `code-review-skill`: `$CLAUDE_HOME/skills/code-review-skill/SKILL.md` 또는 `$HOME/.claude/skills/code-review-skill/SKILL.md`
+- Claude `code-review-skill`: `$CLAUDE_CONFIG_DIR/skills/code-review-skill/SKILL.md` 또는 `$HOME/.claude/skills/code-review-skill/SKILL.md`
+
+`CLAUDE_CONFIG_DIR`가 설정되어 있지 않으면 Claude Code 기본 경로인 `$HOME/.claude`를 사용합니다.
 
 Claude 리뷰 스킬은 다음처럼 별도로 설치합니다.
 

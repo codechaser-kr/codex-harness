@@ -305,8 +305,10 @@ Claude 리뷰는 이 저장소가 관리하지 않는 외부 Claude `code-review
 
 설치 확인 기준은 다음과 같다.
 
-- `$CLAUDE_HOME/skills/code-review-skill/SKILL.md`
+- `$CLAUDE_CONFIG_DIR/skills/code-review-skill/SKILL.md`
 - `$HOME/.claude/skills/code-review-skill/SKILL.md`
+
+`CLAUDE_CONFIG_DIR`가 설정되어 있지 않으면 Claude Code 기본 경로인 `$HOME/.claude`를 사용한다.
 
 설치되어 있지 않으면 Workflow Engine은 다음 설치 안내를 보여주고 현재 `Claude 리뷰 실행` 액션을 중단한다.
 
@@ -494,7 +496,7 @@ PR Proposal Skill은 PR 템플릿 섹션을 다음 기준으로 작성한다. �
 
 Claude `code-review-skill`은 변경사항을 독립적으로 검토하고 PR Review Template 형식의 리뷰 결과를 생성하는 역할이다. Workflow Skill은 PR diff 또는 브랜치 diff와 연결 이슈 맥락을 준비하고, Claude `code-review-skill`을 입력으로 `claude` CLI 호출을 실행한다. 리뷰 결과를 review thread 또는 요약 피드백 댓글 게시 초안으로 정리하는 작업은 Review Comment Skill이 담당하고, 실제 게시와 승인 지점은 Workflow Skill이 담당한다. 파일 수정과 피드백 대응 진행은 Codex가 담당한다.
 
-Workflow Skill은 리뷰 실행 전에 `$CLAUDE_HOME/skills/code-review-skill/SKILL.md` 또는 `$HOME/.claude/skills/code-review-skill/SKILL.md`를 확인한다. 없으면 설치 안내를 보여주고 워크플로우를 중단한다.
+Workflow Skill은 리뷰 실행 전에 `$CLAUDE_CONFIG_DIR/skills/code-review-skill/SKILL.md` 또는 `$HOME/.claude/skills/code-review-skill/SKILL.md`를 확인한다. `CLAUDE_CONFIG_DIR`가 설정되어 있지 않으면 `$HOME/.claude`를 기본값으로 본다. 없으면 설치 안내를 보여주고 워크플로우를 중단한다.
 
 Claude `code-review-skill`은 다음 시점에 실행한다.
 
@@ -658,7 +660,7 @@ PR 리뷰 과정에서 외부 Claude `code-review-skill`은 PR Review Template �
 | 작업 브랜치 push    | PR 생성 필요        | PR 제목과 설명 승인 완료                      | 승인된 작업 브랜치를 원격에 push하고 GitHub에서 head branch가 참조 가능한지 확인                                                   | 없음                         | 원격 head branch가 존재해야 PR Creation Skill의 입력으로 사용할 수 있다. push 실패나 원격 브랜치 충돌이 있으면 PR을 생성하지 않고 사용자에게 원인과 선택지를 제시한다.                                             |
 | PR 생성 입력 검증   | PR 생성 필요        | 원격 head branch 확인 완료                    | PR Creation Skill이 PR 생성 입력을 검증하고 생성 요청 초안 작성                                                                   | 없음                         | 승인된 PR 템플릿, 원격 head branch, `연관 이슈` 섹션이 PR 생성 기준을 만족하는지 확인한다.                                                                                                                          |
 | PR 생성             | PR 생성 필요        | PR 생성 입력 검증 완료                        | Workflow Skill이 승인된 PR 템플릿과 원격 head branch로 PR 생성                                                                     | 없음                         | 생성된 PR 번호와 URL을 기록하고 다음 `Claude 리뷰 실행` 액션으로 넘긴다.                                                                                                                                            |
-| 리뷰 스킬 검사      | PR open             | PR 생성 완료                                  | Claude `code-review-skill` 설치 여부 확인                                                                                         | 없음                         | `$CLAUDE_HOME/skills/code-review-skill/SKILL.md` 또는 `$HOME/.claude/skills/code-review-skill/SKILL.md`가 없으면 설치 안내 후 중단한다.                                                                               |
+| 리뷰 스킬 검사      | PR open             | PR 생성 완료                                  | Claude `code-review-skill` 설치 여부 확인                                                                                         | 없음                         | `$CLAUDE_CONFIG_DIR/skills/code-review-skill/SKILL.md` 또는 `$HOME/.claude/skills/code-review-skill/SKILL.md`가 없으면 설치 안내 후 중단한다. `CLAUDE_CONFIG_DIR`가 없으면 `$HOME/.claude`를 기본값으로 본다.        |
 | Claude 리뷰 실행    | PR open             | 리뷰 스킬 설치 확인 완료                      | Workflow Skill이 PR diff, 이슈 맥락, 출력 템플릿 요구사항을 준비하고 Claude `code-review-skill`로 Claude 리뷰 호출 실행           | 없음                         | `code-review-skill`의 PR Review Template 출력 결과를 Review Comment Skill의 입력으로 사용한다.                                                                                                                      |
 | 리뷰 코멘트 초안 정리 | PR open           | `code-review-skill` 템플릿 출력 결과 존재     | Review Comment Skill이 템플릿 섹션과 severity label을 읽어 review thread 또는 요약 피드백 댓글 게시 초안으로 정리                 | 없음                         | `[blocking]`, `[important]` 중 파일 경로와 diff line이 있는 피드백은 review thread 초안에 포함한다. review thread로 게시할 수 없는 항목은 marker가 있는 요약 피드백 댓글 체크리스트 초안으로 정리한다.             |
 | 리뷰 코멘트 게시    | PR open             | 리뷰 코멘트 게시 초안 확인 완료               | Workflow Skill이 review thread 또는 marker가 있는 요약 피드백 댓글 게시                                                           | 없음                         | 게시된 review thread와 요약 피드백 댓글 marker를 기준으로 후속 피드백 상태를 추적한다.                                                                                                                              |

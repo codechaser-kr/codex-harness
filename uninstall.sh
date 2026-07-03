@@ -2,15 +2,43 @@
 set -eu
 
 CODEX_HOME="${CODEX_HOME:-"$HOME/.codex"}"
-DEST="${CODEX_HARNESS_DEST:-"$CODEX_HOME/skills/harness"}"
+DEST_ROOT="${CODEX_HARNESS_DEST_ROOT:-"$CODEX_HOME/skills"}"
+HARNESS_DEST="${CODEX_HARNESS_DEST:-"$DEST_ROOT/harness"}"
+CODEX_SKILLS="harness github-workflow-engine issue-creation feature-plan fix-plan branch-plan pr-proposal pr-creation review-comment"
 
-if [ ! -e "$DEST" ]; then
-  printf '%s\n' "삭제할 harness 스킬이 없습니다: $DEST"
+dest_for_skill() {
+  skill="$1"
+
+  if [ "$skill" = "harness" ]; then
+    printf '%s\n' "$HARNESS_DEST"
+  else
+    printf '%s\n' "$DEST_ROOT/$skill"
+  fi
+}
+
+remove_skill() {
+  skill="$1"
+  dest="$2"
+
+  if [ ! -e "$dest" ]; then
+    printf '%s\n' "삭제할 $skill 스킬이 없습니다: $dest"
+    return 0
+  fi
+
+  backup="$dest.removed.$(date +%Y%m%d%H%M%S).$$"
+  mv "$dest" "$backup"
+  removed=1
+
+  printf '%s\n' "$skill 스킬을 제거했습니다."
+  printf '%s\n' "백업 위치: $backup"
+}
+
+removed=0
+
+for skill in $CODEX_SKILLS; do
+  remove_skill "$skill" "$(dest_for_skill "$skill")"
+done
+
+if [ "$removed" -eq 0 ]; then
   exit 0
 fi
-
-backup="$DEST.removed.$(date +%Y%m%d%H%M%S).$$"
-mv "$DEST" "$backup"
-
-printf '%s\n' "harness 스킬을 제거했습니다."
-printf '%s\n' "백업 위치: $backup"

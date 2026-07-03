@@ -4,8 +4,10 @@ set -eu
 REPO="${CODEX_HARNESS_REPO:-codechaser-kr/codex-harness}"
 REF="${CODEX_HARNESS_REF:-main}"
 CODEX_HOME="${CODEX_HOME:-"$HOME/.codex"}"
-DEST="${CODEX_HARNESS_DEST:-"$CODEX_HOME/skills/harness"}"
+DEST_ROOT="${CODEX_HARNESS_DEST_ROOT:-"$CODEX_HOME/skills"}"
+HARNESS_DEST="${CODEX_HARNESS_DEST:-"$DEST_ROOT/harness"}"
 TMP_ROOT="${TMPDIR:-/tmp}/codex-harness-install.$$"
+CODEX_SKILLS="harness github-workflow-engine issue-creation feature-plan fix-plan branch-plan pr-proposal pr-creation review-comment"
 
 cleanup() {
   rm -rf "$TMP_ROOT"
@@ -31,9 +33,9 @@ download() {
 
 find_local_source() {
   script_dir=$(CDPATH= cd "$(dirname "$0")" 2>/dev/null && pwd || printf '.')
-  candidate="$script_dir/.codex-dist/skills/harness"
+  candidate="$script_dir/.codex-dist/skills"
 
-  if [ -f "$candidate/SKILL.md" ]; then
+  if [ -f "$candidate/harness/SKILL.md" ]; then
     printf '%s\n' "$candidate"
     return 0
   fi
@@ -53,27 +55,47 @@ find_remote_source() {
   skill_file=$(find "$extract_dir" -type f -name SKILL.md | grep '/\.codex-dist/skills/harness/SKILL\.md$' | head -n 1)
   [ -n "$skill_file" ] || die "아카이브에서 harness 스킬을 찾지 못했습니다: $archive_url"
 
-  dirname "$skill_file"
+  dirname "$(dirname "$skill_file")"
+}
+
+dest_for_skill() {
+  skill="$1"
+
+  if [ "$skill" = "harness" ]; then
+    printf '%s\n' "$HARNESS_DEST"
+  else
+    printf '%s\n' "$DEST_ROOT/$skill"
+  fi
+}
+
+install_skill() {
+  source_root="$1"
+  skill="$2"
+  source_dir="$source_root/$skill"
+  dest=$(dest_for_skill "$skill")
+  stage="$TMP_ROOT/stage/$skill"
+
+  mkdir -p "$stage"
+  [ -f "$source_dir/SKILL.md" ] || die "SKILL.md가 없습니다: $source_dir"
+  cp -R "$source_dir/." "$stage/"
+  mkdir -p "$(dirname "$dest")"
+
+  if [ -e "$dest" ]; then
+    backup="$dest.backup.$(date +%Y%m%d%H%M%S).$$"
+    mv "$dest" "$backup"
+    printf '%s\n' "기존 $skill 스킬 백업: $backup"
+  fi
+
+  mv "$stage" "$dest"
+  printf '%s\n' "설치: $dest"
 }
 
 install_source() {
-  source_dir="$1"
-  stage="$TMP_ROOT/harness"
+  source_root="$1"
 
-  [ -f "$source_dir/SKILL.md" ] || die "SKILL.md가 없습니다: $source_dir"
-  [ -d "$source_dir/references" ] || die "references 디렉터리가 없습니다: $source_dir"
-
-  mkdir -p "$stage"
-  cp -R "$source_dir/." "$stage/"
-  mkdir -p "$(dirname "$DEST")"
-
-  if [ -e "$DEST" ]; then
-    backup="$DEST.backup.$(date +%Y%m%d%H%M%S).$$"
-    mv "$DEST" "$backup"
-    printf '%s\n' "기존 harness 스킬 백업: $backup"
-  fi
-
-  mv "$stage" "$DEST"
+  for skill in $CODEX_SKILLS; do
+    install_skill "$source_root" "$skill"
+  done
 }
 
 trap cleanup EXIT INT TERM
@@ -88,5 +110,6 @@ fi
 
 install_source "$source_dir"
 
-printf '%s\n' "설치 완료: $DEST"
-printf '%s\n' "확인: $DEST/SKILL.md"
+printf '%s\n' "설치 완료: $DEST_ROOT"
+printf '%s\n' "확인: $(dest_for_skill harness)/SKILL.md"
+printf '%s\n' "확인: $DEST_ROOT/github-workflow-engine/SKILL.md"

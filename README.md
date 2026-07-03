@@ -26,6 +26,8 @@
 
 - `.codex-dist/skills/harness/SKILL.md`: Codex에 설치되는 전역 `harness` 스킬 진입점
 - `.codex-dist/skills/harness/references/*`: 하네스 Phase 선택 기준, 역할 설계, 에이전트 생성, QA, 로그, 재진입, 자기진화 기준
+- `.codex-dist/skills/github-workflow-engine/SKILL.md`: GitHub Run State를 읽고 다음 Workflow 액션을 제안하는 전역 스킬
+- `.codex-dist/skills/{issue-creation,feature-plan,fix-plan,branch-plan,pr-proposal,pr-creation,review-comment}/SKILL.md`: GitHub Workflow Engine에서 사용하는 Codex 전용 전역 스킬 기본형
 - `install.sh`, `uninstall.sh`: 전역 Codex 스킬 경로에 배포본을 설치하거나 제거하는 스크립트
 - `.harness/development-quality-evaluation.md`: 하네스 생성기 품질 평가 기준
 - `.harness/document-regression-checklist.md`: README와 reference 문서 변경 후 회귀 점검 기준
@@ -36,7 +38,7 @@
 
 ## 전역 하네스 스킬 설치
 
-전역에서 사용하려면 설치 스크립트로 `harness` 스킬을 Codex 스킬 경로에 배치합니다.
+전역에서 사용하려면 설치 스크립트로 `harness`와 GitHub Workflow Engine 스킬들을 Codex 스킬 경로에 배치합니다.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/install.sh | sh
@@ -51,8 +53,8 @@ curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/in
 설치 경로:
 
 ```text
-소스: .codex-dist/skills/harness
-대상: $HOME/.codex/skills/harness
+Codex 소스: .codex-dist/skills/*
+Codex 대상: $HOME/.codex/skills/*
 ```
 
 배치한 뒤 대상 디렉터리에 다음 항목이 있는지 확인합니다.
@@ -61,17 +63,61 @@ curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/in
 $HOME/.codex/skills/harness
 $HOME/.codex/skills/harness/SKILL.md
 $HOME/.codex/skills/harness/references/
+$HOME/.codex/skills/github-workflow-engine
+$HOME/.codex/skills/github-workflow-engine/SKILL.md
+$HOME/.codex/skills/issue-creation
+$HOME/.codex/skills/feature-plan
+$HOME/.codex/skills/fix-plan
+$HOME/.codex/skills/branch-plan
+$HOME/.codex/skills/pr-proposal
+$HOME/.codex/skills/pr-creation
+$HOME/.codex/skills/review-comment
 ```
 
 설치 범위:
 
 - 전역 `harness` 스킬 디렉터리를 배치합니다.
+- GitHub Workflow Engine Codex 전역 스킬 기본형을 함께 배치합니다.
+
+기존 `harness`만 별도 경로에 설치해야 하는 경우에는 `CODEX_HARNESS_DEST`를 사용할 수 있습니다. Codex 전체 스킬 루트는 `CODEX_HARNESS_DEST_ROOT`로 바꿀 수 있습니다.
 
 ## 전역 하네스 스킬의 구성
 
 설치된 전역 `harness` 스킬의 진입점은 `SKILL.md`입니다. 이 파일은 전체 실행 흐름을 안내하고, `references/`는 하네스 Phase 선택 기준, 역할 설계, 에이전트 생성, QA, 로그, 재진입 기준을 나눠 담습니다.
 
 전역 스킬은 타겟 프로젝트의 에이전트 팀과 역할 스킬을 미리 고정해 두지 않습니다. 하네스 구성을 요청받으면 타겟 저장소와 사용자 입력을 읽고, 필요한 하네스 Phase를 선택해 프로젝트에 맞는 에이전트 팀과 역할 스킬을 생성합니다.
+
+## GitHub Workflow Engine 전역 스킬
+
+GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장소로 사용합니다. 별도 Run State Runtime을 만들지 않고, GitHub의 이슈 제목, 라벨, 본문, 체크리스트, PR 본문, review thread, comment를 읽어 현재 위치와 다음 액션을 판단합니다.
+
+배포본에는 다음 Codex 전역 스킬 기본형이 포함됩니다.
+
+- `github-workflow-engine`: GitHub Run State를 읽고 State Transition Rule에 따라 다음 액션을 제안합니다.
+- `issue-creation`: `기능제안`, `정책검토`, `기능변경`, `기능결함` 이슈 초안을 템플릿 기준으로 제안합니다.
+- `feature-plan`: 기능변경 이슈를 구현 단위, 브랜치 단위, 검증 기준으로 나눕니다.
+- `fix-plan`: 기능결함 이슈를 해결 단위, 브랜치 단위, 검증 기준으로 나눕니다.
+- `branch-plan`: 기준 이슈와 구현 계획을 읽어 작업 시작 전 브랜치 이름 후보를 제안합니다.
+- `pr-proposal`: PR 제목과 템플릿 본문 초안을 제안합니다.
+- `pr-creation`: PR 생성 입력을 검증하고 생성 요청 초안을 제안합니다.
+- `review-comment`: 외부 Claude `code-review-skill`의 PR Review Template 출력 결과를 review thread 또는 marker가 있는 요약 피드백 댓글 게시 초안으로 정리합니다.
+
+외부 의존 스킬은 이 저장소가 설치하거나 관리하지 않습니다. Workflow Engine은 필요한 액션에 들어가기 전에 설치 여부를 확인하고, 없으면 설치 안내 후 워크플로우를 중단합니다.
+
+- Codex 전역 `commit`: `$CODEX_HOME/skills/commit/SKILL.md` 또는 `$HOME/.codex/skills/commit/SKILL.md`
+- Claude `code-review-skill`: `$CLAUDE_HOME/skills/code-review-skill/SKILL.md` 또는 `$HOME/.claude/skills/code-review-skill/SKILL.md`
+
+Claude 리뷰 스킬은 다음처럼 별도로 설치합니다.
+
+```sh
+git clone https://github.com/awesome-skills/code-review-skill.git "$HOME/.claude/skills/code-review-skill"
+```
+
+PR 연결은 PR 본문의 `연관 이슈` 섹션에서 `Refs #번호`를 파싱해 판단합니다. Workflow Engine이 관리하는 이슈에는 `Closes #번호`, `Fixes #번호`, `Resolves #번호`처럼 GitHub가 자동 close하는 키워드를 사용하지 않습니다.
+
+타겟 레포에 GitHub Workflow Engine을 적용하거나 템플릿을 갱신할 때는 `github-templates.md`의 원형과 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`, `.github/pull_request_template.md`가 정합적인지 먼저 점검합니다. 불일치가 있으면 차이와 영향 범위, 수정 후보를 제시하고 승인 후 갱신합니다.
+
+Workflow Engine의 액션 진입과 중단 기록은 타겟 프로젝트의 `.harness/logs/github-workflow-log.md`에 남깁니다. 이 로그는 빠른 재진입을 돕는 보조 체크포인트이며, 기준 상태는 GitHub Issue와 PR입니다.
 
 전역 `harness` 스킬은 다음 하네스 Phase로 동작합니다.
 

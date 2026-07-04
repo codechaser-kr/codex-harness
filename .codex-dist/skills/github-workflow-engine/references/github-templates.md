@@ -1,8 +1,10 @@
-# GitHub Templates
+# GitHub Template Contract
 
 Workflow Engine은 이슈와 PR 본문에 운영 규칙을 반복해서 복사하지 않는다. 본문에는 사람이 확인할 작업 내용, 판단 근거, 완료 기준만 남긴다.
 
-이 파일은 GitHub Workflow Engine이 사용하는 템플릿 원형이다. 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`는 이 원형을 적용한 결과물로 본다.
+이 파일은 GitHub Workflow Engine이 사용하는 템플릿 계약 문서다. 실제 이슈와 PR 본문 형식의 단일 원천은 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`다.
+
+Workflow Engine은 이 파일로 title prefix, label, 필수 섹션, 연결 규칙, 정합성 판정 기준을 검증한다. 이 파일의 항목을 실제 템플릿 본문 복제본으로 보지 않는다.
 
 ## 이슈 템플릿
 
@@ -110,7 +112,7 @@ Workflow Engine이 기본으로 인식하는 라벨 이름은 다음 네 가지�
 
 ## 타겟 템플릿 정합성 검사
 
-타겟 레포에 GitHub Workflow Engine을 적용하거나 하네스 운영 기준을 갱신할 때는 타겟 `.github` 템플릿과 이 원형의 정합성을 먼저 확인한다.
+타겟 레포에 GitHub Workflow Engine을 적용하거나 하네스 운영 기준을 갱신할 때는 타겟 `.github` 템플릿과 이 계약의 정합성을 먼저 확인한다.
 
 ### 기대 파일
 
@@ -131,10 +133,10 @@ Workflow Engine이 기본으로 인식하는 라벨 이름은 다음 네 가지�
 - YAML frontmatter의 `title`이 이 문서의 제목 prefix와 같은가
 - YAML frontmatter의 `labels`가 이 문서의 라벨과 같은가
 - 필수 섹션이 모두 존재하는가
-- 기능제안의 `판단 결과` 선택지가 원형과 같은가
-- 정책검토의 기본 후속 작업 체크리스트가 원형과 같은가
+- 기능제안의 `판단 결과` 선택지가 계약과 같은가
+- 정책검토의 기본 후속 작업 체크리스트가 계약과 같은가
 - 기능변경의 작업 범위가 `포함`과 `제외`를 구분하는가
-- 기능결함의 문제 유형 선택지가 원형과 같은가
+- 기능결함의 문제 유형 선택지가 계약과 같은가
 
 PR 템플릿은 다음 항목을 확인한다.
 
@@ -145,8 +147,8 @@ PR 템플릿은 다음 항목을 확인한다.
 
 ### 판정
 
-- `정합`: 원형의 prefix, label, 필수 섹션, 연결 규칙을 모두 만족한다.
-- `허용된 확장`: 원형을 깨지 않고 타겟 도메인용 섹션이나 설명을 추가했다.
+- `정합`: 계약의 prefix, label, 필수 섹션, 연결 규칙을 모두 만족한다.
+- `허용된 확장`: 계약을 깨지 않고 타겟 도메인용 섹션이나 설명을 추가했다.
 - `불일치`: prefix, label, 필수 섹션, 연결 규칙 중 하나라도 빠졌거나 충돌한다.
 
 불일치가 있으면 Workflow Engine은 바로 템플릿을 덮어쓰지 않는다. 차이, 영향 범위, 수정 후보를 사용자에게 보여주고 승인을 받은 뒤에만 타겟 `.github` 템플릿 갱신을 진행한다.

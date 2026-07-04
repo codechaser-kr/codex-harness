@@ -5,21 +5,24 @@ description: 기능제안, 정책검토, 기능변경, 기능결함 GitHub 이�
 
 # Issue Creation
 
-이 스킬은 사용자의 비정형 요청이나 Workflow Engine의 이슈 생성 액션을 GitHub 이슈 초안으로 정리한다. 초안 작성과 검증이 책임이며, 사용자 승인과 실제 GitHub 이슈 생성은 Workflow Engine의 Human Checkpoint와 후속 액션에서 처리한다.
+이 스킬은 사용자의 비정형 요청이나 Workflow Engine의 이슈 생성 액션을 GitHub 이슈 초안으로 정리한다. 초안 작성과 검증이 책임이며, 사용자 의도 확인과 실제 GitHub 이슈 생성은 Workflow Engine의 Human Checkpoint와 후속 액션에서 처리한다.
 
 ## 먼저 읽을 문서
 
 - `../github-workflow-engine/references/github-templates.md`
 - `../github-workflow-engine/references/workflow-engine-rules.md`
 
+대상 저장소에 `.github/ISSUE_TEMPLATE/*.md`가 있으면 해당 파일을 실제 본문 형식의 단일 원천으로 먼저 읽는다. `github-templates.md`는 본문 복제본이 아니라 title prefix, label, 필수 섹션, 연결 규칙을 검증하는 계약 문서로 사용한다.
+
 ## 책임
 
 1. 요청을 `기능제안`, `정책검토`, `기능변경`, `기능결함` 중 하나로 분류한다.
-2. 제목 prefix, 라벨, 필수 섹션, 완료 기준, 연관 이슈를 검증한다.
-3. 원본 이슈가 있으면 새 이슈의 `연관 이슈`에 원본 번호를 기록한다.
-4. 정책검토 이슈는 출처에 따라 조건부 후속 작업을 다르게 작성한다.
-5. Workflow Engine이 검토할 수 있게 생성 전 위험과 보류 질문을 정리한다.
-6. GitHub 이슈를 직접 생성하지 않는다.
+2. 대상 저장소의 실제 `.github` 이슈 템플릿 형식에 맞춰 본문 초안을 작성한다.
+3. 제목 prefix, 라벨, 필수 섹션, 완료 기준, 연관 이슈를 `github-templates.md` 계약으로 검증한다.
+4. 원본 이슈가 있으면 새 이슈의 `연관 이슈`에 원본 번호를 기록한다.
+5. 정책검토 이슈는 출처에 따라 조건부 후속 작업을 다르게 작성한다.
+6. Workflow Engine이 검토할 수 있게 생성 전 위험과 보류 질문을 정리한다.
+7. GitHub 이슈를 직접 생성하지 않는다.
 
 ## 분류 기준
 
@@ -31,6 +34,8 @@ description: 기능제안, 정책검토, 기능변경, 기능결함 GitHub 이�
 ## 초안 검증
 
 - 이슈 본문에 Workflow Engine 운영 규칙을 설명문으로 붙이지 않는다.
+- 실제 본문 heading, optional 표기, 기본 체크리스트 형식은 대상 저장소의 `.github/ISSUE_TEMPLATE/*.md`를 따른다.
+- 대상 저장소의 `.github` 템플릿이 없거나 `github-templates.md` 계약과 불일치하면 차이와 영향 범위를 출력하고, 임의 형식으로 생성하지 않는다.
 - 완료 기준은 닫아도 되는지를 판단할 수 있는 체크리스트로 쓴다.
 - 연관 이슈가 없으면 `N/A`로 둔다.
 - 기능결함 이슈 생성 시 `원인`과 `해결 방향`은 확정하지 않는다.

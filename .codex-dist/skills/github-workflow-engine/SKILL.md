@@ -20,7 +20,7 @@ description: GitHub Issue, PR, label, checklist, review thread, comment를 기�
 2. GitHub Run State에서 진행 중이거나 멈춰 있는 열린 이슈 또는 PR을 먼저 찾는다.
 3. 이어갈 수 있는 열린 작업이 있으면 신규 후보보다 재개를 우선한다.
 4. 선택된 이슈 유형에 맞는 State Transition Rule을 적용해 다음 액션 후보를 제안한다.
-5. Human Checkpoint가 있으면 사용자의 생성/수정/닫기 의도가 자연어 맥락에서 명확할 때만 다음 액션을 확정한다.
+5. Human Checkpoint가 있으면 사용자 결정 없이 다음 액션을 확정하지 않는다.
 6. 액션 진입, 중단, 재개는 `.harness/logs/github-workflow-log.md`에 기록한다.
 7. 이슈 생성이 필요하면 `issue-creation` 스킬로 타겟 `.github` 템플릿 형식의 초안을 만들고, Workflow Engine이 사용자 의도 확인 이후 실제 GitHub 이슈를 생성한다.
 8. 기능 개발 계획은 `feature-plan`, 기능 결함 해결 계획은 `fix-plan` 스킬로 넘긴다.

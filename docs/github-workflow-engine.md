@@ -547,7 +547,7 @@ Review Feedback Triage는 리뷰 피드백을 바로 수정 명령으로 보지 
 
 - 피드백 원문
 - 관련 파일 또는 문서 위치
-- Severity label
+- 위험도 (code-review-skill severity 해석)
 - 예상 영향
 - 적용/보류/거절/사람 승인 필요 분류
 - 추천 액션

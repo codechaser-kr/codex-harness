@@ -31,14 +31,16 @@ description: Claude code-review-skill의 PR Review Template 출력을 GitHub PR 
 
 ## Severity 매핑
 
-| code-review-skill label | Workflow 피드백 유형 | 기본 대응 후보 |
-| --- | --- | --- |
-| `[blocking]` | 해결 전 merge 불가 피드백 | `적용` |
-| `[important]` | 중요 검토 피드백 | `적용` 또는 `사람 승인 필요` |
-| `[nit]` | 선택적 참고 | `보류` |
-| `[suggestion]` | 선택적 개선 제안 | `보류` |
-| `[learning]` | 교육용 참고 | 상태 추적 제외 |
-| `[praise]` | 긍정 피드백 | 상태 추적 제외 |
+| code-review-skill label | 위험도 | Workflow 피드백 유형 | 기본 대응 후보 |
+| --- | --- | --- | --- |
+| `[blocking]` | 높음 | 해결 전 merge 불가 피드백 | `적용` |
+| `[important]` | 중간 | 중요 검토 피드백 | `적용` 또는 `사람 승인 필요` |
+| `[nit]` | 낮음 | 선택적 참고 | `보류` |
+| `[suggestion]` | 낮음 | 선택적 개선 제안 | `보류` |
+| `[learning]` | 해당 없음 | 교육용 참고 | 상태 추적 제외 |
+| `[praise]` | 해당 없음 | 긍정 피드백 | 상태 추적 제외 |
+
+`위험도`는 워크플로우 엔진이 code-review-skill의 severity를 해석한 값이다. severity 마커 기준으로 🔴는 `높음`, 🟡는 `중간`, 🟢는 `낮음`으로 읽고, 상태 추적에서 제외하는 `[learning]`과 `[praise]`는 `해당 없음`으로 둔다.
 
 `Verdict`가 `Request Changes`이면 `[blocking]` 또는 `[important]`가 최소 하나 있어야 한다. 템플릿 결과에 verdict와 피드백 severity가 충돌하면 Workflow Skill에 보류 질문으로 반환한다.
 
@@ -52,7 +54,6 @@ description: Claude code-review-skill의 PR Review Template 출력을 GitHub PR 
 - [ ] 문제: ...
   - 근거: ...
   - 위험도: ...
-  - Severity: ...
   - 추천 분류: ...
 ```
 

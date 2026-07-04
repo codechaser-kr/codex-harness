@@ -5,7 +5,7 @@ description: Claude code-review-skill의 PR Review Template 출력을 GitHub PR 
 
 # Review Comment
 
-이 스킬은 외부 Claude `code-review-skill`이 PR Review Template 형식으로 생성한 리뷰 결과를 GitHub Pull Request review thread 또는 marker가 있는 요약 피드백 댓글 형식으로 정리한다. 게시 승인과 실제 GitHub 게시는 Workflow Engine의 Human Checkpoint와 후속 액션에서 처리한다.
+이 스킬은 외부 Claude `code-review-skill`이 PR Review Template 형식으로 생성한 리뷰 결과를 GitHub Pull Request review thread 또는 marker가 있는 요약 피드백 댓글 형식으로 정리한다. 실제 GitHub 게시는 Workflow Engine의 후속 액션에서 처리하며, 게시된 피드백의 적용/보류/거절/사람 승인 필요 분류와 대응 확정은 Workflow Engine의 Human Checkpoint에서 처리한다.
 
 ## 먼저 읽을 문서
 

@@ -494,7 +494,7 @@ PR Proposal Skill은 PR 템플릿 섹션을 다음 기준으로 작성한다. �
 
 ### Claude code-review-skill 연동 정책
 
-Claude `code-review-skill`은 변경사항을 독립적으로 검토하고 PR Review Template 형식의 리뷰 결과를 생성하는 역할이다. Workflow Skill은 PR diff 또는 브랜치 diff와 연결 이슈 맥락을 준비하고, Claude `code-review-skill`을 입력으로 `claude` CLI 호출을 실행한다. 리뷰 결과를 review thread 또는 요약 피드백 댓글 게시 초안으로 정리하는 작업은 Review Comment Skill이 담당하고, 실제 게시와 승인 지점은 Workflow Skill이 담당한다. 파일 수정과 피드백 대응 진행은 Codex가 담당한다.
+Claude `code-review-skill`은 변경사항을 독립적으로 검토하고 PR Review Template 형식의 리뷰 결과를 생성하는 역할이다. Workflow Skill은 PR diff 또는 브랜치 diff와 연결 이슈 맥락을 준비하고, Claude `code-review-skill`을 입력으로 `claude` CLI 호출을 실행한다. 리뷰 결과를 review thread 또는 요약 피드백 댓글 게시 초안으로 정리하는 작업은 Review Comment Skill이 담당하고, 실제 게시는 Workflow Skill의 후속 액션에서 처리한다. 게시된 피드백의 적용/보류/거절/사람 승인 필요 분류와 대응 확정은 Workflow Skill의 Human Checkpoint에서 처리하고, 파일 수정과 피드백 대응 진행은 Codex가 담당한다.
 
 Workflow Skill은 리뷰 실행 전에 `$CLAUDE_CONFIG_DIR/skills/code-review-skill/SKILL.md` 또는 `$HOME/.claude/skills/code-review-skill/SKILL.md`를 확인한다. `CLAUDE_CONFIG_DIR`가 설정되어 있지 않으면 `$HOME/.claude`를 기본값으로 본다. 없으면 설치 안내를 보여주고 워크플로우를 중단한다.
 

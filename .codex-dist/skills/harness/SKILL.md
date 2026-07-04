@@ -198,7 +198,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 6. 역할별 `우선 입력`의 설계/정책/사양 문서가 `team-spec` 상단의 `설계 원천 우선순위` 또는 `설계 원천 인벤토리`에 빠짐없이 포함됐는지 확인한다.
 7. 역할 목적, 책임, 주요 출력과 우선 입력 문서가 `team-spec` 상세 기준에 맞게 정합적인지 확인한다.
 8. 실행 로그와 최신 세션 요약이 다음 실행의 입력으로 읽힐 수 있는지 확인한다.
-9. GitHub Workflow Engine을 타겟 레포에 적용하는 경우, `github-templates.md` 원형과 타겟 `.github/ISSUE_TEMPLATE/*.md`, `.github/pull_request_template.md`의 title prefix, label, 필수 섹션, PR 연결 규칙 정합성을 확인한다.
+9. GitHub Workflow Engine을 타겟 레포에 적용하는 경우, `../github-workflow-engine/references/github-templates.md` 원형과 타겟 `.github/ISSUE_TEMPLATE/*.md`, `.github/pull_request_template.md`의 title prefix, label, 필수 섹션, PR 연결 규칙 정합성을 확인한다.
 10. 부족한 축이 `team-spec` 역할 정의 문제인지, agent/skill 포인터 문제인지, 오케스트레이션 문제인지, GitHub 템플릿 정합성 문제인지 분류한다.
 11. `운영 가능 / 재작성 필요 / 재구성 필요` 판정은 여기서 내린다. 피드백을 실제 문서나 역할 자산에 반영하는 작업은 하네스 Phase 7에서 다룬다.
 

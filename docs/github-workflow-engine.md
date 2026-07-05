@@ -579,10 +579,12 @@ git clone https://github.com/awesome-skills/code-review-skill.git "$HOME/.claude
 
 ### Review Comment Skill
 
+Review Comment Skill은 리뷰 생성 도구와 무관하게 PR Review Template 형식의 리뷰 결과를 게시 가능한 피드백 구조로 변환한다.
+
 입력:
 
 - PR 번호
-- Claude `code-review-skill` PR Review Template 출력
+- 리뷰 스킬의 PR Review Template 출력
 - 기존 review thread 목록
 - 기존 PR issue comments
 
@@ -604,6 +606,7 @@ Workflow Engine이 확정할 항목:
 - 파일 수정
 - 피드백 적용 여부 확정
 - GitHub 직접 게시
+- 리뷰 결과를 일반 PR review body로만 게시
 - 승인 없는 review thread resolve
 - marker 없는 일반 PR comment를 요약 피드백 상태 원천으로 취급
 

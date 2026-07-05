@@ -613,7 +613,7 @@ Workflow Engine이 확정할 항목:
 피드백 위치에 따라 출력 대상을 나눈다.
 
 - 라인에 붙일 수 있는 `[blocking]` 또는 `[important]` 피드백은 `inline_review_threads`로 정리한다.
-- 라인에 붙일 수 없는 항목은 `summary_feedback_comment`로 정리한다.
+- 라인에 붙일 수 없는 `[blocking]` 또는 `[important]` 피드백은 `summary_feedback_comment`로 정리한다.
 - `summary_feedback_comment`에는 `<!-- codex-harness:summary-feedback v1 -->` marker를 포함한다.
 
 ## 이슈와 PR 본문 계약

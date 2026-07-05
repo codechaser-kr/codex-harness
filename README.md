@@ -102,12 +102,12 @@ GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장�
 - `pr-creation`: PR 생성 입력을 검증하고 생성 요청 초안을 제안합니다.
 - `review-comment`: PR Review Template 출력 결과를 review thread 또는 marker가 있는 요약 피드백 댓글 게시 초안으로 정리합니다.
 
-외부 의존 스킬은 이 저장소가 설치하거나 관리하지 않습니다. Workflow Engine은 필요한 액션에 들어가기 전에 설치 여부를 확인하고, 없으면 설치 안내 후 워크플로우를 중단합니다.
+외부 의존 스킬은 이 저장소가 설치하거나 관리하지 않습니다. Workflow Engine은 필요한 액션에 들어가기 전에 설치 여부를 확인하고, 없으면 설치 가능한 소스, 설치 대상 경로, 설치 후 확인할 파일, 재개 조건을 안내한 뒤 워크플로우를 중단합니다.
 
 - Codex 전역 `commit`: `$CODEX_HOME/skills/commit/SKILL.md` 또는 `$HOME/.codex/skills/commit/SKILL.md`
 - Codex 전역 `awesome-code-review`: `$CODEX_HOME/skills/awesome-code-review/SKILL.md` 또는 `$HOME/.codex/skills/awesome-code-review/SKILL.md`
 
-`awesome-code-review`는 PR diff와 이슈 맥락을 읽어 PR Review Template 형식의 리뷰 결과를 만드는 외부 의존 스킬입니다. 이 저장소는 해당 스킬을 설치하거나 관리하지 않습니다.
+`awesome-code-review`는 PR diff와 이슈 맥락을 읽어 PR Review Template 형식의 리뷰 결과를 만드는 외부 의존 스킬입니다. 이 저장소는 해당 스킬을 설치하거나 관리하지 않습니다. 설치 소스는 `https://github.com/awesome-skills/code-review-skill`이며, 원천 저장소명은 `code-review-skill`이지만 Codex 전역 설치명은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 사용합니다.
 
 PR 연결은 PR 본문의 `연관 이슈` 섹션에서 `Refs #번호`를 파싱해 판단합니다. Workflow Engine이 관리하는 이슈에는 `Closes #번호`, `Fixes #번호`, `Resolves #번호`처럼 GitHub가 자동 close하는 키워드를 사용하지 않습니다.
 

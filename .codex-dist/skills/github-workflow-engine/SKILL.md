@@ -98,8 +98,14 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 10. Workflow Engine이 외부 `awesome-code-review` 설치를 확인하고 PR diff와 이슈 맥락, 출력 템플릿 요구사항을 준비해 PR Review Template 형식의 리뷰 결과를 생성한다.
 11. `review-comment`로 PR Review Template 출력 결과를 review thread 또는 marker가 있는 요약 피드백 댓글 게시 초안으로 정리한다.
 12. Workflow Engine이 게시 초안을 확인한 뒤 실제 GitHub 리뷰 코멘트를 게시한다.
-13. 미해결 피드백은 적용, 보류, 거절, 사람 승인 필요 중 하나로 사용자 의도를 확인한 뒤 처리한다.
-14. 사람이 PR을 merge하면 GitHub Run State를 다시 읽고 연결 이슈의 PR merged 전이를 적용한다.
+13. 미해결 피드백이 있으면 가장 우선순위가 높은 피드백 1건만 가져와 원문, 맥락, 위험도, 권장 대응을 설명하고 적용, 보류, 거절, 사람 승인 필요 중 하나로 사용자 의도를 확인한다.
+14. `적용` 피드백은 선택된 피드백 1건에 한정해 승인된 PR 범위 안에서 수정한다.
+15. 피드백 수정 변경이 있으면 전역 `commit` 스킬로 커밋 메시지를 제안하고, 확정된 변경만 커밋한다.
+16. 피드백 수정 커밋을 원격 head branch에 push한다.
+17. Workflow Engine이 게시한 피드백을 수정한 경우 해당 review thread 또는 요약 피드백 항목에 `commit-hash 수정했습니다.` 형식으로 댓글을 남긴다.
+18. 수정 댓글, 보류/거절 근거 반영, 또는 사람 추가 승인 완료 후 라인 피드백은 resolve하고 요약 피드백은 체크한다.
+19. GitHub Run State를 다시 읽어 남은 unresolved thread 또는 미체크 요약 피드백이 있으면 13번부터 반복한다.
+20. 사람이 PR을 merge하면 GitHub Run State를 다시 읽고 연결 이슈의 PR merged 전이를 적용한다.
 
 ## 로그
 

@@ -837,6 +837,8 @@ Workflow Skill은 다음 순서로 판단한다.
 | 리뷰 코멘트 게시 | 리뷰 코멘트 초안 정리 완료 | 없음 | Workflow Skill이 review thread 또는 marker 댓글을 게시한다. |
 | 피드백 대응 제안 | unresolved thread 또는 미체크 요약 피드백 존재 | 피드백 대응 확정 | 적용, 보류, 거절, 사람 승인 필요로 분류한다. |
 | 피드백 처리 | 대응 방향 확정 | 필요 시 커밋 메시지 확정 | 적용은 수정하고, 보류/거절은 근거를 기록한다. |
+| 피드백 수정 커밋 | 적용 피드백 수정과 커밋 메시지 확정 | 없음 | 승인된 변경만 커밋한다. |
+| 피드백 수정 push | 피드백 수정 커밋 완료 | 없음 | 작업 브랜치를 원격 head branch에 push한다. |
 | 피드백 해결 처리 | 수정 push 또는 근거 기록 완료 | 없음 | 라인 피드백은 resolve하고 요약 피드백은 체크한다. |
 | PR merge 대기 | 모든 피드백 처리, checks 통과, merge 가능 | PR merge | 사람이 merge한다. |
 | PR merge 반영 | PR merged | 없음 | base branch를 갱신하고 연결 이슈의 PR merged 전이로 이동한다. |

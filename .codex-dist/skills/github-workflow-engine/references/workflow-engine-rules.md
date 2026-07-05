@@ -113,8 +113,9 @@
 | 피드백 수정 커밋      | 선택된 피드백 수정과 커밋 메시지 확정               | 없음                         | 선택된 피드백 수정만 커밋한다.                                                                                 |
 | 피드백 수정 push      | 피드백 수정 커밋 완료                               | 없음                         | 작업 브랜치를 원격 head branch에 push한다.                                                                     |
 | 피드백 수정 댓글      | Workflow Engine이 `review-comment`로 게시한 피드백의 수정 push 완료 | 없음                         | Workflow Engine 생성 피드백에만 해당 review thread 또는 요약 피드백 항목에 `commit-hash 수정했습니다.` 형식으로 댓글을 남긴다. |
-| 피드백 해결 처리      | Workflow Engine 생성 피드백은 수정 댓글, 외부 피드백은 수정 push 완료, 보류/거절은 근거 반영, 사람 승인 필요는 추가 승인 완료 | 없음                         | Workflow Engine 생성 피드백만 resolve 또는 체크하고, 외부 review thread는 resolve하지 않는다.                  |
-| 남은 피드백 확인      | 피드백 1건 해결 처리 완료                           | 없음                         | GitHub Run State를 다시 읽되, 같은 작업 세션에서 이미 처리 완료한 피드백은 제외하고 남은 피드백이 있으면 `피드백 대응 제안`으로 돌아간다. |
+| 피드백 해결 여부 확인 | 피드백 수정 push와 필요한 수정 댓글 처리 완료       | 해당 피드백 resolve 여부 확정 | 해당 피드백을 resolve 또는 체크할지 사용자 의도를 확인한다. 사용자 결정 전에는 review thread를 resolve하거나 요약 피드백을 체크하지 않는다. |
+| 피드백 해결 결정 반영 | 해당 피드백 resolve 여부 확정                       | 없음                         | 사용자가 resolve 또는 체크를 선택하면 라인 피드백은 resolve하고 요약 피드백은 체크한다. 사용자가 미해결 유지를 선택하면 GitHub 상태를 변경하지 않는다. |
+| 남은 피드백 확인      | 피드백 1건의 resolve 결정 반영 완료                 | 없음                         | GitHub Run State를 다시 읽고 남은 피드백이 있으면 `피드백 대응 제안`으로 돌아간다.                             |
 | PR merge 대기         | 모든 피드백 처리, checks 통과, merge 가능           | PR merge                     | 사람이 merge한다.                                                                                              |
 | PR merge 반영         | PR merged                                           | 없음                         | base branch를 갱신하고 연결 이슈의 PR merged 전이로 이동한다.                                                  |
 
@@ -127,12 +128,10 @@
 
 라인 피드백은 review thread의 `isResolved`로 추적한다. 라인에 붙일 수 없는 피드백은 `<!-- codex-harness:summary-feedback v1 -->` marker가 있는 요약 피드백 댓글 체크리스트로 추적한다.
 
-피드백은 한 번에 하나만 처리한다. Workflow Engine은 여러 unresolved thread나 미체크 요약 피드백을 한 번에 수정하지 않고, 피드백 1건마다 맥락 설명, 대응 방향 Human Checkpoint, 수정, 커밋 메시지 Human Checkpoint, push, 수정 댓글, 해결 처리, 남은 피드백 확인을 반복한다.
+피드백은 한 번에 하나만 처리한다. Workflow Engine은 여러 unresolved thread나 미체크 요약 피드백을 한 번에 수정하지 않고, 피드백 1건마다 맥락 설명, 대응 방향 Human Checkpoint, 수정, 커밋 메시지 Human Checkpoint, push, 수정 댓글, resolve 여부 확인, resolve 결정 반영, 남은 피드백 확인을 반복한다.
 
 피드백 대응 방향은 사용자가 `적용`, `보류`, `거절`, `사람 승인 필요` 중 하나를 명시해야 확정된다. `계속 진행`, `다음으로`, `네`, `진행해주세요` 같은 일반 진행 표현은 권장 대응 승인으로 해석하지 않는다. 권장 대응은 기본값이 아니라 제안이며, 방향이 명시되지 않으면 파일 수정이나 댓글 처리로 넘어가지 않고 대응 방향을 다시 질문한다.
 
 수정 댓글 형식은 피드백 출처에 따라 다르다. `commit-hash 수정했습니다.` 형식은 Workflow Engine이 `review-comment`로 게시한 review thread 또는 marker 요약 피드백에만 사용한다. 외부 리뷰 도구나 사람이 남긴 피드백은 일반 피드백 처리 요청만으로 답글을 추가하지 않는다. 사용자가 외부 피드백 답글 작성을 별도로 요청한 경우에만 외부 리뷰 도구의 형식이나 사용자가 지정한 문구에 맞춰 답글을 작성한다.
 
-외부 피드백에서 사용자가 `적용`을 선택한 경우에는 수정 커밋을 원격 head branch에 push하면 Workflow Engine의 처리 완료 조건을 충족한다. 이때 별도 답글 요청이 없으면 외부 피드백 thread에 수정 댓글을 남기지 않고, 외부 review thread도 resolve하지 않는다.
-
-남은 피드백 확인에서는 같은 작업 세션에서 `피드백 해결 처리`까지 끝난 피드백을 다시 대응 대상으로 잡지 않는다. 외부 피드백이 GitHub에서 unresolved 상태로 남아 있어도 수정 push로 처리 완료된 피드백이면 해당 세션의 남은 피드백 후보에서 제외한다.
+resolve 또는 체크는 피드백 출처와 무관하게 별도 Human Checkpoint다. Workflow Engine 생성 피드백과 외부 피드백 모두 수정 push와 필요한 수정 댓글 처리가 끝난 뒤 사용자에게 resolve 여부를 확인한다.

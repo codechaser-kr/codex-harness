@@ -553,7 +553,7 @@ PR 리뷰는 외부 전역 `awesome-code-review` 스킬을 사용한다.
 
 설치되어 있지 않으면 필요한 설치 경로를 안내하고 리뷰 실행 액션을 중단한다.
 
-누락 안내에는 이 저장소가 `awesome-code-review`를 배포하거나 관리하지 않는다는 점, 설치 소스가 `https://github.com/awesome-skills/code-review-skill`이라는 점, 원천 저장소명은 `code-review-skill`이지만 Codex 전역 설치명은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 사용한다는 점을 포함한다. 설치 후에는 위 경로 중 하나에 `SKILL.md`가 있어야 리뷰 실행을 재개할 수 있다.
+누락 안내에는 이 저장소가 `awesome-code-review`를 배포하거나 관리하지 않는다는 점, 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다는 점, 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만 Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다는 점을 포함한다. 설치 후에는 위 경로 중 하나에 `SKILL.md`가 있고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다.
 
 입력:
 

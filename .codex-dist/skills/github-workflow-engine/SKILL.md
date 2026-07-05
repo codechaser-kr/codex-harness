@@ -55,7 +55,7 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 - 의존 스킬이 없으면 설치 가능한 소스, 설치 대상 경로, 설치 후 확인할 파일, 재개 조건을 사용자에게 알리고, 현재 액션을 중단한다.
 - 누락 상태에서는 대체 커밋 메시지 생성이나 대체 리뷰 생성을 진행하지 않는다.
 
-`awesome-code-review`가 없으면 이 저장소가 해당 스킬을 배포하거나 관리하지 않는다는 점을 먼저 알린다. 설치 소스는 `https://github.com/awesome-skills/code-review-skill`이며, 원천 저장소명은 `code-review-skill`이지만 Codex 전역 설치명은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 사용한다고 안내한다. 설치 후에는 `$CODEX_HOME/skills/awesome-code-review/SKILL.md` 또는 `$HOME/.codex/skills/awesome-code-review/SKILL.md` 중 하나가 존재해야 리뷰 실행을 재개할 수 있다고 안내한다.
+`awesome-code-review`가 없으면 이 저장소가 해당 스킬을 배포하거나 관리하지 않는다는 점을 먼저 알린다. 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다고 안내한다. 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만, repo-bootstrap install은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 Codex 전역 설치명과 frontmatter `name`을 `awesome-code-review`로 맞춘다. 설치 후에는 `$CODEX_HOME/skills/awesome-code-review/SKILL.md` 또는 `$HOME/.codex/skills/awesome-code-review/SKILL.md` 중 하나가 존재하고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다고 안내한다.
 
 전역 `commit` 스킬이 없으면 `$CODEX_HOME/skills/commit/SKILL.md` 또는 `$HOME/.codex/skills/commit/SKILL.md`에 `commit` 스킬을 설치해야 한다고 안내한다.
 

@@ -14,7 +14,7 @@
 - 이슈와 PR 본문 형식의 단일 원천은 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`다.
 - `github-templates.md`는 실제 템플릿 본문 복제본이 아니라 title prefix, label, 필수 섹션, 연결 규칙을 검증하는 계약 문서다.
 - 외부 의존 스킬인 전역 `commit`과 `awesome-code-review`는 이 저장소에서 관리하지 않는다. 해당 액션 진입 전 설치 여부를 확인하고, 없으면 설치 가능한 소스, 설치 대상 경로, 설치 후 확인할 파일, 재개 조건을 안내한 뒤 워크플로우를 중단한다.
-- `awesome-code-review`의 설치 소스는 `https://github.com/awesome-skills/code-review-skill`이지만, Codex 전역 설치명은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 사용한다.
+- `awesome-code-review`는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차로 설치한다. 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만, Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다.
 - PR merge는 사람이 수행한다.
 - Workflow Skill은 merge 알림 또는 다음 계획 요청 시 GitHub Run State를 다시 읽어 연결 이슈의 체크리스트와 종료 조건을 판단한다.
 - 로컬 `.harness/logs/github-workflow-log.md`는 보조 체크포인트이며, GitHub 상태를 대체하지 않는다.

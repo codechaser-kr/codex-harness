@@ -884,6 +884,7 @@ Workflow Skill은 marker가 없는 일반 PR comment를 요약 피드백 상태 
 - GitHub Workflow Engine 설계 문서
 - 기능제안, 정책검토, 기능변경, 기능결함 이슈 템플릿
 - Pull Request 템플릿
+- Harness 전역 스킬 기본형
 - GitHub Workflow Engine 전역 스킬 기본형
 - Issue Creation Skill 전역 스킬 기본형
 - Feature Plan Skill 전역 스킬 기본형
@@ -911,6 +912,7 @@ codex-harness/
 │   └── pull_request_template.md
 ├── .codex-dist/
 │   └── skills/
+│       ├── harness/
 │       ├── github-workflow-engine/
 │       ├── issue-creation/
 │       ├── feature-plan/

@@ -103,7 +103,7 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 15. 피드백 수정 변경이 있으면 전역 `commit` 스킬로 커밋 메시지를 제안하고, 확정된 변경만 커밋한다.
 16. 피드백 수정 커밋을 원격 head branch에 push한다.
 17. Workflow Engine이 `review-comment`로 게시한 피드백을 수정한 경우에만 해당 review thread 또는 요약 피드백 항목에 `commit-hash 수정했습니다.` 형식으로 댓글을 남긴다. 외부 리뷰 도구나 사람이 남긴 피드백에는 일반 피드백 처리 요청만으로 답글을 추가하지 않고, 별도 답글 요청이 있을 때만 외부 피드백 형식에 맞춘다.
-18. 수정 댓글, 보류/거절 근거 반영, 또는 사람 추가 승인 완료 후 라인 피드백은 resolve하고 요약 피드백은 체크한다.
+18. Workflow Engine 생성 피드백은 수정 댓글 후 라인 피드백을 resolve하고 요약 피드백을 체크한다. 외부 피드백은 수정 push 완료를 Workflow Engine의 처리 완료 조건으로 보고, 외부 review thread는 resolve하지 않는다. 보류/거절은 근거 반영, 사람 승인 필요는 추가 승인 완료 후 처리 완료로 본다.
 19. GitHub Run State를 다시 읽어 남은 unresolved thread 또는 미체크 요약 피드백이 있으면 13번부터 반복한다.
 20. 사람이 PR을 merge하면 GitHub Run State를 다시 읽고 연결 이슈의 PR merged 전이를 적용한다.
 

@@ -20,20 +20,29 @@ description: GitHub Issue, PR, label, checklist, review thread, comment를 기�
 2. GitHub Run State에서 진행 중이거나 멈춰 있는 열린 이슈 또는 PR을 먼저 찾는다.
 3. 이어갈 수 있는 열린 작업이 있으면 신규 후보보다 재개를 우선한다.
 4. 선택된 이슈 유형에 맞는 State Transition Rule을 적용해 다음 액션 후보를 제안한다.
-5. Human Checkpoint가 있으면 사용자 승인 없이 다음 액션을 확정하지 않는다.
+5. Human Checkpoint가 있으면 사용자 결정 없이 다음 액션을 확정하지 않는다.
 6. 액션 진입, 중단, 재개는 `.harness/logs/github-workflow-log.md`에 기록한다.
-7. 이슈 생성이 필요하면 `issue-creation` 스킬로 초안을 만들고, Workflow Engine이 Human Checkpoint 이후 실제 GitHub 이슈를 생성한다.
+7. 이슈 생성이 필요하면 `issue-creation` 스킬로 타겟 `.github` 템플릿 형식의 초안을 만들고, Workflow Engine이 사용자 의도 확인 이후 실제 GitHub 이슈를 생성한다.
 8. 기능 개발 계획은 `feature-plan`, 기능 결함 해결 계획은 `fix-plan` 스킬로 넘긴다.
 9. 구현 단위가 확정되면 `branch-plan`, 외부 전역 `commit`, `pr-proposal`, `pr-creation`, 외부 Claude `code-review-skill`, `review-comment`를 순서대로 연결한다.
-10. 타겟 레포에 GitHub Workflow Engine을 적용하거나 템플릿을 갱신할 때는 `github-templates.md` 원형과 타겟 `.github` 템플릿의 정합성을 먼저 검사한다.
+10. 타겟 레포에 GitHub Workflow Engine을 적용하거나 템플릿을 갱신할 때는 `github-templates.md` 계약과 타겟 `.github` 템플릿의 정합성을 먼저 검사한다.
 11. 사용자의 PR merge 알림이나 다음 계획 요청이 있으면 GitHub 상태를 다시 읽고 연결 이슈의 체크리스트와 진행 상태를 갱신할 액션을 제안한다.
+
+## GitHub 상태 변경 기준
+
+이슈, PR, 체크리스트, 댓글 같은 GitHub 상태 변경은 사용자의 생성/수정/닫기 의도가 자연어 맥락에서 명확할 때만 수행한다.
+
+- `이대로 진행`, `생성해주세요`, `좋습니다`처럼 현재 초안이나 후보에 대한 진행 의도가 명확하면 상태 변경 액션으로 볼 수 있다.
+- 사용자의 의도가 모호하면 상태를 변경하지 않고 초안, 수정 후보, 필요한 확인 질문만 제시한다.
+- 사용자-facing 응답에는 `승인 절차`, `절차 누락` 같은 운영 용어를 과하게 드러내지 않는다.
 
 ## 타겟 GitHub 템플릿 정합성
 
 GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱신할 때는 `references/github-templates.md`의 "타겟 템플릿 정합성 검사"를 따른다.
 
 - 타겟 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`를 읽는다.
-- 원형의 title prefix, label, 필수 섹션, PR `Refs #번호` 연결 규칙과 비교한다.
+- 실제 이슈/PR 본문 형식은 타겟 `.github` 템플릿을 단일 원천으로 본다.
+- `github-templates.md` 계약의 title prefix, label, 필수 섹션, PR `Refs #번호` 연결 규칙과 비교한다.
 - 결과를 `정합`, `허용된 확장`, `불일치`로 나눈다.
 - 불일치가 있으면 차이와 영향 범위, 수정 후보를 사용자에게 제시하고 승인 전까지 템플릿을 수정하지 않는다.
 
@@ -81,18 +90,18 @@ git clone https://github.com/awesome-skills/code-review-skill.git "$HOME/.claude
 순서는 다음을 따른다.
 
 1. `branch-plan`으로 작업 브랜치 이름 후보를 제안한다.
-2. Workflow Engine이 브랜치 이름을 Human Checkpoint로 승인받고, 승인된 브랜치로 전환한다.
-3. Codex가 세부 구현 계획과 커밋 단위 분할 계획을 제안하고, Workflow Engine이 이를 Human Checkpoint로 승인받는다.
+2. Workflow Engine이 브랜치 이름을 Human Checkpoint로 확정하고, 확정된 브랜치로 전환한다.
+3. Codex가 세부 구현 계획과 커밋 단위 분할 계획을 제안하고, Workflow Engine이 이를 Human Checkpoint로 확정한다.
 4. 커밋 단위별로 파일을 수정한다.
-5. 외부 전역 `commit` 스킬 설치를 확인한 뒤 커밋 메시지 후보를 제안하고, Workflow Engine이 변경 내용과 커밋 메시지를 함께 승인받는다.
-6. 승인된 변경만 커밋한다.
+5. 외부 전역 `commit` 스킬 설치를 확인한 뒤 커밋 메시지 후보를 제안하고, Workflow Engine이 변경 내용과 커밋 메시지에 대한 사용자 의도를 함께 확인한다.
+6. 확정된 변경만 커밋한다.
 7. 모든 커밋 단위가 끝나면 `pr-proposal`로 PR 제목과 본문 초안을 제안한다.
-8. Workflow Engine이 PR 제목과 본문을 Human Checkpoint로 승인받고, 승인된 브랜치를 push한 뒤 `pr-creation`으로 PR 생성 입력을 검증한다.
+8. Workflow Engine이 PR 제목과 본문을 Human Checkpoint로 확정하고, 확정된 브랜치를 push한 뒤 `pr-creation`으로 PR 생성 입력을 검증한다.
 9. Workflow Engine이 검증된 입력으로 실제 GitHub PR을 생성한다.
 10. Workflow Engine이 외부 Claude `code-review-skill` 설치를 확인하고 PR diff와 이슈 맥락, 출력 템플릿 요구사항을 준비해 리뷰 결과를 생성한다.
 11. `review-comment`로 `code-review-skill` 템플릿 출력 결과를 review thread 또는 marker가 있는 요약 피드백 댓글 게시 초안으로 정리한다.
 12. Workflow Engine이 게시 초안을 확인한 뒤 실제 GitHub 리뷰 코멘트를 게시한다.
-13. 미해결 피드백은 적용, 보류, 거절, 사람 승인 필요 중 하나로 사용자 승인을 받은 뒤 처리한다.
+13. 미해결 피드백은 적용, 보류, 거절, 사람 승인 필요 중 하나로 사용자 의도를 확인한 뒤 처리한다.
 14. 사람이 PR을 merge하면 GitHub Run State를 다시 읽고 연결 이슈의 PR merged 전이를 적용한다.
 
 ## 로그

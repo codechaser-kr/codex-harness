@@ -1,11 +1,11 @@
 ---
 name: review-comment
-description: Claude code-review-skill의 PR Review Template 출력을 GitHub PR review thread 또는 marker가 있는 요약 피드백 댓글 게시 초안으로 변환하고 중복 게시 위험을 점검합니다.
+description: PR Review Template 출력을 GitHub PR review thread 또는 marker가 있는 요약 피드백 댓글 게시 초안으로 변환하고 중복 게시 위험을 점검합니다.
 ---
 
 # Review Comment
 
-이 스킬은 외부 Claude `code-review-skill`이 PR Review Template 형식으로 생성한 리뷰 결과를 GitHub Pull Request review thread 또는 marker가 있는 요약 피드백 댓글 형식으로 정리한다. 실제 GitHub 게시는 Workflow Engine의 후속 액션에서 처리하며, 게시된 피드백의 적용/보류/거절/사람 승인 필요 분류와 대응 확정은 Workflow Engine의 Human Checkpoint에서 처리한다.
+이 스킬은 리뷰 생성 도구와 무관하게 PR Review Template 형식으로 생성된 리뷰 결과를 GitHub Pull Request review thread 또는 marker가 있는 요약 피드백 댓글 형식으로 정리한다. 실제 GitHub 게시는 Workflow Engine의 후속 액션에서 처리하며, 게시된 피드백의 적용/보류/거절/사람 승인 필요 분류와 대응 확정은 Workflow Engine의 Human Checkpoint에서 처리한다.
 
 ## 먼저 읽을 문서
 
@@ -14,7 +14,7 @@ description: Claude code-review-skill의 PR Review Template 출력을 GitHub PR 
 ## 입력
 
 - PR 번호
-- Claude `code-review-skill` PR Review Template 출력
+- PR Review Template 출력
 - 기존 review thread 목록
 - 기존 PR issue comments
 
@@ -27,11 +27,11 @@ description: Claude code-review-skill의 PR Review Template 출력을 GitHub PR 
 5. `[nit]`, `[suggestion]`, `[learning]`, `[praise]`는 merge 차단 피드백으로 취급하지 않고, 필요한 경우 요약 참고 섹션으로만 정리한다.
 6. 같은 리뷰 결과가 중복 게시되지 않도록 기존 review thread와 요약 피드백 댓글을 확인한다.
 7. marker는 반드시 `<!-- codex-harness:summary-feedback v1 -->`를 사용한다.
-8. 게시 요청 초안과 중복 게시 위험을 Workflow Skill에 반환한다.
+8. 게시 요청 초안을 `inline_review_threads`와 `summary_feedback_comment`로 분리하고 중복 게시 위험을 Workflow Skill에 반환한다.
 
 ## Severity 매핑
 
-| code-review-skill label | 위험도 | Workflow 피드백 유형 | 기본 대응 후보 |
+| PR Review Template label | 위험도 | Workflow 피드백 유형 | 기본 대응 후보 |
 | --- | --- | --- | --- |
 | `[blocking]` | 높음 | 해결 전 merge 불가 피드백 | `적용` |
 | `[important]` | 중간 | 중요 검토 피드백 | `적용` 또는 `사람 승인 필요` |
@@ -40,7 +40,7 @@ description: Claude code-review-skill의 PR Review Template 출력을 GitHub PR 
 | `[learning]` | 해당 없음 | 교육용 참고 | 상태 추적 제외 |
 | `[praise]` | 해당 없음 | 긍정 피드백 | 상태 추적 제외 |
 
-`위험도`는 워크플로우 엔진이 code-review-skill의 severity를 해석한 값이다. severity 마커 기준으로 🔴는 `높음`, 🟡는 `중간`, 🟢는 `낮음`으로 읽고, 상태 추적에서 제외하는 `[learning]`과 `[praise]`는 `해당 없음`으로 둔다.
+`위험도`는 워크플로우 엔진이 PR Review Template의 severity를 해석한 값이다. severity 마커 기준으로 🔴는 `높음`, 🟡는 `중간`, 🟢는 `낮음`으로 읽고, 상태 추적에서 제외하는 `[learning]`과 `[praise]`는 `해당 없음`으로 둔다.
 
 `Verdict`가 `Request Changes`이면 `[blocking]` 또는 `[important]`가 최소 하나 있어야 한다. 템플릿 결과에 verdict와 피드백 severity가 충돌하면 Workflow Skill에 보류 질문으로 반환한다.
 
@@ -57,10 +57,18 @@ description: Claude code-review-skill의 PR Review Template 출력을 GitHub PR 
   - 추천 분류: ...
 ```
 
+## 출력
+
+- `inline_review_threads`: diff line에 붙일 수 있는 `[blocking]` 또는 `[important]` 피드백의 review thread 게시 초안
+- `summary_feedback_comment`: diff line에 붙일 수 없는 `[blocking]` 또는 `[important]` 피드백의 marker 체크리스트 댓글 초안
+- `duplicate_risk`: 기존 review thread 또는 marker 댓글과의 중복 게시 위험
+- `questions`: 위치 판단, severity, verdict가 충돌할 때 Workflow Skill이 확인할 보류 질문
+
 ## 금지
 
 - 파일 수정
 - 피드백 적용 여부 확정
 - GitHub 직접 게시
+- 리뷰 결과를 일반 PR review body로만 게시
 - 승인 없는 review thread resolve
 - marker 없는 일반 PR comment를 요약 피드백 상태 원천으로 취급

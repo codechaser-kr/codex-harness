@@ -74,6 +74,7 @@ Workflow Engine 설계는 정책검토 이슈에서 확정된 결정을 원천�
 #54는 PR 리뷰 실행 방식을 하나로 고정하지 않고, 설치 기본값과 PR별 선택값으로 분리하는 방향을 확정했다.
 
 - Workflow Engine 설치 시 기본 리뷰 실행 모드를 선택할 수 있어야 한다.
+- 설치 기본 리뷰 실행 모드는 타겟 레포의 `.harness/workflow-engine.json`에 `review.defaultMode`로 저장한다.
 - PR 생성 후 리뷰 실행 전 실제 사용할 리뷰 실행 모드를 Human Checkpoint로 확정한다.
 - 지원 모드는 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review`다.
 - `claude/*` 리뷰 실행 모드는 Codex에서 Claude를 호출하기 위해 `sendbird/cc-plugin-codex`를 외부 전역 의존성으로 사용한다.
@@ -567,6 +568,20 @@ PR 리뷰는 선택된 리뷰 실행 모드로 수행한다. Workflow Engine을 
 | `claude/awesome-code-review` | Claude | Claude CLI 인증, Claude 환경의 `awesome-code-review`, Codex에서 호출할 경우 `sendbird/cc-plugin-codex` |
 | `codex/awesome-code-review` | Codex | Codex 전역 `awesome-code-review` |
 
+설치 기본 리뷰 실행 모드 저장 형식:
+
+```json
+{
+  "review": {
+    "defaultMode": "claude/code-review"
+  }
+}
+```
+
+- 저장 위치는 타겟 레포의 `.harness/workflow-engine.json`이다.
+- `review.defaultMode` 값은 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중 하나여야 한다.
+- 설치 기본값은 PR별 리뷰 실행 모드 선택 Human Checkpoint에서 기본 후보로 제시할 뿐, 실제 리뷰 실행 모드 확정을 대체하지 않는다.
+
 Codex 전역 `awesome-code-review` 설치 확인 경로:
 
 - `$CODEX_HOME/skills/awesome-code-review/SKILL.md`
@@ -875,7 +890,7 @@ Workflow Skill은 다음 순서로 판단한다.
 | 작업 브랜치 push      | PR 제목과 설명 확정                                 | 없음                         | 원격 head branch를 확인한다.                                                                   |
 | PR 생성 입력 검증     | 원격 head branch 확인                               | 없음                         | PR Creation Skill이 생성 입력을 검증한다.                                                      |
 | PR 생성               | PR 생성 입력 검증 완료                              | 없음                         | Workflow Skill이 검증된 입력으로 PR을 생성한다.                                                |
-| 리뷰 실행 모드 선택   | PR open                                             | 리뷰 실행 모드 확정          | 설치 기본값, 사용 가능한 모드, 각 모드의 의존성을 제시하고 실제 사용할 리뷰 실행 모드를 확정한다. |
+| 리뷰 실행 모드 선택   | PR open                                             | 리뷰 실행 모드 확정          | `.harness/workflow-engine.json`의 `review.defaultMode`, 사용 가능한 모드, 각 모드의 의존성을 제시하고 실제 사용할 리뷰 실행 모드를 확정한다. |
 | 리뷰 실행 모드 검사   | 리뷰 실행 모드 확정                                 | 없음                         | 선택된 리뷰 실행 모드의 실행 환경과 의존성 설치 여부를 확인한다.                               |
 | 리뷰 실행             | 리뷰 실행 모드 검사 완료                            | 없음                         | 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락을 검토해 리뷰 결과를 만든다.                       |
 | 리뷰 결과 정규화      | 리뷰 실행 결과 존재                                 | 없음                         | 선택된 모드의 출력이 PR Review Template이 아니면 PR Review Template으로 변환하고, 변환이 불완전하면 보류 질문을 제시한다. |

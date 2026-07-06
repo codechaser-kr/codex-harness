@@ -59,6 +59,8 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 
 `awesome-code-review`가 없으면 이 저장소가 해당 스킬을 배포하거나 관리하지 않는다는 점을 먼저 알린다. 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다고 안내한다. 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만, repo-bootstrap install은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 Codex 전역 설치명과 frontmatter `name`을 `awesome-code-review`로 맞춘다. 설치 후에는 `$CODEX_HOME/skills/awesome-code-review/SKILL.md` 또는 `$HOME/.codex/skills/awesome-code-review/SKILL.md` 중 하나가 존재하고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다고 안내한다.
 
+설치 기본 리뷰 실행 모드는 타겟 레포의 `.harness/workflow-engine.json`에 `review.defaultMode`로 저장한다. 값은 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중 하나여야 한다. 이 값은 리뷰 실행 모드 선택 Human Checkpoint에서 기본 후보로만 제시하며, 실제 리뷰 실행 모드 확정을 대체하지 않는다.
+
 `sendbird/cc-plugin-codex`는 `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`으로 설치 여부를 확인한다. 같은 플러그인 루트에 `skills/setup/SKILL.md`와 `scripts/claude-companion.mjs`가 있어야 하며, `$cc:setup`으로 플러그인 설치 상태와 Claude Code 호출 준비 상태를 확인한다. `$cc:setup`이 설치 누락, hook trust, Claude Code 사용 불가, 인증 필요 상태를 보고하면 출력된 안내를 사용자에게 전달하고 리뷰 실행으로 넘어가지 않는다.
 
 `claude/*` 리뷰 실행 모드에서는 리뷰 실행 전에 `$cc:setup` 결과의 인증 상태를 확인한다. 인증 완료 판정은 `$cc:setup`의 machine-readable probe에서 `auth.available: true`, `auth.loggedIn: true`이거나 사용자 표시 출력이 authenticated 상태를 보고하는 경우로 제한한다. 인증이 없거나 만료되었거나 판단할 수 없으면 리뷰 실행을 중단하고, `$cc:setup`이 제공하는 Claude login 안내를 그대로 전달한다. 재개 조건은 사용자가 Claude CLI 인증을 완료한 뒤 `$cc:setup`을 다시 실행해 인증 완료 상태가 확인되는 것이다.
@@ -103,7 +105,7 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 7. 남은 커밋 단위가 있으면 4번부터 반복하고, 없으면 `pr-proposal`로 PR 제목과 본문 초안을 제안한다.
 8. Workflow Engine이 PR 제목과 본문을 Human Checkpoint로 확정하고, 확정된 브랜치를 push한 뒤 `pr-creation`으로 PR 생성 입력을 검증한다.
 9. Workflow Engine이 검증된 입력으로 실제 GitHub PR을 생성한다.
-10. Workflow Engine이 설치 기본값, 사용 가능한 모드, 각 모드의 의존성을 제시하고 PR 리뷰에 사용할 리뷰 실행 모드를 Human Checkpoint로 확정한다.
+10. Workflow Engine이 타겟 레포의 `.harness/workflow-engine.json`에서 `review.defaultMode`를 읽고, 사용 가능한 모드, 각 모드의 의존성과 함께 제시한 뒤 PR 리뷰에 사용할 리뷰 실행 모드를 Human Checkpoint로 확정한다.
 11. Workflow Engine이 선택된 리뷰 실행 모드의 실행 환경과 의존성 설치 여부를 확인한다.
 12. 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락, 출력 템플릿 요구사항을 준비해 리뷰 결과를 생성한다.
 13. 리뷰 실행 결과가 PR Review Template 형식이 아니면 Workflow Engine이 `Required Changes`, `Important Suggestions`, `Minor Suggestions`, `Learning Notes`, `Security Considerations`, `Test Coverage`, `Verdict`와 severity label을 갖춘 PR Review Template으로 정규화한다. 정규화가 불완전하면 리뷰 코멘트 게시로 넘어가지 않고 보류 질문을 제시한다.

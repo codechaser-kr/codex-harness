@@ -38,7 +38,7 @@ description: GitHub Issue, PR, label, checklist, review thread, comment를 기�
 
 ## 명령 실행 경로 선택
 
-Workflow Engine은 명령을 실행하기 전에 일반 경로와 승인 경로 중 어느 쪽이 맞는지 판단한다. 실행 경로 선택은 권한과 실패 가능성을 줄이기 위한 판단이며, Human Checkpoint를 대체하지 않는다.
+Workflow Engine은 명령을 실행하기 전에 일반 경로와 승인 경로 중 어느 쪽이 맞는지 판단한다. 실행 경로 선택은 권한과 실패 가능성을 줄이기 위한 판단이며, Human Checkpoint를 대체하지 않는다. 사용자 결정이 필요한 상태 변경, 커밋 메시지 확정, PR merge 같은 항목은 승인 경로를 쓰더라도 별도로 사용자 의도가 명확해야 한다.
 
 처음부터 승인 경로를 사용하는 명령:
 

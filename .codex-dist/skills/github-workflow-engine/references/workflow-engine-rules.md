@@ -16,6 +16,7 @@
 - 외부 의존성인 전역 `commit`, `awesome-code-review`, `sendbird/cc-plugin-codex`는 이 저장소에서 관리하지 않는다. 해당 액션 진입 전 설치 여부를 확인하고, 없으면 설치 가능한 소스, 설치 대상 경로, 설치 후 확인할 파일 또는 명령, 재개 조건을 안내한 뒤 워크플로우를 중단한다.
 - `awesome-code-review`는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차로 설치한다. 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만, Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다.
 - `sendbird/cc-plugin-codex` 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다. `claude/*` 리뷰 실행 모드에서 이 의존성이 없으면 다른 리뷰 실행 모드로 자동 fallback하지 않는다.
+- `sendbird/cc-plugin-codex` 설치 여부는 `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`, 같은 플러그인 루트의 `skills/setup/SKILL.md`, `scripts/claude-companion.mjs`, `$cc:setup` 실행 결과로 확인한다.
 - PR merge는 사람이 수행한다.
 - Workflow Skill은 merge 알림 또는 다음 계획 요청 시 GitHub Run State를 다시 읽어 연결 이슈의 체크리스트와 종료 조건을 판단한다.
 - 로컬 `.harness/logs/github-workflow-log.md`는 보조 체크포인트이며, GitHub 상태를 대체하지 않는다.

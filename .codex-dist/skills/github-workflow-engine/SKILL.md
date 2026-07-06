@@ -59,6 +59,8 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 
 `awesome-code-review`가 없으면 이 저장소가 해당 스킬을 배포하거나 관리하지 않는다는 점을 먼저 알린다. 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다고 안내한다. 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만, repo-bootstrap install은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 Codex 전역 설치명과 frontmatter `name`을 `awesome-code-review`로 맞춘다. 설치 후에는 `$CODEX_HOME/skills/awesome-code-review/SKILL.md` 또는 `$HOME/.codex/skills/awesome-code-review/SKILL.md` 중 하나가 존재하고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다고 안내한다.
 
+`sendbird/cc-plugin-codex`는 `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`으로 설치 여부를 확인한다. 같은 플러그인 루트에 `skills/setup/SKILL.md`와 `scripts/claude-companion.mjs`가 있어야 하며, `$cc:setup`으로 플러그인 설치 상태와 Claude Code 호출 준비 상태를 확인한다. `$cc:setup`이 설치 누락, hook trust, Claude Code 사용 불가, 인증 필요 상태를 보고하면 출력된 안내를 사용자에게 전달하고 리뷰 실행으로 넘어가지 않는다.
+
 `sendbird/cc-plugin-codex`가 없으면 이 저장소가 해당 플러그인을 배포하거나 관리하지 않는다는 점을 먼저 알린다. 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다고 안내한다. `claude/*` 리뷰 실행 모드의 의존성이 누락되면 다른 리뷰 실행 모드로 자동 fallback하지 않고, 사용자가 의존성을 설치하거나 리뷰 실행 모드를 다시 선택해야 재개할 수 있다.
 
 전역 `commit` 스킬이 없으면 `$CODEX_HOME/skills/commit/SKILL.md` 또는 `$HOME/.codex/skills/commit/SKILL.md`에 `commit` 스킬을 설치해야 한다고 안내한다.

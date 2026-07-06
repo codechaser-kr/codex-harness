@@ -25,6 +25,23 @@
 - 기능변경/기능결함 계획과 완료 기준 갱신처럼 후속 전이 판단에 쓰이는 상태는 댓글이 아니라 이슈 본문에 반영한다.
 - PR 리뷰 결과, 보조 로그, merge 반영 알림처럼 댓글이나 로그가 맞는 항목은 이슈 본문 반영 대상과 구분한다.
 
+## 명령 실행 경로
+
+Workflow Engine은 명령을 실행하기 전에 일반 경로와 승인 경로 중 어느 쪽이 맞는지 판단한다. 실행 경로 선택은 권한과 실패 가능성을 줄이기 위한 판단이며, Human Checkpoint를 대체하지 않는다. 사용자 결정이 필요한 상태 변경, 커밋 메시지 확정, PR merge 같은 항목은 승인 경로를 쓰더라도 별도로 사용자 의도가 명확해야 한다.
+
+처음부터 승인 경로를 사용하는 명령:
+
+- `gh pr`, `gh issue`, `gh api`처럼 GitHub PR, issue, review, checks, comment 상태를 읽거나 바꾸는 GitHub API 계열 명령
+- `git push`, `git fetch`, `git pull`, `git ls-remote`처럼 네트워크나 원격 저장소 접근이 필요한 Git 명령
+- `git commit`, `git tag`, `git merge`, `git rebase`처럼 `.git` 쓰기가 필요한 명령
+
+일반 경로를 우선 사용하는 명령:
+
+- `git status`, `git diff`, `git log`, `git show`, `rg`, `sed`, `ls`, `find`, `wc`처럼 로컬 파일이나 로컬 Git 상태를 읽는 명령
+- `git diff --check`처럼 로컬 변경사항만 검증하는 명령
+
+파괴적 명령은 실행 경로와 별개로 사용자 의도가 명확해야 한다. `rm`, `git reset --hard`, `git clean`, 강제 push처럼 되돌리기 어렵거나 사용자 변경을 잃게 할 수 있는 명령은 승인 경로 사용 여부만으로 실행하지 않는다.
+
 ## 이슈 유형
 
 - `기능제안`: 기능 추가, 기능 수정, 운영 흐름 개선 요청을 판단한다.

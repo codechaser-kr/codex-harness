@@ -19,6 +19,8 @@
 - `sendbird/cc-plugin-codex` 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다. `claude/*` 리뷰 실행 모드에서 이 의존성이 없으면 다른 리뷰 실행 모드로 자동 fallback하지 않는다.
 - `sendbird/cc-plugin-codex` 설치 여부는 `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`, 같은 플러그인 루트의 `skills/setup/SKILL.md`, `scripts/claude-companion.mjs`, `$cc:setup` 실행 결과로 확인한다.
 - `claude/*` 리뷰 실행 모드의 Claude CLI 인증은 `$cc:setup`의 `auth.available: true`, `auth.loggedIn: true` 또는 authenticated 사용자 표시 출력으로만 완료 판정한다. 인증이 없거나 판단할 수 없으면 리뷰 실행을 중단하고 `$cc:setup`의 login 안내와 재실행 조건을 전달한다.
+- `claude/code-review`는 `$cc:review` companion review가 아니라 `claude -p`로 Claude 공식 `/code-review` 스킬 사용을 명시 요청한다. `/code-review --comment`와 `/code-review --fix`는 사용하지 않고, GitHub 게시와 파일 수정은 Workflow Engine 후속 단계에서만 수행한다.
+- `claude/code-review` stdout findings는 PR 전체 `Verdict`, 각 피드백의 severity label, 파일 경로와 diff 위치 또는 요약 피드백 여부, 문제와 영향, 권장 조치, 테스트 커버리지 판단을 갖춘 PR Review Template으로 정규화한다. 위치, severity, verdict, 문제 영향, 권장 조치 중 하나라도 판단할 수 없으면 게시하지 않고 보류 질문으로 중단한다.
 - PR merge는 사람이 수행한다.
 - Workflow Skill은 merge 알림 또는 다음 계획 요청 시 GitHub Run State를 다시 읽어 연결 이슈의 체크리스트와 종료 조건을 판단한다.
 - 로컬 `.harness/logs/github-workflow-log.md`는 보조 체크포인트이며, GitHub 상태를 대체하지 않는다.
@@ -134,8 +136,8 @@ Workflow Engine은 명령을 실행하기 전에 일반 경로와 승인 경로 
 | PR 생성               | PR 생성 입력 검증 완료                              | 없음                         | Workflow Skill이 검증된 입력으로 PR을 생성한다.                                                                |
 | 리뷰 실행 모드 선택   | PR open                                             | 리뷰 실행 모드 확정          | `.harness/workflow-engine.json`의 `review.defaultMode`, 사용 가능한 모드, 각 모드의 의존성을 제시하고, 사용자가 지원 모드 중 하나를 명시 선택할 때만 실제 사용할 리뷰 실행 모드로 확정한다. |
 | 리뷰 실행 모드 검사   | 리뷰 실행 모드 확정                                 | 없음                         | 선택된 리뷰 실행 모드의 실행 환경과 의존성 설치 여부를 확인한다.                                                |
-| 리뷰 실행             | 리뷰 실행 모드 검사 완료                            | 없음                         | 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락을 검토해 리뷰 결과를 만든다.                                        |
-| 리뷰 결과 정규화      | 리뷰 실행 결과 존재                                 | 없음                         | 선택된 모드의 출력이 PR Review Template이 아니면 PR Review Template으로 변환하고, 변환이 불완전하면 보류 질문을 제시한다. |
+| 리뷰 실행             | 리뷰 실행 모드 검사 완료                            | 없음                         | 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락을 검토해 리뷰 결과를 만든다. `claude/code-review`는 `$cc:review`가 아니라 base/head 브랜치를 명시한 `claude -p` 프롬프트로 Claude 공식 `/code-review` 스킬을 요청한다. |
+| 리뷰 결과 정규화      | 리뷰 실행 결과 존재                                 | 없음                         | 선택된 모드의 출력이 PR Review Template이 아니면 PR Review Template으로 변환한다. 위치, severity, verdict, 문제 영향, 권장 조치 중 하나라도 판단할 수 없어 정규화가 불완전하면 보류 질문을 제시한다. |
 | 리뷰 코멘트 초안 정리 | PR Review Template 출력 결과 존재                   | 없음                         | Review Comment Skill이 thread와 요약 댓글 초안을 정리한다.                                                     |
 | 리뷰 코멘트 게시      | 리뷰 코멘트 초안 정리 완료                          | 없음                         | Workflow Skill이 review thread 또는 marker 댓글을 게시한다.                                                    |
 | 리뷰 대응 대상 확인   | 리뷰 코멘트 게시 완료                               | 없음                         | unresolved thread와 미체크 요약 피드백을 확인한다.                                                             |

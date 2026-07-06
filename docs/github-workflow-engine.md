@@ -82,6 +82,17 @@ Workflow Engine 설계는 정책검토 이슈에서 확정된 결정을 원천�
 - `sendbird/cc-plugin-codex` 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다.
 - 선택된 리뷰 실행 모드를 사용할 수 없으면 다른 모드로 자동 fallback하지 않고, 누락 의존성과 재개 조건을 안내한 뒤 중단한다.
 
+### #60 `claude/code-review` 실행 경로
+
+#60은 `claude/code-review` 모드가 `sendbird/cc-plugin-codex`의 `$cc:review` companion review로 실행되면 안 된다는 점을 확정했다.
+
+- `claude/code-review`는 Claude 공식 `/code-review` 스킬을 `claude -p`로 명시 요청한다.
+- `$cc:review`는 Claude 내장 `/code-review` 호출 경로가 아니므로 `claude/code-review`에 매핑하지 않는다.
+- `/code-review --comment`는 사용하지 않는다.
+- `/code-review --fix`는 사용하지 않는다.
+- GitHub comment 게시, review thread 게시, 파일 수정은 Claude 내장 스킬이 아니라 Workflow Engine 후속 단계에서만 수행한다.
+- `$cc:review` 기반 companion review가 필요하면 `claude/code-review`와 다른 별도 리뷰 실행 모드로 정의해야 한다.
+
 ### #40 반영 기준
 
 #40의 반영 목표는 문서를 보기 좋게 재배열하는 것이 아니다. Workflow Engine이 실제 실행 중 어떤 규칙을 우선해야 하는지 바로 판단할 수 있도록 프롬프트 계약을 선명하게 만드는 것이다.
@@ -586,7 +597,7 @@ PR 리뷰는 선택된 리뷰 실행 모드로 수행한다. Workflow Engine을 
 
 | 리뷰 실행 모드 | 실행 주체 | 필요한 의존성 |
 | -------------- | --------- | ------------- |
-| `claude/code-review` | Claude | Claude CLI 인증, Claude 공식 `/code-review` 플러그인, Codex에서 호출할 경우 `sendbird/cc-plugin-codex` |
+| `claude/code-review` | Claude | Claude CLI 인증, Claude 공식 `/code-review` 플러그인, Codex에서 호출할 경우 `sendbird/cc-plugin-codex`의 `$cc:setup` 준비 상태 확인 |
 | `claude/awesome-code-review` | Claude | Claude CLI 인증, Claude 환경의 `awesome-code-review`, Codex에서 호출할 경우 `sendbird/cc-plugin-codex` |
 | `codex/awesome-code-review` | Codex | Codex 전역 `awesome-code-review` |
 
@@ -630,7 +641,39 @@ Claude CLI 인증 확인 기준:
 
 `awesome-code-review` 누락 안내에는 이 저장소가 해당 스킬을 배포하거나 관리하지 않는다는 점, 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다는 점, 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만 Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다는 점을 포함한다. 설치 후에는 위 경로 중 하나에 `SKILL.md`가 있고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다.
 
-리뷰 실행 결과는 `review-comment`로 전달하기 전에 반드시 PR Review Template 형식이어야 한다. `claude/awesome-code-review`와 `codex/awesome-code-review`는 PR Review Template 출력을 기대한다. `claude/code-review`처럼 일반 Claude Code review 형식으로 결과가 나오는 모드는 Workflow Engine이 `Required Changes`, `Important Suggestions`, `Minor Suggestions`, `Learning Notes`, `Security Considerations`, `Test Coverage`, `Verdict`와 severity label을 갖춘 PR Review Template으로 정규화한 뒤 `review-comment`로 넘긴다. 위치, severity, verdict를 판단할 수 없어 정규화가 불완전하면 리뷰 코멘트 게시로 넘어가지 않고 보류 질문을 제시한다.
+`claude/code-review` 실행 경로:
+
+1. Workflow Engine은 base 브랜치와 head 브랜치를 확인한다.
+2. `$cc:setup`으로 Claude CLI 인증과 호출 준비 상태를 확인할 수 있지만, 실제 리뷰 생성에 `$cc:review` companion review를 사용하지 않는다.
+3. 다음 형태로 Claude 공식 `/code-review` 스킬 사용을 명시 요청한다.
+
+```bash
+claude -p --permission-mode dontAsk -- "
+현재 저장소에서 head 브랜치 `<head-branch>`를 base 브랜치 `<base-branch>` 기준으로 /code-review 스킬을 사용해 리뷰해 주세요.
+
+조건:
+- /code-review --comment 는 사용하지 마세요.
+- /code-review --fix 는 사용하지 마세요.
+- GitHub PR에 직접 comment를 게시하지 마세요.
+- 파일을 수정하지 마세요.
+- 리뷰 결과만 대화 출력으로 반환하세요.
+"
+```
+
+4. Claude stdout만 리뷰 실행 결과로 사용한다.
+5. `$cc:review` 기반 companion review가 필요하면 `claude/code-review`와 다른 별도 리뷰 실행 모드로 추가해야 하며, 현재 지원 모드에 자동 매핑하지 않는다.
+
+리뷰 실행 결과는 `review-comment`로 전달하기 전에 반드시 PR Review Template 형식이어야 한다. `claude/awesome-code-review`와 `codex/awesome-code-review`는 PR Review Template 출력을 기대한다. `claude/code-review`처럼 Claude stdout findings가 일반 Claude Code review 형식으로 나오는 모드는 Workflow Engine이 `Required Changes`, `Important Suggestions`, `Minor Suggestions`, `Learning Notes`, `Security Considerations`, `Test Coverage`, `Verdict`와 severity label을 갖춘 PR Review Template으로 정규화한 뒤 `review-comment`로 넘긴다.
+
+정규화 필수 필드:
+
+- PR 전체 `Verdict`: `Approve`, `Comment`, `Request Changes` 중 하나
+- 각 피드백의 severity label: `[blocking]`, `[important]`, `[nit]`, `[suggestion]`, `[learning]`, `[praise]` 중 하나
+- 각 피드백의 파일 경로와 diff 위치 또는 라인에 붙일 수 없는 요약 피드백 여부
+- 각 피드백의 문제, 영향, 권장 조치
+- 테스트 커버리지 판단 또는 테스트 영향 없음 판단
+
+위치, severity, verdict, 문제 영향, 권장 조치 중 하나라도 판단할 수 없어 PR Review Template으로 손실 없이 정규화할 수 없으면 리뷰 코멘트 게시로 넘어가지 않고 보류 질문을 제시한다.
 
 입력:
 

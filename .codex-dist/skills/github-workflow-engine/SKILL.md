@@ -73,7 +73,7 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 
 - 커밋 메시지 제안 전에 `$CODEX_HOME/skills/commit/SKILL.md` 또는 `$HOME/.codex/skills/commit/SKILL.md`가 있는지 확인한다.
 - `codex/awesome-code-review` 리뷰 실행 전에는 `$CODEX_HOME/skills/awesome-code-review/SKILL.md` 또는 `$HOME/.codex/skills/awesome-code-review/SKILL.md`가 있는지 확인한다.
-- `claude/code-review` 리뷰 실행 전에는 Claude CLI 인증, Claude 공식 `/code-review` 플러그인, Codex에서 Claude를 호출하기 위한 `sendbird/cc-plugin-codex` 사용 가능 여부를 확인한다.
+- `claude/code-review` 리뷰 실행 전에는 Claude CLI 인증, Claude 공식 `/code-review` 플러그인, Codex에서 Claude를 호출하기 위한 `sendbird/cc-plugin-codex`의 `$cc:setup` 준비 상태를 확인한다.
 - `claude/awesome-code-review` 리뷰 실행 전에는 Claude CLI 인증, Claude 환경의 `awesome-code-review`, Codex에서 Claude를 호출하기 위한 `sendbird/cc-plugin-codex` 사용 가능 여부를 확인한다.
 - 의존성이 없으면 설치 가능한 소스, 설치 대상 경로, 설치 후 확인할 파일 또는 명령, 재개 조건을 사용자에게 알리고, 현재 액션을 중단한다.
 - 누락 상태에서는 대체 커밋 메시지 생성이나 대체 리뷰 생성을 진행하지 않는다.
@@ -85,6 +85,25 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 `sendbird/cc-plugin-codex`는 `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`으로 설치 여부를 확인한다. 같은 플러그인 루트에 `skills/setup/SKILL.md`와 `scripts/claude-companion.mjs`가 있어야 하며, `$cc:setup`으로 플러그인 설치 상태와 Claude Code 호출 준비 상태를 확인한다. `$cc:setup`이 설치 누락, hook trust, Claude Code 사용 불가, 인증 필요 상태를 보고하면 출력된 안내를 사용자에게 전달하고 리뷰 실행으로 넘어가지 않는다.
 
 `claude/*` 리뷰 실행 모드에서는 리뷰 실행 전에 `$cc:setup` 결과의 인증 상태를 확인한다. 인증 완료 판정은 `$cc:setup`의 machine-readable probe에서 `auth.available: true`, `auth.loggedIn: true`이거나 사용자 표시 출력이 authenticated 상태를 보고하는 경우로 제한한다. 인증이 없거나 만료되었거나 판단할 수 없으면 리뷰 실행을 중단하고, `$cc:setup`이 제공하는 Claude login 안내를 그대로 전달한다. 재개 조건은 사용자가 Claude CLI 인증을 완료한 뒤 `$cc:setup`을 다시 실행해 인증 완료 상태가 확인되는 것이다.
+
+`claude/code-review`는 Claude 공식 `/code-review` 스킬을 `claude -p`로 명시 요청해 실행한다. `$cc:review` companion review는 Claude 내장 `/code-review` 호출 경로가 아니므로 `claude/code-review`에 매핑하지 않는다. `/code-review --comment`와 `/code-review --fix`는 사용하지 않으며, GitHub comment 게시, review thread 게시, 파일 수정은 Workflow Engine 후속 단계에서만 수행한다.
+
+예상 실행 형태:
+
+```bash
+claude -p --permission-mode dontAsk -- "
+현재 저장소에서 head 브랜치 `<head-branch>`를 base 브랜치 `<base-branch>` 기준으로 /code-review 스킬을 사용해 리뷰해 주세요.
+
+조건:
+- /code-review --comment 는 사용하지 마세요.
+- /code-review --fix 는 사용하지 마세요.
+- GitHub PR에 직접 comment를 게시하지 마세요.
+- 파일을 수정하지 마세요.
+- 리뷰 결과만 대화 출력으로 반환하세요.
+"
+```
+
+`claude/code-review`의 Claude stdout findings는 Workflow Engine이 PR Review Template으로 정규화한다. 필수 필드는 PR 전체 `Verdict`, 각 피드백의 severity label, 파일 경로와 diff 위치 또는 요약 피드백 여부, 문제와 영향, 권장 조치, 테스트 커버리지 판단이다. 위치, severity, verdict, 문제 영향, 권장 조치 중 하나라도 판단할 수 없으면 GitHub comment 또는 review thread를 게시하지 않고 보류 질문으로 중단한다. `$cc:review` 기반 companion review가 필요하면 `claude/code-review`와 다른 별도 리뷰 실행 모드로 분리해야 한다.
 
 `sendbird/cc-plugin-codex`가 없으면 이 저장소가 해당 플러그인을 배포하거나 관리하지 않는다는 점을 먼저 알린다. 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다고 안내한다. `claude/*` 리뷰 실행 모드의 의존성이 누락되면 다른 리뷰 실행 모드로 자동 fallback하지 않고, 사용자가 의존성을 설치하거나 리뷰 실행 모드를 다시 선택해야 재개할 수 있다.
 
@@ -128,8 +147,8 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 9. Workflow Engine이 검증된 입력으로 실제 GitHub PR을 생성한다.
 10. Workflow Engine이 타겟 레포의 `.harness/workflow-engine.json`에서 `review.defaultMode`를 읽고, 사용 가능한 모드, 각 모드의 의존성과 함께 제시한 뒤 사용자가 지원 모드 중 하나를 명시 선택할 때만 PR 리뷰에 사용할 리뷰 실행 모드로 확정한다.
 11. Workflow Engine이 선택된 리뷰 실행 모드의 실행 환경과 의존성 설치 여부를 확인한다.
-12. 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락, 출력 템플릿 요구사항을 준비해 리뷰 결과를 생성한다.
-13. 리뷰 실행 결과가 PR Review Template 형식이 아니면 Workflow Engine이 `Required Changes`, `Important Suggestions`, `Minor Suggestions`, `Learning Notes`, `Security Considerations`, `Test Coverage`, `Verdict`와 severity label을 갖춘 PR Review Template으로 정규화한다. 정규화가 불완전하면 리뷰 코멘트 게시로 넘어가지 않고 보류 질문을 제시한다.
+12. 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락, 출력 템플릿 요구사항을 준비해 리뷰 결과를 생성한다. `claude/code-review`는 `$cc:review`가 아니라 base/head 브랜치를 명시한 `claude -p` 프롬프트로 Claude 공식 `/code-review` 스킬을 요청한다.
+13. 리뷰 실행 결과가 PR Review Template 형식이 아니면 Workflow Engine이 `Required Changes`, `Important Suggestions`, `Minor Suggestions`, `Learning Notes`, `Security Considerations`, `Test Coverage`, `Verdict`와 severity label을 갖춘 PR Review Template으로 정규화한다. 위치, severity, verdict, 문제 영향, 권장 조치 중 하나라도 판단할 수 없어 정규화가 불완전하면 리뷰 코멘트 게시로 넘어가지 않고 보류 질문을 제시한다.
 14. `review-comment`로 PR Review Template 출력 결과를 review thread 또는 marker가 있는 요약 피드백 댓글 게시 초안으로 정리한다.
 15. Workflow Engine이 게시 초안을 확인한 뒤 실제 GitHub 리뷰 코멘트를 게시한다.
 16. Workflow Engine이 unresolved thread와 미체크 요약 피드백을 확인해 리뷰 대응 대상 여부를 판단한다.

@@ -581,6 +581,13 @@ Claude 기반 리뷰 실행 모드를 Codex에서 호출하려면 `sendbird/cc-p
 3. `$cc:setup`을 실행해 플러그인 설치 상태와 Claude Code 호출 준비 상태를 확인한다.
 4. `$cc:setup`이 설치 누락, hook trust, Claude Code 사용 불가, 인증 필요 상태를 보고하면 출력된 안내를 사용자에게 전달하고 리뷰 실행으로 넘어가지 않는다.
 
+Claude CLI 인증 확인 기준:
+
+1. `claude/*` 리뷰 실행 모드에서는 리뷰 실행 전에 `$cc:setup` 결과의 인증 상태를 확인한다.
+2. 인증 완료 판정은 `$cc:setup`의 machine-readable probe에서 `auth.available: true`, `auth.loggedIn: true`이거나 사용자 표시 출력이 authenticated 상태를 보고하는 경우로 제한한다.
+3. 인증이 없거나 만료되었거나 판단할 수 없으면 리뷰 실행을 중단하고, `$cc:setup`이 제공하는 Claude login 안내를 그대로 전달한다.
+4. 재개 조건은 사용자가 Claude CLI 인증을 완료한 뒤 `$cc:setup`을 다시 실행해 인증 완료 상태가 확인되는 것이다.
+
 선택된 리뷰 실행 모드의 의존성이 설치되어 있지 않으면 필요한 설치 경로, 설치 주체, 설치 후 확인할 파일 또는 명령, 재개 조건을 안내하고 리뷰 실행 액션을 중단한다. 다른 리뷰 실행 모드로 자동 fallback하지 않는다.
 
 `awesome-code-review` 누락 안내에는 이 저장소가 해당 스킬을 배포하거나 관리하지 않는다는 점, 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다는 점, 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만 Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다는 점을 포함한다. 설치 후에는 위 경로 중 하나에 `SKILL.md`가 있고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다.

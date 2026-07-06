@@ -61,6 +61,8 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 
 `sendbird/cc-plugin-codex`는 `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`으로 설치 여부를 확인한다. 같은 플러그인 루트에 `skills/setup/SKILL.md`와 `scripts/claude-companion.mjs`가 있어야 하며, `$cc:setup`으로 플러그인 설치 상태와 Claude Code 호출 준비 상태를 확인한다. `$cc:setup`이 설치 누락, hook trust, Claude Code 사용 불가, 인증 필요 상태를 보고하면 출력된 안내를 사용자에게 전달하고 리뷰 실행으로 넘어가지 않는다.
 
+`claude/*` 리뷰 실행 모드에서는 리뷰 실행 전에 `$cc:setup` 결과의 인증 상태를 확인한다. 인증 완료 판정은 `$cc:setup`의 machine-readable probe에서 `auth.available: true`, `auth.loggedIn: true`이거나 사용자 표시 출력이 authenticated 상태를 보고하는 경우로 제한한다. 인증이 없거나 만료되었거나 판단할 수 없으면 리뷰 실행을 중단하고, `$cc:setup`이 제공하는 Claude login 안내를 그대로 전달한다. 재개 조건은 사용자가 Claude CLI 인증을 완료한 뒤 `$cc:setup`을 다시 실행해 인증 완료 상태가 확인되는 것이다.
+
 `sendbird/cc-plugin-codex`가 없으면 이 저장소가 해당 플러그인을 배포하거나 관리하지 않는다는 점을 먼저 알린다. 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다고 안내한다. `claude/*` 리뷰 실행 모드의 의존성이 누락되면 다른 리뷰 실행 모드로 자동 fallback하지 않고, 사용자가 의존성을 설치하거나 리뷰 실행 모드를 다시 선택해야 재개할 수 있다.
 
 전역 `commit` 스킬이 없으면 `$CODEX_HOME/skills/commit/SKILL.md` 또는 `$HOME/.codex/skills/commit/SKILL.md`에 `commit` 스킬을 설치해야 한다고 안내한다.

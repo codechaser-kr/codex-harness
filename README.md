@@ -114,6 +114,8 @@ Workflow Engine의 PR 리뷰 실행 모드는 `claude/code-review`, `claude/awes
 
 `sendbird/cc-plugin-codex`는 Codex에서 Claude를 호출하기 위한 외부 의존성입니다. 이 저장소는 해당 플러그인을 설치하거나 관리하지 않으며, 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당합니다. 선택된 리뷰 실행 모드의 의존성이 없으면 Workflow Engine은 다른 모드로 자동 fallback하지 않고, 설치 대상과 재개 조건을 안내한 뒤 중단합니다.
 
+`claude/*` 리뷰 실행 모드는 `$cc:setup` 결과로 Claude CLI 인증 상태를 확인합니다. 인증 완료는 `auth.available: true`, `auth.loggedIn: true` 또는 authenticated 출력으로만 판정하며, 미인증이거나 판단할 수 없으면 `$cc:setup`의 login 안내를 전달하고 리뷰 실행을 중단합니다.
+
 PR 연결은 PR 본문의 `연관 이슈` 섹션에서 `Refs #번호`를 파싱해 판단합니다. Workflow Engine이 관리하는 이슈에는 `Closes #번호`, `Fixes #번호`, `Resolves #번호`처럼 GitHub가 자동 close하는 키워드를 사용하지 않습니다.
 
 타겟 레포에 GitHub Workflow Engine을 적용하거나 템플릿을 갱신할 때는 `github-templates.md`의 원형과 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`, `.github/pull_request_template.md`가 정합적인지 먼저 점검합니다. 불일치가 있으면 차이와 영향 범위, 수정 후보를 제시하고 승인 후 갱신합니다.

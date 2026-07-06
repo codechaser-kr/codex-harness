@@ -107,7 +107,7 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 19. 피드백 수정 push와 필요한 수정 댓글 처리가 끝나면 해당 피드백을 resolve 또는 체크할지 사용자 의도를 확인한다. 사용자 결정 전에는 review thread를 resolve하거나 요약 피드백을 체크하지 않는다.
 20. 사용자가 resolve 또는 체크를 선택한 경우 라인 피드백은 resolve하고 요약 피드백은 체크한다. 사용자가 미해결 유지를 선택하면 GitHub 상태를 변경하지 않는다.
 21. GitHub Run State를 다시 읽어 남은 unresolved thread 또는 미체크 요약 피드백이 있으면 14번부터 반복한다.
-22. 리뷰 대응 대상이 없으면 `리뷰 대응 대상 없음`을 명시하고 PR merge 대기로 이동한다.
+22. 13번 또는 21번 확인 결과 리뷰 대응 대상이 없으면 `리뷰 대응 대상 없음`을 명시하고 PR merge 대기로 이동한다.
 23. 사람이 PR을 merge하면 GitHub Run State를 다시 읽고 연결 이슈의 PR merged 전이를 적용한다.
 
 ## 로그

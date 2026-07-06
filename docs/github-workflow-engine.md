@@ -847,7 +847,7 @@ Workflow Skill은 다음 순서로 판단한다.
 | 피드백 해결 여부 확인 | 피드백 수정 push와 필요한 수정 댓글 처리 완료       | 해당 피드백 resolve 여부 확정 | 해당 피드백을 resolve 또는 체크할지 사용자 의도를 확인한다. 사용자 결정 전에는 review thread를 resolve하거나 요약 피드백을 체크하지 않는다. |
 | 피드백 해결 결정 반영 | 해당 피드백 resolve 여부 확정                       | 없음                         | 사용자가 resolve 또는 체크를 선택하면 라인 피드백은 resolve하고 요약 피드백은 체크한다. 사용자가 미해결 유지를 선택하면 GitHub 상태를 변경하지 않는다. |
 | 남은 피드백 확인      | 피드백 1건의 resolve 결정 반영 완료                 | 없음                         | GitHub Run State를 다시 읽고 남은 피드백이 있으면 `피드백 대응 제안`으로 돌아가고, 없으면 `리뷰 대응 대상 없음`으로 이동한다. |
-| 리뷰 대응 대상 없음   | unresolved thread와 미체크 요약 피드백이 없음       | 없음                         | 리뷰 대응 대상이 없음을 명시하고 `PR merge 대기`로 이동한다.                                   |
+| 리뷰 대응 대상 없음   | 리뷰 대응 대상 확인 또는 남은 피드백 확인 완료, unresolved thread와 미체크 요약 피드백이 없음 | 없음                         | 완료된 확인 결과 리뷰 대응 대상이 없음을 명시하고 `PR merge 대기`로 이동한다.                   |
 | PR merge 대기         | 리뷰 대응 대상 없음, checks 통과, merge 가능        | PR merge                     | 사람이 merge한다.                                                                              |
 | PR merge 반영         | PR merged                                           | 없음                         | base branch를 갱신하고 연결 이슈의 PR merged 전이로 이동한다.                                  |
 

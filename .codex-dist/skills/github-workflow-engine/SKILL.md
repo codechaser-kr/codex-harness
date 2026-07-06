@@ -24,7 +24,7 @@ description: GitHub Issue, PR, label, checklist, review thread, comment를 기�
 6. 액션 진입, 중단, 재개는 `.harness/logs/github-workflow-log.md`에 기록한다.
 7. 이슈 생성이 필요하면 `issue-creation` 스킬로 타겟 `.github` 템플릿 형식의 초안을 만들고, Workflow Engine이 사용자 의도 확인 이후 실제 GitHub 이슈를 생성한다.
 8. 기능 개발 계획은 `feature-plan`, 기능 결함 해결 계획은 `fix-plan` 스킬로 넘긴다.
-9. 구현 단위가 확정되면 `branch-plan`, 외부 전역 `commit`, `pr-proposal`, `pr-creation`, 리뷰 실행 모드 선택, 선택된 리뷰 실행 모드, `review-comment`를 순서대로 연결한다.
+9. 구현 단위가 확정되면 `branch-plan`, 외부 전역 `commit`, `pr-proposal`, `pr-creation`, 리뷰 실행 모드 선택, 리뷰 실행 모드 검사, 리뷰 실행, 리뷰 결과 정규화, `review-comment`를 순서대로 연결한다.
 10. 타겟 레포에 GitHub Workflow Engine을 적용하거나 템플릿을 갱신할 때는 `github-templates.md` 계약과 타겟 `.github` 템플릿의 정합성을 먼저 검사한다.
 11. 사용자의 PR merge 알림이나 다음 계획 요청이 있으면 GitHub 상태를 다시 읽고 연결 이슈의 체크리스트와 진행 상태를 갱신할 액션을 제안한다.
 
@@ -101,20 +101,21 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 9. Workflow Engine이 검증된 입력으로 실제 GitHub PR을 생성한다.
 10. Workflow Engine이 설치 기본값, 사용 가능한 모드, 각 모드의 의존성을 제시하고 PR 리뷰에 사용할 리뷰 실행 모드를 Human Checkpoint로 확정한다.
 11. Workflow Engine이 선택된 리뷰 실행 모드의 실행 환경과 의존성 설치 여부를 확인한다.
-12. 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락, 출력 템플릿 요구사항을 준비해 PR Review Template 형식의 리뷰 결과를 생성한다.
-13. `review-comment`로 PR Review Template 출력 결과를 review thread 또는 marker가 있는 요약 피드백 댓글 게시 초안으로 정리한다.
-14. Workflow Engine이 게시 초안을 확인한 뒤 실제 GitHub 리뷰 코멘트를 게시한다.
-15. Workflow Engine이 unresolved thread와 미체크 요약 피드백을 확인해 리뷰 대응 대상 여부를 판단한다.
-16. 미해결 피드백이 있으면 가장 우선순위가 높은 피드백 1건만 가져와 원문, 맥락, 위험도, severity, 권장 대응을 설명하고 `수용`, `거절`, `기타` 중 하나로 사용자 의도를 확인한다. 사용자가 세 가지 대응 방향 중 하나를 명시하지 않으면 파일 수정이나 댓글 처리로 넘어가지 않는다.
-17. `수용` 피드백은 선택된 피드백 1건에 한정해 승인된 PR 범위 안에서 수정한다.
-18. 피드백 수정 변경이 있으면 전역 `commit` 스킬로 커밋 메시지를 제안하고, 확정된 변경만 커밋한다.
-19. 피드백 수정 커밋을 원격 head branch에 push한다.
-20. Workflow Engine이 `review-comment`로 게시한 피드백을 수정한 경우에만 해당 review thread 또는 요약 피드백 항목에 `commit-hash 수정했습니다.` 형식으로 댓글을 남긴다. 외부 리뷰 도구나 사람이 남긴 피드백에는 일반 피드백 처리 요청만으로 답글을 추가하지 않고, 별도 답글 요청이 있을 때만 외부 피드백 형식에 맞춘다.
-21. 피드백 수정 push와 필요한 수정 댓글 처리가 끝나면 해당 피드백을 resolve 또는 체크할지 사용자 의도를 확인한다. 사용자 결정 전에는 review thread를 resolve하거나 요약 피드백을 체크하지 않는다.
-22. 사용자가 resolve 또는 체크를 선택한 경우 라인 피드백은 resolve하고 요약 피드백은 체크한다. 사용자가 미해결 유지를 선택하면 GitHub 상태를 변경하지 않는다.
-23. GitHub Run State를 다시 읽어 남은 unresolved thread 또는 미체크 요약 피드백이 있으면 16번부터 반복한다.
-24. 15번 또는 23번 확인 결과 리뷰 대응 대상이 없으면 `리뷰 대응 대상 없음`을 명시하고 PR merge 대기로 이동한다.
-25. 사람이 PR을 merge하면 GitHub Run State를 다시 읽고 연결 이슈의 PR merged 전이를 적용한다.
+12. 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락, 출력 템플릿 요구사항을 준비해 리뷰 결과를 생성한다.
+13. 리뷰 실행 결과가 PR Review Template 형식이 아니면 Workflow Engine이 `Required Changes`, `Important Suggestions`, `Minor Suggestions`, `Learning Notes`, `Security Considerations`, `Test Coverage`, `Verdict`와 severity label을 갖춘 PR Review Template으로 정규화한다. 정규화가 불완전하면 리뷰 코멘트 게시로 넘어가지 않고 보류 질문을 제시한다.
+14. `review-comment`로 PR Review Template 출력 결과를 review thread 또는 marker가 있는 요약 피드백 댓글 게시 초안으로 정리한다.
+15. Workflow Engine이 게시 초안을 확인한 뒤 실제 GitHub 리뷰 코멘트를 게시한다.
+16. Workflow Engine이 unresolved thread와 미체크 요약 피드백을 확인해 리뷰 대응 대상 여부를 판단한다.
+17. 미해결 피드백이 있으면 가장 우선순위가 높은 피드백 1건만 가져와 원문, 맥락, 위험도, severity, 권장 대응을 설명하고 `수용`, `거절`, `기타` 중 하나로 사용자 의도를 확인한다. 사용자가 세 가지 대응 방향 중 하나를 명시하지 않으면 파일 수정이나 댓글 처리로 넘어가지 않는다.
+18. `수용` 피드백은 선택된 피드백 1건에 한정해 승인된 PR 범위 안에서 수정한다.
+19. 피드백 수정 변경이 있으면 전역 `commit` 스킬로 커밋 메시지를 제안하고, 확정된 변경만 커밋한다.
+20. 피드백 수정 커밋을 원격 head branch에 push한다.
+21. Workflow Engine이 `review-comment`로 게시한 피드백을 수정한 경우에만 해당 review thread 또는 요약 피드백 항목에 `commit-hash 수정했습니다.` 형식으로 댓글을 남긴다. 외부 리뷰 도구나 사람이 남긴 피드백에는 일반 피드백 처리 요청만으로 답글을 추가하지 않고, 별도 답글 요청이 있을 때만 외부 피드백 형식에 맞춘다.
+22. 피드백 수정 push와 필요한 수정 댓글 처리가 끝나면 해당 피드백을 resolve 또는 체크할지 사용자 의도를 확인한다. 사용자 결정 전에는 review thread를 resolve하거나 요약 피드백을 체크하지 않는다.
+23. 사용자가 resolve 또는 체크를 선택한 경우 라인 피드백은 resolve하고 요약 피드백은 체크한다. 사용자가 미해결 유지를 선택하면 GitHub 상태를 변경하지 않는다.
+24. GitHub Run State를 다시 읽어 남은 unresolved thread 또는 미체크 요약 피드백이 있으면 17번부터 반복한다.
+25. 16번 또는 24번 확인 결과 리뷰 대응 대상이 없으면 `리뷰 대응 대상 없음`을 명시하고 PR merge 대기로 이동한다.
+26. 사람이 PR을 merge하면 GitHub Run State를 다시 읽고 연결 이슈의 PR merged 전이를 적용한다.
 
 ## 로그
 

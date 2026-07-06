@@ -578,6 +578,8 @@ Claude 기반 리뷰 실행 모드를 Codex에서 호출하려면 `sendbird/cc-p
 
 `awesome-code-review` 누락 안내에는 이 저장소가 해당 스킬을 배포하거나 관리하지 않는다는 점, 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다는 점, 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만 Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다는 점을 포함한다. 설치 후에는 위 경로 중 하나에 `SKILL.md`가 있고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다.
 
+리뷰 실행 결과는 `review-comment`로 전달하기 전에 반드시 PR Review Template 형식이어야 한다. `claude/awesome-code-review`와 `codex/awesome-code-review`는 PR Review Template 출력을 기대한다. `claude/code-review`처럼 일반 Claude Code review 형식으로 결과가 나오는 모드는 Workflow Engine이 `Required Changes`, `Important Suggestions`, `Minor Suggestions`, `Learning Notes`, `Security Considerations`, `Test Coverage`, `Verdict`와 severity label을 갖춘 PR Review Template으로 정규화한 뒤 `review-comment`로 넘긴다. 위치, severity, verdict를 판단할 수 없어 정규화가 불완전하면 리뷰 코멘트 게시로 넘어가지 않고 보류 질문을 제시한다.
+
 입력:
 
 - PR 번호
@@ -861,7 +863,8 @@ Workflow Skill은 다음 순서로 판단한다.
 | PR 생성               | PR 생성 입력 검증 완료                              | 없음                         | Workflow Skill이 검증된 입력으로 PR을 생성한다.                                                |
 | 리뷰 실행 모드 선택   | PR open                                             | 리뷰 실행 모드 확정          | 설치 기본값, 사용 가능한 모드, 각 모드의 의존성을 제시하고 실제 사용할 리뷰 실행 모드를 확정한다. |
 | 리뷰 실행 모드 검사   | 리뷰 실행 모드 확정                                 | 없음                         | 선택된 리뷰 실행 모드의 실행 환경과 의존성 설치 여부를 확인한다.                               |
-| 리뷰 실행             | 리뷰 실행 모드 검사 완료                            | 없음                         | 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락을 검토해 PR Review Template 형식의 리뷰 결과를 만든다. |
+| 리뷰 실행             | 리뷰 실행 모드 검사 완료                            | 없음                         | 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락을 검토해 리뷰 결과를 만든다.                       |
+| 리뷰 결과 정규화      | 리뷰 실행 결과 존재                                 | 없음                         | 선택된 모드의 출력이 PR Review Template이 아니면 PR Review Template으로 변환하고, 변환이 불완전하면 보류 질문을 제시한다. |
 | 리뷰 코멘트 초안 정리 | PR Review Template 출력 결과 존재                   | 없음                         | Review Comment Skill이 thread와 요약 댓글 초안을 정리한다.                                     |
 | 리뷰 코멘트 게시      | 리뷰 코멘트 초안 정리 완료                          | 없음                         | Workflow Skill이 review thread 또는 marker 댓글을 게시한다.                                    |
 | 리뷰 대응 대상 확인   | 리뷰 코멘트 게시 완료                               | 없음                         | unresolved thread와 미체크 요약 피드백을 확인한다.                                             |

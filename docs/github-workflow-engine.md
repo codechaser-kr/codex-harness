@@ -894,6 +894,7 @@ resolve 또는 체크는 피드백 출처와 무관하게 별도 Human Checkpoin
 - 위험도
 - 예상 영향
 - 수용/거절/기타 권장 대응
+- severity
 - 추천 액션
 - Verdict 또는 Review Comment Skill의 보류 질문
 - 자동 수정 시 위험 요소

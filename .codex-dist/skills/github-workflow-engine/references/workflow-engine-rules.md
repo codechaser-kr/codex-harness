@@ -7,14 +7,18 @@
 - GitHub Issue와 PR 상태를 프로젝트 작업 상태의 기준 저장소로 사용한다.
 - 별도 Run State Runtime은 만들지 않는다.
 - 상태 전이는 LLM 자유 판단이 아니라 이 문서의 규칙과 스킬별 책임을 따른다.
-- 이슈 생성, 계획 확정, 브랜치 이름 확정, 커밋 메시지 확정, PR 제목/본문 확정, 리뷰 피드백 대응, PR merge는 Human Checkpoint다.
+- 이슈 생성, 계획 확정, 브랜치 이름 확정, 커밋 메시지 확정, PR 제목/본문 확정, 리뷰 실행 모드 선택, 리뷰 피드백 대응, PR merge는 Human Checkpoint다.
 - 계획/제안형 전용 스킬은 후보, 초안, 분석 결과를 만들고 상태 확정이나 사용자 의도 확인은 Workflow Engine의 Human Checkpoint에서 처리한다.
 - 이슈, PR, 체크리스트, 댓글 같은 GitHub 상태 변경은 사용자의 생성/수정/닫기 의도가 자연어 맥락에서 명확할 때만 수행한다.
 - 사용자의 의도가 모호하면 GitHub 상태를 변경하지 않고 초안, 수정 후보, 필요한 확인 질문만 제시한다.
 - 이슈와 PR 본문 형식의 단일 원천은 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`다.
 - `github-templates.md`는 실제 템플릿 본문 복제본이 아니라 title prefix, label, 필수 섹션, 연결 규칙을 검증하는 계약 문서다.
-- 외부 의존 스킬인 전역 `commit`과 `awesome-code-review`는 이 저장소에서 관리하지 않는다. 해당 액션 진입 전 설치 여부를 확인하고, 없으면 설치 가능한 소스, 설치 대상 경로, 설치 후 확인할 파일, 재개 조건을 안내한 뒤 워크플로우를 중단한다.
+- 설치 기본 리뷰 실행 모드는 타겟 레포의 `.harness/workflow-engine.json`에 `review.defaultMode`로 저장한다. 값은 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중 하나여야 한다. 이 값은 기본 후보이며, 사용자의 명시 선택 없이 리뷰 실행 모드 검사로 전이하지 않는다.
+- 외부 의존성인 전역 `commit`, `awesome-code-review`, `sendbird/cc-plugin-codex`는 이 저장소에서 관리하지 않는다. 해당 액션 진입 전 설치 여부를 확인하고, 없으면 설치 가능한 소스, 설치 대상 경로, 설치 후 확인할 파일 또는 명령, 재개 조건을 안내한 뒤 워크플로우를 중단한다.
 - `awesome-code-review`는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차로 설치한다. 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만, Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다.
+- `sendbird/cc-plugin-codex` 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다. `claude/*` 리뷰 실행 모드에서 이 의존성이 없으면 다른 리뷰 실행 모드로 자동 fallback하지 않는다.
+- `sendbird/cc-plugin-codex` 설치 여부는 `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`, 같은 플러그인 루트의 `skills/setup/SKILL.md`, `scripts/claude-companion.mjs`, `$cc:setup` 실행 결과로 확인한다.
+- `claude/*` 리뷰 실행 모드의 Claude CLI 인증은 `$cc:setup`의 `auth.available: true`, `auth.loggedIn: true` 또는 authenticated 사용자 표시 출력으로만 완료 판정한다. 인증이 없거나 판단할 수 없으면 리뷰 실행을 중단하고 `$cc:setup`의 login 안내와 재실행 조건을 전달한다.
 - PR merge는 사람이 수행한다.
 - Workflow Skill은 merge 알림 또는 다음 계획 요청 시 GitHub Run State를 다시 읽어 연결 이슈의 체크리스트와 종료 조건을 판단한다.
 - 로컬 `.harness/logs/github-workflow-log.md`는 보조 체크포인트이며, GitHub 상태를 대체하지 않는다.
@@ -107,8 +111,10 @@
 | 작업 브랜치 push      | PR 제목과 설명 확정                                 | 없음                         | 원격 head branch를 확인한다.                                                                                   |
 | PR 생성 입력 검증     | 원격 head branch 확인                               | 없음                         | PR Creation Skill이 생성 입력을 검증한다.                                                                      |
 | PR 생성               | PR 생성 입력 검증 완료                              | 없음                         | Workflow Skill이 검증된 입력으로 PR을 생성한다.                                                                |
-| 리뷰 스킬 검사        | PR open                                             | 없음                         | `awesome-code-review` 설치를 확인한다.                                                                         |
-| 리뷰 실행             | 리뷰 스킬 설치 확인                                 | 없음                         | PR diff와 이슈 맥락으로 PR Review Template 형식의 리뷰 결과를 만든다.                                          |
+| 리뷰 실행 모드 선택   | PR open                                             | 리뷰 실행 모드 확정          | `.harness/workflow-engine.json`의 `review.defaultMode`, 사용 가능한 모드, 각 모드의 의존성을 제시하고, 사용자가 지원 모드 중 하나를 명시 선택할 때만 실제 사용할 리뷰 실행 모드로 확정한다. |
+| 리뷰 실행 모드 검사   | 리뷰 실행 모드 확정                                 | 없음                         | 선택된 리뷰 실행 모드의 실행 환경과 의존성 설치 여부를 확인한다.                                                |
+| 리뷰 실행             | 리뷰 실행 모드 검사 완료                            | 없음                         | 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락을 검토해 리뷰 결과를 만든다.                                        |
+| 리뷰 결과 정규화      | 리뷰 실행 결과 존재                                 | 없음                         | 선택된 모드의 출력이 PR Review Template이 아니면 PR Review Template으로 변환하고, 변환이 불완전하면 보류 질문을 제시한다. |
 | 리뷰 코멘트 초안 정리 | PR Review Template 출력 결과 존재                   | 없음                         | Review Comment Skill이 thread와 요약 댓글 초안을 정리한다.                                                     |
 | 리뷰 코멘트 게시      | 리뷰 코멘트 초안 정리 완료                          | 없음                         | Workflow Skill이 review thread 또는 marker 댓글을 게시한다.                                                    |
 | 리뷰 대응 대상 확인   | 리뷰 코멘트 게시 완료                               | 없음                         | unresolved thread와 미체크 요약 피드백을 확인한다.                                                             |
@@ -116,7 +122,7 @@
 | 피드백 처리           | 피드백 1건의 대응 방향 확정                         | 수용 시 커밋 메시지 확정     | 선택된 피드백 1건만 수용, 거절, 기타 중 하나로 처리한다.                                                       |
 | 피드백 수정 커밋      | 선택된 피드백 수정과 커밋 메시지 확정               | 없음                         | 선택된 피드백 수정만 커밋한다.                                                                                 |
 | 피드백 수정 push      | 피드백 수정 커밋 완료                               | 없음                         | 작업 브랜치를 원격 head branch에 push한다.                                                                     |
-| 피드백 수정 댓글      | Workflow Engine이 `review-comment`로 게시한 피드백의 수정 push 완료 | 없음                         | Workflow Engine 생성 피드백에만 해당 review thread 또는 요약 피드백 항목에 `commit-hash 수정했습니다.` 형식으로 댓글을 남긴다. |
+| 피드백 수정 댓글      | 현재 Workflow Engine 실행이 `review-comment`로 게시한 피드백의 수정 push 완료 | 없음                         | 현재 리뷰 코멘트 게시 액션에서 생성한 피드백에만 해당 review thread 또는 요약 피드백 항목에 `commit-hash 수정했습니다.` 형식으로 댓글을 남긴다. |
 | 피드백 해결 여부 확인 | 피드백 수정 push와 필요한 수정 댓글 처리 완료       | 해당 피드백 resolve 여부 확정 | 해당 피드백을 resolve 또는 체크할지 사용자 의도를 확인한다. 사용자 결정 전에는 review thread를 resolve하거나 요약 피드백을 체크하지 않는다. |
 | 피드백 해결 결정 반영 | 해당 피드백 resolve 여부 확정                       | 없음                         | 사용자가 resolve 또는 체크를 선택하면 라인 피드백은 resolve하고 요약 피드백은 체크한다. 사용자가 미해결 유지를 선택하면 GitHub 상태를 변경하지 않는다. |
 | 남은 피드백 확인      | 피드백 1건의 resolve 결정 반영 완료                 | 없음                         | GitHub Run State를 다시 읽고 남은 피드백이 있으면 `피드백 대응 제안`으로 돌아가고, 없으면 `리뷰 대응 대상 없음`으로 이동한다. |
@@ -145,6 +151,6 @@
 
 피드백 대응 방향은 사용자가 `수용`, `거절`, `기타` 중 하나를 명시해야 확정된다. `계속 진행`, `다음으로`, `네`, `진행해주세요` 같은 일반 진행 표현은 권장 대응 승인으로 해석하지 않는다. 권장 대응은 기본값이 아니라 제안이며, 방향이 명시되지 않으면 파일 수정이나 댓글 처리로 넘어가지 않고 대응 방향을 다시 질문한다.
 
-수정 댓글 형식은 피드백 출처에 따라 다르다. `commit-hash 수정했습니다.` 형식은 Workflow Engine이 `review-comment`로 게시한 review thread 또는 marker 요약 피드백에만 사용한다. 외부 리뷰 도구나 사람이 남긴 피드백은 일반 피드백 처리 요청만으로 답글을 추가하지 않는다. 사용자가 외부 피드백 답글 작성을 별도로 요청한 경우에만 외부 리뷰 도구의 형식이나 사용자가 지정한 문구에 맞춰 답글을 작성한다.
+수정 댓글 형식은 피드백 출처에 따라 다르다. `commit-hash 수정했습니다.` 형식은 현재 Workflow Engine 실행이 `review-comment`로 게시한 review thread 또는 marker 요약 피드백에만 사용한다. 판단 기준은 작성자 계정, bot 이름, 리뷰 문체가 아니라 현재 `리뷰 코멘트 게시` 액션의 게시 결과 또는 같은 실행 로그에 남은 추적 근거다. 현재 실행이 게시한 피드백인지 확정할 수 없으면 자동 수정 댓글을 남기지 않고 사용자에게 확인한다. 외부 리뷰 도구, 사람이 남긴 피드백, 이전 실행에서 생성된 피드백에는 일반 피드백 처리 요청만으로 답글을 추가하지 않는다. 사용자가 외부 피드백 답글 작성을 별도로 요청한 경우에만 외부 피드백 형식이나 사용자가 지정한 문구에 맞춰 답글을 작성한다.
 
 resolve 또는 체크는 피드백 출처와 무관하게 별도 Human Checkpoint다. Workflow Engine 생성 피드백과 외부 피드백 모두 수정 push와 필요한 수정 댓글 처리가 끝난 뒤 사용자에게 resolve 여부를 확인한다.

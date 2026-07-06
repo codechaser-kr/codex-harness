@@ -21,7 +21,7 @@ GitHub 템플릿은 이슈와 PR에 남길 본문 형식이다. 이 문서는 �
 - 정책 판단, 설계 변경, 고위험 작업은 Human Checkpoint를 거친다.
 - 액션 하나를 끝낸 뒤 다음 Human Checkpoint까지 자동으로 이어간다.
 - 이슈 초안 작성과 실제 GitHub 상태 변경을 분리한다.
-- 파일 작성과 수정은 Codex가 맡고, PR 리뷰 생성은 외부 `awesome-code-review`가 맡는다.
+- 파일 작성과 수정은 Codex가 맡고, PR 리뷰 생성은 선택된 리뷰 실행 모드가 맡는다.
 - GitHub Workflow 운영 구조의 기본형은 `codex-harness`에서 관리하고 타겟 레포에 적용한다.
 
 ## 정책 원천
@@ -68,6 +68,19 @@ Workflow Engine 설계는 정책검토 이슈에서 확정된 결정을 원천�
 - 구조화된 출력만 후속 액션의 입력으로 사용한다.
 - 외부 의존 스킬의 설치명, 설치 경로, 출력 형식 기대치를 명시한다.
 - 액션 완료 후 다음 Human Checkpoint, 명시적 중단, 외부 의존성 누락, 실행 오류, 완료 상태 중 하나에 닿을 때까지 다음 전이를 이어간다.
+
+### #54 리뷰 실행 모드 선택 흐름
+
+#54는 PR 리뷰 실행 방식을 하나로 고정하지 않고, 설치 기본값과 PR별 선택값으로 분리하는 방향을 확정했다.
+
+- Workflow Engine 설치 시 기본 리뷰 실행 모드를 선택할 수 있어야 한다.
+- 설치 기본 리뷰 실행 모드는 타겟 레포의 `.harness/workflow-engine.json`에 `review.defaultMode`로 저장한다.
+- PR 생성 후 리뷰 실행 전 실제 사용할 리뷰 실행 모드를 Human Checkpoint로 확정한다.
+- 사용자가 지원 모드 중 하나를 명시적으로 선택하기 전에는 설치 기본값으로 자동 진행하지 않는다.
+- 지원 모드는 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review`다.
+- `claude/*` 리뷰 실행 모드는 Codex에서 Claude를 호출하기 위해 `sendbird/cc-plugin-codex`를 외부 전역 의존성으로 사용한다.
+- `sendbird/cc-plugin-codex` 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다.
+- 선택된 리뷰 실행 모드를 사용할 수 없으면 다른 모드로 자동 fallback하지 않고, 누락 의존성과 재개 조건을 안내한 뒤 중단한다.
 
 ### #40 반영 기준
 
@@ -544,18 +557,59 @@ Workflow Engine이 확정할 항목:
 - 자동 close 키워드 삽입
 - 연결 이슈 임의 close
 
-### Awesome Code Review 의존성
+### 리뷰 실행 모드 의존성
 
-PR 리뷰는 외부 전역 `awesome-code-review` 스킬을 사용한다.
+PR 리뷰는 선택된 리뷰 실행 모드로 수행한다. Workflow Engine을 타겟 레포에 설치할 때 기본 리뷰 실행 모드를 선택할 수 있어야 하며, PR 생성 후 리뷰 실행 전에는 실제 사용할 리뷰 실행 모드를 Human Checkpoint로 확정한다.
 
-설치 확인 경로:
+지원 모드는 다음 세 가지다.
+
+| 리뷰 실행 모드 | 실행 주체 | 필요한 의존성 |
+| -------------- | --------- | ------------- |
+| `claude/code-review` | Claude | Claude CLI 인증, Claude 공식 `/code-review` 플러그인, Codex에서 호출할 경우 `sendbird/cc-plugin-codex` |
+| `claude/awesome-code-review` | Claude | Claude CLI 인증, Claude 환경의 `awesome-code-review`, Codex에서 호출할 경우 `sendbird/cc-plugin-codex` |
+| `codex/awesome-code-review` | Codex | Codex 전역 `awesome-code-review` |
+
+설치 기본 리뷰 실행 모드 저장 형식:
+
+```json
+{
+  "review": {
+    "defaultMode": "claude/code-review"
+  }
+}
+```
+
+- 저장 위치는 타겟 레포의 `.harness/workflow-engine.json`이다.
+- `review.defaultMode` 값은 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중 하나여야 한다.
+- 설치 기본값은 PR별 리뷰 실행 모드 선택 Human Checkpoint에서 기본 후보로 제시할 뿐, 실제 리뷰 실행 모드 확정을 대체하지 않는다.
+- 사용자가 지원 모드 중 하나를 명시적으로 선택하지 않으면 리뷰 실행 모드 검사로 전이하지 않고 선택 질문을 유지한다.
+
+Codex 전역 `awesome-code-review` 설치 확인 경로:
 
 - `$CODEX_HOME/skills/awesome-code-review/SKILL.md`
 - `$HOME/.codex/skills/awesome-code-review/SKILL.md`
 
-설치되어 있지 않으면 필요한 설치 경로를 안내하고 리뷰 실행 액션을 중단한다.
+Claude 기반 리뷰 실행 모드를 Codex에서 호출하려면 `sendbird/cc-plugin-codex`가 필요하다. 이 의존성은 `commit`, `awesome-code-review`처럼 외부 전역 의존성으로만 다루며, `codex-harness` 관리 기본형에 포함하지 않는다. 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다.
 
-누락 안내에는 이 저장소가 `awesome-code-review`를 배포하거나 관리하지 않는다는 점, 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다는 점, 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만 Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다는 점을 포함한다. 설치 후에는 위 경로 중 하나에 `SKILL.md`가 있고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다.
+`sendbird/cc-plugin-codex` 설치 확인 기준:
+
+1. 플러그인 캐시에 `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`이 있어야 한다.
+2. 같은 플러그인 루트에 `skills/setup/SKILL.md`와 `scripts/claude-companion.mjs`가 있어야 한다.
+3. `$cc:setup`을 실행해 플러그인 설치 상태와 Claude Code 호출 준비 상태를 확인한다.
+4. `$cc:setup`이 설치 누락, hook trust, Claude Code 사용 불가, 인증 필요 상태를 보고하면 출력된 안내를 사용자에게 전달하고 리뷰 실행으로 넘어가지 않는다.
+
+Claude CLI 인증 확인 기준:
+
+1. `claude/*` 리뷰 실행 모드에서는 리뷰 실행 전에 `$cc:setup` 결과의 인증 상태를 확인한다.
+2. 인증 완료 판정은 `$cc:setup`의 machine-readable probe에서 `auth.available: true`, `auth.loggedIn: true`이거나 사용자 표시 출력이 authenticated 상태를 보고하는 경우로 제한한다.
+3. 인증이 없거나 만료되었거나 판단할 수 없으면 리뷰 실행을 중단하고, `$cc:setup`이 제공하는 Claude login 안내를 그대로 전달한다.
+4. 재개 조건은 사용자가 Claude CLI 인증을 완료한 뒤 `$cc:setup`을 다시 실행해 인증 완료 상태가 확인되는 것이다.
+
+선택된 리뷰 실행 모드의 의존성이 설치되어 있지 않으면 필요한 설치 경로, 설치 주체, 설치 후 확인할 파일 또는 명령, 재개 조건을 안내하고 리뷰 실행 액션을 중단한다. 다른 리뷰 실행 모드로 자동 fallback하지 않는다.
+
+`awesome-code-review` 누락 안내에는 이 저장소가 해당 스킬을 배포하거나 관리하지 않는다는 점, 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다는 점, 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만 Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다는 점을 포함한다. 설치 후에는 위 경로 중 하나에 `SKILL.md`가 있고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다.
+
+리뷰 실행 결과는 `review-comment`로 전달하기 전에 반드시 PR Review Template 형식이어야 한다. `claude/awesome-code-review`와 `codex/awesome-code-review`는 PR Review Template 출력을 기대한다. `claude/code-review`처럼 일반 Claude Code review 형식으로 결과가 나오는 모드는 Workflow Engine이 `Required Changes`, `Important Suggestions`, `Minor Suggestions`, `Learning Notes`, `Security Considerations`, `Test Coverage`, `Verdict`와 severity label을 갖춘 PR Review Template으로 정규화한 뒤 `review-comment`로 넘긴다. 위치, severity, verdict를 판단할 수 없어 정규화가 불완전하면 리뷰 코멘트 게시로 넘어가지 않고 보류 질문을 제시한다.
 
 입력:
 
@@ -564,6 +618,8 @@ PR 리뷰는 외부 전역 `awesome-code-review` 스킬을 사용한다.
 - 변경 diff
 - 완료 기준
 - 검토 제외 범위
+- 리뷰 실행 모드
+- 선택된 모드의 의존성 검사 결과
 - 출력 템플릿 요구사항
 
 출력:
@@ -836,8 +892,10 @@ Workflow Skill은 다음 순서로 판단한다.
 | 작업 브랜치 push      | PR 제목과 설명 확정                                 | 없음                         | 원격 head branch를 확인한다.                                                                   |
 | PR 생성 입력 검증     | 원격 head branch 확인                               | 없음                         | PR Creation Skill이 생성 입력을 검증한다.                                                      |
 | PR 생성               | PR 생성 입력 검증 완료                              | 없음                         | Workflow Skill이 검증된 입력으로 PR을 생성한다.                                                |
-| 리뷰 스킬 검사        | PR open                                             | 없음                         | `awesome-code-review` 설치를 확인한다.                                                         |
-| 리뷰 실행             | 리뷰 스킬 설치 확인                                 | 없음                         | PR diff와 이슈 맥락으로 PR Review Template 형식의 리뷰 결과를 만든다.                          |
+| 리뷰 실행 모드 선택   | PR open                                             | 리뷰 실행 모드 확정          | `.harness/workflow-engine.json`의 `review.defaultMode`, 사용 가능한 모드, 각 모드의 의존성을 제시하고, 사용자가 지원 모드 중 하나를 명시 선택할 때만 실제 사용할 리뷰 실행 모드로 확정한다. |
+| 리뷰 실행 모드 검사   | 리뷰 실행 모드 확정                                 | 없음                         | 선택된 리뷰 실행 모드의 실행 환경과 의존성 설치 여부를 확인한다.                               |
+| 리뷰 실행             | 리뷰 실행 모드 검사 완료                            | 없음                         | 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락을 검토해 리뷰 결과를 만든다.                       |
+| 리뷰 결과 정규화      | 리뷰 실행 결과 존재                                 | 없음                         | 선택된 모드의 출력이 PR Review Template이 아니면 PR Review Template으로 변환하고, 변환이 불완전하면 보류 질문을 제시한다. |
 | 리뷰 코멘트 초안 정리 | PR Review Template 출력 결과 존재                   | 없음                         | Review Comment Skill이 thread와 요약 댓글 초안을 정리한다.                                     |
 | 리뷰 코멘트 게시      | 리뷰 코멘트 초안 정리 완료                          | 없음                         | Workflow Skill이 review thread 또는 marker 댓글을 게시한다.                                    |
 | 리뷰 대응 대상 확인   | 리뷰 코멘트 게시 완료                               | 없음                         | unresolved thread와 미체크 요약 피드백을 확인한다.                                             |
@@ -845,7 +903,7 @@ Workflow Skill은 다음 순서로 판단한다.
 | 피드백 처리           | 피드백 1건의 대응 방향 확정                         | 수용 시 커밋 메시지 확정     | 선택된 피드백 1건만 수용, 거절, 기타 중 하나로 처리한다.                                       |
 | 피드백 수정 커밋      | 선택된 피드백 수정과 커밋 메시지 확정               | 없음                         | 선택된 피드백 수정만 커밋한다.                                                                 |
 | 피드백 수정 push      | 피드백 수정 커밋 완료                               | 없음                         | 작업 브랜치를 원격 head branch에 push한다.                                                     |
-| 피드백 수정 댓글      | Workflow Skill이 `review-comment`로 게시한 피드백의 수정 push 완료 | 없음                         | Workflow Engine 생성 피드백에만 해당 review thread 또는 요약 피드백 항목에 `commit-hash 수정했습니다.` 형식으로 댓글을 남긴다. |
+| 피드백 수정 댓글      | 현재 Workflow Skill 실행이 `review-comment`로 게시한 피드백의 수정 push 완료 | 없음                         | 현재 리뷰 코멘트 게시 액션에서 생성한 피드백에만 해당 review thread 또는 요약 피드백 항목에 `commit-hash 수정했습니다.` 형식으로 댓글을 남긴다. |
 | 피드백 해결 여부 확인 | 피드백 수정 push와 필요한 수정 댓글 처리 완료       | 해당 피드백 resolve 여부 확정 | 해당 피드백을 resolve 또는 체크할지 사용자 의도를 확인한다. 사용자 결정 전에는 review thread를 resolve하거나 요약 피드백을 체크하지 않는다. |
 | 피드백 해결 결정 반영 | 해당 피드백 resolve 여부 확정                       | 없음                         | 사용자가 resolve 또는 체크를 선택하면 라인 피드백은 resolve하고 요약 피드백은 체크한다. 사용자가 미해결 유지를 선택하면 GitHub 상태를 변경하지 않는다. |
 | 남은 피드백 확인      | 피드백 1건의 resolve 결정 반영 완료                 | 없음                         | GitHub Run State를 다시 읽고 남은 피드백이 있으면 `피드백 대응 제안`으로 돌아가고, 없으면 `리뷰 대응 대상 없음`으로 이동한다. |
@@ -890,7 +948,7 @@ Workflow Skill은 marker가 없는 일반 PR comment를 요약 피드백 상태 
 
 피드백 대응 방향은 사용자가 `수용`, `거절`, `기타` 중 하나를 명시해야 확정된다. Workflow Skill은 `권장 대응: 수용`처럼 추천을 제시할 수 있지만, 일반 진행 표현을 추천안 승인으로 해석하지 않는다.
 
-수정 댓글 형식은 피드백 출처에 따라 다르다. `commit-hash 수정했습니다.` 형식은 Workflow Skill이 `review-comment`로 게시한 review thread 또는 marker 요약 피드백에만 사용한다. 외부 리뷰 도구나 사람이 남긴 피드백은 일반 피드백 처리 요청만으로 답글을 추가하지 않는다. 사용자가 외부 피드백 답글 작성을 별도로 요청한 경우에만 외부 리뷰 도구의 형식이나 사용자가 지정한 문구에 맞춰 답글을 작성한다.
+수정 댓글 형식은 피드백 출처에 따라 다르다. `commit-hash 수정했습니다.` 형식은 현재 Workflow Skill 실행이 `review-comment`로 게시한 review thread 또는 marker 요약 피드백에만 사용한다. 판단 기준은 작성자 계정, bot 이름, 리뷰 문체가 아니라 현재 `리뷰 코멘트 게시` 액션의 게시 결과 또는 같은 실행 로그에 남은 추적 근거다. 현재 실행이 게시한 피드백인지 확정할 수 없으면 자동 수정 댓글을 남기지 않고 사용자에게 확인한다. 외부 리뷰 도구, 사람이 남긴 피드백, 이전 실행에서 생성된 피드백에는 일반 피드백 처리 요청만으로 답글을 추가하지 않는다. 사용자가 외부 피드백 답글 작성을 별도로 요청한 경우에만 외부 피드백 형식이나 사용자가 지정한 문구에 맞춰 답글을 작성한다.
 
 resolve 또는 체크는 피드백 출처와 무관하게 별도 Human Checkpoint다. Workflow Engine 생성 피드백과 외부 피드백 모두 수정 push와 필요한 수정 댓글 처리가 끝난 뒤 사용자에게 resolve 여부를 확인한다.
 
@@ -926,7 +984,7 @@ resolve 또는 체크는 피드백 출처와 무관하게 별도 Human Checkpoin
 - Review Comment Skill 전역 스킬 기본형
 - 기본 라벨 세트
 
-전역 `commit` 스킬과 `awesome-code-review`는 외부 의존성으로만 다루며 `codex-harness` 관리 기본형에 포함하지 않는다.
+전역 `commit` 스킬, `awesome-code-review`, `sendbird/cc-plugin-codex`는 외부 의존성으로만 다루며 `codex-harness` 관리 기본형에 포함하지 않는다.
 
 표준 배포 구조:
 

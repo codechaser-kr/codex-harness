@@ -33,12 +33,13 @@ Workflow Engine은 명령을 실행하기 전에 일반 경로와 승인 경로 
 
 처음부터 승인 경로를 사용하는 명령:
 
-- `gh pr`, `gh issue`, `gh api`처럼 GitHub PR, issue, review, checks, comment 상태를 읽거나 바꾸는 GitHub API 계열 명령
+- `gh pr comment`, `gh pr review`, `gh pr merge`, `gh issue edit`, `gh api --method POST|PATCH|PUT|DELETE`처럼 GitHub PR, issue, review, checks, comment 상태를 바꾸는 GitHub API 계열 명령
 - `git push`, `git fetch`, `git pull`, `git ls-remote`처럼 네트워크나 원격 저장소 접근이 필요한 Git 명령
 - `git commit`, `git tag`, `git merge`, `git rebase`처럼 `.git` 쓰기가 필요한 명령
 
 일반 경로를 우선 사용하는 명령:
 
+- `gh pr view`, `gh issue view`, `gh pr checks`, `gh api` GET 조회처럼 GitHub Run State를 읽기만 하는 명령
 - `git status`, `git diff`, `git log`, `git show`, `rg`, `sed`, `ls`, `find`, `wc`처럼 로컬 파일이나 로컬 Git 상태를 읽는 명령
 - `git diff --check`처럼 로컬 변경사항만 검증하는 명령
 

@@ -108,7 +108,7 @@ GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장�
 - Codex 전역 `awesome-code-review`: `$CODEX_HOME/skills/awesome-code-review/SKILL.md` 또는 `$HOME/.codex/skills/awesome-code-review/SKILL.md`
 - Claude 리뷰 브리지 `sendbird/cc-plugin-codex`: Codex에서 Claude 기반 리뷰 실행 모드인 `claude/code-review` 또는 `claude/awesome-code-review`를 호출할 때 필요. `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`과 같은 플러그인 루트 파일과 `$cc:setup` 실행 결과로 설치 여부를 확인합니다.
 
-Workflow Engine의 PR 리뷰 실행 모드는 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중에서 선택합니다. 타겟 레포에 Workflow Engine을 설치할 때 기본 리뷰 실행 모드를 선택할 수 있어야 하며, PR 생성 후 리뷰 실행 전에는 실제 사용할 리뷰 실행 모드를 다시 확정합니다. 설치 기본 리뷰 실행 모드는 타겟 레포의 `.harness/workflow-engine.json`에 `review.defaultMode`로 저장하고, PR별 선택 시 기본 후보로만 사용합니다.
+Workflow Engine의 PR 리뷰 실행 모드는 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중에서 선택합니다. 타겟 레포에 Workflow Engine을 설치할 때 기본 리뷰 실행 모드를 선택할 수 있어야 하며, PR 생성 후 리뷰 실행 전에는 실제 사용할 리뷰 실행 모드를 다시 확정합니다. 설치 기본 리뷰 실행 모드는 타겟 레포의 `.harness/workflow-engine.json`에 `review.defaultMode`로 저장하고, PR별 선택 시 기본 후보로만 사용합니다. 사용자가 지원 모드 중 하나를 명시적으로 선택하기 전에는 리뷰 실행 모드 검사로 넘어가지 않습니다.
 
 `awesome-code-review`는 PR diff와 이슈 맥락을 읽어 PR Review Template 형식의 리뷰 결과를 만드는 외부 의존 스킬입니다. 이 저장소는 해당 스킬을 설치하거나 관리하지 않습니다. 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용합니다. 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만, Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춥니다.
 

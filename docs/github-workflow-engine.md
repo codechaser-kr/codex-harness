@@ -859,8 +859,9 @@ Workflow Skill은 다음 순서로 판단한다.
 | 작업 브랜치 push      | PR 제목과 설명 확정                                 | 없음                         | 원격 head branch를 확인한다.                                                                   |
 | PR 생성 입력 검증     | 원격 head branch 확인                               | 없음                         | PR Creation Skill이 생성 입력을 검증한다.                                                      |
 | PR 생성               | PR 생성 입력 검증 완료                              | 없음                         | Workflow Skill이 검증된 입력으로 PR을 생성한다.                                                |
-| 리뷰 스킬 검사        | PR open                                             | 없음                         | `awesome-code-review` 설치를 확인한다.                                                         |
-| 리뷰 실행             | 리뷰 스킬 설치 확인                                 | 없음                         | PR diff와 이슈 맥락으로 PR Review Template 형식의 리뷰 결과를 만든다.                          |
+| 리뷰 실행 모드 선택   | PR open                                             | 리뷰 실행 모드 확정          | 설치 기본값, 사용 가능한 모드, 각 모드의 의존성을 제시하고 실제 사용할 리뷰 실행 모드를 확정한다. |
+| 리뷰 실행 모드 검사   | 리뷰 실행 모드 확정                                 | 없음                         | 선택된 리뷰 실행 모드의 실행 환경과 의존성 설치 여부를 확인한다.                               |
+| 리뷰 실행             | 리뷰 실행 모드 검사 완료                            | 없음                         | 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락을 검토해 PR Review Template 형식의 리뷰 결과를 만든다. |
 | 리뷰 코멘트 초안 정리 | PR Review Template 출력 결과 존재                   | 없음                         | Review Comment Skill이 thread와 요약 댓글 초안을 정리한다.                                     |
 | 리뷰 코멘트 게시      | 리뷰 코멘트 초안 정리 완료                          | 없음                         | Workflow Skill이 review thread 또는 marker 댓글을 게시한다.                                    |
 | 리뷰 대응 대상 확인   | 리뷰 코멘트 게시 완료                               | 없음                         | unresolved thread와 미체크 요약 피드백을 확인한다.                                             |

@@ -21,7 +21,7 @@ GitHub 템플릿은 이슈와 PR에 남길 본문 형식이다. 이 문서는 �
 - 정책 판단, 설계 변경, 고위험 작업은 Human Checkpoint를 거친다.
 - 액션 하나를 끝낸 뒤 다음 Human Checkpoint까지 자동으로 이어간다.
 - 이슈 초안 작성과 실제 GitHub 상태 변경을 분리한다.
-- 파일 작성과 수정은 Codex가 맡고, PR 리뷰 생성은 외부 `awesome-code-review`가 맡는다.
+- 파일 작성과 수정은 Codex가 맡고, PR 리뷰 생성은 선택된 리뷰 실행 모드가 맡는다.
 - GitHub Workflow 운영 구조의 기본형은 `codex-harness`에서 관리하고 타겟 레포에 적용한다.
 
 ## 정책 원천
@@ -68,6 +68,17 @@ Workflow Engine 설계는 정책검토 이슈에서 확정된 결정을 원천�
 - 구조화된 출력만 후속 액션의 입력으로 사용한다.
 - 외부 의존 스킬의 설치명, 설치 경로, 출력 형식 기대치를 명시한다.
 - 액션 완료 후 다음 Human Checkpoint, 명시적 중단, 외부 의존성 누락, 실행 오류, 완료 상태 중 하나에 닿을 때까지 다음 전이를 이어간다.
+
+### #54 리뷰 실행 모드 선택 흐름
+
+#54는 PR 리뷰 실행 방식을 하나로 고정하지 않고, 설치 기본값과 PR별 선택값으로 분리하는 방향을 확정했다.
+
+- Workflow Engine 설치 시 기본 리뷰 실행 모드를 선택할 수 있어야 한다.
+- PR 생성 후 리뷰 실행 전 실제 사용할 리뷰 실행 모드를 Human Checkpoint로 확정한다.
+- 지원 모드는 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review`다.
+- `claude/*` 리뷰 실행 모드는 Codex에서 Claude를 호출하기 위해 `sendbird/cc-plugin-codex`를 외부 전역 의존성으로 사용한다.
+- `sendbird/cc-plugin-codex` 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다.
+- 선택된 리뷰 실행 모드를 사용할 수 없으면 다른 모드로 자동 fallback하지 않고, 누락 의존성과 재개 조건을 안내한 뒤 중단한다.
 
 ### #40 반영 기준
 
@@ -544,18 +555,28 @@ Workflow Engine이 확정할 항목:
 - 자동 close 키워드 삽입
 - 연결 이슈 임의 close
 
-### Awesome Code Review 의존성
+### 리뷰 실행 모드 의존성
 
-PR 리뷰는 외부 전역 `awesome-code-review` 스킬을 사용한다.
+PR 리뷰는 선택된 리뷰 실행 모드로 수행한다. Workflow Engine을 타겟 레포에 설치할 때 기본 리뷰 실행 모드를 선택할 수 있어야 하며, PR 생성 후 리뷰 실행 전에는 실제 사용할 리뷰 실행 모드를 Human Checkpoint로 확정한다.
 
-설치 확인 경로:
+지원 모드는 다음 세 가지다.
+
+| 리뷰 실행 모드 | 실행 주체 | 필요한 의존성 |
+| -------------- | --------- | ------------- |
+| `claude/code-review` | Claude | Claude CLI 인증, Claude 공식 `/code-review` 플러그인, Codex에서 호출할 경우 `sendbird/cc-plugin-codex` |
+| `claude/awesome-code-review` | Claude | Claude CLI 인증, Claude 환경의 `awesome-code-review`, Codex에서 호출할 경우 `sendbird/cc-plugin-codex` |
+| `codex/awesome-code-review` | Codex | Codex 전역 `awesome-code-review` |
+
+Codex 전역 `awesome-code-review` 설치 확인 경로:
 
 - `$CODEX_HOME/skills/awesome-code-review/SKILL.md`
 - `$HOME/.codex/skills/awesome-code-review/SKILL.md`
 
-설치되어 있지 않으면 필요한 설치 경로를 안내하고 리뷰 실행 액션을 중단한다.
+Claude 기반 리뷰 실행 모드를 Codex에서 호출하려면 `sendbird/cc-plugin-codex`가 필요하다. 이 의존성은 `commit`, `awesome-code-review`처럼 외부 전역 의존성으로만 다루며, `codex-harness` 관리 기본형에 포함하지 않는다. 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다.
 
-누락 안내에는 이 저장소가 `awesome-code-review`를 배포하거나 관리하지 않는다는 점, 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다는 점, 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만 Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다는 점을 포함한다. 설치 후에는 위 경로 중 하나에 `SKILL.md`가 있고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다.
+선택된 리뷰 실행 모드의 의존성이 설치되어 있지 않으면 필요한 설치 경로, 설치 주체, 설치 후 확인할 파일 또는 명령, 재개 조건을 안내하고 리뷰 실행 액션을 중단한다. 다른 리뷰 실행 모드로 자동 fallback하지 않는다.
+
+`awesome-code-review` 누락 안내에는 이 저장소가 해당 스킬을 배포하거나 관리하지 않는다는 점, 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다는 점, 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만 Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다는 점을 포함한다. 설치 후에는 위 경로 중 하나에 `SKILL.md`가 있고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다.
 
 입력:
 
@@ -564,6 +585,8 @@ PR 리뷰는 외부 전역 `awesome-code-review` 스킬을 사용한다.
 - 변경 diff
 - 완료 기준
 - 검토 제외 범위
+- 리뷰 실행 모드
+- 선택된 모드의 의존성 검사 결과
 - 출력 템플릿 요구사항
 
 출력:
@@ -926,7 +949,7 @@ resolve 또는 체크는 피드백 출처와 무관하게 별도 Human Checkpoin
 - Review Comment Skill 전역 스킬 기본형
 - 기본 라벨 세트
 
-전역 `commit` 스킬과 `awesome-code-review`는 외부 의존성으로만 다루며 `codex-harness` 관리 기본형에 포함하지 않는다.
+전역 `commit` 스킬, `awesome-code-review`, `sendbird/cc-plugin-codex`는 외부 의존성으로만 다루며 `codex-harness` 관리 기본형에 포함하지 않는다.
 
 표준 배포 구조:
 

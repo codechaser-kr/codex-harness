@@ -648,7 +648,7 @@ Claude CLI 인증 확인 기준:
 3. 다음 형태로 base/head 브랜치를 명시해 Claude 내장 `/code-review` 사용을 요청한다.
 
 ```bash
-claude -p --permission-mode plan -- "
+claude -p --permission-mode plan <<'CLAUDE_REVIEW_PROMPT'
 /code-review <base-branch>...<head-branch>
 
 위 command를 현재 저장소에서 실행해 base/head 범위를 리뷰하고, 다음 PR 맥락을 함께 반영하세요.
@@ -665,7 +665,7 @@ PR 번호: <pr-number>
 - GitHub PR에 직접 comment를 게시하지 마세요.
 - 파일을 수정하지 마세요.
 - 리뷰 결과만 대화 출력으로 반환하세요.
-"
+CLAUDE_REVIEW_PROMPT
 ```
 
 4. Claude stdout만 리뷰 실행 결과로 사용한다.

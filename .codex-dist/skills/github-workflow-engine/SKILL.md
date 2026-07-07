@@ -91,7 +91,7 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 예상 실행 형태:
 
 ```bash
-claude -p --permission-mode plan -- "
+claude -p --permission-mode plan <<'CLAUDE_REVIEW_PROMPT'
 /code-review <base-branch>...<head-branch>
 
 위 command를 현재 저장소에서 실행해 base/head 범위를 리뷰하고, 다음 PR 맥락을 함께 반영하세요.
@@ -108,7 +108,7 @@ PR 번호: <pr-number>
 - GitHub PR에 직접 comment를 게시하지 마세요.
 - 파일을 수정하지 마세요.
 - 리뷰 결과만 대화 출력으로 반환하세요.
-"
+CLAUDE_REVIEW_PROMPT
 ```
 
 `claude/code-review`의 Claude stdout findings는 Workflow Engine이 PR Review Template으로 정규화한다. 필수 필드는 PR 전체 `Verdict`, 각 피드백의 severity label, 파일 경로와 diff 위치 또는 요약 피드백 여부, 문제와 영향, 권장 조치, 테스트 커버리지 판단이다. 위치, severity, verdict, 문제 영향, 권장 조치, 테스트 커버리지 판단 중 하나라도 판단할 수 없으면 GitHub comment 또는 review thread를 게시하지 않고 보류 질문으로 중단한다. `$cc:review` 기반 companion review가 필요하면 `claude/code-review`와 다른 별도 리뷰 실행 모드로 분리해야 한다.

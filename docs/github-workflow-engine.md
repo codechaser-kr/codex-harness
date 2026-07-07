@@ -86,7 +86,7 @@ Workflow Engine 설계는 정책검토 이슈에서 확정된 결정을 원천�
 
 #60은 `claude/code-review` 모드가 `sendbird/cc-plugin-codex`의 `$cc:review` companion review로 실행되면 안 된다는 점을 확정했다.
 
-- `claude/code-review`는 Claude 공식 `/code-review` 스킬을 `claude -p`로 명시 요청한다.
+- `claude/code-review`는 base/head 브랜치의 `git diff` 결과를 `claude -p`로 전달해 코드 리뷰를 요청한다.
 - `$cc:review`는 Claude 내장 `/code-review` 호출 경로가 아니므로 `claude/code-review`에 매핑하지 않는다.
 - `/code-review --comment`는 사용하지 않는다.
 - `/code-review --fix`는 사용하지 않는다.
@@ -645,7 +645,7 @@ Claude CLI 인증 확인 기준:
 
 1. Workflow Engine은 base 브랜치와 head 브랜치를 확인한다.
 2. `$cc:setup`으로 Claude CLI 인증과 호출 준비 상태를 확인할 수 있지만, 실제 리뷰 생성에 `$cc:review` companion review를 사용하지 않는다.
-3. 다음 형태로 Claude 공식 `/code-review` 스킬 사용을 명시 요청한다.
+3. 다음 형태로 base/head 브랜치의 `git diff` 결과를 `claude -p`로 전달해 코드 리뷰를 요청한다.
 
 ```bash
 git diff <base-branch>...<head-branch> | claude -p --permission-mode bypassPermissions -- "

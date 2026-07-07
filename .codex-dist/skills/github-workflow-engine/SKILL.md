@@ -91,7 +91,7 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 예상 실행 형태:
 
 ```bash
-git diff <base-branch>...<head-branch> | claude -p --permission-mode bypassPermissions -- "
+git diff <base-branch>...<head-branch> | claude -p --permission-mode plan --tools "" -- "
 제공된 diff와 다음 PR 맥락을 기준으로 코드 리뷰를 수행해 주세요.
 
 PR 번호: <pr-number>

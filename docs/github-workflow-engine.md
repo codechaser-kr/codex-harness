@@ -648,7 +648,7 @@ Claude CLI 인증 확인 기준:
 3. 다음 형태로 base/head 브랜치의 `git diff` 결과를 `claude -p`로 전달해 코드 리뷰를 요청한다.
 
 ```bash
-git diff <base-branch>...<head-branch> | claude -p --permission-mode bypassPermissions -- "
+git diff <base-branch>...<head-branch> | claude -p --permission-mode plan --tools "" -- "
 제공된 diff를 기준으로 코드 리뷰를 수행해 주세요.
 
 조건:

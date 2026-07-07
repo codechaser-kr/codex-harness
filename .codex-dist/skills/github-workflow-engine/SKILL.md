@@ -91,7 +91,7 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 예상 실행 형태:
 
 ```bash
-claude -p --permission-mode plan --tools "" -- "
+claude -p --permission-mode plan -- "
 현재 저장소에서 head 브랜치 <head-branch>를 base 브랜치 <base-branch> 기준으로 /code-review 스킬을 사용해 리뷰해 주세요.
 
 다음 PR 맥락을 함께 반영하세요.

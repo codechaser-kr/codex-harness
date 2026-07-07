@@ -648,7 +648,7 @@ Claude CLI 인증 확인 기준:
 3. 다음 형태로 base/head 브랜치를 명시해 Claude 내장 `/code-review` 사용을 요청한다.
 
 ```bash
-claude -p --permission-mode plan --tools "" -- "
+claude -p --permission-mode plan -- "
 현재 저장소에서 head 브랜치 <head-branch>를 base 브랜치 <base-branch> 기준으로 /code-review 스킬을 사용해 리뷰해 주세요.
 
 다음 PR 맥락을 함께 반영하세요.

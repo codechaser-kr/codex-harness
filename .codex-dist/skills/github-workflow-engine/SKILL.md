@@ -101,7 +101,7 @@ git diff <base-branch>...<head-branch> | claude -p --permission-mode bypassPermi
 "
 ```
 
-`claude/code-review`의 Claude stdout findings는 Workflow Engine이 PR Review Template으로 정규화한다. 필수 필드는 PR 전체 `Verdict`, 각 피드백의 severity label, 파일 경로와 diff 위치 또는 요약 피드백 여부, 문제와 영향, 권장 조치, 테스트 커버리지 판단이다. 위치, severity, verdict, 문제 영향, 권장 조치 중 하나라도 판단할 수 없으면 GitHub comment 또는 review thread를 게시하지 않고 보류 질문으로 중단한다. `$cc:review` 기반 companion review가 필요하면 `claude/code-review`와 다른 별도 리뷰 실행 모드로 분리해야 한다.
+`claude/code-review`의 Claude stdout findings는 Workflow Engine이 PR Review Template으로 정규화한다. 필수 필드는 PR 전체 `Verdict`, 각 피드백의 severity label, 파일 경로와 diff 위치 또는 요약 피드백 여부, 문제와 영향, 권장 조치, 테스트 커버리지 판단이다. 위치, severity, verdict, 문제 영향, 권장 조치, 테스트 커버리지 판단 중 하나라도 판단할 수 없으면 GitHub comment 또는 review thread를 게시하지 않고 보류 질문으로 중단한다. `$cc:review` 기반 companion review가 필요하면 `claude/code-review`와 다른 별도 리뷰 실행 모드로 분리해야 한다.
 
 `sendbird/cc-plugin-codex`가 없으면 이 저장소가 해당 플러그인을 배포하거나 관리하지 않는다는 점을 먼저 알린다. 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다고 안내한다. `claude/*` 리뷰 실행 모드의 의존성이 누락되면 다른 리뷰 실행 모드로 자동 fallback하지 않고, 사용자가 의존성을 설치하거나 리뷰 실행 모드를 다시 선택해야 재개할 수 있다.
 

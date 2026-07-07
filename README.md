@@ -106,7 +106,7 @@ GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장�
 
 - Codex 전역 `commit`: `$CODEX_HOME/skills/commit/SKILL.md` 또는 `$HOME/.codex/skills/commit/SKILL.md`
 - Codex 전역 `awesome-code-review`: `$CODEX_HOME/skills/awesome-code-review/SKILL.md` 또는 `$HOME/.codex/skills/awesome-code-review/SKILL.md`
-- Claude 리뷰 브리지 `sendbird/cc-plugin-codex`: Codex에서 Claude 기반 리뷰 실행 모드인 `claude/code-review` 또는 `claude/awesome-code-review`를 호출할 때 필요. `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`과 같은 플러그인 루트 파일과 `$cc:setup` 실행 결과로 설치 여부를 확인합니다.
+- Claude 리뷰 브리지 `sendbird/cc-plugin-codex`: Codex에서 Claude 기반 리뷰 실행 모드인 `claude/code-review` 또는 `claude/awesome-code-review`를 호출할 때 준비 상태 확인에 필요. `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`과 같은 플러그인 루트 파일과 `$cc:setup` 실행 결과로 설치 여부를 확인합니다.
 
 Workflow Engine의 PR 리뷰 실행 모드는 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중에서 선택합니다. 타겟 레포에 Workflow Engine을 설치할 때 기본 리뷰 실행 모드를 선택할 수 있어야 하며, PR 생성 후 리뷰 실행 전에는 실제 사용할 리뷰 실행 모드를 다시 확정합니다. 설치 기본 리뷰 실행 모드는 타겟 레포의 `.harness/workflow-engine.json`에 `review.defaultMode`로 저장하고, PR별 선택 시 기본 후보로만 사용합니다. 사용자가 지원 모드 중 하나를 명시적으로 선택하기 전에는 리뷰 실행 모드 검사로 넘어가지 않습니다.
 
@@ -115,6 +115,8 @@ Workflow Engine의 PR 리뷰 실행 모드는 `claude/code-review`, `claude/awes
 `sendbird/cc-plugin-codex`는 Codex에서 Claude를 호출하기 위한 외부 의존성입니다. 이 저장소는 해당 플러그인을 설치하거나 관리하지 않으며, 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당합니다. 선택된 리뷰 실행 모드의 의존성이 없으면 Workflow Engine은 다른 모드로 자동 fallback하지 않고, 설치 대상과 재개 조건을 안내한 뒤 중단합니다.
 
 `claude/*` 리뷰 실행 모드는 `$cc:setup` 결과로 Claude CLI 인증 상태를 확인합니다. 인증 완료는 `auth.available: true`, `auth.loggedIn: true` 또는 authenticated 출력으로만 판정하며, 미인증이거나 판단할 수 없으면 `$cc:setup`의 login 안내를 전달하고 리뷰 실행을 중단합니다.
+
+`claude/code-review`는 `$cc:review` companion review가 아니라 base/head 브랜치를 target으로 전달해 Claude Code의 `/code-review` command를 단독 호출하는 모드입니다. PR 맥락과 출력 조건은 command arguments에 붙이지 않고 별도 정규화 프롬프트로 넘깁니다. `/code-review --comment`와 `/code-review --fix`는 사용하지 않으며, GitHub comment 게시와 파일 수정은 Workflow Engine 후속 단계에서만 수행합니다.
 
 PR 연결은 PR 본문의 `연관 이슈` 섹션에서 `Refs #번호`를 파싱해 판단합니다. Workflow Engine이 관리하는 이슈에는 `Closes #번호`, `Fixes #번호`, `Resolves #번호`처럼 GitHub가 자동 close하는 키워드를 사용하지 않습니다.
 

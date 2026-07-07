@@ -91,12 +91,10 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 예상 실행 형태:
 
 ```bash
-claude -p --permission-mode bypassPermissions -- "
-현재 저장소에서 head 브랜치 `<head-branch>`를 base 브랜치 `<base-branch>` 기준으로 /code-review 스킬을 사용해 리뷰해 주세요.
+git diff <base-branch>...<head-branch> | claude -p --permission-mode bypassPermissions -- "
+제공된 diff를 기준으로 코드 리뷰를 수행해 주세요.
 
 조건:
-- /code-review --comment 는 사용하지 마세요.
-- /code-review --fix 는 사용하지 마세요.
 - GitHub PR에 직접 comment를 게시하지 마세요.
 - 파일을 수정하지 마세요.
 - 리뷰 결과만 대화 출력으로 반환하세요.

@@ -649,9 +649,17 @@ Claude CLI 인증 확인 기준:
 
 ```bash
 git diff <base-branch>...<head-branch> | claude -p --permission-mode plan --tools "" -- "
-제공된 diff를 기준으로 코드 리뷰를 수행해 주세요.
+제공된 diff와 다음 PR 맥락을 기준으로 코드 리뷰를 수행해 주세요.
+
+PR 번호: <pr-number>
+연결 이슈: <issue-number-and-summary>
+완료 기준: <completion-criteria>
+검토 제외 범위: <review-exclusions>
 
 조건:
+- PR Review Template 형식으로 출력하세요.
+- Required Changes, Important Suggestions, Minor Suggestions, Learning Notes, Security Considerations, Test Coverage, Verdict를 포함하세요.
+- 각 피드백에는 severity label, 파일 경로와 diff 위치 또는 요약 피드백 여부, 문제와 영향, 권장 조치를 포함하세요.
 - GitHub PR에 직접 comment를 게시하지 마세요.
 - 파일을 수정하지 마세요.
 - 리뷰 결과만 대화 출력으로 반환하세요.

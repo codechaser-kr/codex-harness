@@ -146,7 +146,7 @@ git diff <base-branch>...<head-branch> | claude -p --permission-mode bypassPermi
 10. Workflow Engine이 타겟 레포의 `.harness/workflow-engine.json`에서 `review.defaultMode`를 읽고, 사용 가능한 모드, 각 모드의 의존성과 함께 제시한 뒤 사용자가 지원 모드 중 하나를 명시 선택할 때만 PR 리뷰에 사용할 리뷰 실행 모드로 확정한다.
 11. Workflow Engine이 선택된 리뷰 실행 모드의 실행 환경과 의존성 설치 여부를 확인한다.
 12. 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락, 출력 템플릿 요구사항을 준비해 리뷰 결과를 생성한다. `claude/code-review`는 `$cc:review`가 아니라 base/head 브랜치의 `git diff` 결과를 `claude -p`로 전달해 코드 리뷰를 요청한다.
-13. 리뷰 실행 결과가 PR Review Template 형식이 아니면 Workflow Engine이 `Required Changes`, `Important Suggestions`, `Minor Suggestions`, `Learning Notes`, `Security Considerations`, `Test Coverage`, `Verdict`와 severity label을 갖춘 PR Review Template으로 정규화한다. 위치, severity, verdict, 문제 영향, 권장 조치 중 하나라도 판단할 수 없어 정규화가 불완전하면 리뷰 코멘트 게시로 넘어가지 않고 보류 질문을 제시한다.
+13. 리뷰 실행 결과가 PR Review Template 형식이 아니면 Workflow Engine이 `Required Changes`, `Important Suggestions`, `Minor Suggestions`, `Learning Notes`, `Security Considerations`, `Test Coverage`, `Verdict`와 severity label을 갖춘 PR Review Template으로 정규화한다. 위치, severity, verdict, 문제 영향, 권장 조치, 테스트 커버리지 판단 중 하나라도 판단할 수 없어 정규화가 불완전하면 리뷰 코멘트 게시로 넘어가지 않고 보류 질문을 제시한다.
 14. `review-comment`로 PR Review Template 출력 결과를 review thread 또는 marker가 있는 요약 피드백 댓글 게시 초안으로 정리한다.
 15. Workflow Engine이 게시 초안을 확인한 뒤 실제 GitHub 리뷰 코멘트를 게시한다.
 16. Workflow Engine이 unresolved thread와 미체크 요약 피드백을 확인해 리뷰 대응 대상 여부를 판단한다.

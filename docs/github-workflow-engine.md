@@ -86,8 +86,8 @@ Workflow Engine 설계는 정책검토 이슈에서 확정된 결정을 원천�
 
 #60은 `claude/code-review` 모드가 `sendbird/cc-plugin-codex`의 `$cc:review` companion review로 실행되면 안 된다는 점을 확정했다.
 
-- `claude/code-review`는 base/head 브랜치의 `git diff` 결과를 실제 입력으로 전달해 코드 리뷰를 요청한다.
-- `$cc:review`는 base/head diff를 직접 입력으로 전달하는 리뷰 실행 경로가 아니므로 `claude/code-review`에 매핑하지 않는다.
+- `claude/code-review`는 base/head 브랜치를 target으로 전달해 Claude Code의 `/code-review` command를 호출한다.
+- `$cc:review`는 Claude Code의 `/code-review` command 호출 경로가 아니므로 `claude/code-review`에 매핑하지 않는다.
 - `/code-review --comment`는 사용하지 않는다.
 - `/code-review --fix`는 사용하지 않는다.
 - GitHub comment 게시, review thread 게시, 파일 수정은 Claude 리뷰 실행이 아니라 Workflow Engine 후속 단계에서만 수행한다.
@@ -645,14 +645,13 @@ Claude CLI 인증 확인 기준:
 
 1. Workflow Engine은 base 브랜치와 head 브랜치를 확인한다.
 2. `$cc:setup`으로 Claude CLI 인증과 호출 준비 상태를 확인할 수 있지만, 실제 리뷰 생성에 `$cc:review` companion review를 사용하지 않는다.
-3. 다음 형태로 base/head 브랜치의 `git diff` 결과를 실제 입력으로 전달해 코드 리뷰를 요청한다.
+3. 다음 형태로 base/head 브랜치를 target으로 전달해 Claude Code의 `/code-review` command를 호출한다.
 
 ```bash
-{
-  printf '다음은 base/head diff입니다.\n\n'
-  git diff <base-branch>...<head-branch>
-  cat <<'CLAUDE_REVIEW_PROMPT'
-위 diff와 다음 PR 맥락을 기준으로 코드 리뷰를 수행하세요.
+claude -p --permission-mode plan <<'CLAUDE_REVIEW_PROMPT'
+/code-review <base-branch>...<head-branch>
+
+위 command를 현재 저장소에서 실행해 base/head 범위를 리뷰하고, 다음 PR 맥락을 함께 반영하세요.
 
 PR 번호: <pr-number>
 연결 이슈: <issue-number-and-summary>
@@ -667,7 +666,6 @@ PR 번호: <pr-number>
 - 파일을 수정하지 마세요.
 - 리뷰 결과만 대화 출력으로 반환하세요.
 CLAUDE_REVIEW_PROMPT
-} | claude -p --permission-mode plan
 ```
 
 4. Claude stdout만 리뷰 실행 결과로 사용한다.

@@ -597,7 +597,7 @@ PR 리뷰는 선택된 리뷰 실행 모드로 수행한다. Workflow Engine을 
 
 | 리뷰 실행 모드 | 실행 주체 | 필요한 의존성 |
 | -------------- | --------- | ------------- |
-| `claude/code-review` | Claude | Claude CLI 인증, Claude 공식 `/code-review` 플러그인, Codex에서 호출할 경우 `sendbird/cc-plugin-codex`의 `$cc:setup` 준비 상태 확인 |
+| `claude/code-review` | Claude | Claude CLI 인증, Codex에서 호출할 경우 `sendbird/cc-plugin-codex`의 `$cc:setup` 준비 상태 확인 |
 | `claude/awesome-code-review` | Claude | Claude CLI 인증, Claude 환경의 `awesome-code-review`, Codex에서 호출할 경우 `sendbird/cc-plugin-codex` |
 | `codex/awesome-code-review` | Codex | Codex 전역 `awesome-code-review` |
 

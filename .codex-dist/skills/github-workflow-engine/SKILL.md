@@ -86,7 +86,7 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 
 `claude/*` 리뷰 실행 모드에서는 리뷰 실행 전에 `$cc:setup` 결과의 인증 상태를 확인한다. 인증 완료 판정은 `$cc:setup`의 machine-readable probe에서 `auth.available: true`, `auth.loggedIn: true`이거나 사용자 표시 출력이 authenticated 상태를 보고하는 경우로 제한한다. 인증이 없거나 만료되었거나 판단할 수 없으면 리뷰 실행을 중단하고, `$cc:setup`이 제공하는 Claude login 안내를 그대로 전달한다. 재개 조건은 사용자가 Claude CLI 인증을 완료한 뒤 `$cc:setup`을 다시 실행해 인증 완료 상태가 확인되는 것이다.
 
-`claude/code-review`는 Claude 공식 `/code-review` 스킬을 `claude -p`로 명시 요청해 실행한다. `$cc:review` companion review는 Claude 내장 `/code-review` 호출 경로가 아니므로 `claude/code-review`에 매핑하지 않는다. `/code-review --comment`와 `/code-review --fix`는 사용하지 않으며, GitHub comment 게시, review thread 게시, 파일 수정은 Workflow Engine 후속 단계에서만 수행한다.
+`claude/code-review`는 `$cc:review` companion review가 아니라 `git diff` 결과를 `claude -p`로 전달해 코드 리뷰를 요청한다. `$cc:review` companion review는 `claude/code-review`에 매핑하지 않는다. GitHub comment 게시, review thread 게시, 파일 수정은 Workflow Engine 후속 단계에서만 수행한다.
 
 예상 실행 형태:
 

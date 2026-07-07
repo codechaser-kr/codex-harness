@@ -671,7 +671,7 @@ git diff <base-branch>...<head-branch> | claude -p --permission-mode plan --tool
 - 각 피드백의 문제, 영향, 권장 조치
 - 테스트 커버리지 판단 또는 테스트 영향 없음 판단
 
-위치, severity, verdict, 문제 영향, 권장 조치 중 하나라도 판단할 수 없어 PR Review Template으로 손실 없이 정규화할 수 없으면 리뷰 코멘트 게시로 넘어가지 않고 보류 질문을 제시한다.
+위치, severity, verdict, 문제 영향, 권장 조치, 테스트 커버리지 판단 중 하나라도 판단할 수 없어 PR Review Template으로 손실 없이 정규화할 수 없으면 리뷰 코멘트 게시로 넘어가지 않고 보류 질문을 제시한다.
 
 입력:
 

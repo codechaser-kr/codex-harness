@@ -645,13 +645,15 @@ Claude CLI 인증 확인 기준:
 
 1. Workflow Engine은 base 브랜치와 head 브랜치를 확인한다.
 2. `$cc:setup`으로 Claude CLI 인증과 호출 준비 상태를 확인할 수 있지만, 실제 리뷰 생성에 `$cc:review` companion review를 사용하지 않는다.
-3. 다음 형태로 base/head 브랜치를 target으로 전달해 Claude Code의 `/code-review` command를 호출한다.
+3. 다음 형태로 base/head 브랜치를 target으로 전달해 Claude Code의 `/code-review` command를 단독 호출한다. PR 맥락과 출력 조건은 `/code-review` command 뒤에 이어 붙이지 않고, 별도 정규화 프롬프트로 넘긴다.
 
 ```bash
-claude -p --permission-mode plan <<'CLAUDE_REVIEW_PROMPT'
-/code-review <base-branch>...<head-branch>
+claude -p --permission-mode plan '/code-review <base-branch>...<head-branch>' > /tmp/claude-code-review.out
 
-위 command를 현재 저장소에서 실행해 base/head 범위를 리뷰하고, 다음 PR 맥락을 함께 반영하세요.
+{
+  cat <<'CLAUDE_REVIEW_NORMALIZE'
+다음 입력은 이미 실행한 Claude Code /code-review stdout입니다.
+PR 맥락을 반영해 PR Review Template 형식으로 정규화하세요.
 
 PR 번호: <pr-number>
 연결 이슈: <issue-number-and-summary>
@@ -665,7 +667,11 @@ PR 번호: <pr-number>
 - GitHub PR에 직접 comment를 게시하지 마세요.
 - 파일을 수정하지 마세요.
 - 리뷰 결과만 대화 출력으로 반환하세요.
-CLAUDE_REVIEW_PROMPT
+
+--- /code-review stdout ---
+CLAUDE_REVIEW_NORMALIZE
+  cat /tmp/claude-code-review.out
+} | claude -p --permission-mode plan
 ```
 
 4. Claude stdout만 리뷰 실행 결과로 사용한다.

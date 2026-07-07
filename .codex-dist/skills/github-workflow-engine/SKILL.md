@@ -91,10 +91,12 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 예상 실행 형태:
 
 ```bash
-claude -p --permission-mode plan <<'CLAUDE_REVIEW_PROMPT'
-/code-review <base-branch>...<head-branch>
+claude -p --permission-mode plan '/code-review <base-branch>...<head-branch>' > /tmp/claude-code-review.out
 
-위 command를 현재 저장소에서 실행해 base/head 범위를 리뷰하고, 다음 PR 맥락을 함께 반영하세요.
+{
+  cat <<'CLAUDE_REVIEW_NORMALIZE'
+다음 입력은 이미 실행한 Claude Code /code-review stdout입니다.
+PR 맥락을 반영해 PR Review Template 형식으로 정규화하세요.
 
 PR 번호: <pr-number>
 연결 이슈: <issue-number-and-summary>
@@ -108,10 +110,14 @@ PR 번호: <pr-number>
 - GitHub PR에 직접 comment를 게시하지 마세요.
 - 파일을 수정하지 마세요.
 - 리뷰 결과만 대화 출력으로 반환하세요.
-CLAUDE_REVIEW_PROMPT
+
+--- /code-review stdout ---
+CLAUDE_REVIEW_NORMALIZE
+  cat /tmp/claude-code-review.out
+} | claude -p --permission-mode plan
 ```
 
-`claude/code-review`의 Claude stdout findings는 Workflow Engine이 PR Review Template으로 정규화한다. 필수 필드는 PR 전체 `Verdict`, 각 피드백의 severity label, 파일 경로와 diff 위치 또는 요약 피드백 여부, 문제와 영향, 권장 조치, 테스트 커버리지 판단이다. 위치, severity, verdict, 문제 영향, 권장 조치, 테스트 커버리지 판단 중 하나라도 판단할 수 없으면 GitHub comment 또는 review thread를 게시하지 않고 보류 질문으로 중단한다. `$cc:review` 기반 companion review가 필요하면 `claude/code-review`와 다른 별도 리뷰 실행 모드로 분리해야 한다.
+`claude/code-review`는 `/code-review` command를 단독 호출하고, PR 맥락과 출력 조건은 command arguments에 붙이지 않고 별도 정규화 프롬프트로 넘긴다. `claude/code-review`의 Claude stdout findings는 Workflow Engine이 PR Review Template으로 정규화한다. 필수 필드는 PR 전체 `Verdict`, 각 피드백의 severity label, 파일 경로와 diff 위치 또는 요약 피드백 여부, 문제와 영향, 권장 조치, 테스트 커버리지 판단이다. 위치, severity, verdict, 문제 영향, 권장 조치, 테스트 커버리지 판단 중 하나라도 판단할 수 없으면 GitHub comment 또는 review thread를 게시하지 않고 보류 질문으로 중단한다. `$cc:review` 기반 companion review가 필요하면 `claude/code-review`와 다른 별도 리뷰 실행 모드로 분리해야 한다.
 
 `sendbird/cc-plugin-codex`가 없으면 이 저장소가 해당 플러그인을 배포하거나 관리하지 않는다는 점을 먼저 알린다. 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다고 안내한다. `claude/*` 리뷰 실행 모드의 의존성이 누락되면 다른 리뷰 실행 모드로 자동 fallback하지 않고, 사용자가 의존성을 설치하거나 리뷰 실행 모드를 다시 선택해야 재개할 수 있다.
 

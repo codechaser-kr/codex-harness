@@ -116,7 +116,7 @@ Workflow Engine의 PR 리뷰 실행 모드는 `claude/code-review`, `claude/awes
 
 `claude/*` 리뷰 실행 모드는 `$cc:setup` 결과로 Claude CLI 인증 상태를 확인합니다. 인증 완료는 `auth.available: true`, `auth.loggedIn: true` 또는 authenticated 출력으로만 판정하며, 미인증이거나 판단할 수 없으면 `$cc:setup`의 login 안내를 전달하고 리뷰 실행을 중단합니다.
 
-`claude/code-review`는 `$cc:review` companion review가 아니라 base/head 브랜치를 target으로 전달해 Claude Code의 `/code-review` command를 호출하는 모드입니다. `/code-review --comment`와 `/code-review --fix`는 사용하지 않으며, GitHub comment 게시와 파일 수정은 Workflow Engine 후속 단계에서만 수행합니다.
+`claude/code-review`는 `$cc:review` companion review가 아니라 base/head 브랜치를 target으로 전달해 Claude Code의 `/code-review` command를 단독 호출하는 모드입니다. PR 맥락과 출력 조건은 command arguments에 붙이지 않고 별도 정규화 프롬프트로 넘깁니다. `/code-review --comment`와 `/code-review --fix`는 사용하지 않으며, GitHub comment 게시와 파일 수정은 Workflow Engine 후속 단계에서만 수행합니다.
 
 PR 연결은 PR 본문의 `연관 이슈` 섹션에서 `Refs #번호`를 파싱해 판단합니다. Workflow Engine이 관리하는 이슈에는 `Closes #번호`, `Fixes #번호`, `Resolves #번호`처럼 GitHub가 자동 close하는 키워드를 사용하지 않습니다.
 

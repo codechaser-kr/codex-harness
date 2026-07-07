@@ -19,7 +19,7 @@
 - `sendbird/cc-plugin-codex` 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다. `claude/*` 리뷰 실행 모드에서 이 의존성이 없으면 다른 리뷰 실행 모드로 자동 fallback하지 않는다.
 - `sendbird/cc-plugin-codex` 설치 여부는 `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`, 같은 플러그인 루트의 `skills/setup/SKILL.md`, `scripts/claude-companion.mjs`, `$cc:setup` 실행 결과로 확인한다.
 - `claude/*` 리뷰 실행 모드의 Claude CLI 인증은 `$cc:setup`의 `auth.available: true`, `auth.loggedIn: true` 또는 authenticated 사용자 표시 출력으로만 완료 판정한다. 인증이 없거나 판단할 수 없으면 리뷰 실행을 중단하고 `$cc:setup`의 login 안내와 재실행 조건을 전달한다.
-- `claude/code-review`는 `$cc:review` companion review가 아니라 `claude -p`로 Claude 공식 `/code-review` 스킬 사용을 명시 요청한다. `/code-review --comment`와 `/code-review --fix`는 사용하지 않고, GitHub 게시와 파일 수정은 Workflow Engine 후속 단계에서만 수행한다.
+- `claude/code-review`는 `$cc:review` companion review가 아니라 base/head 브랜치의 `git diff` 결과를 `claude -p`로 전달해 코드 리뷰를 요청한다. `/code-review --comment`와 `/code-review --fix`는 사용하지 않고, GitHub 게시와 파일 수정은 Workflow Engine 후속 단계에서만 수행한다.
 - `claude/code-review` stdout findings는 PR 전체 `Verdict`, 각 피드백의 severity label, 파일 경로와 diff 위치 또는 요약 피드백 여부, 문제와 영향, 권장 조치, 테스트 커버리지 판단을 갖춘 PR Review Template으로 정규화한다. 위치, severity, verdict, 문제 영향, 권장 조치 중 하나라도 판단할 수 없으면 게시하지 않고 보류 질문으로 중단한다.
 - PR merge는 사람이 수행한다.
 - Workflow Skill은 merge 알림 또는 다음 계획 요청 시 GitHub Run State를 다시 읽어 연결 이슈의 체크리스트와 종료 조건을 판단한다.

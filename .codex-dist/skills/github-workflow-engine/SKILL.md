@@ -73,7 +73,7 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 
 - 커밋 메시지 제안 전에 `$CODEX_HOME/skills/commit/SKILL.md` 또는 `$HOME/.codex/skills/commit/SKILL.md`가 있는지 확인한다.
 - `codex/awesome-code-review` 리뷰 실행 전에는 `$CODEX_HOME/skills/awesome-code-review/SKILL.md` 또는 `$HOME/.codex/skills/awesome-code-review/SKILL.md`가 있는지 확인한다.
-- `claude/code-review` 리뷰 실행 전에는 Claude CLI 인증, `git diff` 결과를 `claude -p`로 전달할 수 있는 Claude CLI 실행 가능 상태, Codex에서 Claude를 호출하기 위한 `sendbird/cc-plugin-codex`의 `$cc:setup` 준비 상태를 확인한다.
+- `claude/code-review` 리뷰 실행 전에는 Claude CLI 인증, base/head 브랜치를 명시해 `/code-review` 요청을 `claude -p`로 전달할 수 있는 Claude CLI 실행 가능 상태, Codex에서 Claude를 호출하기 위한 `sendbird/cc-plugin-codex`의 `$cc:setup` 준비 상태를 확인한다.
 - `claude/awesome-code-review` 리뷰 실행 전에는 Claude CLI 인증, Claude 환경의 `awesome-code-review`, Codex에서 Claude를 호출하기 위한 `sendbird/cc-plugin-codex` 사용 가능 여부를 확인한다.
 - 의존성이 없으면 설치 가능한 소스, 설치 대상 경로, 설치 후 확인할 파일 또는 명령, 재개 조건을 사용자에게 알리고, 현재 액션을 중단한다.
 - 누락 상태에서는 대체 커밋 메시지 생성이나 대체 리뷰 생성을 진행하지 않는다.
@@ -86,13 +86,15 @@ GitHub Workflow Engine을 타겟 레포에 적용하거나 운영 기준을 갱�
 
 `claude/*` 리뷰 실행 모드에서는 리뷰 실행 전에 `$cc:setup` 결과의 인증 상태를 확인한다. 인증 완료 판정은 `$cc:setup`의 machine-readable probe에서 `auth.available: true`, `auth.loggedIn: true`이거나 사용자 표시 출력이 authenticated 상태를 보고하는 경우로 제한한다. 인증이 없거나 만료되었거나 판단할 수 없으면 리뷰 실행을 중단하고, `$cc:setup`이 제공하는 Claude login 안내를 그대로 전달한다. 재개 조건은 사용자가 Claude CLI 인증을 완료한 뒤 `$cc:setup`을 다시 실행해 인증 완료 상태가 확인되는 것이다.
 
-`claude/code-review`는 `$cc:review` companion review나 Claude 공식 `/code-review` command 직접 호출이 아니라 `git diff` 결과를 `claude -p`로 전달해 코드 리뷰를 요청한다. `$cc:review` companion review는 `claude/code-review`에 매핑하지 않는다. GitHub comment 게시, review thread 게시, 파일 수정은 Workflow Engine 후속 단계에서만 수행한다.
+`claude/code-review`는 `$cc:review` companion review가 아니라 base/head 브랜치를 명시해 Claude 내장 `/code-review` 사용을 `claude -p`로 요청한다. `$cc:review` companion review는 `claude/code-review`에 매핑하지 않는다. GitHub comment 게시, review thread 게시, 파일 수정은 Workflow Engine 후속 단계에서만 수행한다.
 
 예상 실행 형태:
 
 ```bash
-git diff <base-branch>...<head-branch> | claude -p --permission-mode plan --tools "" -- "
-제공된 diff와 다음 PR 맥락을 기준으로 코드 리뷰를 수행해 주세요.
+claude -p --permission-mode plan --tools "" -- "
+현재 저장소에서 head 브랜치 <head-branch>를 base 브랜치 <base-branch> 기준으로 /code-review 스킬을 사용해 리뷰해 주세요.
+
+다음 PR 맥락을 함께 반영하세요.
 
 PR 번호: <pr-number>
 연결 이슈: <issue-number-and-summary>
@@ -153,7 +155,7 @@ PR 번호: <pr-number>
 9. Workflow Engine이 검증된 입력으로 실제 GitHub PR을 생성한다.
 10. Workflow Engine이 타겟 레포의 `.harness/workflow-engine.json`에서 `review.defaultMode`를 읽고, 사용 가능한 모드, 각 모드의 의존성과 함께 제시한 뒤 사용자가 지원 모드 중 하나를 명시 선택할 때만 PR 리뷰에 사용할 리뷰 실행 모드로 확정한다.
 11. Workflow Engine이 선택된 리뷰 실행 모드의 실행 환경과 의존성 설치 여부를 확인한다.
-12. 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락, 출력 템플릿 요구사항을 준비해 리뷰 결과를 생성한다. `claude/code-review`는 `$cc:review`가 아니라 base/head 브랜치의 `git diff` 결과를 `claude -p`로 전달해 코드 리뷰를 요청한다.
+12. 선택된 리뷰 실행 모드로 PR diff와 이슈 맥락, 출력 템플릿 요구사항을 준비해 리뷰 결과를 생성한다. `claude/code-review`는 `$cc:review`가 아니라 base/head 브랜치를 명시해 Claude 내장 `/code-review` 사용을 `claude -p`로 요청한다.
 13. 리뷰 실행 결과가 PR Review Template 형식이 아니면 Workflow Engine이 `Required Changes`, `Important Suggestions`, `Minor Suggestions`, `Learning Notes`, `Security Considerations`, `Test Coverage`, `Verdict`와 severity label을 갖춘 PR Review Template으로 정규화한다. 위치, severity, verdict, 문제 영향, 권장 조치, 테스트 커버리지 판단 중 하나라도 판단할 수 없어 정규화가 불완전하면 리뷰 코멘트 게시로 넘어가지 않고 보류 질문을 제시한다.
 14. `review-comment`로 PR Review Template 출력 결과를 review thread 또는 marker가 있는 요약 피드백 댓글 게시 초안으로 정리한다.
 15. Workflow Engine이 게시 초안을 확인한 뒤 실제 GitHub 리뷰 코멘트를 게시한다.

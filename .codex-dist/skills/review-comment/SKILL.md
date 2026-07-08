@@ -22,12 +22,13 @@ description: PR Review Template 출력을 GitHub PR review thread 또는 marker�
 
 1. `Required Changes`, `Important Suggestions`, `Minor Suggestions`, `Learning Notes`, `Security Considerations`, `Test Coverage`, `Verdict` 섹션을 읽는다.
 2. `[blocking]`, `[important]`, `[nit]`, `[suggestion]`, `[learning]`, `[praise]` severity label을 추출해 피드백 중요도와 추적 대상 여부를 정리한다.
-3. `Location:` 또는 코드 위치가 diff line에 붙을 수 있으면 review thread 초안으로 정리한다.
-4. 라인에 붙일 수 없는 `[blocking]`과 `[important]`는 marker가 있는 요약 피드백 댓글 체크리스트 초안으로 정리한다.
-5. `[nit]`, `[suggestion]`, `[learning]`, `[praise]`는 merge 차단 피드백으로 취급하지 않고, 필요한 경우 요약 참고 섹션으로만 정리한다.
-6. 같은 리뷰 결과가 중복 게시되지 않도록 기존 review thread와 요약 피드백 댓글을 확인한다.
-7. marker는 반드시 `<!-- codex-harness:summary-feedback v1 -->`를 사용한다.
-8. 게시 요청 초안을 `inline_review_threads`와 `summary_feedback_comment`로 분리하고 중복 게시 위험을 Workflow Skill에 반환한다.
+3. `Location:` 또는 코드 위치가 있으면 PR diff에서 해당 파일과 line의 diff position 매핑을 먼저 시도한다.
+4. diff position으로 매핑된 `[blocking]`과 `[important]` 피드백은 review thread 초안으로 정리한다.
+5. diff position으로 매핑할 수 없는 `[blocking]`과 `[important]`만 marker가 있는 요약 피드백 댓글 체크리스트 초안으로 정리한다.
+6. `[nit]`, `[suggestion]`, `[learning]`, `[praise]`는 merge 차단 피드백으로 취급하지 않고, 필요한 경우 요약 참고 섹션으로만 정리한다.
+7. 같은 리뷰 결과가 중복 게시되지 않도록 기존 review thread와 요약 피드백 댓글을 확인한다.
+8. marker는 반드시 `<!-- codex-harness:summary-feedback v1 -->`를 사용한다.
+9. 게시 요청 초안을 `inline_review_threads`와 `summary_feedback_comment`로 분리하고 중복 게시 위험을 Workflow Skill에 반환한다.
 
 ## 피드백 판단 축
 
@@ -44,8 +45,8 @@ description: PR Review Template 출력을 GitHub PR review thread 또는 marker�
 
 | PR Review Template label | 위험도 | 게시 처리 |
 | --- | --- | --- |
-| `[blocking]` | 높음 | diff line에 붙일 수 있으면 review thread, 아니면 marker 요약 피드백 후보 |
-| `[important]` | 중간 | diff line에 붙일 수 있으면 review thread, 아니면 marker 요약 피드백 후보 |
+| `[blocking]` | 높음 | 파일 경로와 line을 PR diff position으로 매핑해 review thread, 매핑할 수 없으면 marker 요약 피드백 후보 |
+| `[important]` | 중간 | 파일 경로와 line을 PR diff position으로 매핑해 review thread, 매핑할 수 없으면 marker 요약 피드백 후보 |
 | `[nit]` | 낮음 | merge 차단 피드백으로 추적하지 않고 필요한 경우 요약 참고 섹션 후보 |
 | `[suggestion]` | 낮음 | merge 차단 피드백으로 추적하지 않고 필요한 경우 요약 참고 섹션 후보 |
 | `[learning]` | 해당 없음 | 상태 추적 제외 |
@@ -70,8 +71,8 @@ description: PR Review Template 출력을 GitHub PR review thread 또는 marker�
 
 ## 출력
 
-- `inline_review_threads`: diff line에 붙일 수 있는 `[blocking]` 또는 `[important]` 피드백의 review thread 게시 초안
-- `summary_feedback_comment`: diff line에 붙일 수 없는 `[blocking]` 또는 `[important]` 피드백의 marker 체크리스트 댓글 초안
+- `inline_review_threads`: PR diff position으로 매핑된 `[blocking]` 또는 `[important]` 피드백의 review thread 게시 초안
+- `summary_feedback_comment`: PR diff position으로 매핑할 수 없는 `[blocking]` 또는 `[important]` 피드백의 marker 체크리스트 댓글 초안
 - `duplicate_risk`: 기존 review thread 또는 marker 댓글과의 중복 게시 위험
 - `questions`: 위치 판단, severity, verdict가 충돌할 때 Workflow Skill이 확인할 보류 질문
 

@@ -19,14 +19,15 @@ description: GitHub Issue, PR, label, checklist, review thread, comment를 기�
 1. 사용자의 요청이 새 요청인지, 중단된 흐름 재개인지, 특정 이슈/PR 기준 진행인지 구분한다.
 2. GitHub Run State에서 진행 중이거나 멈춰 있는 열린 이슈 또는 PR을 먼저 찾는다.
 3. 이어갈 수 있는 열린 작업이 있으면 신규 후보보다 재개를 우선한다.
-4. 선택된 이슈 유형에 맞는 State Transition Rule을 적용해 다음 액션 후보를 제안한다.
-5. Human Checkpoint가 있으면 사용자 결정 없이 다음 액션을 확정하지 않는다.
-6. 액션 진입, 중단, 재개는 `.harness/logs/github-workflow-log.md`에 기록한다.
-7. 이슈 생성이 필요하면 `issue-creation` 스킬로 타겟 `.github` 템플릿 형식의 초안을 만들고, Workflow Engine이 사용자 의도 확인 이후 실제 GitHub 이슈를 생성한다.
-8. 기능 개발 계획은 `feature-plan`, 기능 결함 해결 계획은 `fix-plan` 스킬로 넘긴다.
-9. 구현 단위가 확정되면 `branch-plan`, 외부 전역 `commit`, `pr-proposal`, `pr-creation`, 리뷰 실행 모드 선택, 리뷰 실행 모드 검사, 리뷰 실행, 리뷰 결과 정규화, `review-comment`를 순서대로 연결한다.
-10. 타겟 레포에 GitHub Workflow Engine을 적용하거나 템플릿을 갱신할 때는 `github-templates.md` 계약과 타겟 `.github` 템플릿의 정합성을 먼저 검사한다.
-11. 사용자의 PR merge 알림이나 다음 계획 요청이 있으면 GitHub 상태를 다시 읽고 연결 이슈의 체크리스트와 진행 상태를 갱신할 액션을 제안한다.
+4. 다음 액션을 선택하기 전에 GitHub Run State의 객관적 완료 근거와 실행 단계 로그로 현재 단계를 산출한다.
+5. 선택된 이슈 유형에 맞는 State Transition Rule에 완료된 단계와 보조 확인 결과를 대입해 다음 액션 후보를 제안한다.
+6. Human Checkpoint가 있으면 사용자 결정 없이 다음 액션을 확정하지 않는다.
+7. 액션 진입, 중단, 재개는 `.harness/logs/github-workflow-log.md`에 기록한다.
+8. 이슈 생성이 필요하면 `issue-creation` 스킬로 타겟 `.github` 템플릿 형식의 초안을 만들고, Workflow Engine이 사용자 의도 확인 이후 실제 GitHub 이슈를 생성한다.
+9. 기능 개발 계획은 `feature-plan`, 기능 결함 해결 계획은 `fix-plan` 스킬로 넘긴다.
+10. 구현 단위가 확정되면 `branch-plan`, 외부 전역 `commit`, `pr-proposal`, `pr-creation`, 리뷰 실행 모드 선택, 리뷰 실행 모드 검사, 리뷰 실행, 리뷰 결과 정규화, `review-comment`를 순서대로 연결한다.
+11. 타겟 레포에 GitHub Workflow Engine을 적용하거나 템플릿을 갱신할 때는 `github-templates.md` 계약과 타겟 `.github` 템플릿의 정합성을 먼저 검사한다.
+12. 사용자의 PR merge 알림이나 다음 계획 요청이 있으면 GitHub 상태를 다시 읽고 연결 이슈의 체크리스트와 진행 상태를 갱신할 액션을 제안한다.
 
 ## GitHub 상태 변경 기준
 
@@ -131,6 +132,32 @@ CLAUDE_REVIEW_NORMALIZE
 - GitHub sidebar linked issue는 표준 상태 원천으로 보지 않는다.
 - 기능변경/기능결함 계획과 완료 기준 갱신처럼 후속 전이 판단에 쓰이는 상태는 이슈 본문을 기준으로 읽는다.
 - Review thread는 unresolved 상태를 우선 읽고, 라인에 붙일 수 없는 피드백은 `<!-- codex-harness:summary-feedback v1 -->` marker가 있는 PR issue comment의 미체크 항목만 읽는다.
+
+## 현재 단계 산출 절차
+
+Workflow Engine은 다음 액션을 선택하기 전에 현재 단계 산출 절차를 수행한다. 이 절차는 이슈 본문의 일반 설명을 완료된 단계나 승인된 계획으로 과대 해석하지 않기 위한 전제 조건이다.
+
+1. 기준 이슈 또는 PR의 GitHub Run State를 읽는다.
+   - 이슈 유형
+   - 완료 조건 체크리스트
+   - 연결 PR 상태
+   - review thread 상태
+   - marker 요약 피드백 체크 상태
+2. GitHub Run State에서 완료된 단계를 판정한다.
+   - 체크된 완료 조건
+   - merged PR
+   - resolved review thread
+   - 체크된 marker 요약 피드백
+3. GitHub Run State로 판정할 수 없는 중간 실행 단계를 보조 확인한다.
+   - `.harness/logs/github-workflow-log.md`의 마지막 관련 액션
+   - 마지막으로 확정된 Human Checkpoint
+   - 마지막 실행 결과
+   - 남은 판단 질문
+4. 완료된 단계와 보조 확인 결과를 State Transition Rule에 대입해 현재 액션을 선택한다.
+
+체크되지 않은 완료 조건, open PR, unresolved review thread, 미체크 marker 요약 피드백은 완료된 단계의 근거로 사용하지 않는다. 실행 로그는 GitHub 상태로 표현되지 않는 중간 단계의 보조 근거일 뿐이며, GitHub Run State와 충돌하면 GitHub Run State를 우선한다.
+
+정책검토 이슈에서 `정책 검토 결과 확정`이 체크되어 있고 `결정된 정책을 관련 설계 문서에 반영`이 미체크이면 정책 결정 반영은 완료된 단계로 보되 설계 문서 반영은 완료되지 않은 단계로 본다. 이 경우 현재 액션은 `설계 문서 반영 계획`이다. `설계 문서 반영 계획` 액션은 반영 대상, 제외 대상, 반영 단위, 검증 기준, 후속 기능변경 이슈 필요 여부를 사용자에게 제시하고, 사용자가 계획을 확정한 뒤에만 `설계 문서 반영 착수`로 전이한다.
 
 ## 다음 계획 요청
 

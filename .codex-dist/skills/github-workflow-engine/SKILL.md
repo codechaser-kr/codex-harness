@@ -36,6 +36,8 @@ description: GitHub Issue, PR, label, checklist, review thread, comment를 기�
 - `이대로 진행`, `생성해주세요`, `좋습니다`처럼 현재 초안이나 후보에 대한 진행 의도가 명확하면 상태 변경 액션으로 볼 수 있다.
 - 사용자의 의도가 모호하면 상태를 변경하지 않고 초안, 수정 후보, 필요한 확인 질문만 제시한다.
 - 사용자-facing 응답에는 `승인 절차`, `절차 누락` 같은 운영 용어를 과하게 드러내지 않는다.
+- 현재 액션이 Human Checkpoint에서 멈춘 상태라면 Workflow Engine은 해당 Human Checkpoint의 결정 대상과 확정 가능한 응답을 제시한다.
+- 사용자 요청이 직전 응답에서 제시한 선택지 중 하나를 명시적으로 선택하거나 확정된 액션 실행을 지시한 것이 아니면 Workflow Engine은 먼저 현재 워크플로우 상태를 요약하고, State Transition Rule에서 현재 조건을 만족하는 `액션` 선택지를 제시한다.
 
 ## 명령 실행 경로 선택
 

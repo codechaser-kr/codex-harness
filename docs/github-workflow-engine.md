@@ -778,8 +778,9 @@ Workflow Engine이 확정할 항목:
 
 피드백 위치에 따라 출력 대상을 나눈다.
 
-- 라인에 붙일 수 있는 `[blocking]` 또는 `[important]` 피드백은 `inline_review_threads`로 정리한다.
-- 라인에 붙일 수 없는 `[blocking]` 또는 `[important]` 피드백은 `summary_feedback_comment`로 정리한다.
+- 파일 경로와 line이 있는 `[blocking]` 또는 `[important]` 피드백은 PR diff position 매핑을 먼저 시도한다.
+- PR diff position으로 매핑된 `[blocking]` 또는 `[important]` 피드백은 `inline_review_threads`로 정리한다.
+- PR diff position으로 매핑할 수 없는 `[blocking]` 또는 `[important]` 피드백은 `summary_feedback_comment`로 정리한다.
 - `summary_feedback_comment`에는 `<!-- codex-harness:summary-feedback v1 -->` marker를 포함한다.
 
 ## 이슈와 PR 본문 계약
@@ -1064,7 +1065,7 @@ Review Feedback Triage는 리뷰 피드백을 바로 수정 명령으로 보지 
 | 거절 | 오탐, 범위 밖, 또는 반영하지 않을 피드백이다.                                   | 거절 근거를 남기고 파일은 수정하지 않는다.          |
 | 기타 | 추가 질문, 범위 재조정, 별도 이슈화 등 즉시 수용/거절로 닫기 어려운 피드백이다. | 사용자가 지정한 후속 액션만 수행한다.               |
 
-라인 피드백은 review thread로 게시하고 `isResolved`로 추적한다. 라인에 붙일 수 없는 `[blocking]` 또는 `[important]` 피드백은 marker가 있는 요약 피드백 댓글 체크리스트로 추적한다.
+파일 경로와 line이 있는 피드백은 PR diff position 매핑을 먼저 시도한다. PR diff position으로 매핑된 피드백은 review thread로 게시하고 `isResolved`로 추적한다. PR diff position으로 매핑할 수 없는 `[blocking]` 또는 `[important]` 피드백은 marker가 있는 요약 피드백 댓글 체크리스트로 추적한다.
 
 요약 피드백 marker:
 

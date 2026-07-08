@@ -217,7 +217,7 @@ Workflow Engine은 다음 액션을 선택하기 전에 현재 단계 산출 절
 - `거절`: 오탐, 범위 밖, 또는 반영하지 않을 피드백이다. 거절 근거를 남기고 파일은 수정하지 않는다.
 - `기타`: 추가 질문, 범위 재조정, 별도 이슈화 등 즉시 수용/거절로 닫기 어려운 피드백이다. 사용자가 지정한 후속 액션만 수행한다.
 
-라인 피드백은 review thread의 `isResolved`로 추적한다. 라인에 붙일 수 없는 피드백은 `<!-- codex-harness:summary-feedback v1 -->` marker가 있는 요약 피드백 댓글 체크리스트로 추적한다.
+파일 경로와 line이 있는 피드백은 PR diff position 매핑을 먼저 시도한다. PR diff position으로 매핑된 피드백은 review thread의 `isResolved`로 추적한다. PR diff position으로 매핑할 수 없는 피드백은 `<!-- codex-harness:summary-feedback v1 -->` marker가 있는 요약 피드백 댓글 체크리스트로 추적한다.
 
 피드백은 한 번에 하나만 처리한다. Workflow Engine은 여러 unresolved thread나 미체크 요약 피드백을 한 번에 수정하지 않고, 피드백 1건마다 맥락 설명, 대응 방향 Human Checkpoint, 수정, 커밋 메시지 Human Checkpoint, push, 수정 댓글 게시 또는 생략 판단, resolve 여부 확인, resolve 결정 반영, 남은 피드백 확인을 반복한다.
 

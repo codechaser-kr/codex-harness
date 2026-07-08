@@ -137,7 +137,7 @@ Workflow Engine의 모든 흐름은 다음 골격을 따른다.
 6. 완료된 단계와 보조 확인 결과를 해당 유형의 State Transition Rule에 대입해 다음 액션을 선택한다.
 7. 필요한 전용 스킬을 호출해 구조화된 초안이나 후보를 받는다.
 8. Human Checkpoint가 있으면 후보, 영향, 위험, 추천 근거를 제시하고 멈춘다.
-9. Human Checkpoint가 없고 사용자 의도가 명확한 상태 변경이면 GitHub 상태를 변경한다.
+9. Human Checkpoint가 없으면 State Transition Rule의 상태 반영 지침에 따라 GitHub 상태를 변경한다.
 10. 파일 변경이 필요한 구현 액션이면 승인된 범위만 수정한다.
 11. 액션이 끝나면 GitHub Run State와 현재 코드 상태를 다시 읽고 다음 전이를 선택한다.
 

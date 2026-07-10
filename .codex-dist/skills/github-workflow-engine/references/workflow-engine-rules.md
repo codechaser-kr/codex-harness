@@ -39,7 +39,7 @@
 | GitHub PR merged | GitHub pull request merged 값이 `true`이거나 state가 `MERGED` 또는 `merged`다. |
 | PR base branch 식별됨 | PR의 base branch 이름이 GitHub PR 상태 또는 PR 생성 요청값에서 확인되는 상태다. |
 | 로컬 작업트리 안전 확인 | `git status --short` 결과가 비어 있거나, 남은 변경이 현재 Workflow Engine 실행 범위 안에서 보존 가능한 상태로 기록된다. |
-| base branch 갱신 명령 완료 | PR merge 이후 PR base branch에서 `git pull -p` 또는 동등한 fetch/prune 갱신 명령이 exit code `0`으로 종료된 결과가 기록된다. |
+| base branch 갱신 명령 완료 | PR merge 이후 PR base branch에서 `git pull --ff-only -p` 또는 동등한 fast-forward 확인 절차가 exit code `0`으로 종료된 결과가 기록된다. |
 | 사용자 선택 확정 | 사용자 입력이 직전 응답에서 제시한 번호, 선택지 문구, 유효한 `기타 의견 입력` 형식 중 하나와 일치한다. |
 | 로컬 수정 존재 | `git diff --name-only` 출력에 현재 작업 범위에 속한 파일이 하나 이상 포함된다. |
 | 검증 성공 | 현재 작업의 검증 명령이 exit code `0`으로 종료된 결과가 실행 로그에 기록된다. |

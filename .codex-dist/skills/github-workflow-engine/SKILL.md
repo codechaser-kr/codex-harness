@@ -60,6 +60,8 @@ Workflow Engine은 `workflow-engine-rules.md`의 리뷰 실행 모드 판정 결
 
 Workflow Engine은 `workflow-engine-rules.md`의 명령 실행 경로 판정 결과에 따라 일반 경로 또는 권한 확인 경로로 명령을 실행한다. 명령 실행 경로는 도구 권한을 정하는 절차이며, 사용자 결정이 필요한 작업은 사용자 결정 판정과 출력 기준으로 확정한다.
 
+`workflow-engine-rules.md`가 권한 확인 경로로 판정한 명령은 일반 경로를 먼저 시도하지 않고 권한 확인 경로로 실행한다.
+
 사용자 변경 보존 확인이 필요한 명령은 권한 확인 경로로 실행한다.
 변경 손실 가능 명령은 `workflow-engine-rules.md`의 변경 손실 가능 명령 판정 기준을 적용한 뒤 실행한다.
 

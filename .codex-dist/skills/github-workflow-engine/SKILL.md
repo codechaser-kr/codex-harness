@@ -52,6 +52,7 @@ PR merge는 사람이 수행한다. Workflow Engine은 merge 알림이나 GitHub
 Workflow Engine은 `workflow-engine-rules.md`의 리뷰 실행 모드 판정 결과로 실행 모드를 확정하고, 확정된 모드의 리뷰 결과를 PR Review Template으로 정규화한다.
 
 리뷰 실행 명령은 stdout을 `/tmp` 아래 파일로 저장하는 형태로 실행한다. 파일명은 PR 번호와 리뷰 실행 모드를 드러내게 정하고, 리뷰 결과 정규화와 리뷰 코멘트 초안 정리는 저장된 파일 경로를 입력으로 사용한다.
+리뷰 결과 정규화는 `workflow-engine-rules.md`의 PR Review Template 판정 기준을 적용해 완료 또는 보류 질문을 산출한다.
 
 ## 명령 실행
 

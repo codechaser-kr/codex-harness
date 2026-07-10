@@ -51,6 +51,8 @@ PR merge는 사람이 수행한다. Workflow Engine은 merge 알림이나 GitHub
 
 Workflow Engine은 `workflow-engine-rules.md`의 리뷰 실행 모드 판정 결과로 실행 모드를 확정하고, 확정된 모드의 리뷰 결과를 PR Review Template으로 정규화한다.
 
+리뷰 실행 모드 선택지는 대상 저장소의 `.harness/workflow-engine.json`에 저장된 사용 가능 모드에서 만든다. 저장된 사용 가능 모드가 없거나 설정 파일이 없으면 하네스 설치 또는 갱신 재실행 조건을 안내하고 중단한다.
+
 리뷰 실행 명령은 stdout을 `/tmp` 아래 파일로 저장하는 형태로 실행한다. 파일명은 PR 번호와 리뷰 실행 모드를 드러내게 정하고, 리뷰 결과 정규화와 리뷰 코멘트 초안 정리는 저장된 파일 경로를 입력으로 사용한다.
 리뷰 결과 정규화는 `workflow-engine-rules.md`의 PR Review Template 판정 기준을 적용해 완료 또는 보류 질문을 산출한다.
 
@@ -66,9 +68,8 @@ Workflow Engine은 `workflow-engine-rules.md`의 명령 실행 경로 판정 결
 Workflow Engine은 외부 의존성이 필요한 현재 작업에 진입하기 전에 설치와 실행 가능 상태를 확인한다.
 
 - 커밋 메시지 제안 전에는 전역 `commit` 스킬을 확인한다.
-- `codex/awesome-code-review` 리뷰 실행 전에는 전역 `awesome-code-review` 스킬을 확인한다.
-- `claude/code-review`와 `claude/awesome-code-review` 리뷰 실행 전에는 Claude CLI 인증과 `sendbird/cc-plugin-codex`의 `$cc:setup` 준비 상태를 확인한다.
-- 의존성 확인이 실패하면 설치 가능한 소스, 설치 대상 경로, 설치 후 확인할 파일 또는 명령, 재개 조건을 안내하고 중단한다.
+- 리뷰 실행 모드 사용 가능 여부는 하네스 설치 또는 갱신 시 저장된 `.harness/workflow-engine.json`의 사용 가능 상태로 확인한다.
+- 저장된 사용 가능 상태가 없으면 하네스 설치 또는 갱신 재실행 조건을 안내하고 중단한다.
 - 선택된 리뷰 실행 모드는 사용자의 명시 선택으로 확정한다.
 
 ## 출력 기준

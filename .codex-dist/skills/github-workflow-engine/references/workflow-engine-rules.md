@@ -84,8 +84,8 @@
 | PR 제목과 본문 확정 | 사용자 선택 확정이며 선택지가 PR 제목과 본문 확정이다. |
 | PR open | GitHub PR open 상태다. |
 | PR merged | GitHub PR merged 상태다. |
-| 리뷰 실행 모드 확정 | 사용자가 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중 하나를 번호 또는 선택지 문구로 선택한 상태다. |
-| 리뷰 실행 모드 검사 완료 | 선택된 리뷰 실행 모드의 의존성 확인 결과가 성공으로 기록된 상태다. |
+| 리뷰 실행 모드 확정 | 사용자가 저장된 리뷰 실행 모드 선택지 중 하나를 번호 또는 선택지 문구로 선택한 상태다. |
+| 리뷰 실행 모드 검사 완료 | 선택된 리뷰 실행 모드가 `.harness/workflow-engine.json`에 사용 가능 상태로 기록된 상태다. |
 | 리뷰 실행 결과 생성 완료 | 선택된 리뷰 실행 모드의 리뷰 결과 파일 경로가 기록되고 해당 파일이 읽기 가능한 상태다. |
 | 게시 가능한 PR Review Template 확정 | 리뷰 결과가 PR Review Template 판정 규칙을 충족한 상태다. |
 | review thread 또는 marker 댓글 게시 초안 정리 완료 | 리뷰 코멘트 초안 산출물에 PR 번호, 게시 대상, 게시 본문, diff 위치 또는 marker 요약 피드백 항목이 기록된 상태다. |
@@ -206,6 +206,16 @@
 - 모든 필수 섹션과 필수 필드가 있으면 `게시 가능한 PR Review Template 확정`으로 판정한다.
 - 필수 섹션 또는 필수 필드가 비어 있으면 중단 사유와 보완 질문을 산출한다.
 
+## 리뷰 실행 모드 설정 판정 규칙
+
+| 판정 상태 | 판정 기준 |
+| --------- | --------- |
+| 리뷰 실행 모드 설정 존재 | `.harness/workflow-engine.json`에 `review.defaultMode`와 `review.modes`가 기록된 상태다. |
+| 리뷰 실행 모드 사용 가능 | `.harness/workflow-engine.json`의 `review.modes`에서 해당 모드의 `available` 값이 `true`인 상태다. |
+| 리뷰 실행 모드 선택지 존재 | `review.modes`에 `available: true`인 모드가 하나 이상 기록된 상태다. |
+| 리뷰 실행 모드 설정 보완 필요 | `review.modes`가 비어 있거나 모든 모드의 `available` 값이 `false`인 상태다. |
+| 리뷰 실행 모드 설정 재생성 필요 | `.harness/workflow-engine.json`이 없거나 `review.defaultMode` 또는 `review.modes`가 없는 상태다. |
+
 ## 명령 실행 경로 규칙
 
 명령 실행 경로는 일반 경로와 권한 확인 경로 중 하나로 판정한다.
@@ -314,8 +324,8 @@
 | 작업 브랜치 push | 세부 구현 계획의 모든 커밋 단위 커밋 생성 완료 | 없음 | 작업 브랜치 원격 head가 로컬 작업 브랜치 HEAD와 일치함 |
 | PR 초안 작성 | 작업 브랜치 push 완료 | PR 제목과 본문 확정 | PR 제목과 본문 초안이 존재함 |
 | PR 생성 | 작업 브랜치 push 완료, PR 제목과 본문 확정 | 없음 | 확정된 PR 제목, 본문, base branch, head branch와 일치하는 PR이 open 상태 |
-| 리뷰 실행 모드 선택 | PR open | 리뷰 실행 모드 확정 | 리뷰 실행 모드 선택지가 존재함 |
-| 리뷰 실행 모드 검사 | 리뷰 실행 모드 확정 | 없음 | 선택된 리뷰 실행 모드의 의존성 확인 결과가 성공으로 기록됨 |
+| 리뷰 실행 모드 선택 | PR open, 리뷰 실행 모드 선택지 존재 | 리뷰 실행 모드 확정 | 리뷰 실행 모드 선택지가 존재함 |
+| 리뷰 실행 모드 검사 | 리뷰 실행 모드 확정 | 없음 | 선택된 리뷰 실행 모드가 사용 가능 상태로 기록됨 |
 | 리뷰 실행 | 리뷰 실행 모드 검사 완료 | 없음 | 선택된 리뷰 실행 모드의 리뷰 결과 파일 경로가 기록되고 해당 파일이 읽기 가능함 |
 | 리뷰 결과 정규화 | 리뷰 실행 결과 생성 완료 | 없음 | 게시 가능한 PR Review Template 또는 중단 사유와 보완 질문이 존재함 |
 | 리뷰 코멘트 초안 정리 | 게시 가능한 PR Review Template 확정 | 없음 | review thread 또는 marker 댓글 게시 초안이 존재함 |

@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "commit": {
+      "available": true,
+      "checkedAt": "2026-07-11",
+      "evidence": "Global commit skill is installed."
+    }
+  },
+  "review": {
+    "defaultMode": "claude/code-review",
+    "modes": {
+      "claude/code-review": {
+        "available": true,
+        "checkedAt": "2026-07-11",
+        "evidence": "Claude CLI and sendbird/cc plugin are installed."
+      },
+      "claude/awesome-code-review": {
+        "available": true,
+        "checkedAt": "2026-07-11",
+        "evidence": "Claude CLI and sendbird/cc plugin are installed."
+      },
+      "codex/awesome-code-review": {
+        "available": true,
+        "checkedAt": "2026-07-11",
+        "evidence": "Global awesome-code-review skill is installed."
+      }
+    }
+  }
+}

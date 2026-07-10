@@ -65,9 +65,9 @@ Workflow Engine은 `workflow-engine-rules.md`의 명령 실행 경로 판정 결
 
 ## 외부 의존성 확인
 
-Workflow Engine은 외부 의존성이 필요한 현재 작업에 진입하기 전에 설치와 실행 가능 상태를 확인한다.
+Workflow Engine은 외부 의존성이 필요한 현재 작업에 진입하기 전에 하네스 설치 또는 갱신 시 저장된 실행 가능 상태를 확인한다.
 
-- 커밋 메시지 제안 전에는 전역 `commit` 스킬을 확인한다.
+- 커밋 메시지 제안은 `.harness/workflow-engine.json`의 `dependencies.commit.available` 값으로 판단한다.
 - 리뷰 실행 모드 사용 가능 여부는 하네스 설치 또는 갱신 시 저장된 `.harness/workflow-engine.json`의 사용 가능 상태로 확인한다.
 - 저장된 사용 가능 상태가 없으면 하네스 설치 또는 갱신 재실행 조건을 안내하고 중단한다.
 - 선택된 리뷰 실행 모드는 사용자의 명시 선택으로 확정한다.

@@ -1032,6 +1032,8 @@ Workflow Engine은 작업에 진입하거나 중단 또는 재개 상태를 기�
 
 전역 `commit` 스킬, `awesome-code-review`, `sendbird/cc-plugin-codex`는 외부 의존성으로만 다루며 `codex-harness` 관리 기본형에 포함하지 않는다.
 
+`docs/github-workflow-engine.md`는 Workflow Engine 실행 규칙의 설계 원천이다. Workflow Engine 관련 스킬은 이 설계를 바탕으로 구현하고, 설계 원천의 실행 규칙을 변경하면 스킬 반영 여부와 후속 작업을 정책검토 또는 기능변경 흐름에 기록한다.
+
 표준 배포 구조:
 
 ```text

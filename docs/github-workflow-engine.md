@@ -205,13 +205,15 @@ Workflow Engine은 모든 이슈 유형과 연결 PR에 같은 실행 루프를 
 
 ### 명령 실행 경로 선택
 
-Workflow Engine은 명령을 실행하기 전에 일반 경로와 권한 확인 경로 중 하나로 분류한다. 일반 경로는 현재 권한 안에서 실행할 수 있고 상태를 변경하지 않는 읽기, 조회, 로컬 검증 명령이다. 권한 확인 경로는 권한 상승, 원격 접근, GitHub 상태 변경, `.git` 쓰기, 파일 수정 또는 삭제 가능성이 있어 실행 전 사용자 의도 확인이 필요한 명령이다.
+Workflow Engine은 명령을 실행하기 전에 일반 경로와 권한 확인 경로 중 하나로 분류한다. 일반 경로는 현재 권한 안에서 실행할 수 있고 상태를 변경하지 않는 읽기, 조회, 로컬 검증 명령이다. 권한 확인 경로는 권한 상승, 원격 접근, GitHub 상태 변경, `.git` 쓰기, 파일 수정 또는 삭제 가능성이 있어 실행 전 권한 확인이 필요한 명령이다.
 
-실행 경로 선택은 명령 호출 권한을 정하는 절차이며, 현재 작업, 실행 범위, 사용자 결정을 대체하지 않는다. 사용자 결정이 필요한 상태 변경, 커밋 메시지 확정, PR merge는 권한 확인 경로를 쓰더라도 사용자 결정 규칙을 따라야 한다.
+사용자 의도 확인과 명령 실행 경로는 서로 다른 판단 항목이다. 사용자 결정은 현재 작업과 실행 범위를 확정하는 절차이고, 명령 실행 경로는 확정된 작업을 어떤 권한 경로로 호출할지 정하는 절차다. 따라서 실행 경로 선택은 현재 작업, 실행 범위, 사용자 결정을 대체하지 않는다.
+
+사용자의 상태 변경 의도가 이미 명확한지는 명령 실행 경로 판정 입력으로 사용하지 않는다. 권한 확인 경로 대상 명령은 일반 경로 실패 여부를 관찰하기 전에 권한 확인 경로로 판정하고, 실행 지침은 그 판정 결과를 그대로 적용한다.
 
 권한 확인 경로로 분류하는 명령:
 
-- `gh pr comment`, `gh pr review`, `gh pr merge`, `gh issue edit`, `gh api --method POST|PATCH|PUT|DELETE`처럼 GitHub PR, issue, review, checks, comment 상태를 바꾸는 GitHub API 계열 명령
+- `gh issue create`, `gh issue edit`, `gh pr create`, `gh pr comment`, `gh pr review`, `gh pr merge`, `gh api --method POST|PATCH|PUT|DELETE`처럼 GitHub issue, PR, review, checks, comment 상태를 바꾸는 GitHub API 계열 명령
 - `git push`, `git fetch`, `git pull`, `git ls-remote`처럼 네트워크나 원격 저장소 접근이 필요한 Git 명령
 - `git commit`, `git tag`, `git merge`, `git rebase`처럼 `.git` 쓰기가 필요한 명령
 - `sed -i`, `find -delete`, 쓰기나 삭제를 수행하는 `find -exec`처럼 로컬 파일을 수정하거나 삭제하는 명령

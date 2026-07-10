@@ -83,7 +83,7 @@
 | PR merged | GitHub PR merged 상태다. |
 | 리뷰 실행 모드 확정 | 사용자가 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중 하나를 번호 또는 선택지 문구로 선택한 상태다. |
 | 리뷰 실행 모드 검사 완료 | 선택된 리뷰 실행 모드의 의존성 확인 결과가 성공으로 기록된 상태다. |
-| 리뷰 실행 결과 생성 완료 | 선택된 리뷰 실행 모드의 출력 파일 또는 대화 출력에 리뷰 결과가 기록된 상태다. |
+| 리뷰 실행 결과 생성 완료 | 선택된 리뷰 실행 모드의 리뷰 결과 파일 경로가 기록되고 해당 파일이 읽기 가능한 상태다. |
 | 게시 가능한 PR Review Template 확정 | 리뷰 결과가 PR Review Template 필수 항목과 각 피드백의 파일 위치 또는 요약 피드백 표시를 모두 가진 상태다. |
 | review thread 또는 marker 댓글 게시 초안 정리 완료 | 리뷰 코멘트 초안 산출물에 PR 번호, 게시 대상, 게시 본문, diff 위치 또는 marker 요약 피드백 항목이 기록된 상태다. |
 | 리뷰 코멘트 게시 완료 | review thread 생성 결과 또는 marker 댓글 생성 결과의 GitHub id가 기록된 상태다. |
@@ -273,7 +273,7 @@
 | PR 생성 | 작업 브랜치 push 완료, PR 제목과 본문 확정 | 없음 | 확정된 PR 제목, 본문, base branch, head branch와 일치하는 PR이 open 상태 |
 | 리뷰 실행 모드 선택 | PR open | 리뷰 실행 모드 확정 | 리뷰 실행 모드 선택지가 존재함 |
 | 리뷰 실행 모드 검사 | 리뷰 실행 모드 확정 | 없음 | 선택된 리뷰 실행 모드의 의존성 확인 결과가 성공으로 기록됨 |
-| 리뷰 실행 | 리뷰 실행 모드 검사 완료 | 없음 | 선택된 리뷰 실행 모드의 리뷰 결과가 존재함 |
+| 리뷰 실행 | 리뷰 실행 모드 검사 완료 | 없음 | 선택된 리뷰 실행 모드의 리뷰 결과 파일 경로가 기록되고 해당 파일이 읽기 가능함 |
 | 리뷰 결과 정규화 | 리뷰 실행 결과 생성 완료 | 없음 | 게시 가능한 PR Review Template 또는 중단 사유와 보완 질문이 존재함 |
 | 리뷰 코멘트 초안 정리 | 게시 가능한 PR Review Template 확정 | 없음 | review thread 또는 marker 댓글 게시 초안이 존재함 |
 | 리뷰 코멘트 게시 | review thread 또는 marker 댓글 게시 초안 정리 완료 | 없음 | review thread 생성 결과 또는 marker 댓글 생성 결과의 GitHub id가 기록됨 |

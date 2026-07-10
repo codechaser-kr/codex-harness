@@ -1,11 +1,11 @@
 ---
 name: branch-plan
-description: Workflow Engine 기능 구현 흐름에서 기준 이슈와 구현 계획을 읽어 작업 시작 전 브랜치 이름 후보를 제안합니다.
+description: Workflow Engine 구현 흐름에서 기준 이슈와 구현 계획을 읽어 작업 시작 전 브랜치 이름 후보를 제안합니다.
 ---
 
 # Branch Plan
 
-이 스킬은 기능 구현 흐름에 들어가기 전에 기준 이슈와 구현 단위를 읽고 작업 브랜치 이름 후보를 제안한다. 브랜치 이름 승인, 생성, 전환은 Workflow Engine의 Human Checkpoint와 후속 액션에서 처리한다.
+이 스킬은 구현 흐름에 들어가기 전에 기준 이슈와 구현 단위를 읽고 작업 브랜치 이름 후보를 제안한다. 브랜치 이름 사용자 결정, 생성, 전환은 Workflow Engine의 후속 작업에서 처리한다.
 
 ## 먼저 읽을 문서
 
@@ -25,7 +25,7 @@ description: Workflow Engine 기능 구현 흐름에서 기준 이슈와 구현 
 
 후보별 근거에는 해당 후보가 어떤 구현 내용을 드러내는지 포함한다.
 
-예를 들어 #47처럼 리뷰 피드백의 `Severity`와 `Workflow response`를 분리하는 구현 단위는 `feat/issue-47-separate-review-severity-from-response`처럼 변경 동작이 드러나는 후보를 우선 제안한다.
+예를 들어 리뷰 피드백의 중요도와 대응 방향을 분리하는 구현 단위는 `feat/issue-<번호>-separate-review-importance-from-response`처럼 변경 동작이 드러나는 후보를 우선 제안한다.
 
 ## 책임
 
@@ -33,7 +33,7 @@ description: Workflow Engine 기능 구현 흐름에서 기준 이슈와 구현 
 2. 관례가 없으면 이슈 유형과 번호, 구현 단위의 핵심 동작을 드러내는 topic을 포함한다.
 3. 브랜치 이름은 소문자, 숫자, `/`, `-` 중심으로 제안한다.
 4. 후보와 제안 근거, 후보가 드러내는 구현 내용을 Workflow Engine이 검토할 수 있게 정리한다.
-5. 브랜치를 만들거나 전환하지 않는다.
+5. 실제 브랜치 생성 또는 전환은 Workflow Engine이 수행한다.
 
 ## 기본 형식
 

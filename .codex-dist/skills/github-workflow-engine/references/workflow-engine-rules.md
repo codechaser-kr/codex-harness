@@ -21,7 +21,7 @@
 | PR 제목 summary 통과 | `summary`가 비어 있지 않고 변경 동작을 설명한다. |
 | PR 제목 type 근거 통과 | `type`이 변경 성격, 작업 브랜치 prefix, 변경 파일 역할, 최근 PR 제목 스타일 중 하나로 설명된다. |
 | PR 제목 판정 통과 | `PR 제목 형식 통과`, `PR 제목 type 통과`, `PR 제목 summary 통과`, `PR 제목 type 근거 통과`가 모두 충족된다. |
-| PR 제목 보류 | 제목이 이슈 title prefix 형식이거나, `type` 또는 `summary`가 비어 있거나, `type`이 허용된 Conventional Commits type에 속하지 않거나, `type`이 변경 성격, 작업 브랜치 prefix, 변경 파일 역할, 최근 PR 제목 스타일 중 어느 것으로도 설명되지 않는다. |
+| PR 제목 보류 | 제목이 `<type>: <summary>` 형식이 아니거나, `type`이 허용된 Conventional Commits type에 속하지 않거나, `summary`가 비어 있거나 변경 동작을 설명하지 않거나, `type`이 변경 성격, 작업 브랜치 prefix, 변경 파일 역할, 최근 PR 제목 스타일 중 어느 것으로도 설명되지 않는다. |
 
 ## 상태 판정 규칙
 

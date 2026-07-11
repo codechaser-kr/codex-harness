@@ -661,12 +661,7 @@ Workflow Engine이 확정할 항목:
 - 사용자 결정 없는 review thread resolve
 - marker 없는 일반 PR comment를 요약 피드백 상태 원천으로 취급
 
-피드백 위치에 따라 출력 대상을 나눈다.
-
-- 파일 경로와 line이 있는 `[차단]` 또는 `[중요]` 피드백은 PR diff position 매핑을 먼저 시도한다.
-- PR diff position으로 매핑된 `[차단]` 또는 `[중요]` 피드백은 `inline_review_threads`로 정리한다.
-- PR diff position으로 매핑할 수 없는 `[차단]` 또는 `[중요]` 피드백은 `summary_feedback_comment`로 정리한다.
-- `summary_feedback_comment`에는 `<!-- codex-harness:summary-feedback v1 -->` marker를 포함한다.
+피드백 게시 위치 판정은 `workflow-engine-rules.md`의 리뷰 게시 위치 판정 규칙을 따른다. Review Comment Skill은 판정 결과에 따라 `inline_review_threads`, `summary_feedback_comment`, 보류 질문을 분리해 반환한다.
 
 ## 리뷰 실행 계약
 
@@ -748,14 +743,14 @@ Claude CLI 인증 확인 기준:
 
 1. `claude/*` 리뷰 실행 모드에서는 리뷰 실행 전에 `$cc:setup` 결과의 인증 상태를 확인한다.
 2. 인증 완료 판정은 `$cc:setup`의 machine-readable probe에서 `auth.available: true`, `auth.loggedIn: true`이거나 사용자 표시 출력이 authenticated 상태를 보고하는 경우로 제한한다.
-3. 인증이 없거나 만료되었거나 판단할 수 없으면 리뷰 실행을 중단하고, `$cc:setup`이 제공하는 Claude login 안내를 그대로 전달한다.
-4. 재개 조건은 사용자가 Claude CLI 인증을 완료한 뒤 `$cc:setup`을 다시 실행해 인증 완료 상태가 확인되는 것이다.
+3. 인증이 없거나 만료되었거나 판단할 수 없으면 리뷰 실행을 중단하고 Claude CLI 인증 확인이 필요하다고 안내한다.
+4. 재개 조건은 사용자가 Claude CLI 인증을 직접 복구한 뒤 재개를 요청한 상태다.
 
 Claude 리뷰 실행 실패 판정 기준:
 
 1. `claude/*` 리뷰 실행 모드에서 `claude -p` 명령이 exit code `0`이 아닌 값으로 종료되면 저장된 stdout 파일과 stderr 출력을 확인한다.
 2. 출력에 `Failed to authenticate`, `401 Invalid authentication credentials`, `Invalid authentication credentials` 중 하나가 포함되면 Claude 로그인이 오래되어 토큰이 만료됐을 수 있음을 안내한다.
-3. 재개 조건은 사용자가 `claude auth logout`, `claude auth login --claudeai --email <email>`, `claude -p --permission-mode plan 'Respond with OK only.'` 순서로 재로그인과 smoke test를 수행해 `claude -p` 호출 성공을 확인한 상태다.
+3. 재개 조건은 사용자가 Claude CLI 인증을 직접 복구한 뒤 재개를 요청한 상태다.
 
 `claude/awesome-code-review`와 `codex/awesome-code-review`는 PR Review Template 필수 필드를 포함한 결과를 출력해야 한다. 리뷰 결과가 필수 필드를 모두 포함하면 Workflow Engine은 정규화 없이 그 결과를 Review Comment Skill 입력으로 사용한다.
 
@@ -961,7 +956,7 @@ CLAUDE_REVIEW_NORMALIZE
 | 거절 | 오탐, 범위 밖, 또는 반영 대상에서 제외할 피드백이다.                            | 선택된 피드백에 거절 근거를 남긴다.                |
 | 기타 의견 입력 | 추가 질문, 범위 재조정, 별도 이슈화 등 즉시 수용/거절로 처리 방향을 확정하기 어려운 피드백이다. | 사용자가 지정한 후속 작업을 수행한다. |
 
-파일 경로와 line이 있는 피드백은 PR diff position 매핑을 먼저 시도한다. PR diff position으로 매핑된 피드백은 review thread로 게시하고 `isResolved`로 추적한다. PR diff position으로 매핑할 수 없는 `[차단]` 또는 `[중요]` 피드백은 marker가 있는 요약 피드백 댓글 체크리스트로 추적한다.
+피드백 게시 위치, marker fallback, 대응 대상 여부는 `workflow-engine-rules.md`의 리뷰 게시 위치 판정 규칙을 따른다. 리뷰 실행 결과 파일의 피드백 항목은 GitHub에 게시되기 전까지 리뷰 대응 대상이 아니며, 대응 대상은 review thread 생성 결과 또는 marker 요약 피드백 댓글 게시 결과로 GitHub id가 확인된 피드백이다.
 
 요약 피드백 marker:
 

@@ -614,7 +614,7 @@ Workflow Engine이 확정할 항목:
 
 검증:
 
-- 확정된 PR 제목은 `workflow-engine-rules.md`의 PR 제목 판정 규칙으로 확인하고, 판정 결과를 반환한다.
+- 확정된 PR 제목이 `workflow-engine-rules.md`의 PR 제목 판정 규칙을 벗어나면 생성 전 보류 질문에 근거를 포함한다.
 
 Workflow Engine이 확정할 항목:
 
@@ -751,6 +751,12 @@ Claude CLI 인증 확인 기준:
 3. 인증이 없거나 만료되었거나 판단할 수 없으면 리뷰 실행을 중단하고, `$cc:setup`이 제공하는 Claude login 안내를 그대로 전달한다.
 4. 재개 조건은 사용자가 Claude CLI 인증을 완료한 뒤 `$cc:setup`을 다시 실행해 인증 완료 상태가 확인되는 것이다.
 
+Claude 리뷰 실행 실패 판정 기준:
+
+1. `claude/*` 리뷰 실행 모드에서 `claude -p` 명령이 exit code `0`이 아닌 값으로 종료되면 저장된 stdout 파일과 stderr 출력을 확인한다.
+2. 출력에 `Failed to authenticate`, `401 Invalid authentication credentials`, `Invalid authentication credentials` 중 하나가 포함되면 Claude 로그인이 오래되어 토큰이 만료됐을 수 있음을 안내한다.
+3. 재개 조건은 사용자가 `claude auth logout`, `claude auth login --claudeai --email <email>`, `claude -p --permission-mode plan 'Respond with OK only.'` 순서로 재로그인과 smoke test를 수행해 `claude -p` 호출 성공을 확인한 상태다.
+
 `claude/awesome-code-review`와 `codex/awesome-code-review`는 PR Review Template 필수 필드를 포함한 결과를 출력해야 한다. 리뷰 결과가 필수 필드를 모두 포함하면 Workflow Engine은 정규화 없이 그 결과를 Review Comment Skill 입력으로 사용한다.
 
 `claude/code-review` 실행 경로:
@@ -806,7 +812,7 @@ CLAUDE_REVIEW_NORMALIZE
 ### 템플릿 원천
 
 - `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`는 실제 이슈와 PR 본문 형식의 단일 원천이다.
-- `github-templates.md`는 title prefix, label, 필수 섹션, 연결 규칙의 정합성을 검증하는 계약 문서다.
+- `github-templates.md`는 이슈 title prefix, label, 필수 섹션, 연결 규칙의 정합성을 검증하는 계약 문서다.
 - 작성 지침은 이 문서와 전용 스킬에서 관리하고, 생성된 이슈나 PR 본문에는 복사하지 않는다.
 - 이슈나 PR 템플릿의 특정 섹션을 지칭할 때는 실제 섹션 제목을 그대로 쓴다.
 - `완료 기준은 무엇인가요?`는 해당 이슈를 종료해도 되는지 판단할 수 있는 체크리스트여야 한다.
@@ -1092,9 +1098,9 @@ target-repo/
 
 ### 템플릿 정합성 검사
 
-타겟 레포에 GitHub Workflow Engine을 적용하거나 템플릿을 갱신하기 전에는 타겟 `.github` 템플릿과 `github-templates.md` 계약의 정합성을 먼저 검사한다. `github-templates.md`는 실제 템플릿 본문 복제본이 아니라 title prefix, label, 필수 섹션, 연결 규칙을 검증하는 계약 문서다.
+타겟 레포에 GitHub Workflow Engine을 적용하거나 템플릿을 갱신하기 전에는 타겟 `.github` 템플릿과 `github-templates.md` 계약의 정합성을 먼저 검사한다. `github-templates.md`는 실제 템플릿 본문 복제본이 아니라 이슈 title prefix, label, 필수 섹션, 연결 규칙을 검증하는 계약 문서다.
 
-1. `github-templates.md`에서 기대 파일명, title prefix, label, 필수 섹션, 연결 규칙, 판정 기준을 읽는다.
+1. `github-templates.md`에서 기대 파일명, 이슈 title prefix, label, 필수 섹션, 연결 규칙, 판정 기준을 읽는다.
 2. 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`를 읽는다.
 3. 기본 파일명이 없으면 같은 역할의 기존 템플릿이 있는지 찾고 매핑 근거를 남긴다.
 4. 각 이슈 템플릿의 YAML frontmatter `title`, `labels`, 필수 섹션, 기본 체크리스트를 비교한다.

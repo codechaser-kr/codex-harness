@@ -1,6 +1,6 @@
 # GitHub Workflow Engine Rules
 
-이 문서는 설치된 Workflow Engine 스킬이 실행 중 적용하는 판정 규칙이다. 이 파일은 기준 대상, 상태 근거, 현재 작업, 진행 판단, 실행 범위, 작업 전이, 사용자 입력 유효성, 명령 실행 경로를 산출하는 판정 기준만 정의한다. 실행 지침과 전용 스킬 호출 책임은 `SKILL.md`가 가진다.
+이 문서는 설치된 Workflow Engine 스킬이 실행 중 적용하는 판정 규칙이다. 이 파일은 기준 대상, 상태 근거, 현재 작업, 진행 판단, 실행 범위, 작업 전이, 사용자 입력 유효성, PR 제목, 리뷰 실행 실패, 명령 실행 경로를 산출하는 판정 기준만 정의한다. 실행 지침과 전용 스킬 호출 책임은 `SKILL.md`가 가진다.
 
 ## 적용 범위
 
@@ -8,7 +8,24 @@
 - 현재 작업 산출에 필요한 조건은 이 파일 안에서 판정 가능해야 한다.
 - 작업 전이표의 조건은 이 파일의 상태 읽기 규칙, 필드 판정 규칙, 작업 전이 규칙의 재사용 상태 규칙으로 판정한다.
 - 이슈와 PR 본문 형식은 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`를 기준으로 판정한다.
-- `github-templates.md`는 title prefix, label, 필수 섹션, 연결 규칙 판정에 사용한다.
+- `github-templates.md`는 이슈 title prefix, label, 필수 섹션, 연결 규칙 판정에 사용한다.
+
+## 산출물 판정 규칙
+
+### PR 제목 판정 규칙
+
+Workflow Engine 관리 PR 제목은 Conventional Commits 스타일의 `<type>: <summary>` 형식을 따른다.
+
+- 예: `feat: Workflow Engine 스킬 실행 계약 정렬`
+- 예: `fix: PR 제목 후보 컨벤션 복원`
+- 예: `docs: Workflow Engine 설계 문서 재정렬`
+
+PR 제목의 type은 기준 이슈 유형보다 변경 성격, 작업 브랜치 prefix, 변경 파일의 역할, 최근 PR 제목 스타일을 우선해 정한다.
+
+| 판정 결과 | 판정 기준 |
+| --------- | --------- |
+| 통과 | 제목이 `<type>: <summary>` 형식이고, `type`이 Conventional Commits type이며, `summary`가 변경 동작을 설명하고, `type`이 변경 성격 또는 변경 파일 역할로 설명된다. |
+| 보류 | 제목이 이슈 title prefix 형식이거나, `type` 또는 `summary`가 비어 있거나, `type`이 변경 성격과 맞지 않아 사용자 확인이 필요하다. |
 
 ## 상태 판정 규칙
 
@@ -46,16 +63,6 @@
 | 커밋 생성 완료 | 현재 작업 범위의 마지막 commit hash가 실행 로그 또는 연결 이슈/PR 본문에 기록된다. |
 | 원격 push 완료 | 원격 head branch가 존재하고 원격 head branch의 HEAD commit이 로컬 작업 브랜치 HEAD commit과 일치한다. |
 | 작업 대상 식별자 | 기준 이슈 또는 PR, 구현 단위, 커밋 단위, 브랜치, PR, review thread, marker 요약 피드백 항목처럼 반복 가능한 작업 대상을 구분하는 값이다. |
-
-### PR 제목 판정 규칙
-
-Workflow Engine 관리 PR 제목은 Conventional Commits 스타일의 `<type>: <summary>` 형식을 따른다.
-
-- 예: `feat: Workflow Engine 스킬 실행 계약 정렬`
-- 예: `fix: PR 제목 후보 컨벤션 복원`
-- 예: `docs: Workflow Engine 설계 문서 재정렬`
-
-PR 제목의 type은 기준 이슈 유형보다 변경 성격, 작업 브랜치 prefix, 변경 파일의 역할, 최근 PR 제목 스타일을 우선해 정한다. PR 제목은 `feat:`, `fix:`, `docs:` 같은 Conventional Commits type으로 시작한다.
 
 ### 상태 근거 분류 규칙
 
@@ -178,6 +185,16 @@ PR 제목의 type은 기준 이슈 유형보다 변경 성격, 작업 브랜치 
 | 리뷰 실행 모드 선택지 존재 | `review.modes`에 `available: true`인 모드가 하나 이상 기록된 상태다. |
 | 리뷰 실행 모드 설정 보완 필요 | `review.modes`가 비어 있거나 모든 모드의 `available` 값이 `false`인 상태다. |
 | 리뷰 실행 모드 설정 재생성 필요 | `.harness/workflow-engine.json`이 없거나 `review.defaultMode` 또는 `review.modes`가 없는 상태다. |
+
+### Claude 리뷰 실행 실패 판정 규칙
+
+`claude/*` 리뷰 실행 모드에서 `claude -p` 명령이 exit code `0`이 아닌 값으로 종료되면 저장된 stdout 파일과 stderr 출력을 확인한다.
+
+| 판정 결과 | 판정 기준 | 안내할 재개 조건 |
+| --------- | --------- | ---------------- |
+| Claude CLI 재로그인 필요 | 출력에 `Failed to authenticate`, `401 Invalid authentication credentials`, `Invalid authentication credentials` 중 하나가 포함된다. | Claude 로그인이 오래되어 토큰이 만료됐을 수 있음을 안내한다. 재개 조건은 `claude -p --permission-mode plan 'Respond with OK only.'` smoke test가 성공한 상태다. 안내에는 `claude auth logout`, `claude auth login --claudeai --email <email>` 재로그인 명령 예시를 포함한다. |
+| Claude 리뷰 실행 재시도 필요 | 인증 실패 문구 없이 일시적인 네트워크 오류, socket 오류, rate limit, service unavailable 문구가 포함된다. | 사용자에게 오류 원문을 보여주고 같은 리뷰 명령 재시도 여부를 확인한다. |
+| Claude 리뷰 실행 원인 확인 필요 | 위 두 판정 기준에 맞는 문구가 없다. | 저장된 stdout 파일 경로, exit code, 오류 원문을 보여주고 리뷰 실행 모드 유지 또는 다른 리뷰 실행 모드 선택을 확인한다. |
 
 ### 명령 실행 경로 규칙
 

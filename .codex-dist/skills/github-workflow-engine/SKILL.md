@@ -56,6 +56,8 @@ Workflow Engine은 `workflow-engine-rules.md`의 리뷰 실행 모드 판정 결
 리뷰 실행 명령은 stdout을 `/tmp` 아래 파일로 저장하는 형태로 실행한다. 파일명은 PR 번호와 리뷰 실행 모드를 드러내게 정하고, 리뷰 결과 정규화와 리뷰 코멘트 초안 정리는 저장된 파일 경로를 입력으로 사용한다.
 리뷰 결과 정규화는 `workflow-engine-rules.md`의 PR Review Template 판정 기준을 적용해 완료 또는 보류 질문을 산출한다.
 
+Claude 리뷰 실행 실패가 `Claude CLI 재로그인 필요`로 판정되면 토큰 만료 가능성만 안내하고 중단한다.
+
 ## 명령 실행
 
 Workflow Engine은 `workflow-engine-rules.md`의 명령 실행 경로 판정 결과에 따라 일반 경로 또는 권한 확인 경로로 명령을 실행한다. 명령 실행 경로는 도구 권한을 정하는 절차이며, 사용자 결정이 필요한 작업은 사용자 결정 판정과 출력 기준으로 확정한다.

@@ -1,6 +1,6 @@
 # GitHub Workflow Engine Rules
 
-이 문서는 설치된 Workflow Engine 스킬이 실행 중 적용하는 판정 규칙이다. 이 파일은 기준 대상, 상태 근거, 현재 작업, 진행 판단, 실행 범위, 작업 전이, 사용자 입력 유효성, 명령 실행 경로를 산출하는 판정 기준만 정의한다. 실행 지침과 전용 스킬 호출 책임은 `SKILL.md`가 가진다.
+이 문서는 설치된 Workflow Engine 스킬이 실행 중 적용하는 판정 규칙이다. 이 파일은 기준 대상, 상태 근거, 현재 작업, 진행 판단, 실행 범위, 작업 전이, 사용자 입력 유효성, PR 제목, 리뷰 실행 실패, 명령 실행 경로를 산출하는 판정 기준만 정의한다. 실행 지침과 전용 스킬 호출 책임은 `SKILL.md`가 가진다.
 
 ## 적용 범위
 
@@ -8,7 +8,20 @@
 - 현재 작업 산출에 필요한 조건은 이 파일 안에서 판정 가능해야 한다.
 - 작업 전이표의 조건은 이 파일의 상태 읽기 규칙, 필드 판정 규칙, 작업 전이 규칙의 재사용 상태 규칙으로 판정한다.
 - 이슈와 PR 본문 형식은 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`를 기준으로 판정한다.
-- `github-templates.md`는 title prefix, label, 필수 섹션, 연결 규칙 판정에 사용한다.
+- `github-templates.md`는 이슈 title prefix, label, 필수 섹션, 연결 규칙 판정에 사용한다.
+
+## 산출물 판정 규칙
+
+### PR 제목 판정 규칙
+
+| 판정 상태 | 판정 기준 |
+| --------- | --------- |
+| PR 제목 형식 통과 | 제목이 `<type>: <summary>` 형식이다. |
+| PR 제목 type 통과 | `type`이 저장소 PR 제목 type인 `chore`, `docs`, `feature`, `fix`, `refactor`, `revert`, `style`, `test` 중 하나다. |
+| PR 제목 summary 통과 | `summary`가 비어 있지 않고 변경 동작을 설명한다. |
+| PR 제목 type 근거 통과 | `type`이 변경 성격, 작업 브랜치 prefix, 변경 파일 역할, 최근 PR 제목 스타일 중 하나로 설명된다. |
+| PR 제목 판정 통과 | `PR 제목 형식 통과`, `PR 제목 type 통과`, `PR 제목 summary 통과`, `PR 제목 type 근거 통과`가 모두 충족된다. |
+| PR 제목 보류 | 제목이 `<type>: <summary>` 형식이 아니거나, `type`이 저장소 PR 제목 type에 속하지 않거나, `summary`가 비어 있거나 변경 동작을 설명하지 않거나, `type`이 변경 성격, 작업 브랜치 prefix, 변경 파일 역할, 최근 PR 제목 스타일 중 어느 것으로도 설명되지 않는다. |
 
 ## 상태 판정 규칙
 
@@ -158,6 +171,18 @@
 - 모든 필수 섹션과 필수 필드가 있으면 `게시 가능한 PR Review Template 확정`으로 판정한다.
 - 필수 섹션 또는 필수 필드가 비어 있으면 중단 사유와 보완 질문을 산출한다.
 
+### 리뷰 게시 위치 판정 규칙
+
+| 판정 상태 | 판정 기준 |
+| --------- | --------- |
+| 리뷰 대응 대상 아님 | 피드백 항목이 리뷰 실행 결과 파일에만 있고 GitHub review thread id 또는 marker 요약 피드백 댓글 id가 없다. |
+| 리뷰 대응 대상 | 피드백 항목에 GitHub review thread id 또는 marker 요약 피드백 댓글 id가 있다. |
+| review thread 게시 초안 | PR Review Template 중요도 라벨이 `[차단]` 또는 `[중요]`이고, 파일 경로와 line이 있으며, PR diff position 매핑 성공 결과가 있다. |
+| marker 요약 피드백 댓글 후보 | PR Review Template 중요도 라벨이 `[차단]` 또는 `[중요]`이고, 요약 피드백 표시가 있거나, 파일 경로 또는 line이 없거나, PR diff에 해당 파일 또는 line이 없거나, line이 PR diff hunk 밖이거나 outdated 상태이거나, GitHub review thread 생성에 필요한 diff position을 산출할 수 없거나, GitHub review thread 생성 API가 위치 오류로 실패했다는 매핑 실패 근거가 있다. |
+| 위치 매핑 보류 | PR Review Template 중요도 라벨이 `[차단]` 또는 `[중요]`이고, 파일 경로와 line이 있으며, PR diff position 매핑 성공 결과와 매핑 실패 근거가 모두 없다. |
+| 리뷰 코멘트 게시 초안 정리 완료 | 모든 `[차단]` 또는 `[중요]` 피드백이 `review thread 게시 초안` 또는 `marker 요약 피드백 댓글 후보` 중 하나로 분류된 상태다. |
+| 보류 질문 필요 | `위치 매핑 보류` 피드백이 하나 이상 있다. |
+
 ### 외부 의존성 설정 판정 규칙
 
 | 판정 상태 | 판정 기준 |
@@ -168,6 +193,15 @@
 | 리뷰 실행 모드 선택지 존재 | `review.modes`에 `available: true`인 모드가 하나 이상 기록된 상태다. |
 | 리뷰 실행 모드 설정 보완 필요 | `review.modes`가 비어 있거나 모든 모드의 `available` 값이 `false`인 상태다. |
 | 리뷰 실행 모드 설정 재생성 필요 | `.harness/workflow-engine.json`이 없거나 `review.defaultMode` 또는 `review.modes`가 없는 상태다. |
+
+### Claude 리뷰 실행 실패 판정 규칙
+
+| 판정 상태 | 판정 기준 | 재개 조건 |
+| --------- | --------- | --------- |
+| Claude 리뷰 실행 실패 | `claude/*` 리뷰 실행 모드의 `claude -p` 명령 exit code가 `0`이 아니다. | 저장된 stdout 파일 경로, exit code, stderr 출력이 기록된 상태다. |
+| Claude CLI 재로그인 필요 | `Claude 리뷰 실행 실패`이고 출력에 `Failed to authenticate`, `401 Invalid authentication credentials`, `Invalid authentication credentials` 중 하나가 포함된다. | 사용자가 Claude CLI 인증 복구 후 재개를 요청한 상태다. |
+| Claude 리뷰 실행 재시도 필요 | `Claude 리뷰 실행 실패`이고 인증 실패 문구 없이 일시적인 네트워크 오류, socket 오류, rate limit, service unavailable 문구가 포함된다. | 같은 리뷰 명령 재시도 사용자 결정이 있는 상태다. |
+| Claude 리뷰 실행 원인 확인 필요 | `Claude 리뷰 실행 실패`이고 `Claude CLI 재로그인 필요` 또는 `Claude 리뷰 실행 재시도 필요` 판정 기준에 맞지 않는다. | 리뷰 실행 모드 유지 또는 다른 리뷰 실행 모드 선택 사용자 결정이 있는 상태다. |
 
 ### 명령 실행 경로 규칙
 

@@ -583,6 +583,8 @@ Workflow Engine이 확정할 항목:
 - merge 선행 조건
 - 보류 질문
 
+PR 제목 후보는 `workflow-engine-rules.md`의 PR 제목 판정 규칙을 적용해 산출한다.
+
 Workflow Engine이 확정할 항목:
 
 - PR 제목
@@ -609,6 +611,10 @@ Workflow Engine이 확정할 항목:
 
 - PR 생성 요청값
 - 생성 전 보류 질문
+
+검증:
+
+- 확정된 PR 제목은 `workflow-engine-rules.md`의 PR 제목 판정 규칙으로 확인하고, 판정 결과를 반환한다.
 
 Workflow Engine이 확정할 항목:
 

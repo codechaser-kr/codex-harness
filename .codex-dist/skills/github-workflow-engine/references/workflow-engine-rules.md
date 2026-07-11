@@ -47,6 +47,16 @@
 | 원격 push 완료 | 원격 head branch가 존재하고 원격 head branch의 HEAD commit이 로컬 작업 브랜치 HEAD commit과 일치한다. |
 | 작업 대상 식별자 | 기준 이슈 또는 PR, 구현 단위, 커밋 단위, 브랜치, PR, review thread, marker 요약 피드백 항목처럼 반복 가능한 작업 대상을 구분하는 값이다. |
 
+### PR 제목 판정 규칙
+
+Workflow Engine 관리 PR 제목은 Conventional Commits 스타일의 `<type>: <summary>` 형식을 따른다.
+
+- 예: `feat: Workflow Engine 스킬 실행 계약 정렬`
+- 예: `fix: PR 제목 후보 컨벤션 복원`
+- 예: `docs: Workflow Engine 설계 문서 재정렬`
+
+PR 제목의 type은 기준 이슈 유형보다 변경 성격, 작업 브랜치 prefix, 변경 파일의 역할, 최근 PR 제목 스타일을 우선해 정한다. PR 제목은 `feat:`, `fix:`, `docs:` 같은 Conventional Commits type으로 시작한다.
+
 ### 상태 근거 분류 규칙
 
 | 묶음 | 포함할 수 있는 근거 |

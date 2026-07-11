@@ -24,9 +24,10 @@ description: PR 제목과 본문, base branch, 원격 head branch를 기준으�
 
 1. 원격 head branch가 존재하는지 확인한다.
 2. 제목과 본문이 Workflow Engine에서 전달한 입력과 같은지 확인한다.
-3. PR 본문의 `연관 이슈` 섹션에 `Refs #번호`가 있는지 확인한다.
-4. PR 생성 요청 초안과 생성 전 확인해야 할 보류 질문을 반환한다.
-5. 실제 GitHub PR 생성은 Workflow Engine이 수행한다.
+3. PR 제목은 `workflow-engine-rules.md`의 PR 제목 판정 규칙으로 확인하고, 판정 결과를 반환한다.
+4. PR 본문의 `연관 이슈` 섹션에 `Refs #번호`가 있는지 확인한다.
+5. PR 생성 요청 초안과 생성 전 확인해야 할 보류 질문을 반환한다.
+6. 실제 GitHub PR 생성은 Workflow Engine이 수행한다.
 
 ## Workflow Engine이 확정할 항목
 

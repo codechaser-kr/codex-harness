@@ -526,10 +526,6 @@ Workflow Engine이 확정할 항목:
 - 브랜치 직접 생성
 - 브랜치 직접 전환
 
-브랜치 prefix는 변경 대상 파일 경로가 아니라 변경의 제품 의미와 저장소 성격을 우선한다. 문서가 실행 계약이나 핵심 기능 산출물인 저장소에서는 설계 문서 반영이라도 `feat/...` 후보가 우선될 수 있다.
-
-브랜치 topic은 이슈 제목보다 구현 단위의 핵심 동작을 우선해 만든다. 핵심 동작만으로 충분히 구체적이지 않으면 변경 대상 파일 또는 스킬 이름을 보조 정보로 사용하고, 그다음 이슈 제목의 도메인 키워드를 사용한다. 예를 들어 #47처럼 리뷰 피드백의 중요도와 대응 방향을 분리하는 구현 단위는 `feat/issue-47-separate-review-importance-from-response`처럼 변경 동작이 드러나는 후보를 우선 제안한다.
-
 ### Commit Skill
 
 `commit`은 이 저장소가 관리하지 않는 외부 전역 Codex 스킬이다.
@@ -583,8 +579,6 @@ Workflow Engine이 확정할 항목:
 - merge 선행 조건
 - 보류 질문
 
-PR 제목 후보는 `workflow-engine-rules.md`의 PR 제목 판정 규칙을 적용해 산출한다.
-
 Workflow Engine이 확정할 항목:
 
 - PR 제목
@@ -612,10 +606,6 @@ Workflow Engine이 확정할 항목:
 - PR 생성 요청값
 - 생성 전 보류 질문
 
-검증:
-
-- 확정된 PR 제목이 `workflow-engine-rules.md`의 PR 제목 판정 규칙을 벗어나면 생성 전 보류 질문에 근거를 포함한다.
-
 Workflow Engine이 확정할 항목:
 
 - 실제 PR 생성
@@ -629,8 +619,6 @@ Workflow Engine이 확정할 항목:
 - 연결 이슈 임의 종료
 
 ### Review Comment Skill
-
-Review Comment Skill은 리뷰 생성 도구와 무관하게 PR Review Template 형식의 리뷰 결과를 게시 가능한 피드백 구조로 변환한다.
 
 입력:
 
@@ -660,8 +648,6 @@ Workflow Engine이 확정할 항목:
 - 리뷰 결과를 일반 PR review body로만 게시
 - 사용자 결정 없는 review thread resolve
 - marker 없는 일반 PR comment를 요약 피드백 상태 원천으로 취급
-
-피드백 게시 위치 판정은 `workflow-engine-rules.md`의 리뷰 게시 위치 판정 규칙을 따른다. Review Comment Skill은 판정 결과에 따라 `inline_review_threads`, `summary_feedback_comment`, 보류 질문을 분리해 반환한다.
 
 ## 리뷰 실행 계약
 

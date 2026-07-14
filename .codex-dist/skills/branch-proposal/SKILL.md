@@ -1,15 +1,15 @@
 ---
-name: branch-plan
+name: branch-proposal
 description: Workflow Engine 구현 흐름에서 기준 이슈와 구현 계획을 읽어 작업 시작 전 브랜치 이름 후보를 제안합니다.
 ---
 
-# Branch Plan
+# Branch Proposal
 
 이 스킬은 구현 흐름에 들어가기 전에 기준 이슈와 구현 단위를 읽고 작업 브랜치 이름 후보를 제안한다. 브랜치 이름 사용자 결정, 생성, 전환은 Workflow Engine의 후속 작업에서 처리한다.
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/workflow-engine-rules.md`
+- `../github-workflow-engine/references/workflow-engine-rules.md`에서 `Branch Proposal 출력 판정 규칙` 섹션만 읽는다.
 
 ## 입력
 
@@ -32,7 +32,7 @@ description: Workflow Engine 구현 흐름에서 기준 이슈와 구현 계획�
 1. 저장소의 기존 브랜치 네이밍 관례를 우선한다.
 2. 관례가 없으면 이슈 유형과 번호, 구현 단위의 핵심 동작을 드러내는 topic을 포함한다.
 3. 브랜치 이름은 소문자, 숫자, `/`, `-` 중심으로 제안한다.
-4. 후보와 제안 근거, 후보가 드러내는 구현 내용을 Workflow Engine이 검토할 수 있게 정리한다.
+4. 후보와 후보가 드러내는 구현 범위를 근거와 함께 정리한다.
 5. 실제 브랜치 생성 또는 전환은 Workflow Engine이 수행한다.
 
 ## 기본 형식
@@ -46,3 +46,16 @@ docs/issue-<번호>-<topic>
 ```
 
 정책검토 설계 반영은 `docs/issue-<번호>-<topic>`, 기능변경은 `feat/issue-<번호>-<topic>`, 기능결함은 `fix/issue-<번호>-<topic>`을 우선 검토한다.
+
+## 필수 출력 섹션
+
+브랜치 이름 후보는 다음 섹션과 항목을 순서대로 빠짐없이 채운다. 필수 내용을 채울 수 없으면 후보를 확정하지 말고 `보류 질문`에 확인할 내용을 기록한다.
+
+- `기준 이슈`
+- `구현 단위`
+- `확인한 브랜치 이름 규칙`
+- `브랜치 이름 후보`
+  - `브랜치 이름`
+  - `제안 근거와 범위`
+- `추천 브랜치`
+- `보류 질문`

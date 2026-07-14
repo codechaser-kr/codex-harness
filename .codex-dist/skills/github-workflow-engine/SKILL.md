@@ -9,8 +9,8 @@ description: GitHub Issue, PR, label, checklist, review thread, comment를 기�
 
 ## 먼저 읽을 문서
 
-- `references/workflow-engine-rules.md`
-- `references/github-templates.md`
+- `references/workflow-engine-rules.md` 전체를 항상 읽는다.
+- 현재 작업 판정이나 실행에 이슈 유형 label, 제목, 본문, 템플릿, 연관 이슈 계약이 필요하면 `references/github-templates.md`를 읽는다.
 
 필요한 경우 대상 저장소의 `.harness/logs/github-workflow-log.md`를 읽는다. 로그는 `workflow-engine-rules.md`에서 보조 근거로 인정한 항목만 사용한다.
 
@@ -19,10 +19,11 @@ description: GitHub Issue, PR, label, checklist, review thread, comment를 기�
 1. 기준 이슈, 기준 PR, 새 요청 여부, 재개 요청 여부를 식별한다.
 2. `workflow-engine-rules.md`의 판정 규칙으로 현재 작업, 진행 판단, 실행 범위를 산출한다.
 3. 현재 작업이 전용 스킬의 초안, 후보, 분석 결과를 요구하면 해당 전용 스킬을 호출한다.
-4. 사용자 결정이 필요한 작업이면 결정 대상, 선택지, `기타 의견 입력`, 입력 예시를 번호 목록으로 제시한다.
-5. 자동 실행 작업이면 산출된 실행 범위 안에서만 GitHub 상태, 파일, 브랜치, 커밋, PR, 댓글, review thread를 변경한다.
-6. 자동 실행 후 GitHub 실행 상태와 현재 코드 상태를 다시 읽고 다음 작업 판정을 반복한다.
-7. 작업 진입, 중단, 재개, 작업 결과를 `.harness/logs/github-workflow-log.md`에 기록한다.
+4. 전용 스킬 출력에 `workflow-engine-rules.md`의 해당 산출물 판정 규칙을 적용하고, 보류 판정이면 상태를 변경하거나 사용자 결정 대상으로 제시하지 않는다.
+5. 사용자 결정이 필요한 작업이면 결정 대상, 선택지, `기타 의견 입력`, 입력 예시를 번호 목록으로 제시한다.
+6. 자동 실행 작업이면 산출된 실행 범위 안에서만 GitHub 상태, 파일, 브랜치, 커밋, PR, 댓글, review thread를 변경한다.
+7. 자동 실행 후 GitHub 실행 상태와 현재 코드 상태를 다시 읽고 다음 작업 판정을 반복한다.
+8. 작업 진입, 중단, 재개, 작업 결과를 `.harness/logs/github-workflow-log.md`에 기록한다.
 
 PR merge는 사람이 수행한다. Workflow Engine은 merge 알림이나 GitHub 실행 상태를 근거로 merge 이후 작업만 수행한다.
 
@@ -31,9 +32,14 @@ PR merge는 사람이 수행한다. Workflow Engine은 merge 알림이나 GitHub
 | 필요한 산출물 | 호출할 스킬 |
 | ------------- | ----------- |
 | 이슈 초안 | `issue-creation` |
+| 기능제안 진행 방향 후보 | `feature-proposal-triage` |
+| 정책 설계 계획 | `policy-plan` |
+| 정책검토 기능변경 전환 방향 후보 | `policy-review-next-triage` |
 | 기능변경 계획 | `feature-plan` |
+| 기능결함 원인 조사 결과 | `fix-analysis` |
 | 기능결함 해결 계획 | `fix-plan` |
-| 브랜치 이름 후보 | `branch-plan` |
+| 브랜치 이름 후보 | `branch-proposal` |
+| 세부 구현 계획 | `commit-plan` |
 | 커밋 메시지 후보 | 전역 `commit` |
 | PR 제목과 본문 초안 | `pr-proposal` |
 | PR 생성 요청값 | `pr-creation` |
@@ -53,8 +59,9 @@ Workflow Engine은 `workflow-engine-rules.md`의 리뷰 실행 모드 판정 결
 
 리뷰 실행 모드 선택지는 대상 저장소의 `.harness/workflow-engine.json`에 저장된 사용 가능 모드에서 만든다. 저장된 사용 가능 모드가 없거나 설정 파일이 없으면 하네스 설치 또는 갱신 재실행 조건을 안내하고 중단한다.
 
-리뷰 실행 명령은 stdout을 `/tmp` 아래 파일로 저장하는 형태로 실행한다. 파일명은 PR 번호와 리뷰 실행 모드를 드러내게 정하고, 리뷰 결과 정규화와 리뷰 코멘트 초안 정리는 저장된 파일 경로를 입력으로 사용한다.
-리뷰 결과 정규화는 `workflow-engine-rules.md`의 PR Review Template 판정 기준을 적용해 완료 또는 보류 질문을 산출한다.
+리뷰 실행 명령은 stdout을 `/tmp` 아래 파일로 저장하는 형태로 실행한다. 파일명은 PR 번호, head commit SHA, 리뷰 실행 모드를 드러내게 정하고, 리뷰 결과 정규화는 저장된 파일 경로를 입력으로 사용한다.
+리뷰 결과 정규화는 `workflow-engine-rules.md`의 PR Review Template 판정 기준을 적용한다. 정규화 결과는 현재 PR 번호와 head commit SHA를 본문과 파일명에 포함한 별도 `/tmp` 파일로 저장하고 해당 경로를 실행 로그에 기록한다.
+정규화 결과에 `workflow-engine-rules.md`의 `게시할 리뷰 피드백 존재` 또는 `게시할 리뷰 피드백 없음` 판정 규칙을 적용한다. 게시할 리뷰 피드백이 있을 때만 리뷰 코멘트 게시 초안을 만들고, 없으면 `리뷰 대응 대상 확인`으로 전환한다.
 
 Claude 리뷰 실행 실패가 `Claude CLI 재로그인 필요`로 판정되면 토큰 만료 가능성만 안내하고 중단한다.
 
@@ -95,11 +102,15 @@ Workflow Engine은 외부 의존성이 필요한 현재 작업에 진입하기 �
 작업에 진입하거나 중단 또는 재개 상태를 기록해야 할 때 대상 저장소의 `.harness/logs/github-workflow-log.md`에 다음 항목을 남긴다.
 
 - 대상 이슈 또는 PR
+- 작업 대상 식별자
 - 워크플로우 유형
 - 진입한 작업 이름
 - 적용한 조건
 - 실행 범위와 수행한 작업 내용
-- 사용자 결정 필요 여부
+- 확정된 사용자 결정 또는 사용자 결정 필요 여부
+- 완료기준과 충족 근거
 - 참조한 GitHub 실행 상태
 - GitHub 상태에 반영한 내용
 - 남은 판단 질문 또는 재개 조건
+
+반복 가능한 작업은 해당 대상을 유일하게 구분할 수 있는 작업 대상 식별자를 기록한다.

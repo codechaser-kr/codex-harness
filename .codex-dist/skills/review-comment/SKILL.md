@@ -9,7 +9,7 @@ description: PR Review Template 출력을 GitHub PR review thread 또는 marker�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/workflow-engine-rules.md`
+- `../github-workflow-engine/references/workflow-engine-rules.md`에서 `PR Review Template 판정 규칙`, `리뷰 게시 위치 판정 규칙`, `Review Comment 출력 판정 규칙` 섹션만 읽는다.
 
 ## 입력
 
@@ -26,9 +26,9 @@ description: PR Review Template 출력을 GitHub PR review thread 또는 marker�
 4. review thread 게시 대상으로 판정된 피드백은 review thread 초안으로 정리한다.
 5. marker 요약 피드백 대상으로 판정된 피드백은 marker가 있는 요약 피드백 댓글 체크리스트 초안으로 정리한다.
 6. 보류 질문 대상으로 판정된 피드백은 `questions`로 정리한다.
-7. 기존 review thread와 요약 피드백 댓글을 확인해 같은 리뷰 결과의 중복 게시 위험을 산출한다.
+7. 기존 review thread와 요약 피드백 댓글을 확인해 중복 게시 대상을 제외한다.
 8. marker는 반드시 `<!-- codex-harness:summary-feedback v1 -->`를 사용한다.
-9. 게시 요청 초안을 `inline_review_threads`와 `summary_feedback_comment`로 분리하고 중복 게시 위험을 Workflow Engine에 반환한다.
+9. 게시 요청 초안을 `inline_review_threads`와 `summary_feedback_comment`로 분리한다.
 
 ## 판정 기준 참조
 
@@ -47,17 +47,11 @@ description: PR Review Template 출력을 GitHub PR review thread 또는 marker�
   - 중요도: ...
 ```
 
-## 출력
+## 필수 출력
 
+리뷰 코멘트 게시 초안은 다음 필드를 빠짐없이 채운다. 해당 게시 대상이 없으면 빈 배열 또는 `N/A`를 명시한다.
+
+- `pr_number`
 - `inline_review_threads`: review thread 게시 대상으로 판정된 피드백의 게시 초안
 - `summary_feedback_comment`: marker 요약 피드백 대상으로 판정된 피드백의 체크리스트 댓글 초안
-- `duplicate_risk`: 기존 review thread 또는 marker 댓글과의 중복 게시 위험
 - `questions`: Workflow Engine이 확인할 보류 질문
-
-## Workflow Engine이 확정할 항목
-
-- review thread 우선 게시
-- review thread 게시 실패 시 marker 요약 피드백 댓글 게시
-- 게시 후 피드백 상태 추적
-- 피드백 대응 방향
-- 피드백 해결 여부 결정

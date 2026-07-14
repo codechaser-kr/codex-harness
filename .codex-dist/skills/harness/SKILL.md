@@ -180,6 +180,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 7. `.harness/docs/*` 문서가 생성되거나 수정되면 같은 세션 로그에도 반영 역할, QA 관점, 남은 위험을 함께 남긴다.
 8. 기존 하네스 문서를 보존하면서 역할명이나 진입점이 새 `team-spec`과 다르면, 원문을 바로 고치기보다 `orchestration-plan.md`나 `team-playbook.md`에 이전 역할명 -> 현재 역할명 호환성 매핑과 우선 기준을 남긴다.
 9. GitHub Workflow Engine을 타겟 레포에 적용하는 경우 `.harness/workflow-engine.json`에 `dependencies.commit.available`, `review.defaultMode`, `review.modes`를 기록한다. 각 리뷰 실행 모드에는 하네스 설치 또는 갱신 시 확인한 `available` 값을 남긴다.
+10. GitHub Workflow Engine을 타겟 레포에 적용하는 경우 `github-templates.md`의 이슈 유형별 라벨 집합이 타겟 GitHub 레포에 정확한 이름으로 존재하는지 확인한다. 라벨 생성은 `repo-bootstrap` 저장소의 설치 절차 책임이므로 하네스는 라벨을 직접 생성하지 않고 누락 또는 불일치만 기록한다.
 
 이 단계의 목적은 문서 묶음을 완성하는 것이 아니다. 생성된 역할 팀이 실제 요청에서 어떤 순서로 움직이고, 어디서 멈추며, 어떤 기준으로 다시 들어갈지를 실행 가능한 형태로 고정하는 것이다.
 
@@ -199,7 +200,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 6. 역할별 `우선 입력`의 설계/정책/사양 문서가 `team-spec` 상단의 `설계 원천 우선순위` 또는 `설계 원천 인벤토리`에 빠짐없이 포함됐는지 확인한다.
 7. 역할 목적, 책임, 주요 출력과 우선 입력 문서가 `team-spec` 상세 기준에 맞게 정합적인지 확인한다.
 8. 실행 로그와 최신 세션 요약이 다음 실행의 입력으로 읽힐 수 있는지 확인한다.
-9. GitHub Workflow Engine을 타겟 레포에 적용하는 경우, `../github-workflow-engine/references/github-templates.md` 원형과 타겟 `.github/ISSUE_TEMPLATE/*.md`, `.github/pull_request_template.md`의 title prefix, label, 필수 섹션, PR 연결 규칙 정합성을 확인한다.
+9. GitHub Workflow Engine을 타겟 레포에 적용하는 경우, `../github-workflow-engine/references/github-templates.md` 원형과 타겟 `.github/ISSUE_TEMPLATE/*.md`, `.github/pull_request_template.md`의 title prefix, label, 이슈 유형별 라벨 존재 여부, 필수 섹션, PR 연결 규칙 정합성을 확인한다.
 10. 부족한 축이 `team-spec` 역할 정의 문제인지, agent/skill 포인터 문제인지, 오케스트레이션 문제인지, GitHub 템플릿 정합성 문제인지 분류한다.
 11. `운영 가능 / 재작성 필요 / 재구성 필요` 판정은 여기서 내린다. 피드백을 실제 문서나 역할 자산에 반영하는 작업은 하네스 Phase 7에서 다룬다.
 

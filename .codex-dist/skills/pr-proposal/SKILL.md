@@ -10,7 +10,7 @@ description: Workflow Engine 구현 흐름에서 기준 이슈, 변경 요약, �
 ## 먼저 읽을 문서
 
 - `../github-workflow-engine/references/github-templates.md`
-- `../github-workflow-engine/references/workflow-engine-rules.md`
+- `../github-workflow-engine/references/workflow-engine-rules.md`에서 `PR 제목 판정 규칙`과 `PR Proposal 출력 판정 규칙` 섹션만 읽는다.
 
 ## 입력
 
@@ -32,10 +32,10 @@ description: Workflow Engine 구현 흐름에서 기준 이슈, 변경 요약, �
 6. PR 제목 후보는 `workflow-engine-rules.md`의 PR 제목 판정 규칙을 적용해 제안한다.
 7. 실제 PR 생성은 Workflow Engine이 수행한다.
 
-## 출력 형식
+## 필수 출력 섹션
 
-- PR 제목 후보
-- PR 본문 초안
-- 연결 이슈 파싱 결과
-- merge 선행 조건
-- Workflow Engine이 확인할 보류 질문
+PR 초안은 다음 섹션을 순서대로 빠짐없이 채운다. 제목 또는 본문 계약을 충족하지 못하면 PR 초안을 확정하지 말고 `보류 질문`에 확인할 내용을 기록한다.
+
+- `제목 후보`
+- `본문 초안`
+- `보류 질문`

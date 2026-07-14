@@ -4,7 +4,7 @@ set -eu
 CODEX_HOME="${CODEX_HOME:-"$HOME/.codex"}"
 DEST_ROOT="${CODEX_HARNESS_DEST_ROOT:-"$CODEX_HOME/skills"}"
 HARNESS_DEST="${CODEX_HARNESS_DEST:-"$DEST_ROOT/harness"}"
-CODEX_SKILLS="harness github-workflow-engine issue-creation feature-plan fix-plan branch-plan pr-proposal pr-creation review-comment"
+CODEX_SKILLS="harness github-workflow-engine issue-creation feature-proposal-triage policy-plan policy-review-next-triage feature-plan fix-analysis fix-plan branch-proposal commit-plan pr-proposal pr-creation review-comment"
 
 dest_for_skill() {
   skill="$1"

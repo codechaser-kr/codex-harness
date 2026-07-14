@@ -100,7 +100,7 @@ GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장�
 
 - `github-workflow-engine`: GitHub Run State를 읽고 State Transition Rule에 따라 다음 액션을 제안합니다.
 - `issue-creation`: `기능제안`, `정책검토`, `기능변경`, `기능결함` 이슈 초안을 템플릿 기준으로 제안합니다.
-- `feature-proposal-triage`: 기능제안 이슈를 기준으로 진행하지 않음, 정책검토 필요, 기능변경 필요 중 적절한 진행 방향 후보와 판단 근거를 제안합니다.
+- `feature-proposal-triage`: 기능제안 이슈를 기준으로 진행하지 않음, 정책 검토 필요, 기능 변경 필요 중 적절한 진행 방향 후보와 판단 근거를 제안합니다.
 - `policy-plan`: 정책검토 이슈를 기준으로 정책 설계, 판단 맥락, 설계 문서 반영 대상, 설계 반영 후 기능변경 전환 범위를 제안합니다.
 - `policy-review-next-triage`: 정책검토 결과와 열린 기능변경 이슈를 비교해 기존 이슈 반영 또는 새 이슈 생성 후보와 판단 근거를 제안합니다.
 - `feature-plan`: 기능변경 이슈를 브랜치/PR 단위로 나누고 검증 기준을 제안합니다.

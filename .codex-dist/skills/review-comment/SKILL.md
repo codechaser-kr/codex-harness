@@ -16,7 +16,6 @@ description: PR Review Template 출력을 GitHub PR review thread 게시 초안�
 - PR 번호
 - PR Review Template 출력
 - 기존 review thread 목록
-- 기존 PR issue comments
 
 ## 책임
 
@@ -26,8 +25,7 @@ description: PR Review Template 출력을 GitHub PR review thread 게시 초안�
 4. review thread 게시 대상으로 판정된 피드백은 review thread 초안으로 정리한다.
 5. 위치 매핑 보류 대상으로 판정된 피드백은 원문, 보류 사유, 현재 `file`·`line` 근거와 `review thread 게시 위치 재지정`, `비실행 피드백 재분류` 선택지를 `questions`로 정리한다.
 6. 기존 review thread를 확인해 중복 게시 대상을 제외한다.
-7. 기존 marker 요약 피드백 댓글은 과거 호환 확인용으로만 읽고, 새 게시 초안이나 대응 대상으로 만들지 않는다.
-8. 게시 요청 초안을 `inline_review_threads`와 `questions`로 분리한다.
+7. 게시 요청 초안을 `inline_review_threads`와 `questions`로 분리한다.
 
 ## 판정 기준 참조
 
@@ -42,3 +40,5 @@ Workflow Engine이 `review thread 게시 위치 재지정`을 확정하면 새 `
 - `pr_number`
 - `inline_review_threads`: review thread 게시 대상으로 판정된 피드백의 게시 초안
 - `questions`: Workflow Engine이 확인할 보류 질문
+
+기존 marker 요약 피드백 댓글의 호환 확인은 이 스킬의 입력이나 출력에 포함하지 않는다. Workflow Engine이 `리뷰 대응 대상 확인`과 `남은 피드백 확인`에서 GitHub issue comments를 다시 읽고 `legacy_marker_comments`로 산출한다.

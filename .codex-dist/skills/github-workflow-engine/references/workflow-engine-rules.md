@@ -311,6 +311,57 @@ PR Review Template의 섹션명은 사람이 읽는 출력 구조이므로 한�
 - 명령 실행 경로는 현재 작업, 실행 범위, 사용자 결정의 판정 결과를 유지한다.
 - 변경 손실 가능 명령은 현재 작업의 실행 범위 안에 있고 사용자 의도가 명확한 상태에서만 실행한다.
 - PR merge 반영 작업의 작업 브랜치 정리는 안전 조건을 만족하면 사용자 추가 결정 없이 수행한다.
+- 구조화 실행 요청은 생성 시 이 규칙으로 판정한 `command_execution_path`와 권한 조건을 기록한다. 실행 주체는 실제 명령 호출 직전에 같은 규칙으로 `실행 직전 경로 재판정 통과` 여부를 판정한다.
+- `실행 직전 경로 재판정 통과`는 기록된 `command_execution_path`와 직전 판정 경로가 일치하고, 필요한 권한 조건과 사용 가능 도구 조건이 확인되며, 변경 손실 가능 명령이면 이 규칙의 추가 조건도 충족한 상태다. 하나라도 확인할 수 없거나 일치하지 않으면 명령 실행 없이 `중단`으로 판정한다.
+
+### 구조화 실행 요청 판정 규칙
+
+구조화 실행 요청은 확정된 현재 작업을 한 건의 추적 가능한 실행 입력으로 표현한 값이다. 요청에 없는 값, 재계산할 수 없는 값, 또는 사용자 결정으로 확정되지 않은 값은 실행 주체가 보완하거나 재판단하지 않는다.
+
+| 판정 상태 | 판정 기준 |
+| --- | --- |
+| 요청 식별 가능 | `request_fingerprint`를 쓰면 `request_fingerprint_algorithm_identifier`, `request_fingerprint_algorithm_version`이 있고 같은 입력에서 같은 계산 방식과 버전으로 재계산 가능하다. `request_id`만 쓰면 `request_fingerprint_algorithm_identifier`, `request_fingerprint_algorithm_version`이 `not_applicable`이고 `request_fingerprint_not_applicable_reason`이 있다. 둘 중 하나의 식별 방식은 반드시 있다. |
+| 작업과 범위 식별 가능 | `base_issue_or_pr`, `work_target_id`, `work_type`, `target_ids_or_files`, `confirmed_request_values`가 있고, 각 값이 현재 작업과 실행 범위 규칙으로 확정된 값과 일치한다. |
+| 기준 상태 식별 가능 | 대상 저장소의 `target_baseline`에 commit SHA 또는 동등한 기준 상태 식별자가 기록되어 있다. |
+| 계약 조건 식별 가능 | `preconditions`, `expected_postconditions`, `verification_criteria`가 각각 비어 있지 않고 현재 작업의 조건, 완료기준, 검증 기준과 모순되지 않는다. |
+| 실행 경로 조건 식별 가능 | `command_execution_path`, `permission_conditions`, `available_tool_conditions`, `destructive_command_risk`가 있고, 명령 실행 주체이면 `command_execution_path`가 명령 실행 경로 규칙으로 판정한 값과 일치한다. 비명령 실행 주체이면 `command_execution_path`가 `not_applicable`이고 `command_execution_path_not_applicable_reason`이 있다. |
+| 예정 실행 주체 식별 가능 | `planned_executor_type`가 있고, `planned_agent_or_role`, `planned_model_identifier`, `planned_skill_identifier`, `planned_config_identifier`마다 실행 주체 유형에 적용되는 확인 가능한 값 또는 `not_applicable`과 해당 `*_not_applicable_reason`이 있다. 적용 여부를 확인하지 못한 값은 통과하지 않는다. |
+| 예정 세션 관계 식별 가능 | `orchestration_session_id`와 `planned_session_relation`이 있다. `planned_session_relation`이 `same_session`이면 `planned_execution_session_id`가 `orchestration_session_id`와 같거나 명시적 `same_session` 표시가 있다. `separate_execution_session`이면 알려진 `planned_execution_session_id` 또는 도구 발급 대기 `pending_tool_issued`와 근거가 있다. |
+| 구조화 실행 요청 사용 가능 | `요청 식별 가능`, `작업과 범위 식별 가능`, `기준 상태 식별 가능`, `계약 조건 식별 가능`, `실행 경로 조건 식별 가능`, `예정 실행 주체 식별 가능`, `예정 세션 관계 식별 가능`이 모두 충족된다. |
+
+### 구조화 실행 결과와 요청-결과 상관관계 판정 규칙
+
+구조화 실행 결과는 한 건의 구조화 실행 요청에 대응하는 관측 결과다. 결과의 실제 값은 요청값을 대체하지 않으며, 요청값과 다르면 불일치를 기록하는 근거로만 사용한다.
+
+| 판정 상태 | 판정 기준 |
+| --- | --- |
+| 결과 식별 정보 존재 | `request_id` 또는 `request_fingerprint`, `target_baseline`, `actual_executor_type`, `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`, `actual_orchestration_session_id`, `actual_execution_session_id`, `actual_session_relation`, `actual_permission_conditions`, `actual_available_tool_conditions`, `actual_command_execution_path`, `execution_path_recheck_result`가 있다. `request_fingerprint`를 쓰면 `request_fingerprint_algorithm_identifier`, `request_fingerprint_algorithm_version`이 있고, `request_id`만 쓰면 두 값이 `not_applicable`이며 그 근거가 있다. `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`마다 실행 주체 유형에 적용되는 확인 가능한 값 또는 `not_applicable`과 해당 `*_not_applicable_reason`이 있다. 비명령 실행 주체이면 `actual_command_execution_path`, `execution_path_recheck_result`가 각각 `not_applicable`이고 `command_execution_path_not_applicable_reason`이 있으며, 단순 누락은 통과하지 않는다. |
+| 결과 수행 근거 존재 | `performed_actions`, 변경 파일 `changed_files`, `github_state_changes`, 검증 결과 `verification_results`, `postconditions_satisfied`, 남은 위험 또는 실패 사유 `residual_risks_or_failure_reasons`가 있다. 변경 또는 GitHub 상태 변경이 없으면 각각 빈 값임을 명시한다. |
+| 요청-결과 상관관계 통과 | 결과의 요청 식별자 또는 요청 지문과 지문 계산 방식·버전, `target_baseline`, 실제 실행 주체 유형, 적용 가능한 agent/role·model·skill·config 식별 정보 또는 `not_applicable` 근거, 권한·도구 조건이 원 요청의 해당 값 및 `실행 직전 경로 재판정 통과` 결과와 일치한다. 명령 실행 주체이면 `actual_command_execution_path`가 원 요청의 `command_execution_path`와 일치하고 `execution_path_recheck_result`가 `실행 직전 경로 재판정 통과`다. 비명령 실행 주체이면 두 실제 경로 필드의 `not_applicable`과 근거가 원 요청의 `command_execution_path_not_applicable_reason`과 일치한다. `actual_orchestration_session_id`는 `orchestration_session_id`와 일치하고, `actual_session_relation`과 `actual_execution_session_id`는 `planned_session_relation`에 일치한다. `same_session`이면 두 실제 세션 ID가 같아야 하고, `separate_execution_session`이면 달라야 하며 알려진 `planned_execution_session_id`가 있으면 그 값과도 일치한다. |
+| 실행 범위 준수 | `performed_actions`, `changed_files`, `github_state_changes`가 원 요청의 `work_type`, `target_ids_or_files`, `confirmed_request_values`, 실행 범위 밖의 값을 포함하지 않는다. |
+| 구조화 실행 결과 사용 가능 | `결과 식별 정보 존재`, `결과 수행 근거 존재`, `요청-결과 상관관계 통과`, `실행 범위 준수`가 모두 충족된다. |
+
+### 구조화 실행 성공과 중단 판정 규칙
+
+| 판정 상태 | 판정 기준 | 중단 사유와 재개 조건 |
+| --- | --- | --- |
+| 구조화 실행 성공 | `구조화 실행 요청 사용 가능`, `구조화 실행 결과 사용 가능`, `요청-결과 상관관계 통과`, `실행 범위 준수`가 모두 충족되고, 모든 `expected_postconditions`가 충족되며 모든 `verification_criteria`의 `verification_results`가 성공이다. | 해당 없음 |
+| 구조화 실행 중단 | 요청 또는 결과 필수값 누락, 요청-결과 불일치, 실행 범위 확대, `preconditions` 실패, 필요한 권한 또는 사용 가능 도구 조건 미확인, 실행 직전 경로 재판정 실패, 사후조건 실패, 검증 실패 중 하나 이상이 있다. | 충족하지 못한 판정 상태와 원인을 기록하고, 누락값 보완, 기준 상태 재확인, 사용자 결정, 권한 또는 도구 조건 확인, 범위 축소 또는 새 구조화 실행 요청 중 필요한 재개 조건을 산출한다. |
+
+- `구조화 실행 성공` 이외의 모든 상태는 성공으로 판정하지 않는다.
+- 실행 주체는 `confirmed_request_values`, `target_ids_or_files`, `work_type`, `expected_postconditions`, `verification_criteria`를 재판단하거나 실행 범위를 넓힐 수 없다. 불일치 또는 추가 판단 필요는 `구조화 실행 중단`으로 판정한다.
+
+### 실행 주체 선택 판정 규칙
+
+| 판정 상태 | 판정 기준 |
+| --- | --- |
+| 결정론적 실행기 선택 | 확정된 단순 상태 변경이고, 명령 실행 경로 규칙과 사용 가능 도구 조건으로 확인되는 결정론적 도구 경로가 있다. |
+| 저비용 실행 서브에이전트 선택 | 결정론적 도구 경로가 없고, 판단·값 재해석·범위 변경 없이 단일 동작으로 실행할 수 있으며, 실행 주체 유형에 적용되는 agent/role, model, skill, config 식별 정보가 확인 가능하거나 `not_applicable` 근거가 있다. |
+| 타겟 하네스 코드 수정 서브에이전트 선택 | 파일 수정 작업이고, 대상 저장소의 로컬 `run-harness` 준비 상태와 타겟 하네스 코드 수정 서브에이전트의 실행 주체 유형에 적용되는 확인 가능한 식별 정보 또는 `not_applicable` 근거가 모두 있다. |
+| 파일 수정 중단 | 파일 수정 작업인데 로컬 `run-harness` 준비 상태가 없거나 타겟 하네스 코드 수정 서브에이전트를 확인할 수 없는 상태다. 직접 수정은 허용하지 않는다. |
+
+- 최종 판단, 사용자 결정 해석, 리뷰 내용 작성, 커밋 생성 여부 판단, PR 생성 여부 판단은 결정론적 실행기, 저비용 실행 서브에이전트, 타겟 하네스 코드 수정 서브에이전트에 위임하지 않는다.
+- 위 선택 판정에 맞는 실행 주체가 없으면 `구조화 실행 중단`으로 판정한다.
 
 ## 작업 전이 규칙
 

@@ -320,7 +320,7 @@ PR Review Template의 섹션명은 사람이 읽는 출력 구조이므로 한�
 
 | 판정 상태 | 판정 기준 |
 | --- | --- |
-| 요청 식별 가능 | `request_fingerprint`를 쓰면 `request_fingerprint_algorithm_identifier`, `request_fingerprint_algorithm_version`이 있고 같은 입력에서 같은 계산 방식과 버전으로 재계산 가능하다. `request_id`만 쓰면 `request_fingerprint_algorithm_identifier`, `request_fingerprint_algorithm_version`이 `not_applicable`이고 `request_fingerprint_not_applicable_reason`이 있다. 둘 중 하나의 식별 방식은 반드시 있다. |
+| 요청 식별 가능 | `request_id`가 있고, 모든 구조화 실행 요청은 `request_id`를 필수 식별자로 사용한다. 원 요청의 식별과 선택은 `request_id`로만 수행하며, 다른 식별자를 fallback으로 사용하지 않는다. |
 | 작업과 범위 식별 가능 | `base_issue_or_pr`, `work_target_id`, `work_type`, `target_ids_or_files`, `confirmed_request_values`가 있고, 각 값이 현재 작업과 실행 범위 규칙으로 확정된 값과 일치한다. |
 | 기준 상태 식별 가능 | 대상 저장소의 `target_baseline`에 commit SHA 또는 동등한 기준 상태 식별자가 기록되어 있다. |
 | 계약 조건 식별 가능 | `preconditions`, `expected_postconditions`, `verification_criteria`가 각각 비어 있지 않고 현재 작업의 조건, 완료기준, 검증 기준과 모순되지 않는다. |
@@ -335,9 +335,9 @@ PR Review Template의 섹션명은 사람이 읽는 출력 구조이므로 한�
 
 | 판정 상태 | 판정 기준 |
 | --- | --- |
-| 결과 식별 정보 존재 | `request_id` 또는 `request_fingerprint`, `target_baseline`, `actual_executor_type`, `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`, `actual_orchestration_session_id`, `actual_execution_session_id`, `actual_session_relation`, `actual_permission_conditions`, `actual_available_tool_conditions`, `actual_command_execution_path`, `execution_path_recheck_result`가 있다. `request_fingerprint`를 쓰면 `request_fingerprint_algorithm_identifier`, `request_fingerprint_algorithm_version`이 있고, `request_id`만 쓰면 두 값이 `not_applicable`이며 그 근거가 있다. `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`마다 실행 주체 유형에 적용되는 확인 가능한 값 또는 `not_applicable`과 해당 `*_not_applicable_reason`이 있다. 비명령 실행 주체이면 `actual_command_execution_path`, `execution_path_recheck_result`가 각각 `not_applicable`이고 `command_execution_path_not_applicable_reason`이 있으며, 단순 누락은 통과하지 않는다. |
+| 결과 식별 정보 존재 | `request_id`, `target_baseline`, `actual_executor_type`, `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`, `actual_orchestration_session_id`, `actual_execution_session_id`, `actual_session_relation`, `actual_permission_conditions`, `actual_available_tool_conditions`, `actual_command_execution_path`, `execution_path_recheck_result`가 있다. 결과의 `request_id`는 요청의 `request_id`와 같아야 하며, `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`마다 실행 주체 유형에 적용되는 확인 가능한 값 또는 `not_applicable`과 해당 `*_not_applicable_reason`이 있다. 비명령 실행 주체이면 `actual_command_execution_path`, `execution_path_recheck_result`가 각각 `not_applicable`이고 `command_execution_path_not_applicable_reason`이 있으며, 단순 누락은 통과하지 않는다. |
 | 결과 수행 근거 존재 | `performed_actions`, 변경 파일 `changed_files`, `github_state_changes`, 검증 결과 `verification_results`, `postconditions_satisfied`, 남은 위험 또는 실패 사유 `residual_risks_or_failure_reasons`가 있다. 변경 또는 GitHub 상태 변경이 없으면 각각 빈 값임을 명시한다. |
-| 요청-결과 상관관계 통과 | 결과의 요청 식별자 또는 요청 지문과 지문 계산 방식·버전, `target_baseline`, 실제 실행 주체 유형, 적용 가능한 agent/role·model·skill·config 식별 정보 또는 `not_applicable` 근거, 권한·도구 조건이 원 요청의 해당 값 및 `실행 직전 경로 재판정 통과` 결과와 일치한다. 명령 실행 주체이면 `actual_command_execution_path`가 원 요청의 `command_execution_path`와 일치하고 `execution_path_recheck_result`가 `실행 직전 경로 재판정 통과`다. 비명령 실행 주체이면 두 실제 경로 필드의 `not_applicable`과 근거가 원 요청의 `command_execution_path_not_applicable_reason`과 일치한다. `actual_orchestration_session_id`는 `orchestration_session_id`와 일치하고, `actual_session_relation`과 `actual_execution_session_id`는 `planned_session_relation`에 일치한다. `same_session`이면 두 실제 세션 ID가 같아야 하고, `separate_execution_session`이면 달라야 하며 알려진 `planned_execution_session_id`가 있으면 그 값과도 일치한다. |
+| 요청-결과 상관관계 통과 | 먼저 결과의 `request_id` 일치로 대응할 원 요청을 식별·선택한다. 원 요청이 식별된 뒤 `target_baseline`, 실제 실행 주체 유형, 적용 가능한 agent/role·model·skill·config 식별 정보 또는 `not_applicable` 근거, 권한·도구 조건이 선택된 원 요청의 해당 값 및 `실행 직전 경로 재판정 통과` 결과와 일치하는지 별도로 검사한다. 명령 실행 주체이면 `actual_command_execution_path`가 선택된 원 요청의 `command_execution_path`와 일치하고 `execution_path_recheck_result`가 `실행 직전 경로 재판정 통과`다. 비명령 실행 주체이면 두 실제 경로 필드의 `not_applicable`과 근거가 선택된 원 요청의 `command_execution_path_not_applicable_reason`과 일치한다. `actual_orchestration_session_id`는 `orchestration_session_id`와 일치하고, `actual_session_relation`과 `actual_execution_session_id`는 `planned_session_relation`에 일치한다. `same_session`이면 두 실제 세션 ID가 같아야 하고, `separate_execution_session`이면 달라야 하며 알려진 `planned_execution_session_id`가 있으면 그 값과도 일치한다. 대응할 원 요청의 식별과 선택은 `request_id` 일치로만 판정하며, 다른 식별자를 fallback으로 사용하지 않는다. |
 | 실행 범위 준수 | `performed_actions`, `changed_files`, `github_state_changes`가 원 요청의 `work_type`, `target_ids_or_files`, `confirmed_request_values`, 실행 범위 밖의 값을 포함하지 않는다. |
 | 구조화 실행 결과 사용 가능 | `결과 식별 정보 존재`, `결과 수행 근거 존재`, `요청-결과 상관관계 통과`, `실행 범위 준수`가 모두 충족된다. |
 
@@ -350,6 +350,9 @@ PR Review Template의 섹션명은 사람이 읽는 출력 구조이므로 한�
 
 - `구조화 실행 성공` 이외의 모든 상태는 성공으로 판정하지 않는다.
 - 실행 주체는 `confirmed_request_values`, `target_ids_or_files`, `work_type`, `expected_postconditions`, `verification_criteria`를 재판단하거나 실행 범위를 넓힐 수 없다. 불일치 또는 추가 판단 필요는 `구조화 실행 중단`으로 판정한다.
+- 하나의 `request_id`는 하나의 변경 불가능한 구조화 요청 내용에만 대응한다. 같은 `request_id`에서 `target_baseline`, `work_type`, `target_ids_or_files`, `confirmed_request_values` 또는 그 밖의 요청 내용 불일치가 관측되면 계약 위반으로 중단한다.
+- 동일 요청의 단순 재전송은 같은 `request_id`를 유지할 수 있다. 요청 내용이나 기준 상태가 바뀐 새 요청은 새 `request_id`를 사용한다.
+- 실행 시도와 세션 차이는 `orchestration_session_id`와 `execution_session_id`의 관계로 구분하며, 식별자 대체나 혼용으로 해석하지 않는다.
 
 ### 실행 주체 선택 판정 규칙
 

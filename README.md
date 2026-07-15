@@ -110,7 +110,7 @@ GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장�
 - `commit-plan`: 현재 브랜치/PR 단위를 의미적 커밋 단위로 나누고 작업 범위와 검증 기준을 제안합니다.
 - `pr-proposal`: PR 제목과 템플릿 본문 초안을 제안합니다.
 - `pr-creation`: PR 생성 입력을 검증하고 생성 요청 초안을 제안합니다.
-- `review-comment`: PR Review Template 출력 결과를 review thread 또는 marker가 있는 요약 피드백 댓글 게시 초안으로 정리합니다.
+- `review-comment`: PR Review Template 출력 결과를 review thread 게시 초안으로 정리하고 위치 매핑 보류 대상을 점검합니다.
 
 외부 의존 스킬은 이 저장소가 설치하거나 관리하지 않습니다. 타겟 레포에 GitHub Workflow Engine을 설치하거나 갱신할 때 사용 가능 상태를 `.harness/workflow-engine.json`에 기록하고, Workflow Engine은 필요한 액션에 들어가기 전에 이 설정을 읽습니다. `commit` 스킬은 `dependencies.commit.available`에 기록합니다. 사용 가능 상태가 없거나 실행 불가로 기록되어 있으면 설치 가능한 소스, 설치 대상 경로, 설치 후 확인할 파일, 재개 조건을 안내한 뒤 워크플로우를 중단합니다.
 

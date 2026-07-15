@@ -40,7 +40,7 @@
 
 ### GitHub 실행 상태
 
-GitHub 실행 상태는 Workflow Engine이 현재 작업 상태를 판단하기 위해 GitHub에서 읽는 상태 값이다. 별도 로컬 상태 파일은 기준 상태 원천으로 사용하지 않는다. PR 리뷰 피드백 상태는 diff가 있는 review thread의 resolved/unresolved 상태를 우선 원천으로 읽고, marker가 있는 PR issue comment는 diff 위치로 추적할 수 없는 요약 피드백의 보조 상태 원천으로만 읽는다.
+GitHub 실행 상태는 Workflow Engine이 현재 작업 상태를 판단하기 위해 GitHub에서 읽는 상태 값이다. 별도 로컬 상태 파일은 기준 상태 원천으로 사용하지 않는다. PR 리뷰 피드백 상태는 diff가 있는 review thread의 resolved/unresolved 상태를 원천으로 읽는다. 기존 marker 요약 피드백 댓글은 과거 호환 확인용 보조 근거로만 읽고, 새 게시 대상, 새 대응 대상, merge 대기 판정 근거로 쓰지 않는다.
 
 | 상태 원천                   | 역할                                                            |
 | --------------------------- | --------------------------------------------------------------- |
@@ -51,8 +51,8 @@ GitHub 실행 상태는 Workflow Engine이 현재 작업 상태를 판단하기 
 | Issue state                 | 작업이 열려 있는지 닫혔는지 읽는다.                             |
 | Pull Request body           | 변경 이유, 영향 범위, `연관 이슈 (optional)` 섹션의 이슈 번호를 읽는다. |
 | Pull Request state          | open, closed, merged 여부를 읽는다.                              |
-| Pull Request review threads | diff가 있는 리뷰 피드백과 review thread의 resolved/unresolved 상태를 우선 상태 원천으로 읽는다. |
-| Pull Request issue comments | diff 위치로 추적할 수 없는 marker 요약 피드백의 체크 상태만 보조 상태 원천으로 읽고, marker가 없는 일반 PR comment는 상태 전이 근거로 쓰지 않는다. |
+| Pull Request review threads | diff가 있는 리뷰 피드백과 review thread의 resolved/unresolved 상태를 리뷰 피드백 상태 원천으로 읽는다. |
+| Pull Request issue comments | 리뷰 피드백 상태 원천으로 쓰지 않는다. 기존 marker 요약 피드백 댓글은 과거 호환 확인용 보조 근거로만 읽는다. |
 
 ### 상태 근거 묶음
 
@@ -60,8 +60,8 @@ GitHub 실행 상태는 Workflow Engine이 현재 작업 상태를 판단하기 
 
 | 묶음        | 포함할 수 있는 근거                                                                            |
 | ----------- | ---------------------------------------------------------------------------------------------- |
-| 완료 근거   | 체크된 완료 조건, merged PR, resolved review thread, diff 위치로 추적할 수 없는 요약 피드백의 체크 상태 |
-| 미완료 근거 | 체크되지 않은 완료 조건, merged가 아닌 연결 PR, unresolved review thread, diff 위치로 추적할 수 없는 요약 피드백의 미체크 상태 |
+| 완료 근거   | 체크된 완료 조건, merged PR, resolved review thread |
+| 미완료 근거 | 체크되지 않은 완료 조건, merged가 아닌 연결 PR, unresolved review thread |
 | 보조 근거   | 현재 코드 상태, 보조 로그, 현재 대화에서 확인한 마지막 관련 작업, 마지막 사용자 결정, 마지막 실행 결과 |
 | 무효 근거   | 이슈 본문의 일반 설명, 추천 문장, 선택되지 않은 후보, 구조화된 스킬 출력 필드 밖의 설명 문장 |
 
@@ -192,7 +192,7 @@ Workflow Engine은 사용자 요청을 그대로 실행 명령으로 보지 않�
 Workflow Engine은 모든 이슈 유형과 연결 PR에 같은 실행 루프를 적용한다.
 
 1. 기준 대상을 정한다.
-   - 열린 PR 중 unresolved review thread, 미체크 marker 요약 피드백, merge 대기 상태가 있으면 먼저 처리한다.
+   - 열린 PR 중 unresolved review thread 또는 merge 대기 상태가 있으면 먼저 처리한다.
    - 이어갈 수 있는 열린 이슈가 있으면 새 작업보다 우선한다.
 2. 상태 근거 묶음을 만든다.
    - GitHub 이슈/PR 상태와 현재 코드 상태를 읽는다.
@@ -337,11 +337,11 @@ Workflow Engine은 GitHub와 코드 상태를 읽고 규칙에 따라 현재 작
 | Commit | 현재 변경에 맞는 커밋 메시지 후보 제시 |
 | PR Proposal | PR 제목과 본문 후보 작성 |
 | PR Creation | 확정된 PR 입력을 생성 요청으로 검증·구성 |
-| Review Comment | 정규화된 리뷰 결과를 review thread와 marker 댓글 게시 초안으로 구성 |
+| Review Comment | 정규화된 리뷰 결과를 review thread 게시 초안으로 구성 |
 
 ## 리뷰 실행 설계
 
-리뷰 실행은 PR diff와 연결 이슈의 작업 범위 및 완료 판단 기준을 검토해 PR Review Template 형식의 결과를 만드는 책임만 가진다. 리뷰 결과 게시, review thread 생성, marker 요약 피드백 댓글 작성과 피드백 resolve는 Review Comment와 이후 Workflow Engine 작업의 책임이다. 정확한 판정 기준은 `workflow-engine-rules.md`, 실행 절차와 출력 형식은 관련 스킬을 따른다.
+리뷰 실행은 PR diff와 연결 이슈의 작업 범위 및 완료 판단 기준을 검토해 PR Review Template 형식의 결과를 만드는 책임만 가진다. 리뷰 결과 게시, review thread 생성과 피드백 resolve는 Review Comment와 이후 Workflow Engine 작업의 책임이다. 정확한 판정 기준은 `workflow-engine-rules.md`, 실행 절차와 출력 형식은 관련 스킬을 따른다.
 
 Workflow Engine을 타겟 레포에 설치할 때는 기본 리뷰 실행 모드를 저장할 수 있다. 저장된 기본 리뷰 실행 모드는 리뷰 실행 모드 선택 사용자 결정에서 기본 후보로만 사용하며, PR 생성 후 실제 사용할 리뷰 실행 모드는 매번 사용자가 확정해야 한다.
 
@@ -423,7 +423,8 @@ PR 번호: <pr-number>
 조건:
 - PR Review Template 형식으로 출력하세요.
 - `필수 변경`, `중요 제안`, `사소한 제안`, `학습 메모`, `보안 검토`, `테스트 커버리지`, `리뷰 결론` 섹션을 포함하세요.
-- 각 피드백에는 중요도 라벨, 파일 경로와 diff 위치 또는 요약 피드백 여부, 문제와 영향, 권장 조치를 포함하세요.
+- `[차단]` 또는 `[중요]` 피드백에는 중요도 라벨, 파일 경로와 diff 위치, 문제와 영향, 권장 조치를 포함하세요.
+- `[사소]`, `[제안]`, `[학습]`, `[칭찬]` 피드백에는 파일 경로와 diff 위치 또는 요약 피드백 여부를 포함할 수 있습니다.
 - GitHub comment나 review thread를 게시하지 마세요.
 - 파일을 수정하지 마세요.
 - 리뷰 결과만 대화 출력으로 반환하세요.
@@ -445,7 +446,7 @@ PR Review Template의 섹션명은 사람이 읽는 출력 구조이므로 한�
 
 - PR 전체 리뷰 결론: `승인`, `의견`, `변경 요청` 중 하나
 - 각 피드백의 중요도 라벨: `[차단]`, `[중요]`, `[사소]`, `[제안]`, `[학습]`, `[칭찬]` 중 하나
-- 각 피드백의 파일 경로와 diff 위치 또는 라인에 붙일 수 없는 요약 피드백 여부
+- 각 `[차단]` 또는 `[중요]` 피드백의 파일 경로와 diff 위치
 - 각 피드백의 문제, 영향, 권장 조치
 - 테스트 커버리지 판단 또는 테스트 영향 없음 판단
 
@@ -636,17 +637,11 @@ Workflow Engine은 Commit Plan의 커밋 단위 ID와 작업 범위로 체크항
 | 거절 | 오탐, 범위 밖, 또는 반영 대상에서 제외할 피드백이다.                            | 선택된 피드백에 거절 근거를 남긴다.                |
 | 기타 의견 입력 | 추가 질문, 범위 재조정, 별도 이슈화 등 즉시 수용/거절로 처리 방향을 확정하기 어려운 피드백이다. | 사용자가 지정한 후속 작업을 수행한다. |
 
-피드백 게시 위치와 marker fallback은 `workflow-engine-rules.md`의 리뷰 게시 위치 판정 규칙을 따른다. 정규화 결과에 게시할 피드백이 있으면 모든 게시 대상에 GitHub id가 기록된 때 리뷰 결과가 반영된 것으로 보고, 없으면 댓글을 만들지 않고 리뷰 결과가 반영된 것으로 본다. 이후 `리뷰 대응 대상 확인`과 `남은 피드백 확인` 작업은 현재 GitHub 상태에서 다음 대응 대상을 선택한다. 리뷰 결과가 반영되고 모든 review thread가 resolved이며 marker 요약 피드백이 모두 체크된 상태는 별도로 기록하지 않고 GitHub 상태에서 `모든 피드백 대응 완료`로 판정한다. 확인 작업의 완료 여부는 이 판정에 사용하지 않는다. 이 판정과 `PR merge 가능`을 모두 충족해야 merge 결정을 요청한다. 리뷰 실행 결과 파일에만 있는 피드백은 게시 전 분류 대상일 뿐, 대응 대상은 아니다.
+피드백 게시 위치는 `workflow-engine-rules.md`의 리뷰 게시 위치 판정 규칙을 따른다. `[차단]`과 `[중요]` 피드백은 `file`, `line`, diff position 매핑 성공 근거가 있을 때만 review thread 게시 초안으로 만든다. 근거가 없거나 매핑할 수 없으면 GitHub 상태를 변경하지 않고 `위치 매핑 보류`로 중단한다. 정규화 결과에 게시할 피드백이 있으면 모든 review thread 게시 대상에 GitHub id가 기록된 때 리뷰 결과가 반영된 것으로 보고, 없으면 댓글을 만들지 않고 리뷰 결과가 반영된 것으로 본다. 이후 `리뷰 대응 대상 확인`과 `남은 피드백 확인` 작업은 현재 GitHub 상태에서 unresolved review thread를 선택한다. 리뷰 결과가 반영되고 모든 review thread가 resolved인 상태는 별도로 기록하지 않고 GitHub 상태에서 `모든 피드백 대응 완료`로 판정한다. 확인 작업의 완료 여부는 이 판정에 사용하지 않는다. 이 판정과 `PR merge 가능`을 모두 충족해야 merge 결정을 요청한다. 리뷰 실행 결과 파일에만 있는 피드백은 게시 전 분류 대상일 뿐, 대응 대상은 아니다.
 
-요약 피드백 marker:
+기존 marker 요약 피드백 댓글은 과거 호환 확인용 보조 근거로만 읽고, 새 게시 대상, 새 대응 대상, merge 대기 판정 근거로 쓰지 않는다.
 
-```markdown
-<!-- codex-harness:summary-feedback v1 -->
-```
-
-Workflow Engine은 marker가 없는 일반 PR comment를 요약 피드백 상태 원천으로 취급하지 않는다.
-
-피드백은 한 번에 하나만 처리한다. Workflow Engine은 diff가 있는 unresolved review thread를 먼저 처리하고, 남은 unresolved review thread가 없을 때 미체크 요약 피드백을 처리한다. 피드백 1건마다 맥락 설명, 대응 방향 사용자 결정, 수정, 커밋 메시지 사용자 결정, push, 처리 결과 댓글, 해결 여부 확인, 해결 결정 반영, 남은 피드백 확인을 반복한다.
+피드백은 한 번에 하나만 처리한다. Workflow Engine은 diff가 있는 unresolved review thread를 처리한다. 피드백 1건마다 맥락 설명, 대응 방향 사용자 결정, 수정, 커밋 메시지 사용자 결정, push, 처리 결과 댓글, 해결 여부 확인, 해결 결정 반영, 남은 피드백 확인을 반복한다.
 
 `수용`은 선택된 피드백 1건의 파일 수정을 확정한다는 의미다. 파일 수정과 검증이 끝난 뒤에는 `commit` 스킬로 커밋 메시지 후보를 제안하고, 사용자가 특정 커밋 메시지를 확정하기 전까지 `git commit`을 실행하지 않는다. 작업 진행 안내나 추천 메시지 표시만으로 커밋 메시지 확정 사용자 결정을 충족한 것으로 보지 않는다.
 
@@ -658,9 +653,9 @@ Workflow Engine은 marker가 없는 일반 PR comment를 요약 피드백 상태
 
 다음 피드백으로 이동하려면 현재 선택된 피드백 1건의 대응 방향 확정, 필요한 수정, 커밋, push, 처리 결과 댓글, 해결 여부 결정, GitHub 실행 상태 재조회가 끝나야 한다.
 
-처리 결과 댓글은 현재 선택된 피드백 1건에 남긴다. 대상이 review thread이면 해당 thread에 답글을 남기고, marker 요약 피드백이면 해당 marker 댓글 항목에 처리 결과를 남긴다. `수용`은 수정 커밋 push 뒤 `commit-hash 수정했습니다.` 형식으로 남긴다. `거절`은 거절 근거를 남긴다. `기타 의견 입력`은 사용자가 지정한 처리 결과를 남긴다.
+처리 결과 댓글은 현재 선택된 review thread에 답글로 남긴다. `수용`은 수정 커밋 push 뒤 `commit-hash 수정했습니다.` 형식으로 남긴다. `거절`은 거절 근거를 남긴다. `기타 의견 입력`은 사용자가 지정한 처리 결과를 남긴다.
 
-해결 여부 결정은 처리 결과 댓글이 끝난 뒤 별도로 확인하는 사용자 결정이다. Workflow Engine은 사용자에게 `해결` 또는 `미해결` 중 하나를 확인한다. `해결`을 선택하면 diff 피드백은 review thread를 resolve하고, 요약 피드백은 marker 체크리스트 항목을 체크한다. `미해결`을 선택하면 GitHub 상태를 현재 상태로 유지한다.
+해결 여부 결정은 처리 결과 댓글이 끝난 뒤 별도로 확인하는 사용자 결정이다. Workflow Engine은 사용자에게 `해결` 또는 `미해결` 중 하나를 확인한다. `해결`을 선택하면 review thread를 resolve한다. `미해결`을 선택하면 GitHub 상태를 현재 상태로 유지한다.
 
 피드백을 사람에게 전달할 때 포함할 맥락:
 

@@ -370,9 +370,9 @@ PR Review Template의 섹션명은 사람이 읽는 출력 구조이므로 한�
 | 결정론적 실행기 선택 | 파일 수정 작업이 아닌 경우에만 성립하며, 확정된 단순 상태 변경이고, 명령 실행 경로 규칙과 사용 가능 도구 조건으로 확인되는 결정론적 도구 경로가 있다. |
 | 저비용 상태 요약 실행 주체 선택 | 읽기 전용 상태 요약이 필요하고, `github-state-summary`가 출처 식별자가 있는 관측값만 반환하며, 파일·GitHub 상태·로그 변경, 현재 작업·사용자 결정·상태 전이 판단이 없고, `planned_model_identifier`와 `planned_config_identifier`가 실행 환경에서 확인 가능한 저비용 실행 설정을 가리키며, 실행 주체 식별 정보와 읽기 전용 도구 조건이 확인 가능한 상태다. |
 | 저비용 실행 서브에이전트 선택 | `github-simple-executor`에만 적용하며, 파일 수정 작업이 아닌 경우에만 성립하고, 결정론적 도구 경로가 없으며, 정확히 하나의 확정된 비파일 단순 상태 변경을 판단·값 재해석·범위 변경 없이 수행할 수 있고, `planned_model_identifier`와 `planned_config_identifier`가 실행 환경에서 확인 가능한 저비용 실행 설정을 가리키며, 실행 주체 유형에 적용되는 agent/role, model, skill, config 식별 정보가 확인 가능하거나 `not_applicable` 근거가 있다. |
-| 타겟 하네스 코드 수정 서브에이전트 선택 | 파일 수정 작업이고, Workflow Engine이 대상 저장소의 로컬 `run-harness`에서 받은 라우팅 결과와 선택 역할의 실행 주체 유형에 적용되는 확인 가능한 식별 정보 또는 `not_applicable` 근거를 검증한 상태다. |
+| 타겟 하네스 코드 수정 서브에이전트 선택 | `Target Harness Code Editor 선택 가능` 판정이 충족된 상태다. |
 | 리뷰 실행 주체 선택 | 현재 작업이 `리뷰 실행`이고, 사용자가 확정한 리뷰 실행 모드가 `.harness/workflow-engine.json`에서 `리뷰 실행 모드 사용 가능`이며, 해당 모드의 실행 주체 식별 정보와 권한·도구 조건이 확인 가능한 상태다. |
-| 파일 수정 중단 | 파일 수정 작업인데 로컬 `run-harness` 준비 상태가 없거나 타겟 하네스 코드 수정 서브에이전트를 확인할 수 없는 상태다. 직접 수정은 허용하지 않는다. |
+| 파일 수정 중단 | 파일 수정 작업인데 `Target Harness Code Editor 선택 가능` 판정이 실패해 `대상 코드 수정 구조화 중단`으로 이어지는 상태다. 직접 수정은 허용하지 않는다. |
 
 - 최종 판단, 사용자 결정 해석, 커밋 생성 여부 판단, PR 생성 여부 판단은 실행 주체에 위임하지 않는다.
 - `github-state-summary`는 읽기 전용 지원 단위이고, 그 결과는 Workflow Engine의 상태 판정 입력이다. `github-simple-executor`는 일반 구조화 실행 결과 계약을 따르는 실행 단위다.
@@ -381,11 +381,13 @@ PR Review Template의 섹션명은 사람이 읽는 출력 구조이므로 한�
 
 ### Target Harness Code Editor 준비도, 라우팅, 출력 사용 가능 판정
 
+이 절이 파일 수정 실행 주체의 최종 선택·중단 판정과 target editor 출력 사용 가능 판정을 담당한다.
+
 | 판정 상태 | 판정 기준 |
 | --- | --- |
 | 대상 하네스 준비됨 | `target-harness-code-editor`가 설치되어 있고, 대상 프로젝트의 `AGENTS.md`, 로컬 `run-harness` 스킬, `.harness/docs/team-spec.md`, `.harness/docs/orchestration-plan.md`가 존재하며, 요청의 `target_baseline`이 대상 프로젝트의 현재 기준 상태와 일치한다. |
 | 대상 코드 수정 라우팅 사용 가능 | Workflow Engine이 로컬 `run-harness`에서 받은 라우팅 결과에 `routing_status`, 정확히 하나의 `selected_role_id`, `agent_config_path`, `local_skill_path`, `routing_evidence`, 선택 역할의 `model`, `model_reasoning_effort`, `sandbox_mode`가 있음을 확인한다. 그 결과와 선택 역할의 team-spec 역할 카드, agent TOML, local skill, 예정 실행 식별자 및 조건을 대조해 일치함을 검증한다. |
-| Target Harness Code Editor 선택 가능 | 파일 수정 작업이며 `대상 하네스 준비됨`, `대상 코드 수정 라우팅 사용 가능`, 기존 `타겟 하네스 코드 수정 서브에이전트 선택`이 모두 충족되고, 유효한 `request_id`·orchestration context와 검증된 라우팅 결과를 완전한 불변 구조화 실행 요청과 함께 `target-harness-code-editor` 입력으로 전달할 수 있다. 이 조건을 충족하지 못하면 target editor를 호출하지 않고 Workflow Engine이 선택 전에 `구조화 실행 중단`으로 처리한다. |
+| Target Harness Code Editor 선택 가능 | 파일 수정 작업이며 `대상 하네스 준비됨`, `대상 코드 수정 라우팅 사용 가능`이 모두 충족되고, 유효한 `request_id`·orchestration context와 검증된 라우팅 결과를 완전한 불변 구조화 실행 요청과 함께 `target-harness-code-editor` 입력으로 전달할 수 있다. 이 조건을 충족하지 못하면 target editor를 호출하지 않고 Workflow Engine이 선택 전에 `구조화 실행 중단`으로 처리한다. |
 | Target Harness Code Editor 출력 사용 가능 | target editor가 `Target Harness Code Editor 선택 가능`을 통과한 입력으로 실제 호출된 경우에만 기존 `구조화 실행 결과 사용 가능`과 `실행 범위 준수`를 적용한다. 성공 또는 실제 execution session ID가 발급된 뒤의 중단이면 반환된 `routing_status`, `selected_role_id`, `agent_config_path`, `local_skill_path`, `routing_evidence`, `model`, `model_reasoning_effort`, `sandbox_mode`가 Workflow Engine이 검증해 전달한 입력 라우팅 결과와 모두 일치하며 실제 실행 주체가 선택 역할의 agent config, local skill, model, reasoning, sandbox를 사용한 별도 execution session임이 확인된다. 실행 세션 미시작 중단이면 `routing_status`만 `aborted`로 전이할 수 있고 나머지 라우팅 고유 필드는 검증해 전달한 입력과 항상 일치해야 하며, 전용 중단 조건과 세션 `not_applicable` 사유 대조를 통과해야 한다. 선택 전 중단, 구조화 요청 식별 불능, 검증된 라우팅 입력 누락은 target editor 출력 사용 가능 판정 대상이 아니다. |
 | 대상 코드 수정 구조화 중단 | 대상 하네스 또는 실행 스킬 누락, 기준 상태 불일치, 라우팅 결과 누락, 라우팅 후보 0개 또는 복수, Workflow Engine 검증 뒤의 라우팅·역할 자산·설정 변경, 역할·agent·skill·model·reasoning·sandbox·권한·도구·경로·파괴적 위험 불일치, 별도 execution session 시작 불가, 출력 사용 가능 실패 중 하나 이상이 있다. |
 

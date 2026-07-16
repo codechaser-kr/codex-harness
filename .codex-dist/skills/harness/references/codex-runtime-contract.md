@@ -71,7 +71,7 @@ planned_execution_session_id       # 예정 실행 세션 식별자
 라우팅 단계는 아래 고유 필드를 별도로 유지할 수 있다.
 
 ```text
-routing_status, selected_role_id, agent_config_path, local_skill_path, routing_evidence
+routing_status, selected_role_id, agent_config_path, local_skill_path, routing_evidence, model, model_reasoning_effort, sandbox_mode
 ```
 
 최종 반환은 라우팅 고유 필드와 함께 아래 Workflow Engine 공통 구조화 실행 결과 계약을 정확한 필드명으로 포함해야 한다.

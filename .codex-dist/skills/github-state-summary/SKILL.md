@@ -19,7 +19,7 @@ description: GitHub와 로컬의 지정된 상태를 읽기 전용으로 수집�
 
 ## 책임
 
-1. 허용된 범위에서 `gh issue view`, `gh pr view`, `gh pr checks`, `gh api` GET, `git status`, `git diff`, `git log`, `git show`, `rg`, `sed`, `ls`, `find`, `wc` 등 읽기 전용 명령 또는 도구만 사용한다.
+1. 허용된 범위에서 `gh issue view`, `gh pr view`, `gh pr checks`, `gh api` GET, `git status`, `git diff`, `git log`, `git show`, `rg`, `sed`, `ls`, `find`, `wc` 등 읽기 전용 명령 또는 도구만 사용한다. `sed`는 출력 또는 파이프 변환용 읽기 형태만 허용하고 `sed -i`는 금지한다. `find`는 탐색 전용만 허용하고 `find -delete` 및 파일 변경 목적의 `find -exec`는 금지한다.
 2. 각 관측 사실에 출처 식별자와 조회 시점을 연결하고, 확인하지 못한 사실은 누락 또는 충돌로 분리한다.
 3. 실제 executor, model, skill, config, orchestration session, execution session, permission, tool, command path 정보를 관측 결과에 기록한다.
 4. 수행한 읽기 동작, 빈 `changed_files`, 빈 `github_state_changes`, 검증 결과, 사후조건, 남은 위험을 반환한다.

@@ -129,6 +129,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 13. 새 역할명을 만들 때는 저장소 용어와 실패 경계를 드러내는 이름을 우선하고, `role_id`는 snake_case, 표시 이름과 파일명은 kebab-case로 정리한다.
 14. `analyst`, `architect`, `orchestrator`, `validator` 같은 추상 직무명만 단독으로 역할명에 쓰지 않고, 반드시 저장소 고유 용어나 책임 축을 붙인다.
 15. `## 최종 역할 인벤토리`는 반드시 fenced `text` 블록으로 남긴다. 헤더와 모든 역할 행은 같은 블록 안에 있어야 하며, inline code 행을 여러 줄 나열한 결과는 하네스 Phase 2 미완료로 본다.
+16. GitHub Workflow Engine 구조화 코드 수정 요청을 지원하는 타겟 팀이면, 실제 코드 수정 역할의 역할 카드에 `target_ids_or_files`와 공통 요청 계약 조건을 선언한다. `run-harness`는 이 선언과 `orchestration-plan.md`을 근거로 정확히 하나를 선택하거나 파일을 수정하지 않고 중단하며, 직접 코드 수정 역할을 겸하지 않는다.
 
 이 단계의 핵심은 문서를 늘리는 데 있지 않다. **운영 가능한 역할 팀 아키텍처**를 설계하는 데 있다.
 흐름과 위임 기준은 `references/reference-map.md`를 먼저 읽고, `references/initial-generation-contract.md`, `references/orchestrator-template.md`, `references/team-spec-schema.md`를 필요할 때 참고한다.
@@ -181,6 +182,8 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 8. 기존 하네스 문서를 보존하면서 역할명이나 진입점이 새 `team-spec`과 다르면, 원문을 바로 고치기보다 `orchestration-plan.md`나 `team-playbook.md`에 이전 역할명 -> 현재 역할명 호환성 매핑과 우선 기준을 남긴다.
 9. GitHub Workflow Engine을 타겟 레포에 적용하는 경우 `.harness/workflow-engine.json`에 `dependencies.commit.available`, `review.defaultMode`, `review.modes`를 기록한다. 각 리뷰 실행 모드에는 하네스 설치 또는 갱신 시 확인한 `available` 값을 남긴다.
 10. GitHub Workflow Engine을 타겟 레포에 적용하는 경우 `github-templates.md`의 이슈 유형별 라벨 집합이 타겟 GitHub 레포에 정확한 이름으로 존재하는지 확인한다. 라벨 생성은 `repo-bootstrap` 저장소의 설치 절차 책임이므로 하네스는 라벨을 직접 생성하지 않고 누락 또는 불일치만 기록한다.
+11. Workflow Engine의 완전 구조화 코드 수정 요청을 받는 타겟 `run-harness`는 `references/codex-runtime-contract.md`의 공통 요청 계약을 불변 입력으로 보존한다. `team-spec`과 `orchestration-plan`으로 정확히 하나의 실제 수정 역할을 선택하고, 후보 0개/복수 또는 role/agent/skill 불일치·누락이면 파일을 수정하지 않고 중단한다.
+12. 선택 handoff에는 `role_id`, agent config path, local skill path, 확인한 model/reasoning/sandbox, 라우팅 근거를 남긴다. `run-harness`는 실제 수정 역할을 대신하거나 모델을 임의 선택하지 않으며, 실제 수정 서브에이전트가 선택 역할의 config/skill/model/권한 조건을 사용하도록 라우팅한다.
 
 이 단계의 목적은 문서 묶음을 완성하는 것이 아니다. 생성된 역할 팀이 실제 요청에서 어떤 순서로 움직이고, 어디서 멈추며, 어떤 기준으로 다시 들어갈지를 실행 가능한 형태로 고정하는 것이다.
 
@@ -203,6 +206,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 9. GitHub Workflow Engine을 타겟 레포에 적용하는 경우, `../github-workflow-engine/references/github-templates.md` 원형과 타겟 `.github/ISSUE_TEMPLATE/*.md`, `.github/pull_request_template.md`의 title prefix, label, 이슈 유형별 라벨 존재 여부, 필수 섹션, PR 연결 규칙 정합성을 확인한다.
 10. 부족한 축이 `team-spec` 역할 정의 문제인지, agent/skill 포인터 문제인지, 오케스트레이션 문제인지, GitHub 템플릿 정합성 문제인지 분류한다.
 11. `운영 가능 / 재작성 필요 / 재구성 필요` 판정은 여기서 내린다. 피드백을 실제 문서나 역할 자산에 반영하는 작업은 하네스 Phase 7에서 다룬다.
+12. Workflow Engine 구조화 코드 수정 요청을 지원하면, 역할 선택 또는 중단 결과가 `references/codex-runtime-contract.md`의 공통 구조화 실행 결과 계약을 반환할 수 있는지와 요청 불변 입력 보존을 함께 검증한다.
 
 검증 기준은 `references/reference-map.md`, `references/initial-generation-contract.md`, `references/verification-checklist.md`, `references/qa-agent-guide.md`, `references/skill-testing-guide.md`를 순서대로 참고한다.
 
@@ -249,6 +253,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - 시작 문서가 생성된 상태는 완료가 아니라 자동 판단 보류 메모와 역할 입력이 준비된 상태로 본다.
 - `하네스 Phase 2`는 `team-spec.md`의 최종 역할 인벤토리를 fenced `text` 블록으로 만들고, `하네스 Phase 3`은 `.codex/config.toml`, `.codex/agents/*.toml`을, `하네스 Phase 4`는 `.agents/skills/*`를 작성해야 한다.
 - `하네스 Phase 5`는 시작 진입 역할과 오케스트레이션 흐름을 연결하고, `하네스 Phase 6`은 운영 감사 역할이 구조와 실행 가능성을 검증한다.
+- Workflow Engine 구조화 코드 수정 요청에서 `run-harness`는 요청 범위를 새로 판단하지 않는다. `team-spec`과 `orchestration-plan`이 일치하는 하나의 실제 수정 역할을 가리킬 때만 라우팅하고, 그렇지 않으면 파일을 수정하지 않고 중단한다.
 - GitHub Workflow Engine을 타겟 레포에 적용하는 경우 `하네스 Phase 5`에서 `.harness/workflow-engine.json`을 만들거나 갱신하고, `dependencies.commit.available`과 리뷰 실행 모드별 사용 가능 상태를 기록한다.
 - `.codex/config.toml`과 `.codex/agents/*.toml`은 별도 진실원천이 아니라 `team-spec.md`를 구현한 결과물이다.
 - 세션 기록은 `references/logging-contract.md`를 따라 `.harness/docs/logging-policy.md`, `.harness/logs/session-log.md`, `.harness/logs/latest-session-summary.md`가 같은 계약을 말하도록 남긴다.
@@ -357,13 +362,14 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 2. `team-spec.md`가 프로젝트 특화 역할 인벤토리와 역할 경계를 설명한다.
 3. `.codex/agents/*`와 `.agents/skills/*`가 `team-spec`의 역할 집합을 구현한다.
 4. 시작 진입 역할(`run-harness`)이 현재 상태를 읽고 시작 역할, 다음 역할, 미해결 질문을 분명히 제시할 수 있다.
-5. 오케스트레이션 흐름이 정상, 보류, 실패, 재진입 상황을 모두 다룬다.
-6. 운영 감사 역할이 `references/verification-checklist.md` 기준으로 구조 누락과 골격 잔존이 없다고 설명할 수 있다.
-7. GitHub Workflow Engine을 적용한 경우 `.harness/workflow-engine.json`에 `dependencies.commit.available`, `review.defaultMode`, `review.modes`가 기록돼 있다.
-8. 마지막 실행 세션이 `.harness/logs/session-log.md`, `.harness/logs/latest-session-summary.md`에 같은 세션 ID로 남아 있다.
-9. 모든 필수 역할과 subagent가 `completed` 또는 `timed_out`으로 정리되고, `timed_out` 또는 `failed` 항목은 남은 위험과 후속 보강 대상으로 기록돼 있다.
-10. 운영 감사 역할이 새 학습 후보의 반영 위치를 설명하거나, 이번 작업에는 학습 후보가 없다고 명시할 수 있다.
-11. 신규 구축 결과는 `references/initial-generation-contract.md` 기준으로 첫 세션부터 자기진화 루프를 이어 갈 수 있다고 설명할 수 있다.
+5. Workflow Engine 구조화 코드 수정 요청을 지원하면 `run-harness`가 요청 불변 필드를 보존하고 정확히 하나의 실제 수정 역할을 라우팅하거나 파일 미수정으로 중단할 수 있다.
+6. 오케스트레이션 흐름이 정상, 보류, 실패, 재진입 상황을 모두 다룬다.
+7. 운영 감사 역할이 `references/verification-checklist.md` 기준으로 구조 누락과 골격 잔존이 없다고 설명할 수 있다.
+8. GitHub Workflow Engine을 적용한 경우 `.harness/workflow-engine.json`에 `dependencies.commit.available`, `review.defaultMode`, `review.modes`가 기록돼 있다.
+9. 마지막 실행 세션이 `.harness/logs/session-log.md`, `.harness/logs/latest-session-summary.md`에 같은 세션 ID로 남아 있다.
+10. 모든 필수 역할과 subagent가 `completed` 또는 `timed_out`으로 정리되고, `timed_out` 또는 `failed` 항목은 남은 위험과 후속 보강 대상으로 기록돼 있다.
+11. 운영 감사 역할이 새 학습 후보의 반영 위치를 설명하거나, 이번 작업에는 학습 후보가 없다고 명시할 수 있다.
+12. 신규 구축 결과는 `references/initial-generation-contract.md` 기준으로 첫 세션부터 자기진화 루프를 이어 갈 수 있다고 설명할 수 있다.
 
 시작 문서가 준비된 상태는 완료가 아니다. **자동 판단 보류 메모와 역할 입력이 준비된 상태**다.
 
@@ -376,6 +382,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - [ ] 로컬 역할 스킬 구조가 생성되었다.
 - [ ] 중심 조율 역할 또는 오케스트레이터 역할이 포함되어 있다.
 - [ ] 시작 진입 역할이 포함되어 있다.
+- [ ] Workflow Engine 구조화 코드 수정 요청에서 정확히 하나의 실제 수정 역할을 라우팅하거나 파일 미수정으로 중단하는 규칙이 있다.
 - [ ] 품질 전략과 운영 감사 역할이 포함되어 있다.
 - [ ] 실행 하네스 팀이 프로젝트에 맞는 아키텍처 패턴으로 구성되어 있다.
 - [ ] 정상 흐름과 보류/실패 흐름 시나리오가 오케스트레이션 문서나 시작 진입 역할에 포함되어 있다.

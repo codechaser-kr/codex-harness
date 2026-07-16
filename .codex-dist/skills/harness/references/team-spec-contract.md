@@ -66,6 +66,7 @@
 - 권장 모델 클래스
 - reasoning 기본값
 - sandbox 정책
+- 코드 수정 역할이면 허용 `target_ids_or_files`와 공통 요청 계약의 권한·도구·명령 경로·파괴적 명령 위험 조건
 
 ## 최종 역할 인벤토리 계약
 
@@ -85,6 +86,7 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - `agent_file`은 `.codex/agents/<agent_file>.toml`, `.agents/skills/<agent_file>/SKILL.md`와 일치해야 한다
 - description은 실제 요청에서 트리거될 만큼 구체적이어야 한다
 - `reasoning`은 역할 유형과 검증 부담에 맞춰 정한다. 일반 구현/문서/콘텐츠 역할과 시작 진입 역할(`run_harness`)은 기본 `medium`이다. 중심 조율 역할은 기본 `medium`이지만, 역할 수가 많거나 보존 문서, 정책 원천, 로그 상태, 다중 패키지 충돌을 함께 조율하면 `high`를 쓴다. QA, 운영 감사, cross-check, 하네스 정합성 검토 역할은 기본 `high`다.
+- Workflow Engine 구조화 코드 수정 요청의 실제 수정 후보 역할은 역할 카드에 코드 수정 책임, 허용 `target_ids_or_files`, 공통 요청 계약의 조건을 명시한다. `run_harness`는 후보 선택과 중단만 맡고 이 역할을 겸하지 않는다.
 - 헤더와 모든 역할 행은 같은 fenced `text` 블록 안에 있어야 한다
 - 각 역할 행을 inline code로 따로 나열하지 않는다
 - fenced `text` 블록이 없으면 `하네스 Phase 2` 결과를 완료로 보지 않고 다시 쓴다
@@ -95,6 +97,10 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - 역할별 `우선 입력 문서`에 등장하는 설계/정책/사양 문서는 `설계 원천 우선순위` 또는 `설계 원천 인벤토리`에 포함한다.
 - 역할 목적, 책임, 주요 출력에서 필요한 판단 근거를 역산해 우선 입력 문서를 정한다.
 - 역할별 출력 규칙에는 하네스 용어 원칙을 반영한다. 하네스 생명주기 단계는 `하네스 Phase N`으로 쓰고, 제품/로드맵/개발 단계에는 도메인 수식어를, 한국어만으로 뜻이 모호한 기술 용어에는 영어 병기를 붙인다.
+- Workflow Engine 구조화 코드 수정 요청을 받는 시작 진입 역할의 우선 입력에는 `team-spec.md` 최종 역할 인벤토리와 역할 카드, `orchestration-plan.md`의 코드 수정 라우팅 규칙, `codex-runtime-contract.md`의 공통 요청 계약을 포함한다. 공통 요청 필드는 불변 입력으로 취급하며 재판단하거나 확대하지 않는다.
+- 코드 수정 후보 역할은 자신의 역할 카드에 선언된 `target_ids_or_files`와 공통 요청 계약 조건에서만 선택될 수 있다. 해당 선언이 없거나 요청과 맞지 않으면 후보가 아니다.
+- 구조화 코드 수정 라우팅은 정확히 하나의 후보만 선택할 수 있다. 후보 0개, 복수 후보, team-spec/agent/skill 불일치 또는 누락이면 `run_harness`는 파일을 수정하지 않는 중단 결과를 남긴다.
+- 선택 결과의 출력 규칙은 `selected_role_id`, `agent_config_path`, `local_skill_path`, agent TOML에서 확인한 `model`, `model_reasoning_effort`, `sandbox_mode`, 라우팅 근거를 포함해야 한다. 최종 실행 또는 중단 결과는 `codex-runtime-contract.md`의 공통 구조화 실행 결과 계약을 그대로 따른다.
 - 선행 정책, 구현 순서, 라우팅 판단, 보류 질문처럼 다음 실행을 좌우하는 출력을 맡는 역할은 그 판단에 필요한 정책/설계/로드맵 원천을 우선 입력 문서에 포함한다.
 - 이 정합성 검사는 구현 역할뿐 아니라 계획 역할, 조율 역할, 시작 진입 역할, 운영 감사 역할에도 동일하게 적용한다.
 - QA 역할은 변경 diff, 대상 앱 또는 패키지의 `AGENTS.md`, team-spec의 설계 원천 우선순위 또는 설계 원천 인벤토리, 변경 범위에 해당하는 설계/정책/계약 문서, 최신 세션 요약 또는 재진입 상태를 우선 입력 문서에 포함한다.
@@ -152,6 +158,7 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - 최종 역할 인벤토리의 `agent_file` 값이 `.codex/agents/*.toml`과 `.agents/skills/*/SKILL.md` 경로에 그대로 반영된다.
 - QA와 운영 감사 역할이 별도의 책임을 가진다.
 - 시작 진입 역할과 중심 조율 역할이 혼동되지 않는다.
+- Workflow Engine 구조화 코드 수정 요청의 시작 진입 역할과 실제 코드 수정 역할이 분리되고, 실제 수정 역할의 `role_id`, `agent_file`, agent config, local skill, model/reasoning/sandbox가 상호 일치한다.
 - 재진입 기준이 역할 수준에서 드러난다.
 - 새로 확인한 저장소 사실과 반복될 수 있는 판단을 어느 역할이 기록하고 어디로 승격할지 드러나야 한다.
 - 초기 생성물만으로 다음 시작 역할과 하네스 재진입 Phase를 설명할 수 있다.

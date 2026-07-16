@@ -383,7 +383,7 @@ PR Review Template의 섹션명은 사람이 읽는 출력 구조이므로 한�
 
 | 판정 상태 | 판정 기준 |
 | --- | --- |
-| 대상 하네스 준비됨 | `target-harness-code-editor`가 설치되어 있고, 대상 프로젝트의 `AGENTS.md`, 로컬 `run-harness` 스킬, `team-spec.md`, `orchestration-plan.md`가 존재하며, 요청의 `target_baseline`이 대상 프로젝트의 현재 기준 상태와 일치한다. |
+| 대상 하네스 준비됨 | `target-harness-code-editor`가 설치되어 있고, 대상 프로젝트의 `AGENTS.md`, 로컬 `run-harness` 스킬, `.harness/docs/team-spec.md`, `.harness/docs/orchestration-plan.md`가 존재하며, 요청의 `target_baseline`이 대상 프로젝트의 현재 기준 상태와 일치한다. |
 | 대상 코드 수정 라우팅 사용 가능 | Workflow Engine이 로컬 `run-harness`에서 받은 라우팅 결과에 `routing_status`, 정확히 하나의 `selected_role_id`, `agent_config_path`, `local_skill_path`, `routing_evidence`, 선택 역할의 `model`, `model_reasoning_effort`, `sandbox_mode`가 있음을 확인한다. 그 결과와 선택 역할의 team-spec 역할 카드, agent TOML, local skill, 예정 실행 식별자 및 조건을 대조해 일치함을 검증한다. |
 | Target Harness Code Editor 선택 가능 | 파일 수정 작업이며 `대상 하네스 준비됨`, `대상 코드 수정 라우팅 사용 가능`, 기존 `타겟 하네스 코드 수정 서브에이전트 선택`이 모두 충족되고, 검증된 라우팅 결과를 완전한 불변 구조화 실행 요청과 함께 `target-harness-code-editor` 입력으로 전달할 수 있다. |
 | Target Harness Code Editor 출력 사용 가능 | 기존 `구조화 실행 결과 사용 가능`과 `실행 범위 준수`를 통과하고, 반환된 라우팅 고유 필드가 Workflow Engine이 검증해 전달한 결과와 일치하며 실제 실행 주체가 선택 역할의 agent config, local skill, model, reasoning, sandbox를 사용한 별도 execution session임이 확인된다. 공통 결과의 실제 executor type, agent/role, model, skill, config, execution session 식별자는 중개 절차가 아니라 이 선택 역할을 가리키고, orchestration session은 메인 Workflow Engine을 가리킨다. 공통 요청·결과 필드와 `not_applicable` 사유는 기존 구조화 실행 계약을 그대로 따른다. |

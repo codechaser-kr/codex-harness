@@ -25,9 +25,9 @@ description: Workflow Engine이 검증한 대상 local run-harness 라우팅 결
 1. 요청이 파일 수정 작업인지와 `구조화 실행 요청 사용 가능` 판정 통과를 확인한다.
 2. 대상 프로젝트의 현재 기준 상태가 요청의 `target_baseline`과 일치하는지 확인하고, 로컬 `run-harness`, `team-spec.md`, `orchestration-plan.md`와 역할 자산이 모두 준비됐는지 확인한다.
 3. 전달받은 라우팅 결과의 `routing_status`, 단일 선택 역할, 경로, 근거와 선택 역할의 model, reasoning, sandbox를 대상 `team-spec.md`, `orchestration-plan.md`, agent TOML, local skill에 다시 대조한다. Workflow Engine 검증 뒤 기준 상태, 라우팅 근거, 선택 역할 자산 또는 설정이 바뀌지 않았음을 확인한다.
-4. 대조한 역할·모델·스킬·config·세션 관계가 불변 요청의 예정 실행 식별자와 일치하는지 확인한다. 이 스킬은 라우팅을 새로 얻거나 `run-harness` 라우팅을 다시 수행하지 않는다.
-5. 사전 검증을 모두 통과한 경우 메인 Workflow Engine의 orchestration session과 다른 별도 execution session 하나에서 정확히 하나의 선택 역할만 시작하도록 시도한다. 선택한 agent config, local skill, model, reasoning, sandbox와 불변 요청 및 검증된 라우팅 결과를 그대로 전달한다. 사전 검증 실패로 별도 execution session 시작을 시도하지 않았거나, 시작을 시도했지만 도구가 실제 세션 ID를 발급하기 전에 실패하면 `실행 세션 미시작 중단`으로 기록하고 실제 선택 역할을 실행하지 않는다.
-6. 실제 명령 직전에 선택 역할의 `permission_conditions`, `available_tool_conditions`, `command_execution_path`, `destructive_command_risk`를 다시 확인한다. 하나라도 불일치하거나 확인할 수 없으면 명령을 실행하지 않는다.
+4. 세션 시작 전에 대조한 역할 설정과 `permission_conditions`, `available_tool_conditions`, `command_execution_path`, `destructive_command_risk`가 불변 요청의 예정 실행 식별자·조건 및 라우팅 결과와 일치하는지 확인한다. 이 스킬은 라우팅을 새로 얻거나 `run-harness` 라우팅을 다시 수행하지 않는다.
+5. 세션 시작 전 대조를 모두 통과한 경우에만 메인 Workflow Engine의 orchestration session과 다른 별도 execution session 하나에서 정확히 하나의 선택 역할만 시작하도록 시도한다. 선택한 agent config, local skill, model, reasoning, sandbox와 불변 요청 및 검증된 라우팅 결과를 그대로 전달한다. 세션 시작 전 대조 실패로 별도 execution session 시작을 시도하지 않았거나, 시작을 시도했지만 도구가 실제 세션 ID를 발급하기 전에 실패하면 기존 `실행 세션 미시작 중단`으로 기록하고 실제 선택 역할을 실행하지 않는다.
+6. 실제 선택 역할은 발급된 별도 execution session에서 각 실제 명령 직전에 자신의 `permission_conditions`, `available_tool_conditions`, `command_execution_path`, `destructive_command_risk`를 다시 확인한다. 하나라도 불일치하거나 확인할 수 없으면 해당 명령을 실행하지 않고, 발급된 별도 세션에서 중단 결과를 반환한다.
 7. 선택 역할의 수행 결과 또는 실행 세션 미시작 중단 결과를 변경하지 않고 라우팅 고유 필드와 공통 구조화 실행 결과로 반환한다.
 
 ## 출력
@@ -59,7 +59,7 @@ residual_risks_or_failure_reasons
 
 적용할 수 없는 실제 식별자 또는 비명령 실행 경로 필드는 `workflow-engine-rules.md`의 공통 계약에 따라 `not_applicable`과 해당 이유를 함께 반환한다.
 
-`actual_executor_type`, `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`, `actual_execution_session_id`는 성공 또는 세션이 발급된 중단에서는 중개 절차가 아니라 실제 파일 수정 실행을 맡아 시작된 선택 타겟 역할과 그 별도 execution session을 가리킨다. `actual_orchestration_session_id`는 메인 Workflow Engine의 orchestration session을, `actual_session_relation`은 두 세션의 별도 관계를 가리킨다. `실행 세션 미시작 중단`에서만 `actual_execution_session_id`와 `actual_session_relation`을 각각 지정된 `not_applicable` 및 사유로 반환할 수 있다.
+`actual_executor_type`, `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`, `actual_execution_session_id`는 성공 또는 세션이 발급된 중단에서는 중개 절차가 아니라 실제 파일 수정 실행을 맡아 시작된 선택 타겟 역할과 그 별도 execution session을 가리킨다. `actual_orchestration_session_id`는 메인 Workflow Engine의 orchestration session을, `actual_session_relation`은 두 세션의 별도 관계를 가리킨다. `actual_permission_conditions`, `actual_available_tool_conditions`, `actual_command_execution_path`와 `execution_path_recheck_result`는 중개 절차의 세션 시작 전 대조가 아니라 실제 선택 역할이 각 명령 직전에 수행한 재확인과 그 실제 값을 가리킨다. `실행 세션 미시작 중단`에서만 `actual_execution_session_id`와 `actual_session_relation`을 각각 지정된 `not_applicable` 및 사유로 반환할 수 있다.
 
 ## 하지 않는 일
 

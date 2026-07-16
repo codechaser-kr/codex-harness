@@ -64,7 +64,13 @@ planned_execution_session_id       # 예정 실행 세션 식별자
 
 비명령 실행 주체이면 `command_execution_path`는 `not_applicable`이고 `command_execution_path_not_applicable_reason`을 보존한다. `planned_agent_or_role`, `planned_model_identifier`, `planned_skill_identifier`, `planned_config_identifier`은 예정 실행 주체 유형에 적용되지 않으면 각각 `not_applicable`과 `planned_agent_or_role_not_applicable_reason`, `planned_model_identifier_not_applicable_reason`, `planned_skill_identifier_not_applicable_reason`, `planned_config_identifier_not_applicable_reason`을 보존한다. `planned_session_relation = separate_execution_session`이면 `planned_execution_session_id`는 알려진 세션 값 또는 도구 발급 대기 값 `pending_tool_issued`와 그 근거를 유지한다.
 
-선택 전에는 해당 역할의 `role_id`, `agent_file`, `.codex/agents/<agent_file>.toml`, `.agents/skills/<agent_file>/SKILL.md`가 모두 존재하고 서로 일치하는지 확인한다. agent TOML에서 확인한 `model`, `model_reasoning_effort`, `sandbox_mode`는 team-spec의 `model`, `reasoning`, `sandbox`과 대응해야 한다.
+선택 전에는 해당 역할의 `role_id`, `agent_file`, `.codex/agents/<agent_file>.toml`, `.agents/skills/<agent_file>/SKILL.md`가 모두 존재하고 서로 일치하는지 확인한다. agent TOML과 team-spec의 실행 설정은 다음 매핑으로 대조한다.
+
+| team-spec | agent TOML |
+| --- | --- |
+| `model` | `model` |
+| `reasoning` | `model_reasoning_effort` |
+| `sandbox` | `sandbox_mode` |
 
 후보가 0개 또는 복수이거나, role/agent/skill 메타데이터가 누락 또는 불일치하면 `run-harness`는 파일을 수정하지 않고 중단한다. `run-harness`는 코드 수정 역할을 대신 실행하거나 모델을 임의 선택하지 않는다. 선택이 성공한 경우에만 실제 수정 서브에이전트가 선택 역할의 agent config, local skill, model, reasoning, sandbox와 요청의 `permission_conditions`, `available_tool_conditions`, `command_execution_path`, `destructive_command_risk`를 사용하도록 라우팅한다.
 
@@ -134,7 +140,7 @@ Codex용 Harness의 생성 책임은 다음 순서로 정리한다.
 
 1. `team-spec.md`가 역할 팀의 단일 진실원천이다.
 2. `AGENTS.md`는 상위 운영 기준과 진입 규칙을 담는다.
-3. `.codex/config.toml`과 `.codex/agents/*.toml`은 역할 식별, 모델/추론 설정, sandbox 정책 같은 실행 메타데이터를 담는다. `team-spec`의 `reasoning`과 `sandbox` 값은 agent TOML에서 각각 `model_reasoning_effort`, `sandbox_mode`로 매핑한다.
+3. `.codex/config.toml`과 `.codex/agents/*.toml`은 역할 식별, 모델/추론 설정, sandbox 정책 같은 실행 메타데이터를 담는다. 선택 전 대조는 앞의 실행 설정 매핑 표를 따른다.
 4. `.agents/skills/*`는 각 역할의 `team-spec.md` 섹션과 공통 출력 블록을 참조하는 실행 포인터를 담는다.
 5. `.harness/docs/*`는 저장소 입력, 오케스트레이션, 검증, 재진입 상태를 담는다.
 6. 생성 절차는 위 계약을 기준으로 주 에이전트가 직접 수행한다.

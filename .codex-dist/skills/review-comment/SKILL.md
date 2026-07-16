@@ -27,6 +27,32 @@ description: PR Review Template 출력을 GitHub PR review thread 게시 초안�
 6. 기존 review thread를 확인해 중복 게시 대상을 제외한다.
 7. 게시 요청 초안을 `inline_review_threads`와 `questions`로 분리한다.
 
+## 출력
+
+- 기존 `필수 출력`의 `pr_number`, `inline_review_threads`, `questions`만 반환한다.
+- `inline_review_threads`는 게시 가능한 review thread 초안이며 실제 게시 요청, 피드백 대응 방향, 해결 여부 또는 PR 상태의 확정값이 아니다.
+
+## 하지 않는 일
+
+- review thread 게시·답글·resolve, 리뷰 피드백 대응 방향, 해결 여부, 현재 Workflow 상태를 확정하거나 GitHub에 반영하지 않는다.
+- 정규화된 리뷰 결과의 중요도나 내용을 사용자 결정 없이 바꾸지 않고, 기존 review thread를 변경하지 않는다.
+- 전달된 PR Review Template, PR diff, 기존 review thread 범위를 넘어 새 리뷰 피드백이나 수정 범위를 추가하지 않는다.
+
+## 사용자 결정
+
+- 위치 재지정 또는 비실행 피드백 재분류가 필요한 경우 `questions`에 선택지로만 반환한다. 사용자의 일반 진행 표현을 선택 확정으로 해석하지 않는다.
+- 게시 대상, 재분류, 게시 요청, 이후 대응 방향과 해결 여부는 `github-workflow-engine`이 사용자 결정과 전이 규칙으로 처리한다.
+
+## 중단 조건
+
+- PR 번호, 정규화된 PR Review Template 출력, 기존 review thread 또는 필요한 diff position 근거가 없거나 충돌하면 게시 초안을 확정하지 않는다.
+- 위치 매핑 실패, 중복 여부 확인 불가, 범위 밖 피드백 요청이 있으면 GitHub 상태를 변경하지 않고 구체적인 사유와 재개에 필요한 `file`·`line` 또는 재분류 입력을 `questions`에 반환한다.
+
+## 후속 전이
+
+- 제어와 기존 출력 구조를 `github-workflow-engine`에 반환한다.
+- Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 위치 매핑 재시도, 비실행 피드백 재분류, 또는 review thread 게시의 구조화 실행 요청을 확정한다.
+
 ## 판정 기준 참조
 
 게시 위치와 보류 질문 판정은 `workflow-engine-rules.md`의 리뷰 게시 위치 판정 규칙을 따른다. `[차단]`과 `[중요]` 피드백은 `file`, `line`, diff position 매핑 성공 근거가 있을 때만 review thread 게시 초안으로 만들고, 근거가 없거나 매핑할 수 없으면 GitHub 상태를 변경하지 않도록 `questions`에 보류 사유를 기록한다.

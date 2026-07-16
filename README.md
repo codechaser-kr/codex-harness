@@ -27,7 +27,7 @@
 - `.codex-dist/skills/harness/SKILL.md`: Codex에 설치되는 전역 `harness` 스킬 진입점
 - `.codex-dist/skills/harness/references/*`: 하네스 Phase 선택 기준, 역할 설계, 에이전트 생성, QA, 로그, 재진입, 자기진화 기준
 - `.codex-dist/skills/github-workflow-engine/SKILL.md`: GitHub Run State를 읽고 다음 Workflow 액션을 제안하는 전역 스킬
-- `.codex-dist/skills/{issue-creation,feature-proposal-triage,policy-plan,policy-review-next-triage,feature-plan,fix-analysis,fix-plan,branch-proposal,commit-plan,pr-proposal,pr-creation,review-comment}/SKILL.md`: GitHub Workflow Engine에서 사용하는 Codex 전용 전역 스킬 기본형
+- `.codex-dist/skills/{github-state-summary,github-simple-executor,issue-creation,feature-proposal-triage,policy-plan,policy-review-next-triage,feature-plan,fix-analysis,fix-plan,branch-proposal,commit-plan,pr-proposal,pr-creation,review-comment}/SKILL.md`: GitHub Workflow Engine에서 사용하는 Codex 전용 전역 스킬 기본형
 - `install.sh`, `uninstall.sh`: 전역 Codex 스킬 경로에 배포본을 설치하거나 제거하는 스크립트
 - `.harness/development-quality-evaluation.md`: 하네스 생성기 품질 평가 기준
 - `.harness/document-regression-checklist.md`: README와 reference 문서 변경 후 회귀 점검 기준
@@ -65,6 +65,8 @@ $HOME/.codex/skills/harness/SKILL.md
 $HOME/.codex/skills/harness/references/
 $HOME/.codex/skills/github-workflow-engine
 $HOME/.codex/skills/github-workflow-engine/SKILL.md
+$HOME/.codex/skills/github-state-summary
+$HOME/.codex/skills/github-simple-executor
 $HOME/.codex/skills/issue-creation
 $HOME/.codex/skills/feature-proposal-triage
 $HOME/.codex/skills/policy-plan
@@ -99,6 +101,8 @@ GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장�
 배포본에는 다음 Codex 전역 스킬 기본형이 포함됩니다.
 
 - `github-workflow-engine`: GitHub Run State를 읽고 State Transition Rule에 따라 다음 액션을 제안합니다.
+- `github-state-summary`: 출처가 있는 GitHub·로컬 상태를 읽기 전용으로 요약합니다.
+- `github-simple-executor`: 확정된 단일 비파일 단순 상태 변경을 검증 후 수행합니다.
 - `issue-creation`: `기능제안`, `정책검토`, `기능변경`, `기능결함` 이슈 초안을 템플릿 기준으로 제안합니다.
 - `feature-proposal-triage`: 기능제안 이슈를 기준으로 진행하지 않음, 정책 검토 필요, 기능 변경 필요 중 적절한 진행 방향 후보와 판단 근거를 제안합니다.
 - `policy-plan`: 정책검토 이슈를 기준으로 정책 설계, 판단 맥락, 설계 문서 반영 대상, 설계 반영 후 기능변경 전환 범위를 제안합니다.

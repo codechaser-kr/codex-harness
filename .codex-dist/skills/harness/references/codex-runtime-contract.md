@@ -74,6 +74,8 @@ planned_execution_session_id       # 예정 실행 세션 식별자
 routing_status, selected_role_id, agent_config_path, local_skill_path, routing_evidence, model, model_reasoning_effort, sandbox_mode
 ```
 
+반환하는 라우팅 고유 필드는 검증해 전달한 입력 라우팅 결과와 일치해야 한다. 단, `세션 시작 전 중단`에서만 `routing_status`를 `aborted`로 전이할 수 있으며, `selected_role_id`, `agent_config_path`, `local_skill_path`, `routing_evidence`, `model`, `model_reasoning_effort`, `sandbox_mode`는 입력과 일치해야 한다.
+
 최종 반환은 라우팅 고유 필드와 함께 아래 Workflow Engine 공통 구조화 실행 결과 계약을 정확한 필드명으로 포함해야 한다.
 
 ```text
@@ -99,9 +101,9 @@ postconditions_satisfied
 residual_risks_or_failure_reasons
 ```
 
-실제 실행 주체 유형에 적용되지 않는 `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`은 각각 `not_applicable`과 `actual_agent_or_role_not_applicable_reason`, `actual_model_identifier_not_applicable_reason`, `actual_skill_identifier_not_applicable_reason`, `actual_config_identifier_not_applicable_reason`을 반환한다. 비명령 실행 주체이면 `actual_command_execution_path`, `execution_path_recheck_result`는 각각 `not_applicable`이고 `command_execution_path_not_applicable_reason`을 반환한다.
+실제 실행 주체 유형에 적용되지 않는 `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`은 각각 `not_applicable`과 `actual_agent_or_role_not_applicable_reason`, `actual_model_identifier_not_applicable_reason`, `actual_skill_identifier_not_applicable_reason`, `actual_config_identifier_not_applicable_reason`을 반환한다. 비명령 실행 주체이면 `actual_command_execution_path`, `execution_path_recheck_result`는 각각 `not_applicable`이고 `command_execution_path_not_applicable_reason`을 반환한다. 선택 역할의 별도 execution session 시작을 시도했지만 도구가 실제 세션 ID를 발급하기 전에 실패한 `세션 시작 전 중단`인 경우에만 `actual_execution_session_id = not_applicable`과 `actual_execution_session_id_not_applicable_reason = execution_session_not_started`, `actual_session_relation = not_applicable`과 `actual_session_relation_not_applicable_reason = execution_session_not_started`를 반환할 수 있다.
 
-`routing_status = aborted`이면 공통 결과 계약으로도 반환한다. 적용할 수 없는 실제 실행 필드는 위 사유 필드와 함께 `not_applicable`으로 기록하고, `changed_files`와 `github_state_changes`는 빈 값으로 둔다. `performed_actions`에는 라우팅 확인과 중단만, `verification_results`에는 중단 검증 결과만 기록하며, 실패 사유는 `residual_risks_or_failure_reasons`에 남긴다. 성공 결과도 이 필드에 실제 실행 값만 기록한다.
+`routing_status = aborted`이면 공통 결과 계약으로도 반환한다. 적용할 수 없는 실제 실행 필드는 위 사유 필드와 함께 `not_applicable`으로 기록하고, `changed_files`와 `github_state_changes`는 빈 값으로 둔다. `performed_actions`에는 라우팅 확인과 중단만, `verification_results`에는 중단 검증 결과만 기록하며, 실패 사유는 `residual_risks_or_failure_reasons`에 남긴다. 세션 관련 실제 필드의 `not_applicable`은 `세션 시작 전 중단` 예외에서만 허용한다. 이 예외는 `routing_status = aborted`, `planned_session_relation = separate_execution_session`, 실제 세션 ID 미발급, 파일 변경과 GitHub 상태 변경 모두 빈 값, 그리고 `performed_actions`, `verification_results`, `residual_risks_or_failure_reasons`에 각각 세션 시작 시도와 실패가 기록된 경우에만 허용한다. 성공 결과, 세션이 발급된 실행, 일반 중단은 기존 실제 별도 세션 ID와 관계 검증을 따른다.
 
 ### 요청-결과 상관관계
 
@@ -110,9 +112,9 @@ residual_risks_or_failure_reasons
 - 결과의 `target_baseline`과 요청의 `target_baseline`
 - `actual_executor_type`과 예정 실행 주체, 적용 가능한 actual/planned agent·model·skill·config 식별자 또는 `not_applicable` 사유
 - `actual_permission_conditions`, `actual_available_tool_conditions`, `actual_command_execution_path`, `execution_path_recheck_result`와 요청의 권한·도구·명령 경로 조건
-- `actual_orchestration_session_id`와 `orchestration_session_id`, `actual_session_relation` 및 `actual_execution_session_id`와 예정 세션 관계
+- `actual_orchestration_session_id`와 `orchestration_session_id`, `actual_session_relation` 및 `actual_execution_session_id`와 예정 세션 관계. 단, 위 조건을 모두 충족한 `세션 시작 전 중단`만 두 세션 필드의 `not_applicable`과 해당 사유를 허용한다.
 
-명령 실행 주체이면 실제 명령 경로는 요청의 `command_execution_path`와 일치하고 `execution_path_recheck_result`는 실행 직전 경로 재판정 통과여야 한다. 비명령 실행 주체이면 두 실제 경로 필드의 `not_applicable`과 사유가 요청의 `command_execution_path_not_applicable_reason`과 일치해야 한다. `same_session`이면 실제 오케스트레이션 세션과 실행 세션이 같아야 하며, `separate_execution_session`이면 달라야 한다. 알려진 `planned_execution_session_id`는 실제 세션과 일치해야 하지만, 값이 `pending_tool_issued`이면 문자 그대로 대조하지 않고 도구가 발급한 `actual_execution_session_id`를 확인한다.
+명령 실행 주체이면 실제 명령 경로는 요청의 `command_execution_path`와 일치하고 `execution_path_recheck_result`는 실행 직전 경로 재판정 통과여야 한다. 비명령 실행 주체이면 두 실제 경로 필드의 `not_applicable`과 사유가 요청의 `command_execution_path_not_applicable_reason`과 일치해야 한다. `same_session`이면 실제 오케스트레이션 세션과 실행 세션이 같아야 하며, `separate_execution_session`이면 달라야 한다. 알려진 `planned_execution_session_id`는 실제 세션과 일치해야 하지만, 값이 `pending_tool_issued`이면 문자 그대로 대조하지 않고 도구가 발급한 `actual_execution_session_id`를 확인한다. 단, `세션 시작 전 중단`의 모든 허용 조건을 충족하면 세션 ID와 관계의 `not_applicable` 및 사유를 대조하고, 그렇지 않으면 실제 별도 세션 ID와 관계 검증을 생략하지 않는다.
 
 ## 병렬 위임 기준
 

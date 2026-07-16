@@ -26,13 +26,13 @@ description: Workflow Engine이 검증한 대상 local run-harness 라우팅 결
 2. 대상 프로젝트의 현재 기준 상태가 요청의 `target_baseline`과 일치하는지 확인하고, 로컬 `run-harness`, `team-spec.md`, `orchestration-plan.md`와 역할 자산이 모두 준비됐는지 확인한다.
 3. 전달받은 라우팅 결과의 `routing_status`, 단일 선택 역할, 경로, 근거와 선택 역할의 model, reasoning, sandbox를 대상 `team-spec.md`, `orchestration-plan.md`, agent TOML, local skill에 다시 대조한다. Workflow Engine 검증 뒤 기준 상태, 라우팅 근거, 선택 역할 자산 또는 설정이 바뀌지 않았음을 확인한다.
 4. 대조한 역할·모델·스킬·config·세션 관계가 불변 요청의 예정 실행 식별자와 일치하는지 확인한다. 이 스킬은 라우팅을 새로 얻거나 `run-harness` 라우팅을 다시 수행하지 않는다.
-5. 메인 Workflow Engine의 orchestration session과 다른 별도 execution session 하나에서 정확히 하나의 선택 역할만 시작한다. 선택한 agent config, local skill, model, reasoning, sandbox와 불변 요청 및 검증된 라우팅 결과를 그대로 전달한다.
+5. 메인 Workflow Engine의 orchestration session과 다른 별도 execution session 하나에서 정확히 하나의 선택 역할만 시작하도록 시도한다. 선택한 agent config, local skill, model, reasoning, sandbox와 불변 요청 및 검증된 라우팅 결과를 그대로 전달한다. 도구가 실제 세션 ID를 발급하기 전에 시작에 실패하면 `세션 시작 전 중단`으로 기록하고 실제 선택 역할을 실행하지 않는다.
 6. 실제 명령 직전에 선택 역할의 `permission_conditions`, `available_tool_conditions`, `command_execution_path`, `destructive_command_risk`를 다시 확인한다. 하나라도 불일치하거나 확인할 수 없으면 명령을 실행하지 않는다.
-7. 선택 역할의 수행 결과를 변경하지 않고 라우팅 고유 필드와 공통 구조화 실행 결과로 반환한다.
+7. 선택 역할의 수행 결과 또는 세션 시작 전 중단 결과를 변경하지 않고 라우팅 고유 필드와 공통 구조화 실행 결과로 반환한다.
 
 ## 출력
 
-라우팅 고유 필드 `routing_status`, `selected_role_id`, `agent_config_path`, `local_skill_path`, `routing_evidence`와 함께 다음 공통 구조화 실행 결과 필드를 정확한 이름으로 반환한다.
+라우팅 고유 필드 `routing_status`, `selected_role_id`, `agent_config_path`, `local_skill_path`, `routing_evidence`, `model`, `model_reasoning_effort`, `sandbox_mode`와 함께 다음 공통 구조화 실행 결과 필드를 정확한 이름으로 반환한다.
 
 ```text
 request_id
@@ -59,7 +59,7 @@ residual_risks_or_failure_reasons
 
 적용할 수 없는 실제 식별자 또는 비명령 실행 경로 필드는 `workflow-engine-rules.md`의 공통 계약에 따라 `not_applicable`과 해당 이유를 함께 반환한다.
 
-`actual_executor_type`, `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`, `actual_execution_session_id`는 중개 절차가 아니라 실제 파일을 수정한 선택 타겟 역할과 그 별도 execution session을 가리킨다. `actual_orchestration_session_id`는 메인 Workflow Engine의 orchestration session을, `actual_session_relation`은 두 세션의 별도 관계를 가리킨다.
+`actual_executor_type`, `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`, `actual_execution_session_id`는 성공 또는 세션이 발급된 중단에서는 중개 절차가 아니라 실제 파일 수정 실행을 맡아 시작된 선택 타겟 역할과 그 별도 execution session을 가리킨다. `actual_orchestration_session_id`는 메인 Workflow Engine의 orchestration session을, `actual_session_relation`은 두 세션의 별도 관계를 가리킨다. `세션 시작 전 중단`에서만 `actual_execution_session_id`와 `actual_session_relation`을 각각 지정된 `not_applicable` 및 사유로 반환할 수 있다.
 
 ## 하지 않는 일
 
@@ -75,8 +75,8 @@ residual_risks_or_failure_reasons
 ## 중단 조건
 
 - 요청 또는 Workflow Engine 검증 라우팅 결과 누락, 기준 상태 불일치, 대상 하네스 자산 누락, `routing_status` 불일치, 선택 역할 0개 또는 복수, Workflow Engine 검증 뒤의 라우팅 근거·역할 자산·설정 변경, agent/skill/config 메타데이터 불일치가 있으면 중단한다.
-- 역할·모델·reasoning·sandbox·권한·도구·경로·파괴적 위험 조건이 요청 또는 라우팅 결과와 다르거나, 선택 역할의 별도 세션을 시작할 수 없으면 중단한다.
-- 중단 시 파일 변경 없이 `routing_status = aborted`와 공통 구조화 실행 결과를 반환한다. 적용 불가 실제 실행 필드는 `not_applicable`과 이유를 기록하고, `changed_files`와 `github_state_changes`는 빈 값으로 둔다. `performed_actions`에는 라우팅 확인과 중단만, `verification_results`에는 중단 검증만, 실패 사유에는 `residual_risks_or_failure_reasons`를 사용한다.
+- 역할·모델·reasoning·sandbox·권한·도구·경로·파괴적 위험 조건이 요청 또는 라우팅 결과와 다르거나, 선택 역할의 별도 세션을 시작할 수 없으면 중단한다. 세션 시작 시도 후 도구가 실제 세션 ID를 발급하기 전에 실패한 경우는 `세션 시작 전 중단`으로 명시한다.
+- 일반 중단은 파일 변경 없이 공통 구조화 실행 결과를 반환하고, `performed_actions`에는 실제로 수행한 라우팅·자산·조건 확인과 중단만 기록한다. `세션 시작 전 중단`에서만 `routing_status = aborted`, 예정 관계 `separate_execution_session`, 실제 세션 ID 미발급, `changed_files`와 `github_state_changes` 빈 값, `performed_actions`·`verification_results`·`residual_risks_or_failure_reasons`의 세션 시작 시도·실패 기록을 모두 충족할 때 지정된 세션 `not_applicable` 필드를 사용한다. 그 밖의 중단은 실제 별도 세션 ID와 관계 검증을 유지한다.
 
 ## 후속 전이
 

@@ -117,6 +117,15 @@
 
 `legacy_marker_comments`는 marker 댓글마다 `comment_id`, `url`, 체크된 항목 수, 미체크 항목 수를 기록한다. 기존 marker 댓글이 없으면 빈 배열로 기록한다. 이 결과는 과거 댓글의 존재와 체크 상태를 안내하기 위한 호환 정보이며 GitHub 상태를 변경하거나 작업 전이를 결정하지 않는다.
 
+### 상태 요약 출력 사용 가능 판정 규칙
+
+| 판정 상태 | 판정 기준 |
+| --- | --- |
+| 상태 요약 출력 사용 가능 | `github-state-summary` 결과에 `request_id`, `target_baseline`, `source_identifiers`, `observed_facts`, `missing_or_conflicting_facts`, 실제 실행 식별자와 세션, 읽기 전용 `performed_actions`, 빈 `changed_files`, 빈 `github_state_changes`, `verification_results`, `postconditions_satisfied`, `residual_risks_or_failure_reasons`가 있다. `request_id`, `target_baseline`, 조회 대상 식별자는 원 요청과 각각 일치한다. 모든 관측 사실은 출처 식별자로 추적 가능하고, 쓰기 또는 상태 전이 판단이 없다. |
+
+- 누락 또는 충돌 사실은 관측값으로 유지하며 현재 작업, 사용자 결정, 실행 범위, 상태 전이를 확정하는 근거로 자동 보완하지 않는다.
+- `상태 요약 출력 사용 가능`은 Workflow Engine이 다시 적용할 수 있는 읽기 전용 입력 조건일 뿐 최종 판단이 아니다.
+
 ### 필드 판정 규칙
 
 | 판정                       | 산출 규칙                                                                                                                                                 |
@@ -359,12 +368,14 @@ PR Review Template의 섹션명은 사람이 읽는 출력 구조이므로 한�
 | 판정 상태 | 판정 기준 |
 | --- | --- |
 | 결정론적 실행기 선택 | 파일 수정 작업이 아닌 경우에만 성립하며, 확정된 단순 상태 변경이고, 명령 실행 경로 규칙과 사용 가능 도구 조건으로 확인되는 결정론적 도구 경로가 있다. |
-| 저비용 실행 서브에이전트 선택 | 파일 수정 작업이 아닌 경우에만 성립하며, 결정론적 도구 경로가 없고, 판단·값 재해석·범위 변경 없이 단일 동작으로 실행할 수 있으며, 실행 주체 유형에 적용되는 agent/role, model, skill, config 식별 정보가 확인 가능하거나 `not_applicable` 근거가 있다. |
+| 저비용 상태 요약 실행 주체 선택 | 읽기 전용 상태 요약이 필요하고, `github-state-summary`가 출처 식별자가 있는 관측값만 반환하며, 파일·GitHub 상태·로그 변경, 현재 작업·사용자 결정·상태 전이 판단이 없고, `planned_model_identifier`와 `planned_config_identifier`가 실행 환경에서 확인 가능한 저비용 실행 설정을 가리키며, 실행 주체 식별 정보와 읽기 전용 도구 조건이 확인 가능한 상태다. |
+| 저비용 실행 서브에이전트 선택 | `github-simple-executor`에만 적용하며, 파일 수정 작업이 아닌 경우에만 성립하고, 결정론적 도구 경로가 없으며, 정확히 하나의 확정된 비파일 단순 상태 변경을 판단·값 재해석·범위 변경 없이 수행할 수 있고, `planned_model_identifier`와 `planned_config_identifier`가 실행 환경에서 확인 가능한 저비용 실행 설정을 가리키며, 실행 주체 유형에 적용되는 agent/role, model, skill, config 식별 정보가 확인 가능하거나 `not_applicable` 근거가 있다. |
 | 타겟 하네스 코드 수정 서브에이전트 선택 | 파일 수정 작업이고, 대상 저장소의 로컬 `run-harness` 준비 상태와 타겟 하네스 코드 수정 서브에이전트의 실행 주체 유형에 적용되는 확인 가능한 식별 정보 또는 `not_applicable` 근거가 모두 있다. |
 | 리뷰 실행 주체 선택 | 현재 작업이 `리뷰 실행`이고, 사용자가 확정한 리뷰 실행 모드가 `.harness/workflow-engine.json`에서 `리뷰 실행 모드 사용 가능`이며, 해당 모드의 실행 주체 식별 정보와 권한·도구 조건이 확인 가능한 상태다. |
 | 파일 수정 중단 | 파일 수정 작업인데 로컬 `run-harness` 준비 상태가 없거나 타겟 하네스 코드 수정 서브에이전트를 확인할 수 없는 상태다. 직접 수정은 허용하지 않는다. |
 
 - 최종 판단, 사용자 결정 해석, 커밋 생성 여부 판단, PR 생성 여부 판단은 실행 주체에 위임하지 않는다.
+- `github-state-summary`는 읽기 전용 지원 단위이고, 그 결과는 Workflow Engine의 상태 판정 입력이다. `github-simple-executor`는 일반 구조화 실행 결과 계약을 따르는 실행 단위다.
 - 리뷰 내용 생성은 사용자가 확정한 리뷰 실행 모드에 대해 `리뷰 실행 주체 선택`으로 확정된 실행 주체만 담당한다. 결정론적 실행기, 저비용 실행 서브에이전트, 타겟 하네스 코드 수정 서브에이전트에는 리뷰 내용 생성을 위임하지 않는다. Workflow Engine은 리뷰 결과 정규화와 게시할 리뷰 피드백 존재 또는 없음 판정을 담당한다.
 - 위 선택 판정에 맞는 실행 주체가 없으면 `구조화 실행 중단`으로 판정한다.
 

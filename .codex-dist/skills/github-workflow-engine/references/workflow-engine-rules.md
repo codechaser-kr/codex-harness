@@ -336,7 +336,10 @@ PR Review Template의 섹션명은 사람이 읽는 출력 구조이므로 한�
 | 실행 경로 조건 식별 가능 | `command_execution_path`, `permission_conditions`, `available_tool_conditions`, `destructive_command_risk`가 있고, 명령 실행 주체이면 `command_execution_path`가 명령 실행 경로 규칙으로 판정한 값과 일치한다. 비명령 실행 주체이면 `command_execution_path`가 `not_applicable`이고 `command_execution_path_not_applicable_reason`이 있다. |
 | 예정 실행 주체 식별 가능 | `planned_executor_type`가 있고, `planned_agent_or_role`, `planned_model_identifier`, `planned_skill_identifier`, `planned_config_identifier`마다 실행 주체 유형에 적용되는 확인 가능한 값 또는 `not_applicable`과 해당 `*_not_applicable_reason`이 있다. 적용 여부를 확인하지 못한 값은 통과하지 않는다. |
 | 예정 세션 관계 식별 가능 | `orchestration_session_id`와 `planned_session_relation`이 있다. `planned_session_relation`이 `same_session`이면 `planned_execution_session_id`가 `orchestration_session_id`와 같거나 명시적 `same_session` 표시가 있다. `separate_execution_session`이면 알려진 `planned_execution_session_id` 또는 도구 발급 대기 `pending_tool_issued`와 근거가 있다. |
-| 구조화 실행 요청 사용 가능 | `요청 식별 가능`, `작업과 범위 식별 가능`, `기준 상태 식별 가능`, `계약 조건 식별 가능`, `실행 경로 조건 식별 가능`, `예정 실행 주체 식별 가능`, `예정 세션 관계 식별 가능`이 모두 충족된다. |
+| 동일 `request_id` 활성 슬롯 선점 | Workflow Engine이 `동일 request_id 활성 시도 없음` 판정과 해당 `request_id`의 활성 실행 슬롯 선점을 하나의 원자적 동작으로 수행한다. 동시에 경쟁하는 요청 중 정확히 하나만 선점에 성공하며, 선점된 슬롯은 해당 시도의 구조화 실행 성공 또는 구조화 실행 중단이 최종 기록될 때까지 유지된다. |
+| 구조화 실행 요청 사용 가능 | `요청 식별 가능`, `작업과 범위 식별 가능`, `기준 상태 식별 가능`, `계약 조건 식별 가능`, `실행 경로 조건 식별 가능`, `예정 실행 주체 식별 가능`, `예정 세션 관계 식별 가능`, `동일 request_id 활성 슬롯 선점`이 모두 충족된다. |
+
+`동일 request_id 활성 슬롯 선점`에 실패하면 Workflow Engine은 기존 활성 시도를 대체·변경·중단하지 않고, 기존 시도의 활성 상태를 종료하거나 실행 슬롯을 해제하지 않으며, 새 `run-harness` 라우팅, `target-harness-code-editor` 호출, 별도 execution session 시작 없이 선택 전에 `duplicate_active_request_id` 원인을 기록한 `구조화 실행 중단`으로 반환한다. 이 중단은 target editor 결과로 만들지 않으며 파일과 GitHub 상태를 변경하지 않는다. 기존 시도가 성공 또는 중단으로 최종 기록된 뒤에는 요청 내용 불변을 유지하는 순차 재전송만 같은 `request_id`를 다시 사용할 수 있고, execution session ID로 각 실행 시도를 구분한다.
 
 ### 구조화 실행 결과와 요청-결과 상관관계 판정 규칙
 
@@ -360,7 +363,7 @@ PR Review Template의 섹션명은 사람이 읽는 출력 구조이므로 한�
 - `구조화 실행 성공` 이외의 모든 상태는 성공으로 판정하지 않는다.
 - 실행 주체는 `confirmed_request_values`, `target_ids_or_files`, `work_type`, `expected_postconditions`, `verification_criteria`를 재판단하거나 실행 범위를 넓힐 수 없다. 불일치 또는 추가 판단 필요는 `구조화 실행 중단`으로 판정한다.
 - 하나의 `request_id`는 하나의 변경 불가능한 구조화 요청 내용에만 대응한다. 같은 `request_id`에서 `target_baseline`, `work_type`, `target_ids_or_files`, `confirmed_request_values` 또는 그 밖의 요청 내용 불일치가 관측되면 계약 위반으로 중단한다.
-- 동일 요청의 단순 재전송은 같은 `request_id`를 유지할 수 있다. 요청 내용이나 기준 상태가 바뀐 새 요청은 새 `request_id`를 사용한다.
+- 동일 요청의 단순 재전송은 이전 시도의 성공 또는 중단이 최종 기록되어 같은 `request_id`의 활성 시도가 없을 때만 같은 `request_id`를 유지하는 순차 재전송으로 허용한다. 요청 내용이나 기준 상태가 바뀐 새 요청은 새 `request_id`를 사용한다.
 - 실행 시도와 세션 차이는 `orchestration_session_id`와 `execution_session_id`의 관계로 구분하며, 식별자 대체나 혼용으로 해석하지 않는다.
 
 ### 실행 주체 선택 판정 규칙

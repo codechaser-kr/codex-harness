@@ -115,6 +115,12 @@ residual_risks_or_failure_reasons
 
 결과는 `request_id` 일치로만 원 요청을 식별하고 선택한다. `base_issue_or_pr`, `work_target_id`, `target_ids_or_files` 또는 다른 식별자는 fallback으로 사용할 수 없다. 원 요청을 선택한 뒤에만 다음을 대조한다.
 
+Workflow Engine은 동일 `request_id`의 활성 시도가 없는지 확인하는 판정과 해당 `request_id`의 활성 실행 슬롯 선점을 하나의 원자적 동작으로 수행한다. 동시에 경쟁하는 요청 중 정확히 하나만 슬롯을 선점해 구조화 실행 요청 사용 가능 판정을 통과하며, 선점하지 못한 요청은 `duplicate_active_request_id` 선택 전 중단을 따른다.
+
+하나의 `request_id`에는 동시에 활성인 라우팅·실행 시도를 정확히 하나만 허용한다. 활성 상태는 해당 `request_id`의 구조화 요청이 라우팅 진입을 위해 수락된 시점부터 그 시도의 구조화 실행 성공 또는 구조화 실행 중단이 최종 기록될 때까지다. 활성 시도가 있는 동안 동일 요청의 단순 재전송이나 재라우팅 요청이 들어오면 기존 시도를 대체·변경·중단하지 않고, 기존 시도의 활성 상태를 종료하거나 실행 슬롯을 해제하지 않으며, 새 `run-harness` 라우팅, `target-harness-code-editor` 호출, 별도 execution session 시작을 수행하지 않는다. Workflow Engine은 선택 전에 `duplicate_active_request_id` 원인을 기록한 `구조화 실행 중단`으로 반환하며, 이 중단은 target editor 결과로 만들지 않는다. 파일과 GitHub 상태 변경은 없어야 한다.
+
+이전 시도가 성공 또는 중단으로 최종 기록되어 활성 상태가 끝난 뒤에는 같은 요청 내용을 유지한 순차 재전송만 같은 `request_id`를 다시 사용할 수 있다. 각 순차 실행 시도는 execution session ID로 구분하며, 요청 내용 불변 규칙은 유지한다.
+
 - 결과의 `target_baseline`과 요청의 `target_baseline`
 - `actual_executor_type`과 예정 실행 주체, 적용 가능한 actual/planned agent·model·skill·config 식별자 또는 `not_applicable` 사유
 - `actual_permission_conditions`, `actual_available_tool_conditions`, `actual_command_execution_path`, `execution_path_recheck_result`와 요청의 권한·도구·명령 경로 조건

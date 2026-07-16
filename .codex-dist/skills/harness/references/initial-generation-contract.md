@@ -33,6 +33,7 @@
 - 각 역할에 생성기 환류 후보 기준을 둔다. 단일 타겟 로컬 보강과 여러 타겟에서 반복될 생성기 보강 후보를 구분해야 한다.
 - 시작 진입 역할, 중심 조율 역할, QA 역할, 운영 감사 역할의 책임 경계를 둔다.
 - 역할별 출력 형식이 다음 역할, 하네스 재진입 Phase, 남은 위험을 전달할 수 있게 한다.
+- Workflow Engine 구조화 코드 수정 요청을 지원하면 `run-harness` 역할 카드와 `orchestration-plan.md`에 정확히 하나의 실제 코드 수정 역할을 선택하거나 파일을 수정하지 않고 중단하는 규칙을 둔다. 공통 요청과 공통 실행 결과의 정확한 필드명은 `codex-runtime-contract.md`를 따른다.
 - 공통 출력 블록을 역할 스킬이 따를 단일 원천으로 둔다.
 
 ### 2. `.codex/agents/*`
@@ -49,6 +50,7 @@
 - 역할별 우선 입력, 절차, 출력 형식, 다음 역할, 종료 기준을 `.toml`에 반복 복제하지 않는다.
 - `.codex/config.toml`은 `[agents]` 아래에 `directory` 또는 `skills_directory`를 두지 않고, 필요한 경우 `[agents.<role_id>]`와 `config_file = "agents/<agent_file>.toml"`만 사용한다.
 - agent TOML은 `model_reasoning_effort`와 `sandbox_mode`를 사용하고, `reasoning` 또는 `sandbox` 키를 쓰지 않는다.
+- 코드 수정 역할마다 team-spec의 `role_id`와 `agent_file`에 대응하는 agent TOML과 local skill이 존재하고, model/reasoning/sandbox 매핑을 확인할 수 있어야 한다.
 
 고정 역할명을 강제하지 않는다. 타겟 프로젝트의 도메인과 실패 경계를 반영한 이름이 우선이다.
 
@@ -155,10 +157,13 @@
 - 역할 스킬은 이름만 특화된 껍데기로 남으면 안 된다. 반드시 해당 `role_id`의 `team-spec` 섹션으로 연결돼야 한다.
 - 역할 스킬은 `team-spec`의 공통 출력 블록과 해당 역할 섹션을 따르라고 지시해야 한다.
 - 역할 스킬에 역할별 우선 입력, 절차, 다음 역할, 종료 기준을 반복 복제하지 않는다.
+- 실제 코드 수정 역할의 스킬은 역할별 절차를 복제하지 않고, team-spec의 해당 역할 섹션에 선언된 Workflow Engine 공통 요청 계약을 따르도록 지시한다.
 
 ### 하네스 Phase 5
 
 - handoff가 입력, 출력, 다음 역할, 하네스 재진입 Phase를 전달해야 한다.
+- 구조화 코드 수정 handoff는 선택 역할의 `role_id`, agent config path, local skill path, 확인한 model/reasoning/sandbox, 라우팅 근거를 전달한다. 최종 실행 또는 중단 결과는 `codex-runtime-contract.md`의 공통 구조화 실행 결과 계약을 따른다. `run-harness`는 실제 수정 역할을 대신하거나 모델을 임의 선택하지 않는다.
+- 후보 0개, 복수 후보, role/agent/skill 불일치 또는 누락이면 handoff 대신 파일 미수정 중단 결과를 남긴다.
 - 보류와 실패도 다음 세션에서 이어 읽을 수 있어야 한다.
 - 흐름 조율 역할이 `logging-policy.md`, `session-log.md`, `latest-session-summary.md`를 같은 handoff와 세션 종료 기준으로 정렬한다.
 - 흐름 조율 역할은 세션 환경 메모와 승인 이력을 `session-log.md`에 남기고, `latest-session-summary.md`에는 다음 시작 판단에 직접 필요한 운영상 위험만 남긴다.
@@ -179,6 +184,7 @@
 - 모든 역할 스킬이 `team-spec.md`의 해당 역할 섹션과 공통 출력 블록을 명확히 참조한다.
 - 역할별 우선 입력, 절차, 다음 역할, 종료 기준의 단일 원천은 `team-spec.md`다.
 - `team-spec.md`와 실제 agent/skill 자산이 같은 역할 집합을 말한다.
+- 구조화 코드 수정 요청이 지원되는 경우, `run-harness`는 정확히 하나의 실제 코드 수정 역할만 라우팅하며 중단 시 파일을 수정하지 않는다. 완료와 중단 결과는 `codex-runtime-contract.md`의 공통 구조화 실행 결과 계약을 제공할 수 있다.
 - QA와 운영 감사 역할이 생성 직후부터 구분된다.
 - 보류한 판단과 남은 질문이 로그와 문서에 남아 있다.
 - 초기 생성 중 발생한 환경성 이슈는 `session-log.md`에 남고, `latest-session-summary.md`의 남은 위험에는 다음 실행 판단에 필요한 운영상 위험만 남아 있다.

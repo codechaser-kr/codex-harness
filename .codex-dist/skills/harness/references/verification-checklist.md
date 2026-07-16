@@ -50,6 +50,12 @@
 - `.codex/agents/*.toml`과 `.agents/skills/*/SKILL.md`에 역할별 우선 입력, 절차, 다음 역할, 종료 기준이 중복되어 있지 않다.
 - description이 실제 요청에서 트리거될 만큼 구체적이다.
 - 시작 진입 역할과 중심 조율 역할이 구분된다.
+- Workflow Engine 구조화 코드 수정 요청을 지원하면, `run-harness`와 실제 코드 수정 역할이 구분되고 `run-harness`가 직접 수정하거나 모델을 임의 선택하지 않는다.
+- 코드 수정 후보 역할마다 team-spec 역할 카드의 `target_ids_or_files`, 공통 요청 계약 조건과 `role_id`/`agent_file`이 선언돼 있으며 `.codex/agents/<agent_file>.toml`, `.agents/skills/<agent_file>/SKILL.md`와 정확히 일치한다.
+- agent TOML에서 확인한 `model`, `model_reasoning_effort`, `sandbox_mode`가 team-spec의 `model`, `reasoning`, `sandbox`와 대응하고, 라우팅 결과에 확인 가능한 값으로 남는다.
+- `codex-runtime-contract.md`가 공통 구조화 요청 및 공통 구조화 실행 결과 계약의 정확한 필드명을 정의하고, 다른 문서가 별칭을 만들지 않는다.
+- `orchestration-plan.md`가 공통 구조화 요청 계약을 불변 입력으로 handoff하고 재판단이나 확대를 금지한다.
+- 라우팅 규칙이 정확히 하나의 후보만 선택하며 후보 0개/복수, role/agent/skill 불일치 또는 누락에서는 파일을 수정하지 않고 중단하도록 정의한다.
 - QA 역할과 운영 감사 역할이 구분된다.
 - 역할별 `우선 입력`에 등장하는 설계/정책/사양 문서가 모두 `설계 원천 우선순위` 또는 `설계 원천 인벤토리`에 포함돼 있다.
 - `설계 원천 우선순위`에 없는 문서를 역할이 정책 판단 기준으로 사용하지 않는다.
@@ -73,6 +79,7 @@
 - `harness-architecture.md`는 팀 구조와 실행 패턴을 선택한 이유를 설명하고 역할별 상세 책임이나 운영 매뉴얼을 반복하지 않는다.
 - `team-structure.md`는 역할 목록과 책임 경계를 설명하고 패턴 선택 이유나 실행 흐름을 길게 반복하지 않는다.
 - `orchestration-plan.md`는 역할 순서, handoff, 정상/보류/실패/재진입 흐름을 설명하고 역할 설명서나 운영 매뉴얼을 대신하지 않는다.
+- `orchestration-plan.md`가 구조화 코드 수정 선택 handoff의 `selected_role_id`, agent config path, local skill path, model/reasoning/sandbox, 라우팅 근거를 전달하고 공통 구조화 실행 결과 계약은 `codex-runtime-contract.md`를 참조한다.
 - `team-playbook.md`는 실제 요청에서 팀을 어떻게 운용할지 설명하고 아키텍처 근거나 전체 역할 스펙을 다시 쓰지 않는다.
 - 같은 내용이 여러 보조 운영 문서에 반복되어 있으면 해당 질문에 가장 직접 답하는 문서에만 남기고 나머지는 짧은 참조로 줄인다.
 - 보존 문서에 이전 역할명이나 진입점이 남아 있으면 `orchestration-plan.md` 또는 `team-playbook.md`가 이전 역할명 -> 현재 역할명 매핑과 우선 기준을 설명한다.
@@ -116,6 +123,7 @@
 
 - 신규 구축 결과라면 `initial-generation-contract.md` 기준으로 초기 생성물만 읽어도 다음 시작 역할, 다음 하네스 재진입 Phase, 학습 후보 기록 위치를 알 수 있다.
 - 역할 출력이나 로그에 새로 확인한 저장소 사실을 남길 위치가 있다.
+- 구조화 코드 수정 라우팅의 중단 결과가 `routing_status: aborted`와 중단 근거를 남기고, 공통 구조화 실행 결과 계약의 적용 불가 필드는 `not_applicable`과 사유, `changed_files`/`github_state_changes`는 빈 값, 실패 사유는 `residual_risks_or_failure_reasons`에 기록한다.
 - 모든 역할 스킬이 `team-spec.md`의 해당 `role_id` 섹션을 참조한다. 누락된 역할이 있으면 `하네스 Phase 4` 재작성 필요로 판정한다.
 - 모든 역할 스킬이 `team-spec.md`의 공통 출력 블록을 따르도록 지시한다.
 - `.codex/agents/*.toml`과 `.agents/skills/*/SKILL.md`가 역할 세부 기준을 별도 기준처럼 복제하면 drift 위험으로 기록한다.

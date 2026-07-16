@@ -85,6 +85,7 @@ team-spec은 최소한 아래 정보를 가져야 한다.
 - sandbox 정책
 - 권장 모델 클래스
 - role description 초안
+- 코드 수정 역할의 허용 `target_ids_or_files`, 공통 요청 계약 조건, Workflow Engine 구조화 요청 불변 입력 보존 규칙
 
 또한 생성기는 team-spec 안의 기계 판독 블록도 읽을 수 있어야 한다.
 현재 기본 형식은 fenced `text` 블록이다.
@@ -102,6 +103,7 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - `agent_file`은 `.codex/agents/<agent_file>.toml`과 `.agents/skills/<agent_file>/SKILL.md`를 연결하는 기준값이다.
 - `reasoning`과 `sandbox`는 team-spec의 추상 컬럼명으로만 쓰고, agent TOML 생성 시 각각 `model_reasoning_effort`, `sandbox_mode`로 매핑한다.
 - `reasoning`은 역할 유형별 기본값을 따른다. 일반 구현/문서/콘텐츠 역할과 시작 진입 역할은 `medium`, QA/운영 감사/cross-check/하네스 정합성 검토 역할은 `high`를 기본값으로 쓴다.
+- Workflow Engine 구조화 코드 수정 요청의 코드 수정 후보는 역할 카드에 `target_ids_or_files`와 공통 요청 계약 조건을 선언해야 한다. `run_harness` 역할 카드는 이 요청에서 후보 선택 또는 중단만 맡고 직접 수정 책임을 선언하지 않는다.
 - 중심 조율 역할은 기본 `medium`이지만, 다중 역할 조율, 보존 문서 충돌, 정책 원천 충돌, 로그/문서/구현 상태의 교차 정렬을 맡으면 `high`로 올린다.
 - 최종 역할명 선택 이유와 대체 관계는 기계 블록 밖의 설명 섹션에도 남긴다
 - 헤더와 모든 역할 행은 같은 fenced `text` 블록 안에 둔다.
@@ -147,6 +149,9 @@ run_harness|run-harness|run-harness|default|medium|workspace-write|현재 하네
 - 관련 정책 문서는 고정 파일명이나 경로 패턴이 아니라 저장소의 문서 제목, 본문 키워드, 목차, 영역별 `AGENTS.md` 참조를 읽어 의미상 해당 정책 원천에 해당하는 후보에서 찾는다.
 - 같은 정책 도메인을 맡는 역할은 같은 정책 원천을 공유해야 한다.
 - 정책 문서가 없으면 대체 원천과 보류 판단을 역할 스펙에 남긴다.
+- Workflow Engine 구조화 코드 수정 요청의 시작 역할은 `codex-runtime-contract.md`의 공통 요청 계약을 불변 입력으로 적고 재판단, 확대, 대체하지 않도록 정의한다.
+- 코드 수정 후보 역할의 판단 기준에는 선언한 `target_ids_or_files`와 공통 요청 계약 조건의 정확한 일치만 포함한다. `team-spec` 역할 카드, `.codex/agents/<agent_file>.toml`, `.agents/skills/<agent_file>/SKILL.md` 중 하나라도 없거나 `role_id`/`agent_file`/실행 설정이 다르면 후보에서 제외하고 파일을 수정하지 않는 중단으로 끝낸다.
+- 선택 출력은 `selected_role_id`, `agent_config_path`, `local_skill_path`, `model`, `model_reasoning_effort`, `sandbox_mode`, 라우팅 근거를 포함한다. 실제 수정 또는 중단 결과는 `codex-runtime-contract.md`의 공통 구조화 실행 결과 계약을 그대로 따른다.
 
 예를 들면 다음과 같은 차이가 있어야 한다.
 
@@ -165,6 +170,7 @@ team-spec이 이 정보를 담지 못하면, 생성된 `.agents/skills/*/SKILL.m
 - 재진입 규칙
 - 운영 감사 역할 개입 시점
 - 재구성 조건
+- Workflow Engine 구조화 코드 수정 요청의 정확히 하나 선택 또는 파일 미수정 중단 규칙
 
 ---
 
@@ -242,6 +248,8 @@ team-spec을 바탕으로 아래를 동적으로 생성한다.
 - team-spec의 각 역할이 학습 후보를 어디에 남기고 어느 문서/스킬로 승격할지 적었는가
 - team-spec의 각 역할이 단일 타겟 로컬 보강과 생성기 환류 후보를 어떻게 구분할지 적었는가
 - 시작 진입 역할이 team-spec 기준 시작 역할과 재진입 규칙을 설명하는가
+- Workflow Engine 구조화 코드 수정 요청에서 `run_harness`가 정확히 하나의 실제 코드 수정 역할을 선택하거나, 후보 0개/복수/불일치/누락이면 파일을 수정하지 않고 중단하는가
+- 선택 역할의 `role_id`, `agent_file`, agent config, local skill, model/reasoning/sandbox가 일치하고, `codex-runtime-contract.md`의 공통 요청 계약을 재판단하거나 확대하지 않는가
 - 운영 감사 역할이 team-spec과 산출물의 불일치를 지적할 수 있는가
 - 생성된 `.agents/skills/*/SKILL.md`가 해당 `role_id`의 team-spec 섹션과 공통 출력 블록을 명확히 참조하는가
 - 생성된 `.codex/agents/*.toml`과 `.agents/skills/*/SKILL.md`가 역할별 시작 체크리스트, 판단 기준, 완료 기준, 다음 역할 기준을 중복해서 담지 않는가

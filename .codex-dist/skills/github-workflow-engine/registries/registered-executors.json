@@ -1,0 +1,38 @@
+[
+  {
+    "executor_id": "github-state-summary",
+    "executor_kind": "skill",
+    "side_effect_scope": "read_only",
+    "runtime_reference": "github-state-summary"
+  },
+  {
+    "executor_id": "github-simple-executor",
+    "executor_kind": "skill",
+    "side_effect_scope": "github_state_change",
+    "runtime_reference": "github-simple-executor"
+  },
+  {
+    "executor_id": "target-harness-code-editor",
+    "executor_kind": "skill",
+    "side_effect_scope": "repository_file_change",
+    "runtime_reference": "target-harness-code-editor"
+  },
+  {
+    "executor_id": "claude/code-review",
+    "executor_kind": "review_mode",
+    "side_effect_scope": "review_output",
+    "runtime_reference": "claude/code-review"
+  },
+  {
+    "executor_id": "claude/awesome-code-review",
+    "executor_kind": "review_mode",
+    "side_effect_scope": "review_output",
+    "runtime_reference": "claude/awesome-code-review"
+  },
+  {
+    "executor_id": "codex/awesome-code-review",
+    "executor_kind": "review_mode",
+    "side_effect_scope": "review_output",
+    "runtime_reference": "codex/awesome-code-review"
+  }
+]

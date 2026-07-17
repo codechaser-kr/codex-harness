@@ -338,15 +338,18 @@ function validateTransition(value, path, workflowKind, facts, executorIds, taskA
   return record;
 }
 
-function collectStateFacts(facts) {
+function collectReferencedStateFacts(factIds, facts) {
   const stateFacts = [];
-  for (const fact of facts.values()) {
+  for (const [factId, fact] of facts) {
+    if (!factIds.has(factId)) {
+      continue;
+    }
     if (!fact.conditionReady) {
       return undefined;
     }
     stateFacts.push(fact);
   }
-  return stateFacts;
+  return stateFacts.length === factIds.size ? stateFacts : undefined;
 }
 
 function stateSpaceSize(facts, maxConditionStates) {
@@ -408,20 +411,20 @@ function collectExpressionFactIds(expression, factIds) {
   }
 }
 
-function collectCompletionPredicateFacts(expression, facts) {
+function collectExpressionStateFacts(expression, facts) {
   const factIds = new Set();
   collectExpressionFactIds(expression, factIds);
-  const stateFacts = [];
-  for (const [factId, fact] of facts) {
-    if (!factIds.has(factId)) {
-      continue;
+  return collectReferencedStateFacts(factIds, facts);
+}
+
+function collectRuleConditionFacts(ruleSet, facts) {
+  const factIds = new Set();
+  for (const rule of ruleSet.rules) {
+    if (rule.conditionValid && !rule.unconditional) {
+      collectExpressionFactIds(rule.condition, factIds);
     }
-    if (!fact.conditionReady) {
-      return undefined;
-    }
-    stateFacts.push(fact);
   }
-  return stateFacts.length === factIds.size ? stateFacts : undefined;
+  return collectReferencedStateFacts(factIds, facts);
 }
 
 function completionPredicateStateSpaceSize(facts, maxConditionStates) {
@@ -466,7 +469,7 @@ function validateCompletionPredicateSatisfiability(records, facts, maxConditionS
     if (!record.completionPredicateValid) {
       continue;
     }
-    const stateFacts = collectCompletionPredicateFacts(record.completionPredicate, facts);
+    const stateFacts = collectExpressionStateFacts(record.completionPredicate, facts);
     if (!stateFacts) {
       continue;
     }
@@ -508,28 +511,21 @@ function validateRuleCoverage(records, terminalIds, facts, maxConditionStates, e
     }
     return record.ruleSet.hasConditionalRules && record.ruleSet.conditionsValid;
   });
-  if (candidates.length === 0) {
-    return matchingRules;
-  }
-  const stateFacts = collectStateFacts(facts);
-  if (!stateFacts) {
-    for (const record of candidates) {
-      for (const rule of record.ruleSet.rules) {
-        matchingRules.add(rule);
-      }
-    }
-    return matchingRules;
-  }
-  if (stateSpaceSize(stateFacts, maxConditionStates) === undefined) {
-    addError(errors, "condition_state_space.limit_exceeded", "/normalized_fact_schema", `Condition state space exceeds configured limit ${maxConditionStates}.`);
-    for (const record of candidates) {
-      for (const rule of record.ruleSet.rules) {
-        matchingRules.add(rule);
-      }
-    }
-    return matchingRules;
-  }
   for (const record of candidates) {
+    const stateFacts = collectRuleConditionFacts(record.ruleSet, facts);
+    if (!stateFacts) {
+      for (const rule of record.ruleSet.rules) {
+        matchingRules.add(rule);
+      }
+      continue;
+    }
+    if (stateSpaceSize(stateFacts, maxConditionStates) === undefined) {
+      addError(errors, "condition_state_space.limit_exceeded", `${record.path}/next_transition_rules`, `Condition state space exceeds configured limit ${maxConditionStates}.`);
+      for (const rule of record.ruleSet.rules) {
+        matchingRules.add(rule);
+      }
+      continue;
+    }
     let gapReported = false;
     let overlapReported = false;
     forEachState(stateFacts, (state) => {

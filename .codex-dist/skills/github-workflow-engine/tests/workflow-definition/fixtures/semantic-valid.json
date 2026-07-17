@@ -134,6 +134,54 @@
           }
         ]
       }
+    },
+    {
+      "name": "conditional rules ignore large unrelated fact domains",
+      "options": { "maxConditionStates": 3 },
+      "definition": {
+        "workflow_id": "projected-condition-flow",
+        "version": "1.0.0",
+        "workflow_kind": "implementation",
+        "target_type": "issue",
+        "entry_transition_id": "check",
+        "terminal_transition_ids": ["complete"],
+        "normalized_fact_schema": [
+          { "fact_id": "flag", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": false },
+          { "fact_id": "unrelated", "value_type": "integer", "allowed_values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], "evidence_required": false }
+        ],
+        "transitions": [
+          {
+            "transition_id": "check",
+            "normalized_fact_conditions": { "fact_id": "flag", "operator": "exists" },
+            "task_action_id": "FI-1",
+            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+            "completion_predicate": { "fact_id": "flag", "operator": "exists" },
+            "registered_executor_reference": null,
+            "next_transition_rules": [
+              { "condition": { "fact_id": "flag", "operator": "equals", "value": true }, "transition_id": "review" },
+              { "condition": { "fact_id": "flag", "operator": "equals", "value": false }, "transition_id": "complete" }
+            ]
+          },
+          {
+            "transition_id": "review",
+            "normalized_fact_conditions": { "fact_id": "flag", "operator": "exists" },
+            "task_action_id": "FI-2",
+            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+            "completion_predicate": { "fact_id": "flag", "operator": "exists" },
+            "registered_executor_reference": null,
+            "next_transition_rules": [{ "condition": null, "transition_id": "complete" }]
+          },
+          {
+            "transition_id": "complete",
+            "normalized_fact_conditions": { "fact_id": "flag", "operator": "exists" },
+            "task_action_id": "FI-3",
+            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+            "completion_predicate": { "fact_id": "flag", "operator": "exists" },
+            "registered_executor_reference": null,
+            "next_transition_rules": []
+          }
+        ]
+      }
     }
   ]
 }

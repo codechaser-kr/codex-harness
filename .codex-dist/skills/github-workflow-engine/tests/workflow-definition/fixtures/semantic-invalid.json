@@ -218,6 +218,29 @@
         }
       ],
       "expected_code": "condition_state_space.limit_exceeded"
+    },
+    {
+      "name": "relevant condition state space limit",
+      "options": { "maxConditionStates": 3 },
+      "mutations": [
+        {
+          "op": "append",
+          "path": ["normalized_fact_schema"],
+          "value": { "fact_id": "phase", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": false }
+        },
+        {
+          "op": "set",
+          "path": ["transitions", 0, "next_transition_rules"],
+          "value": [
+            { "condition": { "all": [{ "fact_id": "flag", "operator": "equals", "value": true }, { "fact_id": "phase", "operator": "equals", "value": true }] }, "transition_id": "complete" },
+            { "condition": { "all": [{ "fact_id": "flag", "operator": "equals", "value": true }, { "fact_id": "phase", "operator": "equals", "value": false }] }, "transition_id": "complete" },
+            { "condition": { "all": [{ "fact_id": "flag", "operator": "equals", "value": false }, { "fact_id": "phase", "operator": "equals", "value": true }] }, "transition_id": "complete" },
+            { "condition": { "all": [{ "fact_id": "flag", "operator": "equals", "value": false }, { "fact_id": "phase", "operator": "equals", "value": false }] }, "transition_id": "complete" }
+          ]
+        }
+      ],
+      "expected_code": "condition_state_space.limit_exceeded",
+      "expected_path": "/transitions/0/next_transition_rules"
     }
   ]
 }

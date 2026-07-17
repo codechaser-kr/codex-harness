@@ -39,7 +39,7 @@ function applyMutations(definition, mutations) {
 test("accepts unconditional, conditional, and terminal-escaping cyclic graphs", async () => {
   const fixture = await readFixture("semantic-valid.json");
   for (const scenario of fixture.cases) {
-    const result = validateWorkflowDefinition(scenario.definition);
+    const result = validateWorkflowDefinition(scenario.definition, scenario.options);
     assert.equal(result.valid, true, `${scenario.name}: ${JSON.stringify(result.errors)}`);
     assert.deepEqual(result.errors, []);
   }
@@ -71,6 +71,9 @@ test("reports deterministic C3 graph and condition errors", async () => {
     assert.equal(first.valid, false, scenario.name);
     const error = first.errors.find((item) => item.code === scenario.expected_code);
     assert.notEqual(error, undefined, `${scenario.name}: ${JSON.stringify(first.errors)}`);
+    if (scenario.expected_path) {
+      assert.equal(error.path, scenario.expected_path, scenario.name);
+    }
     if (scenario.expected_code === "next_transition_rules.condition_overlap" || scenario.expected_code === "next_transition_rules.condition_gap") {
       assert.equal(typeof error.witness, "object");
       assert.equal(typeof error.message, "string");

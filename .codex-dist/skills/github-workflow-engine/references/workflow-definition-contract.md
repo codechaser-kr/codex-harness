@@ -110,10 +110,14 @@ C3 semantic validation은 각 transition의 `completion_predicate`가 자신이 
 도메인 상태로 포함하며, 어떤 상태에서도 참이 될 수 없는 predicate는
 `completion_predicate.unsatisfiable` 오류로 거부한다.
 
-조건 의미 검증은 선언 순서가 아닌 normalized fact의 유한 상태 공간을 결정적 순서로
-탐색한다. 기본 상태 공간 상한은 10,000개이며 `validateWorkflowDefinition`의
-`maxConditionStates` option으로 양의 정수 상한을 재정의할 수 있다. 곱셈 결과가 상한을
-넘으면 `condition_state_space.limit_exceeded` 구조화 오류를 반환하고 탐색하지 않는다.
+조건 의미 검증은 각 non-terminal candidate transition의 유효한 조건부
+`next_transition_rules`가 참조하는 fact ID의 합집합만 상태 공간에 포함한다. 참조 fact는
+선언된 normalized fact 순서로 탐색하고, next-transition coverage에는 기존처럼
+`allowed_values` 상태만 포함하며 missing 상태는 추가하지 않는다. 기본 상태 공간 상한은
+10,000개이며 `validateWorkflowDefinition`의 `maxConditionStates` option으로 양의 정수
+상한을 재정의할 수 있다. 각 transition의 관련 상태 공간 곱셈 결과가 상한을 넘으면 해당
+transition의 `next_transition_rules` 경로에 `condition_state_space.limit_exceeded` 구조화
+오류를 반환하고 그 transition의 탐색을 하지 않는다.
 completion predicate satisfiability 검증도 같은 option을 해당 predicate가 참조하는 fact와
 누락 상태로 구성한 상태 공간에 적용한다. 이 상태 공간이 상한을 넘으면
 `completion_predicate_state_space.limit_exceeded` 구조화 오류를 반환하고 탐색하지 않는다.

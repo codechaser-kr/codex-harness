@@ -38,6 +38,9 @@ function parseOptions(argumentsList) {
     if (typeof value !== "string" || value.startsWith("--")) {
       return { error: `Missing value for ${flag}.` };
     }
+    if (value.length === 0) {
+      return { error: `Empty value for ${flag}.` };
+    }
     values[flag] = value;
     index += 1;
   }

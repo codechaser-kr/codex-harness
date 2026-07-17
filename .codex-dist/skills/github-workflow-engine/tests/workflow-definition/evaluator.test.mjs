@@ -286,6 +286,18 @@ test("CLI returns JSON-serializable results and specified exit codes", async (t)
   assert.equal(usage.exitCode, 2);
   assert.equal(JSON.parse(JSON.stringify(usage.result)).reason, "usage_error");
 
+  const emptyValueArguments = [
+    ["validate", "--definition", ""],
+    ["evaluate", "--definition", definitionPath, "--state", ""],
+    ["evaluate", "--definition", definitionPath, "--state", statePath, "--current-transition-id", ""],
+  ];
+  for (const argumentsList of emptyValueArguments) {
+    const response = await runWorkflowDefinitionCli(argumentsList);
+    assert.equal(response.exitCode, 2);
+    assert.equal(response.result.reason, "usage_error");
+    assert.equal(hasError(response.result, "cli.usage", ""), true);
+  }
+
   await t.test("actual child process emits one JSON line with documented exit codes", async (childTest) => {
     const validateProcess = runCliProcess(["validate", "--definition", definitionPath]);
     if (validateProcess.error?.code === "EPERM") {
@@ -312,5 +324,12 @@ test("CLI returns JSON-serializable results and specified exit codes", async (t)
     assert.equal(usageProcess.error, undefined, usageProcess.error?.message);
     assert.equal(usageProcess.status, 2);
     assert.equal(parseSingleJsonLine(usageProcess).reason, "usage_error");
+
+    for (const argumentsList of emptyValueArguments) {
+      const emptyValueProcess = runCliProcess(argumentsList);
+      assert.equal(emptyValueProcess.error, undefined, emptyValueProcess.error?.message);
+      assert.equal(emptyValueProcess.status, 2);
+      assert.equal(parseSingleJsonLine(emptyValueProcess).reason, "usage_error");
+    }
   });
 });

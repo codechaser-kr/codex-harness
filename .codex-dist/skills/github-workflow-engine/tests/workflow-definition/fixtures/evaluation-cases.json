@@ -1,0 +1,310 @@
+{
+  "definitions": {
+    "entry_action_required": {
+      "workflow_id": "evaluation-entry-action",
+      "version": "1",
+      "workflow_kind": "implementation",
+      "target_type": "issue",
+      "entry_transition_id": "start",
+      "terminal_transition_ids": ["complete"],
+      "normalized_fact_schema": [
+        {
+          "fact_id": "ready",
+          "value_type": "boolean",
+          "allowed_values": [true, false],
+          "evidence_required": false
+        }
+      ],
+      "transitions": [
+        {
+          "transition_id": "start",
+          "normalized_fact_conditions": { "fact_id": "ready", "operator": "equals", "value": true },
+          "task_action_id": "FI-1",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "ready", "operator": "equals", "value": false },
+          "registered_executor_reference": null,
+          "next_transition_rules": [{ "condition": null, "transition_id": "complete" }]
+        },
+        {
+          "transition_id": "complete",
+          "normalized_fact_conditions": { "fact_id": "ready", "operator": "exists" },
+          "task_action_id": "FI-2",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "ready", "operator": "equals", "value": true },
+          "registered_executor_reference": null,
+          "next_transition_rules": []
+        }
+      ]
+    },
+    "conditional_next": {
+      "workflow_id": "evaluation-conditional-next",
+      "version": "1",
+      "workflow_kind": "implementation",
+      "target_type": "issue",
+      "entry_transition_id": "check",
+      "terminal_transition_ids": ["terminal"],
+      "normalized_fact_schema": [
+        {
+          "fact_id": "completion_ready",
+          "value_type": "boolean",
+          "allowed_values": [true],
+          "evidence_required": false
+        },
+        {
+          "fact_id": "remaining_feedback",
+          "value_type": "boolean",
+          "allowed_values": [true, false],
+          "evidence_required": false
+        },
+        {
+          "fact_id": "action_done",
+          "value_type": "boolean",
+          "allowed_values": [false],
+          "evidence_required": false
+        }
+      ],
+      "transitions": [
+        {
+          "transition_id": "check",
+          "normalized_fact_conditions": { "fact_id": "completion_ready", "operator": "equals", "value": true },
+          "task_action_id": "FI-1",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "completion_ready", "operator": "equals", "value": true },
+          "registered_executor_reference": null,
+          "next_transition_rules": [
+            { "condition": { "fact_id": "remaining_feedback", "operator": "equals", "value": true }, "transition_id": "review" },
+            { "condition": { "fact_id": "remaining_feedback", "operator": "equals", "value": false }, "transition_id": "complete" }
+          ]
+        },
+        {
+          "transition_id": "review",
+          "normalized_fact_conditions": { "fact_id": "completion_ready", "operator": "exists" },
+          "task_action_id": "FI-2",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "action_done", "operator": "not_equals", "value": false },
+          "registered_executor_reference": null,
+          "next_transition_rules": [{ "condition": null, "transition_id": "terminal" }]
+        },
+        {
+          "transition_id": "complete",
+          "normalized_fact_conditions": { "fact_id": "completion_ready", "operator": "exists" },
+          "task_action_id": "FI-3",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "action_done", "operator": "not_equals", "value": false },
+          "registered_executor_reference": null,
+          "next_transition_rules": [{ "condition": null, "transition_id": "terminal" }]
+        },
+        {
+          "transition_id": "terminal",
+          "normalized_fact_conditions": { "fact_id": "completion_ready", "operator": "exists" },
+          "task_action_id": "FI-4",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "action_done", "operator": "not_equals", "value": false },
+          "registered_executor_reference": null,
+          "next_transition_rules": []
+        }
+      ]
+    },
+    "terminal_completed": {
+      "workflow_id": "evaluation-terminal",
+      "version": "1",
+      "workflow_kind": "implementation",
+      "target_type": "issue",
+      "entry_transition_id": "complete",
+      "terminal_transition_ids": ["complete"],
+      "normalized_fact_schema": [
+        {
+          "fact_id": "done",
+          "value_type": "boolean",
+          "allowed_values": [true],
+          "evidence_required": false
+        }
+      ],
+      "transitions": [
+        {
+          "transition_id": "complete",
+          "normalized_fact_conditions": { "fact_id": "done", "operator": "equals", "value": true },
+          "task_action_id": "FI-1",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "done", "operator": "equals", "value": true },
+          "registered_executor_reference": null,
+          "next_transition_rules": []
+        }
+      ]
+    },
+    "missing_zero_match": {
+      "workflow_id": "evaluation-missing-zero",
+      "version": "1",
+      "workflow_kind": "implementation",
+      "target_type": "issue",
+      "entry_transition_id": "check",
+      "terminal_transition_ids": ["terminal"],
+      "normalized_fact_schema": [
+        {
+          "fact_id": "ready",
+          "value_type": "boolean",
+          "allowed_values": [true, false],
+          "evidence_required": false
+        }
+      ],
+      "transitions": [
+        {
+          "transition_id": "check",
+          "normalized_fact_conditions": { "fact_id": "ready", "operator": "not_exists" },
+          "task_action_id": "FI-1",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
+          "registered_executor_reference": null,
+          "next_transition_rules": [
+            { "condition": { "fact_id": "ready", "operator": "equals", "value": true }, "transition_id": "true-action" },
+            { "condition": { "fact_id": "ready", "operator": "not_equals", "value": true }, "transition_id": "false-action" }
+          ]
+        },
+        {
+          "transition_id": "true-action",
+          "normalized_fact_conditions": { "fact_id": "ready", "operator": "not_exists" },
+          "task_action_id": "FI-2",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
+          "registered_executor_reference": null,
+          "next_transition_rules": [{ "condition": null, "transition_id": "terminal" }]
+        },
+        {
+          "transition_id": "false-action",
+          "normalized_fact_conditions": { "fact_id": "ready", "operator": "not_exists" },
+          "task_action_id": "FI-3",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
+          "registered_executor_reference": null,
+          "next_transition_rules": [{ "condition": null, "transition_id": "terminal" }]
+        },
+        {
+          "transition_id": "terminal",
+          "normalized_fact_conditions": { "fact_id": "ready", "operator": "not_exists" },
+          "task_action_id": "FI-4",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
+          "registered_executor_reference": null,
+          "next_transition_rules": []
+        }
+      ]
+    },
+    "missing_multiple_match": {
+      "workflow_id": "evaluation-missing-multiple",
+      "version": "1",
+      "workflow_kind": "implementation",
+      "target_type": "issue",
+      "entry_transition_id": "check",
+      "terminal_transition_ids": ["terminal"],
+      "normalized_fact_schema": [
+        {
+          "fact_id": "ready",
+          "value_type": "boolean",
+          "allowed_values": [true, false],
+          "evidence_required": false
+        }
+      ],
+      "transitions": [
+        {
+          "transition_id": "check",
+          "normalized_fact_conditions": { "fact_id": "ready", "operator": "not_exists" },
+          "task_action_id": "FI-1",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
+          "registered_executor_reference": null,
+          "next_transition_rules": [
+            { "condition": { "not": { "fact_id": "ready", "operator": "equals", "value": true } }, "transition_id": "true-action" },
+            { "condition": { "not": { "fact_id": "ready", "operator": "equals", "value": false } }, "transition_id": "false-action" }
+          ]
+        },
+        {
+          "transition_id": "true-action",
+          "normalized_fact_conditions": { "fact_id": "ready", "operator": "not_exists" },
+          "task_action_id": "FI-2",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
+          "registered_executor_reference": null,
+          "next_transition_rules": [{ "condition": null, "transition_id": "terminal" }]
+        },
+        {
+          "transition_id": "false-action",
+          "normalized_fact_conditions": { "fact_id": "ready", "operator": "not_exists" },
+          "task_action_id": "FI-3",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
+          "registered_executor_reference": null,
+          "next_transition_rules": [{ "condition": null, "transition_id": "terminal" }]
+        },
+        {
+          "transition_id": "terminal",
+          "normalized_fact_conditions": { "fact_id": "ready", "operator": "not_exists" },
+          "task_action_id": "FI-4",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
+          "registered_executor_reference": null,
+          "next_transition_rules": []
+        }
+      ]
+    },
+    "fixed_state_cycle": {
+      "workflow_id": "evaluation-cycle",
+      "version": "1",
+      "workflow_kind": "implementation",
+      "target_type": "issue",
+      "entry_transition_id": "start",
+      "terminal_transition_ids": ["terminal"],
+      "normalized_fact_schema": [
+        {
+          "fact_id": "exit_cycle",
+          "value_type": "boolean",
+          "allowed_values": [true, false],
+          "evidence_required": false
+        }
+      ],
+      "transitions": [
+        {
+          "transition_id": "start",
+          "normalized_fact_conditions": { "fact_id": "exit_cycle", "operator": "exists" },
+          "task_action_id": "FI-1",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "exit_cycle", "operator": "exists" },
+          "registered_executor_reference": null,
+          "next_transition_rules": [{ "condition": null, "transition_id": "loop" }]
+        },
+        {
+          "transition_id": "loop",
+          "normalized_fact_conditions": { "fact_id": "exit_cycle", "operator": "exists" },
+          "task_action_id": "FI-2",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "exit_cycle", "operator": "exists" },
+          "registered_executor_reference": null,
+          "next_transition_rules": [
+            { "condition": { "fact_id": "exit_cycle", "operator": "equals", "value": true }, "transition_id": "terminal" },
+            { "condition": { "fact_id": "exit_cycle", "operator": "equals", "value": false }, "transition_id": "loop" }
+          ]
+        },
+        {
+          "transition_id": "terminal",
+          "normalized_fact_conditions": { "fact_id": "exit_cycle", "operator": "exists" },
+          "task_action_id": "FI-3",
+          "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+          "completion_predicate": { "fact_id": "exit_cycle", "operator": "exists" },
+          "registered_executor_reference": null,
+          "next_transition_rules": []
+        }
+      ]
+    }
+  },
+  "states": {
+    "ready": { "ready": true },
+    "not_ready": { "ready": false },
+    "review_needed": { "completion_ready": true, "remaining_feedback": true, "action_done": false },
+    "complete_needed": { "completion_ready": true, "remaining_feedback": false, "action_done": false },
+    "done": { "done": true },
+    "missing": {},
+    "cycle": { "exit_cycle": false },
+    "unknown_fact": { "unknown": true },
+    "wrong_type": { "ready": "true" },
+    "outside_domain": { "done": false }
+  }
+}

@@ -13,7 +13,7 @@
       {
         "transition_id": "start",
         "normalized_fact_conditions": { "fact_id": "flag", "operator": "exists" },
-        "task_action_id": "E-1",
+        "task_action_id": "FI-1",
         "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
         "completion_predicate": { "fact_id": "flag", "operator": "exists" },
         "registered_executor_reference": null,
@@ -22,7 +22,7 @@
       {
         "transition_id": "complete",
         "normalized_fact_conditions": { "fact_id": "flag", "operator": "exists" },
-        "task_action_id": "E-2",
+        "task_action_id": "FI-2",
         "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
         "completion_predicate": { "fact_id": "flag", "operator": "exists" },
         "registered_executor_reference": null,
@@ -59,7 +59,7 @@
           "value": {
             "transition_id": "detached",
             "normalized_fact_conditions": { "fact_id": "flag", "operator": "exists" },
-            "task_action_id": "E-3",
+            "task_action_id": "FI-3",
             "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
             "completion_predicate": { "fact_id": "flag", "operator": "exists" },
             "registered_executor_reference": null,

@@ -22,16 +22,16 @@ const TRANSITION_FIELDS = [
   "next_transition_rules",
 ];
 const WORKFLOW_PREFIXES = {
-  feature_proposal: "A",
-  policy_review: "B",
-  feature_change: "C",
-  feature_fix: "D",
-  implementation: "E",
+  feature_proposal: "FP",
+  policy_review: "PR",
+  feature_change: "FC",
+  feature_fix: "FF",
+  implementation: "FI",
 };
 const WORKFLOW_KINDS = new Set(Object.keys(WORKFLOW_PREFIXES));
 const TARGET_TYPES = new Set(["issue", "pull_request", "repository"]);
 const FACT_TYPES = new Set(["boolean", "string", "integer"]);
-const TASK_ACTION_ID = /^[ABCDE]-[1-9][0-9]*$/;
+const TASK_ACTION_ID = /^(FP|PR|FC|FF|FI)-[1-9][0-9]*$/;
 export const DEFAULT_MAX_CONDITION_STATES = 10_000;
 
 function pointer(path, segment) {
@@ -276,7 +276,7 @@ function validateTransition(value, path, workflowKind, facts, executorIds, taskA
   if (Object.hasOwn(value, "task_action_id")) {
     const actionPath = pointer(path, "task_action_id");
     if (typeof value.task_action_id !== "string" || !TASK_ACTION_ID.test(value.task_action_id)) {
-      addError(errors, "task_action_id.invalid", actionPath, "task_action_id must match ^[ABCDE]-[1-9][0-9]*$.");
+      addError(errors, "task_action_id.invalid", actionPath, "task_action_id must match ^(FP|PR|FC|FF|FI)-[1-9][0-9]*$.");
     } else {
       if (taskActionIds.has(value.task_action_id)) {
         addError(errors, "task_action_id.duplicate", actionPath, `Duplicate task_action_id: ${value.task_action_id}.`);

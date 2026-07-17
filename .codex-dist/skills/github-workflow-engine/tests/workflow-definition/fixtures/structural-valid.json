@@ -60,7 +60,7 @@
                 }
               ]
             },
-            "task_action_id": "C-1",
+            "task_action_id": "FC-1",
             "user_decision_specification": {
               "required": true,
               "options": [
@@ -99,7 +99,7 @@
                 }
               ]
             },
-            "task_action_id": "C-2",
+            "task_action_id": "FC-2",
             "user_decision_specification": {
               "required": false,
               "options": [],

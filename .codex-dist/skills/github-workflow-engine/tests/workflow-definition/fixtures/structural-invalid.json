@@ -38,7 +38,7 @@
               "operator": "equals",
               "value": "open"
             },
-            "task_action_id": "C-1",
+            "task_action_id": "FC-1",
             "user_decision_specification": {
               "required": true,
               "options": [
@@ -77,7 +77,7 @@
                 2
               ]
             },
-            "task_action_id": "C-1",
+            "task_action_id": "FC-1",
             "user_decision_specification": {
               "required": false,
               "options": [],
@@ -111,7 +111,7 @@
             "normalized_fact_conditions": {
               "all": []
             },
-            "task_action_id": "C-01",
+            "task_action_id": "FC-01",
             "user_decision_specification": {
               "required": true,
               "options": [],

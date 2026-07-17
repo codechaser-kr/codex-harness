@@ -67,10 +67,12 @@ leaf의 `operator`는 다음 중 하나다.
 - `registered_executor_reference`
 - `next_transition_rules`
 
-`task_action_id`는 `A-1`, `B-1`, `C-1`, `D-1`, `E-1`과 같은 형식만 허용한다. 숫자는
-1 이상이어야 하고 0 또는 선행 0을 허용하지 않는다. `workflow_kind`별 접두어는
-`feature_proposal=A`, `policy_review=B`, `feature_change=C`, `feature_fix=D`,
-`implementation=E`다. 이 상관관계는 C2 semantic validator가 검증한다.
+`task_action_id`는 `FP-1`, `PR-1`, `FC-1`, `FF-1`, `FI-1`과 같은 형식만 허용한다. 공통
+정규식은 `^(FP|PR|FC|FF|FI)-[1-9][0-9]*$`이며 숫자는 1 이상이어야 하고 0 또는 선행
+0을 허용하지 않는다.
+`workflow_kind`별 접두어는 `feature_proposal=FP`, `policy_review=PR`,
+`feature_change=FC`, `feature_fix=FF`, `implementation=FI`다. 이 상관관계는 C2 semantic
+validator가 검증한다.
 
 `user_decision_specification`은 `required`, `options`, `allow_free_form`,
 `block_execution_until_confirmed`를 가진 닫힌 객체다. 각 option은 `decision_id`와
@@ -106,7 +108,33 @@ terminal rule 배열, terminal 도달 가능성과 종료 불가능 순환을 �
 탐색한다. 기본 상태 공간 상한은 10,000개이며 `validateWorkflowDefinition`의
 `maxConditionStates` option으로 양의 정수 상한을 재정의할 수 있다. 곱셈 결과가 상한을
 넘으면 `condition_state_space.limit_exceeded` 구조화 오류를 반환하고 탐색하지 않는다.
-이 정적 검증은 C4 런타임 평가기나 CLI가 아니다.
+이 정적 검증은 C4 런타임 평가기와 CLI가 사용한다.
+
+## C4 결정론적 평가와 CLI
+
+`evaluateWorkflowDefinition(definition, normalizedFactState, options?)`는 외부 실행 주체,
+GitHub, LLM, 파일 변경 없이 definition과 고정된 normalized fact state만 평가하는 순수
+Node.js API다. `options.currentTransitionId`가 없으면 `entry_transition_id`에서 시작한다.
+평가 전 C2/C3 validator를 호출하며 definition 오류는 `stopped`와
+`invalid_definition`으로 반환한다.
+
+state는 plain object여야 한다. 선언되지 않은 fact, value type 불일치, 또는
+`allowed_values` 밖의 값은 `stopped`와 `invalid_state`로 반환한다. 선언된 fact의 누락은
+`exists`와 `not_exists` 의미를 위해 허용한다. 각 transition에서 normalized condition이
+거짓이면 중단하고, completion predicate가 거짓이면 `action_required`를 반환한다.
+predicate가 참인 non-terminal은 `next_transition_rules`를 평가해 정확히 하나의 rule만
+일치할 때 이동한다. 0개 또는 복수 일치는 각각 중단 오류이며 선언 순서나 priority로
+선택하지 않는다. 같은 호출에서 transition을 다시 방문하면 `evaluation_cycle`로 중단한다.
+
+`cli.mjs`는 다음 read-only 명령을 제공하고 stdout에는 구조화 JSON만 쓴다.
+
+```
+node cli.mjs validate --definition <path>
+node cli.mjs evaluate --definition <path> --state <path> [--current-transition-id <id>]
+```
+
+validate 성공과 evaluate의 `action_required` 또는 `completed`는 exit 0이다. definition,
+state, 평가 중단 오류는 exit 1이고 usage 오류는 exit 2다.
 
 ## Executor Registry
 

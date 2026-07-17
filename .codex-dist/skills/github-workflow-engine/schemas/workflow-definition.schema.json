@@ -457,7 +457,7 @@
         },
         "task_action_id": {
           "type": "string",
-          "pattern": "^[ABCDE]-[1-9][0-9]*$"
+          "pattern": "^(FP|PR|FC|FF|FI)-[1-9][0-9]*$"
         },
         "user_decision_specification": {
           "$ref": "#/$defs/userDecisionSpecification"

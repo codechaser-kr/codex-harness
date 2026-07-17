@@ -39,11 +39,11 @@ test("accepts a valid workflow definition", async () => {
 test("accepts every workflow_kind task_action_id prefix", async () => {
   const fixture = await readFixture("structural-valid.json");
   const prefixCases = [
-    ["feature_proposal", "A"],
-    ["policy_review", "B"],
-    ["feature_change", "C"],
-    ["feature_fix", "D"],
-    ["implementation", "E"],
+    ["feature_proposal", "FP"],
+    ["policy_review", "PR"],
+    ["feature_change", "FC"],
+    ["feature_fix", "FF"],
+    ["implementation", "FI"],
   ];
 
   for (const [workflowKind, prefix] of prefixCases) {
@@ -61,11 +61,11 @@ test("accepts every workflow_kind task_action_id prefix", async () => {
 test("rejects zero and leading-zero task action numbers", async () => {
   const fixture = await readFixture("structural-valid.json");
 
-  for (const actionId of ["A-0", "A-01"]) {
+  for (const actionId of ["FP-0", "FP-01"]) {
     const definition = structuredClone(fixture.cases[0].definition);
     definition.workflow_kind = "feature_proposal";
     definition.transitions[0].task_action_id = actionId;
-    definition.transitions[1].task_action_id = "A-2";
+    definition.transitions[1].task_action_id = "FP-2";
 
     const result = validateWorkflowDefinition(definition);
     assert.equal(result.valid, false);
@@ -93,7 +93,7 @@ test("reports C2 fact, action, decision, AST, registry, and priority failures de
 
   const valid = await readFixture("structural-valid.json");
   const prefixMismatch = structuredClone(valid.cases[0].definition);
-  prefixMismatch.transitions[0].task_action_id = "D-1";
+  prefixMismatch.transitions[0].task_action_id = "FF-1";
   const prefixResult = validateWorkflowDefinition(prefixMismatch);
   assert.equal(hasError(prefixResult.errors, "task_action_id.prefix_mismatch", "/transitions/0/task_action_id"), true);
 });
@@ -110,7 +110,7 @@ test("reports C1 structural errors with next transition rules", async () => {
   assert.equal(hasError(structural.errors, "priority.forbidden", "/transitions/0/priority"), true);
 });
 
-test("rejects the legacy next_transition field and requires next_transition_rules", async () => {
+test("rejects next_transition and requires next_transition_rules", async () => {
   const fixture = await readFixture("structural-valid.json");
   const definition = structuredClone(fixture.cases[0].definition);
   definition.transitions[0].next_transition = "complete";

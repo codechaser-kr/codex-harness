@@ -81,7 +81,12 @@
               ]
             },
             "registered_executor_reference": "github-state-summary",
-            "next_transition": "complete"
+            "next_transition_rules": [
+              {
+                "condition": null,
+                "transition_id": "complete"
+              }
+            ]
           },
           {
             "transition_id": "complete",
@@ -106,7 +111,7 @@
               "operator": "not_exists"
             },
             "registered_executor_reference": null,
-            "next_transition": null
+            "next_transition_rules": []
           }
         ]
       }

@@ -414,6 +414,29 @@
       ],
       "minLength": 1
     },
+    "nextTransitionRule": {
+      "type": "object",
+      "required": [
+        "condition",
+        "transition_id"
+      ],
+      "properties": {
+        "condition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/expression"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transition_id": {
+          "$ref": "#/$defs/stableId"
+        }
+      },
+      "additionalProperties": false
+    },
     "transition": {
       "type": "object",
       "required": [
@@ -423,7 +446,7 @@
         "user_decision_specification",
         "completion_predicate",
         "registered_executor_reference",
-        "next_transition"
+        "next_transition_rules"
       ],
       "properties": {
         "transition_id": {
@@ -445,8 +468,11 @@
         "registered_executor_reference": {
           "$ref": "#/$defs/nullableStableId"
         },
-        "next_transition": {
-          "$ref": "#/$defs/nullableStableId"
+        "next_transition_rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nextTransitionRule"
+          }
         }
       },
       "additionalProperties": false

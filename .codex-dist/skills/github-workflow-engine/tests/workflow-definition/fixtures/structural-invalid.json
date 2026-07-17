@@ -9,7 +9,7 @@
         "target_type": "issue",
         "entry_transition_id": "unverified-entry",
         "terminal_transition_ids": [
-          "unverified-terminal"
+          "same-id"
         ],
         "priority": "high",
         "normalized_fact_schema": [
@@ -60,7 +60,12 @@
               "value": "closed"
             },
             "registered_executor_reference": "missing-executor",
-            "next_transition": "missing-next"
+            "next_transition_rules": [
+              {
+                "condition": null,
+                "transition_id": "missing-next"
+              }
+            ]
           },
           {
             "transition_id": "same-id",
@@ -85,7 +90,7 @@
               "value": "open"
             },
             "registered_executor_reference": null,
-            "next_transition": null
+            "next_transition_rules": []
           }
         ]
       }
@@ -118,7 +123,7 @@
               "operator": "unknown"
             },
             "registered_executor_reference": "",
-            "next_transition": null,
+            "next_transition_rules": [],
             "priority": 1
           }
         ]

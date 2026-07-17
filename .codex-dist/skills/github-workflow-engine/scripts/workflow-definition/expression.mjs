@@ -210,3 +210,55 @@ export function validateExpression(value, { path = "", facts = new Map() } = {})
   validateExpressionInto(value, path, factMap, errors);
   return errors;
 }
+
+function readStateValue(state, factId) {
+  if (state instanceof Map) {
+    return { present: state.has(factId), value: state.get(factId) };
+  }
+  if (isObject(state) && Object.hasOwn(state, factId)) {
+    return { present: true, value: state[factId] };
+  }
+  return { present: false, value: undefined };
+}
+
+export function matchesExpressionState(expression, state) {
+  if (!isObject(expression)) {
+    return false;
+  }
+  if (Object.hasOwn(expression, "all") && Array.isArray(expression.all)) {
+    return expression.all.every((item) => matchesExpressionState(item, state));
+  }
+  if (Object.hasOwn(expression, "any") && Array.isArray(expression.any)) {
+    return expression.any.some((item) => matchesExpressionState(item, state));
+  }
+  if (Object.hasOwn(expression, "not")) {
+    return !matchesExpressionState(expression.not, state);
+  }
+  if (!Object.hasOwn(expression, "fact_id") || !Object.hasOwn(expression, "operator")) {
+    return false;
+  }
+
+  const fact = readStateValue(state, expression.fact_id);
+  if (expression.operator === "exists") {
+    return fact.present;
+  }
+  if (expression.operator === "not_exists") {
+    return !fact.present;
+  }
+  if (!fact.present || !Object.hasOwn(expression, "value")) {
+    return false;
+  }
+  if (expression.operator === "equals") {
+    return fact.value === expression.value;
+  }
+  if (expression.operator === "not_equals") {
+    return fact.value !== expression.value;
+  }
+  if (expression.operator === "in") {
+    return Array.isArray(expression.value) && expression.value.includes(fact.value);
+  }
+  if (expression.operator === "not_in") {
+    return Array.isArray(expression.value) && !expression.value.includes(fact.value);
+  }
+  return false;
+}

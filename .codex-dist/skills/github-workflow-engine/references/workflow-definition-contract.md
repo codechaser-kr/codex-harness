@@ -65,7 +65,7 @@ leaf의 `operator`는 다음 중 하나다.
 - `user_decision_specification`
 - `completion_predicate`
 - `registered_executor_reference`
-- `next_transition`
+- `next_transition_rules`
 
 `task_action_id`는 `A-1`, `B-1`, `C-1`, `D-1`, `E-1`과 같은 형식만 허용한다. 숫자는
 1 이상이어야 하고 0 또는 선행 0을 허용하지 않는다. `workflow_kind`별 접두어는
@@ -78,20 +78,35 @@ leaf의 `operator`는 다음 중 하나다.
 `false`이면 option 배열은 비어 있을 수 있다. option의 `decision_id` 고유성 및 다른
 필드 간 운용 의미는 C2 semantic validator가 검증한다.
 
-`registered_executor_reference`와 `next_transition`은 문자열 또는 `null`이다. `null`은
-terminal 또는 no-execution 상태를 표현할 수 있다. 실행기 참조가 등록 레지스트리를
+`registered_executor_reference`는 문자열 또는 `null`이다. 실행기 참조가 등록 레지스트리를
 가리키는지는 C2 validator가 확인한다.
+
+`next_transition_rules`는 필수 배열이다. 각 rule은 `condition`과 `transition_id`를 가진
+닫힌 객체다. `transition_id`는 비어 있지 않은 일반 안정 ID 문자열이며, `condition`은
+기존 expression AST 또는 `null`이다. `condition: null`은 무조건 후속 전이를 뜻하고,
+유일한 rule로만 허용한다. 일반적인 무조건 이동은 `condition: null` rule 하나로 표현한다.
+
+terminal transition은 `next_transition_rules: []`이어야 한다. terminal이 아닌 transition은
+rule을 하나 이상 가져야 한다. 조건부 rule 집합은 priority나 선언 순서로 선택하지 않는다.
+선언한 normalized fact 유한 도메인의 모든 상태에서 정확히 하나의 rule만 일치해야 한다.
+0개 일치는 조건 누락, 둘 이상 일치는 조건 중복 오류다.
 
 ## C2/C3 교차 검증
 
 JSON Schema가 표현할 수 없는 객체 속성 기반 고유성, workflow kind와 action prefix의
 상관관계, registry 참조, fact 참조와 AST 의미 검증은 C2 semantic validator 책임이다.
 
-C3 graph validator는 transition ID 고유성, `entry_transition_id`와 모든 transition
-참조의 존재, `terminal_transition_ids` 참조, 도달 가능성, 그래프 종료 조건 및 순환을
-검증한다. `terminal_transition_ids`가 가리키는 transition은 반드시
-`next_transition: null`이어야 한다. 기존 자연어 전이표는 이 definition 또는 런타임에
-연결하지 않는다.
+C3 graph validator는 transition ID 고유성, `entry_transition_id`,
+`terminal_transition_ids`, rule `transition_id` 참조의 존재, entry 기준 전체 도달성,
+terminal rule 배열, terminal 도달 가능성과 종료 불가능 순환을 검증한다. 순환 자체는
+허용하지만 도달 가능한 각 transition과 SCC는 rule을 따라 적어도 하나의 terminal로 갈 수
+있어야 한다. 기존 자연어 전이표는 이 definition 또는 런타임에 연결하지 않는다.
+
+조건 의미 검증은 선언 순서가 아닌 normalized fact의 유한 상태 공간을 결정적 순서로
+탐색한다. 기본 상태 공간 상한은 10,000개이며 `validateWorkflowDefinition`의
+`maxConditionStates` option으로 양의 정수 상한을 재정의할 수 있다. 곱셈 결과가 상한을
+넘으면 `condition_state_space.limit_exceeded` 구조화 오류를 반환하고 탐색하지 않는다.
+이 정적 검증은 C4 런타임 평가기나 CLI가 아니다.
 
 ## Executor Registry
 

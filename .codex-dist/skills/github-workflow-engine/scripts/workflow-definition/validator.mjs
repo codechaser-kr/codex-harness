@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 
-import { validateExpression } from "./expression.mjs";
+import { matchesExpressionState, validateExpression } from "./expression.mjs";
 
 const ROOT_FIELDS = [
   "workflow_id",
@@ -11,6 +11,15 @@ const ROOT_FIELDS = [
   "terminal_transition_ids",
   "normalized_fact_schema",
   "transitions",
+];
+const TRANSITION_FIELDS = [
+  "transition_id",
+  "normalized_fact_conditions",
+  "task_action_id",
+  "user_decision_specification",
+  "completion_predicate",
+  "registered_executor_reference",
+  "next_transition_rules",
 ];
 const WORKFLOW_PREFIXES = {
   feature_proposal: "A",
@@ -23,6 +32,7 @@ const WORKFLOW_KINDS = new Set(Object.keys(WORKFLOW_PREFIXES));
 const TARGET_TYPES = new Set(["issue", "pull_request", "repository"]);
 const FACT_TYPES = new Set(["boolean", "string", "integer"]);
 const TASK_ACTION_ID = /^[ABCDE]-[1-9][0-9]*$/;
+export const DEFAULT_MAX_CONDITION_STATES = 10_000;
 
 function pointer(path, segment) {
   return `${path}/${String(segment).replaceAll("~", "~0").replaceAll("/", "~1")}`;
@@ -32,8 +42,12 @@ function isObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function addError(errors, code, path, message) {
-  errors.push({ code, path, message });
+function addError(errors, code, path, message, witness) {
+  const error = { code, path, message };
+  if (witness !== undefined) {
+    error.witness = witness;
+  }
+  errors.push(error);
 }
 
 function validateClosedObject(value, path, allowedFields, errors, context) {
@@ -107,17 +121,21 @@ function validateFact(value, path, errors) {
   if (Object.hasOwn(value, "value_type") && !valueTypeValid) {
     addError(errors, "fact.value_type.invalid", pointer(path, "value_type"), "value_type must be boolean, string, or integer.");
   }
+
+  let allowedValuesValid = false;
   if (Object.hasOwn(value, "allowed_values")) {
     const valuesPath = pointer(path, "allowed_values");
     if (!Array.isArray(value.allowed_values)) {
       addError(errors, "fact.allowed_values.type", valuesPath, "allowed_values must be an array.");
     } else {
-      if (value.allowed_values.length === 0) {
+      allowedValuesValid = value.allowed_values.length > 0;
+      if (!allowedValuesValid) {
         addError(errors, "fact.allowed_values.empty", valuesPath, "allowed_values must not be empty.");
       }
       if (valueTypeValid) {
         for (let index = 0; index < value.allowed_values.length; index += 1) {
           if (!valueMatchesType(value.allowed_values[index], value.value_type)) {
+            allowedValuesValid = false;
             addError(errors, "fact.allowed_values.type_mismatch", pointer(valuesPath, index), "allowed_values must match value_type.");
           }
         }
@@ -135,14 +153,16 @@ function validateFact(value, path, errors) {
     factId: value.fact_id,
     valueType: valueTypeValid ? value.value_type : undefined,
     allowedValues: Array.isArray(value.allowed_values) ? value.allowed_values : undefined,
+    conditionReady: valueTypeValid && allowedValuesValid,
   };
 }
 
 function validateDecisionSpecification(value, path, errors) {
-  if (!validateClosedObject(value, path, new Set(["required", "options", "allow_free_form", "block_execution_until_confirmed"]), errors, "user_decision_specification")) {
+  const fields = ["required", "options", "allow_free_form", "block_execution_until_confirmed"];
+  if (!validateClosedObject(value, path, new Set(fields), errors, "user_decision_specification")) {
     return;
   }
-  validateRequired(value, path, ["required", "options", "allow_free_form", "block_execution_until_confirmed"], errors, "user_decision_specification");
+  validateRequired(value, path, fields, errors, "user_decision_specification");
 
   const required = value.required;
   if (Object.hasOwn(value, "required") && typeof required !== "boolean") {
@@ -194,23 +214,61 @@ function validateNullableStableId(value, path, errors, code) {
   return true;
 }
 
-function validateTransition(value, path, workflowKind, facts, executorIds, taskActionIds, errors) {
-  const fields = [
-    "transition_id",
-    "normalized_fact_conditions",
-    "task_action_id",
-    "user_decision_specification",
-    "completion_predicate",
-    "registered_executor_reference",
-    "next_transition",
-  ];
-  if (!validateClosedObject(value, path, new Set(fields), errors, "transition")) {
-    return;
+function validateNextTransitionRules(value, path, facts, errors) {
+  const result = { isArray: false, rules: [], hasConditionalRules: false, conditionsValid: false };
+  if (!Array.isArray(value)) {
+    addError(errors, "next_transition_rules.type", path, "next_transition_rules must be an array.");
+    return result;
   }
-  validateRequired(value, path, fields, errors, "transition");
+  result.isArray = true;
+  let allConditionsValid = true;
+  const unconditionalIndexes = [];
+  for (let index = 0; index < value.length; index += 1) {
+    const rule = value[index];
+    const rulePath = pointer(path, index);
+    const metadata = { path: rulePath, transitionId: undefined, condition: undefined, conditionValid: false, unconditional: false };
+    result.rules.push(metadata);
+    if (!validateClosedObject(rule, rulePath, new Set(["condition", "transition_id"]), errors, "next_transition_rule")) {
+      allConditionsValid = false;
+      continue;
+    }
+    validateRequired(rule, rulePath, ["condition", "transition_id"], errors, "next_transition_rule");
+    if (Object.hasOwn(rule, "transition_id") && validateStableId(rule.transition_id, pointer(rulePath, "transition_id"), errors, "next_transition_rule.transition_id.invalid")) {
+      metadata.transitionId = rule.transition_id;
+    }
+    if (!Object.hasOwn(rule, "condition")) {
+      allConditionsValid = false;
+      continue;
+    }
+    if (rule.condition === null) {
+      metadata.unconditional = true;
+      metadata.conditionValid = true;
+      unconditionalIndexes.push(index);
+      continue;
+    }
+    const expressionErrors = validateExpression(rule.condition, { path: pointer(rulePath, "condition"), facts });
+    errors.push(...expressionErrors);
+    metadata.condition = rule.condition;
+    metadata.conditionValid = expressionErrors.length === 0;
+    result.hasConditionalRules = true;
+    allConditionsValid &&= metadata.conditionValid;
+  }
+  if (unconditionalIndexes.length > 0 && value.length > 1) {
+    addError(errors, "next_transition_rules.unconditional_mixed", pointer(pointer(path, unconditionalIndexes[0]), "condition"), "An unconditional rule must be the only next transition rule.");
+  }
+  result.conditionsValid = allConditionsValid && unconditionalIndexes.length === 0;
+  return result;
+}
 
-  if (Object.hasOwn(value, "transition_id")) {
-    validateStableId(value.transition_id, pointer(path, "transition_id"), errors, "transition_id.invalid");
+function validateTransition(value, path, workflowKind, facts, executorIds, taskActionIds, errors) {
+  const record = { path, transitionId: undefined, ruleSet: undefined };
+  if (!validateClosedObject(value, path, new Set(TRANSITION_FIELDS), errors, "transition")) {
+    return record;
+  }
+  validateRequired(value, path, TRANSITION_FIELDS, errors, "transition");
+
+  if (Object.hasOwn(value, "transition_id") && validateStableId(value.transition_id, pointer(path, "transition_id"), errors, "transition_id.invalid")) {
+    record.transitionId = value.transition_id;
   }
   if (Object.hasOwn(value, "normalized_fact_conditions")) {
     errors.push(...validateExpression(value.normalized_fact_conditions, { path: pointer(path, "normalized_fact_conditions"), facts }));
@@ -243,13 +301,288 @@ function validateTransition(value, path, workflowKind, facts, executorIds, taskA
       addError(errors, "registered_executor_reference.unknown", executorPath, `Unknown executor: ${value.registered_executor_reference}.`);
     }
   }
-  if (Object.hasOwn(value, "next_transition")) {
-    validateNullableStableId(value.next_transition, pointer(path, "next_transition"), errors, "next_transition.invalid");
+  if (Object.hasOwn(value, "next_transition_rules")) {
+    record.ruleSet = validateNextTransitionRules(value.next_transition_rules, pointer(path, "next_transition_rules"), facts, errors);
+  }
+  return record;
+}
+
+function collectStateFacts(facts) {
+  const stateFacts = [];
+  for (const fact of facts.values()) {
+    if (!fact.conditionReady) {
+      return undefined;
+    }
+    stateFacts.push(fact);
+  }
+  return stateFacts;
+}
+
+function stateSpaceSize(facts, maxConditionStates) {
+  let size = 1;
+  for (const fact of facts) {
+    if (size > Math.floor(maxConditionStates / fact.allowedValues.length)) {
+      return undefined;
+    }
+    size *= fact.allowedValues.length;
+  }
+  return size;
+}
+
+function forEachState(facts, visit) {
+  const state = new Map();
+  let keepGoing = true;
+  function traverse(index) {
+    if (!keepGoing) {
+      return;
+    }
+    if (index === facts.length) {
+      keepGoing = visit(new Map(state)) !== false;
+      return;
+    }
+    const fact = facts[index];
+    for (const value of fact.allowedValues) {
+      state.set(fact.factId, value);
+      traverse(index + 1);
+      if (!keepGoing) {
+        return;
+      }
+    }
+  }
+  traverse(0);
+}
+
+function stateWitness(state) {
+  return Object.fromEntries(state.entries());
+}
+
+function validateRuleCoverage(records, terminalIds, facts, maxConditionStates, errors) {
+  const matchingRules = new Set();
+  for (const record of records) {
+    for (const rule of record.ruleSet?.rules ?? []) {
+      if (rule.unconditional || !rule.conditionValid) {
+        matchingRules.add(rule);
+      }
+    }
+  }
+  const candidates = records.filter((record) => {
+    if (!record.transitionId || terminalIds.has(record.transitionId) || !record.ruleSet?.isArray || record.ruleSet.rules.length === 0) {
+      return false;
+    }
+    return record.ruleSet.hasConditionalRules && record.ruleSet.conditionsValid;
+  });
+  if (candidates.length === 0) {
+    return matchingRules;
+  }
+  const stateFacts = collectStateFacts(facts);
+  if (!stateFacts) {
+    for (const record of candidates) {
+      for (const rule of record.ruleSet.rules) {
+        matchingRules.add(rule);
+      }
+    }
+    return matchingRules;
+  }
+  if (stateSpaceSize(stateFacts, maxConditionStates) === undefined) {
+    addError(errors, "condition_state_space.limit_exceeded", "/normalized_fact_schema", `Condition state space exceeds configured limit ${maxConditionStates}.`);
+    for (const record of candidates) {
+      for (const rule of record.ruleSet.rules) {
+        matchingRules.add(rule);
+      }
+    }
+    return matchingRules;
+  }
+  for (const record of candidates) {
+    let gapReported = false;
+    let overlapReported = false;
+    forEachState(stateFacts, (state) => {
+      const matchedInState = record.ruleSet.rules.filter((rule) => rule.conditionValid && matchesExpressionState(rule.condition, state));
+      for (const rule of matchedInState) {
+        matchingRules.add(rule);
+      }
+      if (matchedInState.length === 0 && !gapReported) {
+        addError(errors, "next_transition_rules.condition_gap", record.ruleSet.rules[0]?.path ?? `${record.path}/next_transition_rules`, "No conditional next transition rule matches this declared fact state.", stateWitness(state));
+        gapReported = true;
+      }
+      if (matchedInState.length > 1 && !overlapReported) {
+        addError(errors, "next_transition_rules.condition_overlap", record.ruleSet.rules[0]?.path ?? `${record.path}/next_transition_rules`, "Multiple conditional next transition rules match this declared fact state.", stateWitness(state));
+        overlapReported = true;
+      }
+      return !(gapReported && overlapReported);
+    });
+  }
+  return matchingRules;
+}
+
+function reachableFrom(seeds, adjacency) {
+  const reached = new Set();
+  const queue = [...seeds];
+  for (let index = 0; index < queue.length; index += 1) {
+    const current = queue[index];
+    if (reached.has(current)) {
+      continue;
+    }
+    reached.add(current);
+    for (const next of adjacency.get(current) ?? []) {
+      if (!reached.has(next)) {
+        queue.push(next);
+      }
+    }
+  }
+  return reached;
+}
+
+function findStronglyConnectedComponents(adjacency, reachable) {
+  let index = 0;
+  const indexes = new Map();
+  const lowlinks = new Map();
+  const stack = [];
+  const onStack = new Set();
+  const components = [];
+
+  function visit(node) {
+    indexes.set(node, index);
+    lowlinks.set(node, index);
+    index += 1;
+    stack.push(node);
+    onStack.add(node);
+    for (const next of adjacency.get(node) ?? []) {
+      if (!reachable.has(next)) {
+        continue;
+      }
+      if (!indexes.has(next)) {
+        visit(next);
+        lowlinks.set(node, Math.min(lowlinks.get(node), lowlinks.get(next)));
+      } else if (onStack.has(next)) {
+        lowlinks.set(node, Math.min(lowlinks.get(node), indexes.get(next)));
+      }
+    }
+    if (lowlinks.get(node) !== indexes.get(node)) {
+      return;
+    }
+    const component = [];
+    let next;
+    do {
+      next = stack.pop();
+      onStack.delete(next);
+      component.push(next);
+    } while (next !== node);
+    components.push(component);
+  }
+
+  for (const node of reachable) {
+    if (!indexes.has(node)) {
+      visit(node);
+    }
+  }
+  return components;
+}
+
+function validateGraph(definition, records, terminalEntries, facts, maxConditionStates, errors) {
+  const transitions = new Map();
+  for (const record of records) {
+    if (!record.transitionId) {
+      continue;
+    }
+    if (transitions.has(record.transitionId)) {
+      addError(errors, "transition_id.duplicate", pointer(record.path, "transition_id"), `Duplicate transition_id: ${record.transitionId}.`);
+    } else {
+      transitions.set(record.transitionId, record);
+    }
+  }
+
+  const terminalIds = new Set();
+  for (const entry of terminalEntries) {
+    if (terminalIds.has(entry.id)) {
+      addError(errors, "terminal_transition_id.duplicate", entry.path, `Duplicate terminal_transition_id: ${entry.id}.`);
+    } else {
+      terminalIds.add(entry.id);
+    }
+    if (!transitions.has(entry.id)) {
+      addError(errors, "terminal_transition_id.unknown", entry.path, `Unknown terminal_transition_id: ${entry.id}.`);
+    }
+  }
+  if (isNonEmptyString(definition.entry_transition_id) && !transitions.has(definition.entry_transition_id)) {
+    addError(errors, "entry_transition_id.unknown", "/entry_transition_id", `Unknown entry_transition_id: ${definition.entry_transition_id}.`);
+  }
+
+  const matchingRules = validateRuleCoverage(records, terminalIds, facts, maxConditionStates, errors);
+  const adjacency = new Map();
+  for (const [transitionId, record] of transitions) {
+    const rules = record.ruleSet;
+    const isTerminal = terminalIds.has(transitionId);
+    if (!rules?.isArray) {
+      adjacency.set(transitionId, []);
+      continue;
+    }
+    if (isTerminal && rules.rules.length !== 0) {
+      addError(errors, "transition.terminal_rules_not_empty", `${record.path}/next_transition_rules`, "A terminal transition must have an empty next_transition_rules array.");
+    }
+    if (!isTerminal && rules.rules.length === 0) {
+      addError(errors, "transition.non_terminal_rules_empty", `${record.path}/next_transition_rules`, "A non-terminal transition must have at least one next transition rule.");
+    }
+    const targets = [];
+    for (const rule of rules.rules) {
+      if (!rule.transitionId) {
+        continue;
+      }
+      if (!transitions.has(rule.transitionId)) {
+        addError(errors, "next_transition_rule.transition_id.unknown", pointer(rule.path, "transition_id"), `Unknown transition_id: ${rule.transitionId}.`);
+      } else if (matchingRules.has(rule)) {
+        targets.push(rule.transitionId);
+      }
+    }
+    adjacency.set(transitionId, targets);
+  }
+
+  if (!isNonEmptyString(definition.entry_transition_id) || !transitions.has(definition.entry_transition_id)) {
+    return;
+  }
+  const reachable = reachableFrom([definition.entry_transition_id], adjacency);
+  for (const [transitionId, record] of transitions) {
+    if (!reachable.has(transitionId)) {
+      addError(errors, "transition.unreachable", pointer(record.path, "transition_id"), `Transition is unreachable from entry_transition_id: ${transitionId}.`);
+    }
+  }
+
+  const reverseAdjacency = new Map([...transitions.keys()].map((transitionId) => [transitionId, []]));
+  for (const [source, targets] of adjacency) {
+    for (const target of targets) {
+      reverseAdjacency.get(target).push(source);
+    }
+  }
+  const terminalSeeds = [...terminalIds].filter((transitionId) => transitions.has(transitionId));
+  const reachesTerminal = reachableFrom(terminalSeeds, reverseAdjacency);
+  for (const transitionId of reachable) {
+    if (!reachesTerminal.has(transitionId)) {
+      const record = transitions.get(transitionId);
+      addError(errors, "transition.no_terminal_path", pointer(record.path, "transition_id"), `No path from transition to a terminal transition: ${transitionId}.`);
+    }
+  }
+  for (const component of findStronglyConnectedComponents(adjacency, reachable)) {
+    const first = component[0];
+    const isCycle = component.length > 1 || (adjacency.get(first) ?? []).includes(first);
+    if (isCycle && !component.some((transitionId) => reachesTerminal.has(transitionId))) {
+      const record = transitions.get(first);
+      addError(errors, "transition.cycle_without_terminal", pointer(record.path, "transition_id"), "Cycle has no path to a terminal transition.");
+    }
   }
 }
 
-export function validateWorkflowDefinition(definition, { registry = loadDefaultRegistry() } = {}) {
+function normalizeMaxConditionStates(value, errors) {
+  if (value === undefined) {
+    return DEFAULT_MAX_CONDITION_STATES;
+  }
+  if (Number.isInteger(value) && value > 0) {
+    return value;
+  }
+  addError(errors, "validator.max_condition_states.invalid", "", "maxConditionStates must be a positive integer.");
+  return DEFAULT_MAX_CONDITION_STATES;
+}
+
+export function validateWorkflowDefinition(definition, { registry = loadDefaultRegistry(), maxConditionStates } = {}) {
   const errors = [];
+  const normalizedMaxConditionStates = normalizeMaxConditionStates(maxConditionStates, errors);
   if (!validateClosedObject(definition, "", new Set(ROOT_FIELDS), errors, "workflow")) {
     return { valid: false, errors };
   }
@@ -266,6 +599,8 @@ export function validateWorkflowDefinition(definition, { registry = loadDefaultR
   if (Object.hasOwn(definition, "target_type") && (typeof definition.target_type !== "string" || !TARGET_TYPES.has(definition.target_type))) {
     addError(errors, "target_type.invalid", "/target_type", "target_type is not supported.");
   }
+
+  const terminalEntries = [];
   if (Object.hasOwn(definition, "terminal_transition_ids")) {
     if (!Array.isArray(definition.terminal_transition_ids)) {
       addError(errors, "terminal_transition_ids.type", "/terminal_transition_ids", "terminal_transition_ids must be an array.");
@@ -274,7 +609,10 @@ export function validateWorkflowDefinition(definition, { registry = loadDefaultR
         addError(errors, "terminal_transition_ids.empty", "/terminal_transition_ids", "terminal_transition_ids must not be empty.");
       }
       for (let index = 0; index < definition.terminal_transition_ids.length; index += 1) {
-        validateStableId(definition.terminal_transition_ids[index], `/terminal_transition_ids/${index}`, errors, "terminal_transition_id.invalid");
+        const idPath = `/terminal_transition_ids/${index}`;
+        if (validateStableId(definition.terminal_transition_ids[index], idPath, errors, "terminal_transition_id.invalid")) {
+          terminalEntries.push({ id: definition.terminal_transition_ids[index], path: idPath });
+        }
       }
     }
   }
@@ -301,6 +639,7 @@ export function validateWorkflowDefinition(definition, { registry = loadDefaultR
     }
   }
 
+  const records = [];
   const executorIds = registryIds(registry);
   if (Object.hasOwn(definition, "transitions")) {
     if (!Array.isArray(definition.transitions)) {
@@ -311,7 +650,7 @@ export function validateWorkflowDefinition(definition, { registry = loadDefaultR
       }
       const taskActionIds = new Set();
       for (let index = 0; index < definition.transitions.length; index += 1) {
-        validateTransition(
+        records.push(validateTransition(
           definition.transitions[index],
           `/transitions/${index}`,
           definition.workflow_kind,
@@ -319,10 +658,11 @@ export function validateWorkflowDefinition(definition, { registry = loadDefaultR
           executorIds,
           taskActionIds,
           errors,
-        );
+        ));
       }
     }
   }
 
+  validateGraph(definition, records, terminalEntries, facts, normalizedMaxConditionStates, errors);
   return { valid: errors.length === 0, errors };
 }

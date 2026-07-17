@@ -98,7 +98,7 @@ test("reports C2 fact, action, decision, AST, registry, and priority failures de
   assert.equal(hasError(prefixResult.errors, "task_action_id.prefix_mismatch", "/transitions/0/task_action_id"), true);
 });
 
-test("reports C1 structural errors without adding C3 graph validation", async () => {
+test("reports C1 structural errors with next transition rules", async () => {
   const fixture = await readFixture("structural-invalid.json");
   const structural = validateWorkflowDefinition(fixture.cases[1].definition);
 
@@ -108,15 +108,15 @@ test("reports C1 structural errors without adding C3 graph validation", async ()
   assert.equal(hasError(structural.errors, "task_action_id.invalid", "/transitions/0/task_action_id"), true);
   assert.equal(hasError(structural.errors, "expression.empty", "/transitions/0/normalized_fact_conditions/all"), true);
   assert.equal(hasError(structural.errors, "priority.forbidden", "/transitions/0/priority"), true);
+});
 
-  const valid = await readFixture("structural-valid.json");
-  const c3Only = structuredClone(valid.cases[0].definition);
-  c3Only.entry_transition_id = "missing-entry";
-  c3Only.terminal_transition_ids = ["missing-terminal"];
-  c3Only.transitions[0].next_transition = "missing-next";
-  c3Only.transitions[1].transition_id = c3Only.transitions[0].transition_id;
+test("rejects the legacy next_transition field and requires next_transition_rules", async () => {
+  const fixture = await readFixture("structural-valid.json");
+  const definition = structuredClone(fixture.cases[0].definition);
+  definition.transitions[0].next_transition = "complete";
+  delete definition.transitions[0].next_transition_rules;
 
-  const c3Result = validateWorkflowDefinition(c3Only);
-  assert.equal(c3Result.valid, true);
-  assert.deepEqual(c3Result.errors, []);
+  const result = validateWorkflowDefinition(definition);
+  assert.equal(hasError(result.errors, "object.additional_property", "/transitions/0/next_transition"), true);
+  assert.equal(hasError(result.errors, "transition.required", "/transitions/0/next_transition_rules"), true);
 });

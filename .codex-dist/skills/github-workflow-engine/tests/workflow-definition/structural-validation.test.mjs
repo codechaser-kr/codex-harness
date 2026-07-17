@@ -36,6 +36,17 @@ test("accepts a valid workflow definition", async () => {
   assert.deepEqual(result.errors, []);
 });
 
+test("returns a deterministic registry load error when the registry is unavailable", async () => {
+  const fixture = await readFixture("structural-valid.json");
+  const first = validateWorkflowDefinition(fixture.cases[0].definition, { registry: null });
+  const second = validateWorkflowDefinition(fixture.cases[0].definition, { registry: null });
+
+  assert.equal(first.valid, false);
+  assert.deepEqual(first.errors, second.errors);
+  assert.equal(hasError(first.errors, "registry.load_failed", ""), true);
+  assert.equal(hasError(first.errors, "registered_executor_reference.unknown", "/transitions/0/registered_executor_reference"), false);
+});
+
 test("accepts every workflow_kind task_action_id prefix", async () => {
   const fixture = await readFixture("structural-valid.json");
   const prefixCases = [

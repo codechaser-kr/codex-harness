@@ -32,6 +32,7 @@ const WORKFLOW_KINDS = new Set(Object.keys(WORKFLOW_PREFIXES));
 const TARGET_TYPES = new Set(["issue", "pull_request", "repository"]);
 const FACT_TYPES = new Set(["boolean", "string", "integer"]);
 const TASK_ACTION_ID = /^(FP|PR|FC|FF|FI)-[1-9][0-9]*$/;
+const REGISTRY_FIELDS = ["executor_id", "executor_kind", "side_effect_scope", "runtime_reference"];
 export const DEFAULT_MAX_CONDITION_STATES = 10_000;
 
 function pointer(path, segment) {
@@ -100,14 +101,35 @@ function registryIds(registry) {
     return registry;
   }
   if (!Array.isArray(registry)) {
-    return new Set();
+    return undefined;
   }
-  return new Set(registry.map((entry) => (typeof entry === "string" ? entry : entry?.executor_id)).filter(Boolean));
+  const executorIds = new Set();
+  for (const entry of registry) {
+    const executorId = typeof entry === "string" ? entry : entry?.executor_id;
+    if (!isNonEmptyString(executorId)) {
+      return undefined;
+    }
+    executorIds.add(executorId);
+  }
+  return executorIds;
 }
 
 function loadDefaultRegistry() {
-  const registryUrl = new URL("../../registries/registered-executors.json", import.meta.url);
-  return JSON.parse(readFileSync(registryUrl, "utf8"));
+  try {
+    const registryUrl = new URL("../../registries/registered-executors.json", import.meta.url);
+    const registry = JSON.parse(readFileSync(registryUrl, "utf8"));
+    if (!Array.isArray(registry) || registry.some((entry) => {
+      if (!isObject(entry) || Object.keys(entry).length !== REGISTRY_FIELDS.length) {
+        return true;
+      }
+      return REGISTRY_FIELDS.some((field) => !isNonEmptyString(entry[field]));
+    })) {
+      return undefined;
+    }
+    return registry;
+  } catch {
+    return undefined;
+  }
 }
 
 function validateFact(value, path, errors) {
@@ -297,7 +319,7 @@ function validateTransition(value, path, workflowKind, facts, executorIds, taskA
   }
   if (Object.hasOwn(value, "registered_executor_reference")) {
     const executorPath = pointer(path, "registered_executor_reference");
-    if (validateNullableStableId(value.registered_executor_reference, executorPath, errors, "registered_executor_reference.invalid") && value.registered_executor_reference !== null && !executorIds.has(value.registered_executor_reference)) {
+    if (validateNullableStableId(value.registered_executor_reference, executorPath, errors, "registered_executor_reference.invalid") && value.registered_executor_reference !== null && executorIds && !executorIds.has(value.registered_executor_reference)) {
       addError(errors, "registered_executor_reference.unknown", executorPath, `Unknown executor: ${value.registered_executor_reference}.`);
     }
   }
@@ -581,13 +603,17 @@ function normalizeMaxConditionStates(value, errors) {
   return DEFAULT_MAX_CONDITION_STATES;
 }
 
-export function validateWorkflowDefinition(definition, { registry = loadDefaultRegistry(), maxConditionStates } = {}) {
+export function validateWorkflowDefinition(definition, { registry, maxConditionStates } = {}) {
   const errors = [];
   const normalizedMaxConditionStates = normalizeMaxConditionStates(maxConditionStates, errors);
   if (!validateClosedObject(definition, "", new Set(ROOT_FIELDS), errors, "workflow")) {
     return { valid: false, errors };
   }
   validateRequired(definition, "", ROOT_FIELDS, errors, "workflow");
+  const executorIds = registryIds(registry === undefined ? loadDefaultRegistry() : registry);
+  if (!executorIds) {
+    addError(errors, "registry.load_failed", "", "Registered executor registry could not be loaded.");
+  }
 
   for (const field of ["workflow_id", "version", "entry_transition_id"]) {
     if (Object.hasOwn(definition, field)) {
@@ -641,7 +667,6 @@ export function validateWorkflowDefinition(definition, { registry = loadDefaultR
   }
 
   const records = [];
-  const executorIds = registryIds(registry);
   if (Object.hasOwn(definition, "transitions")) {
     if (!Array.isArray(definition.transitions)) {
       addError(errors, "transitions.type", "/transitions", "transitions must be an array.");

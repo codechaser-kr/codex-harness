@@ -142,10 +142,39 @@ test("completes terminal transitions and stops when the current condition is not
   const completed = evaluateWorkflowDefinition(fixture.definitions.terminal_completed, fixture.states.done);
   assert.deepEqual(completed, { status: "completed", transition_id: "complete" });
 
+  const incompleteTerminal = structuredClone(fixture.definitions.terminal_completed);
+  incompleteTerminal.normalized_fact_schema[0].allowed_values = [true, false];
+  incompleteTerminal.transitions[0].normalized_fact_conditions = {
+    fact_id: "done",
+    operator: "exists"
+  };
+  const actionRequired = evaluateWorkflowDefinition(incompleteTerminal, { done: false });
+  assert.equal(actionRequired.status, "action_required");
+  assert.equal(actionRequired.transition_id, "complete");
+
   const conditionNotMet = evaluateWorkflowDefinition(fixture.definitions.entry_action_required, fixture.states.not_ready);
   assert.equal(conditionNotMet.status, "stopped");
   assert.equal(conditionNotMet.reason, "current_transition_condition_not_met");
   assert.equal(conditionNotMet.transition_id, "start");
+});
+
+test("rejects an unsatisfiable terminal completion predicate before action_required", async () => {
+  const fixture = await readCases();
+  const satisfiable = validateWorkflowDefinition(fixture.definitions.terminal_completed);
+  assert.equal(satisfiable.valid, true);
+
+  const definition = structuredClone(fixture.definitions.terminal_completed);
+  definition.transitions[0].completion_predicate = {
+    all: [
+      { fact_id: "done", operator: "equals", value: true },
+      { not: { fact_id: "done", operator: "equals", value: true } },
+    ],
+  };
+
+  const result = evaluateWorkflowDefinition(definition, fixture.states.done);
+  assert.equal(result.status, "stopped");
+  assert.equal(result.reason, "invalid_definition");
+  assert.equal(hasError(result, "completion_predicate.unsatisfiable", "/transitions/0/completion_predicate"), true);
 });
 
 test("defends against zero and multiple matches caused by missing facts", async () => {

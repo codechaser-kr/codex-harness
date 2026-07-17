@@ -59,7 +59,7 @@
         {
           "fact_id": "action_done",
           "value_type": "boolean",
-          "allowed_values": [false],
+          "allowed_values": [false, true],
           "evidence_required": false
         }
       ],

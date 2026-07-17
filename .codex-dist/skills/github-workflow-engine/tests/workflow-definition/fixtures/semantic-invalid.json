@@ -135,6 +135,28 @@
       "expected_code": "next_transition_rules.condition_gap"
     },
     {
+      "name": "unsatisfiable completion predicate",
+      "mutations": [
+        {
+          "op": "set",
+          "path": ["transitions", 1, "completion_predicate"],
+          "value": {
+            "all": [
+              { "fact_id": "flag", "operator": "equals", "value": true },
+              { "not": { "fact_id": "flag", "operator": "equals", "value": true } }
+            ]
+          }
+        }
+      ],
+      "expected_code": "completion_predicate.unsatisfiable"
+    },
+    {
+      "name": "completion predicate state space limit includes missing state",
+      "options": { "maxConditionStates": 2 },
+      "mutations": [],
+      "expected_code": "completion_predicate_state_space.limit_exceeded"
+    },
+    {
       "name": "coverage collects a late satisfiable rule after gap and overlap witnesses",
       "mutations": [
         {

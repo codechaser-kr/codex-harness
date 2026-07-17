@@ -283,7 +283,13 @@ function validateNextTransitionRules(value, path, facts, errors) {
 }
 
 function validateTransition(value, path, workflowKind, facts, executorIds, taskActionIds, errors) {
-  const record = { path, transitionId: undefined, ruleSet: undefined };
+  const record = {
+    path,
+    transitionId: undefined,
+    completionPredicate: undefined,
+    completionPredicateValid: false,
+    ruleSet: undefined,
+  };
   if (!validateClosedObject(value, path, new Set(TRANSITION_FIELDS), errors, "transition")) {
     return record;
   }
@@ -315,7 +321,10 @@ function validateTransition(value, path, workflowKind, facts, executorIds, taskA
     validateDecisionSpecification(value.user_decision_specification, pointer(path, "user_decision_specification"), errors);
   }
   if (Object.hasOwn(value, "completion_predicate")) {
-    errors.push(...validateExpression(value.completion_predicate, { path: pointer(path, "completion_predicate"), facts }));
+    const completionErrors = validateExpression(value.completion_predicate, { path: pointer(path, "completion_predicate"), facts });
+    errors.push(...completionErrors);
+    record.completionPredicate = value.completion_predicate;
+    record.completionPredicateValid = completionErrors.length === 0;
   }
   if (Object.hasOwn(value, "registered_executor_reference")) {
     const executorPath = pointer(path, "registered_executor_reference");
@@ -372,6 +381,112 @@ function forEachState(facts, visit) {
     }
   }
   traverse(0);
+}
+
+function collectExpressionFactIds(expression, factIds) {
+  if (!isObject(expression)) {
+    return;
+  }
+  if (Object.hasOwn(expression, "fact_id")) {
+    factIds.add(expression.fact_id);
+    return;
+  }
+  if (Array.isArray(expression.all)) {
+    for (const child of expression.all) {
+      collectExpressionFactIds(child, factIds);
+    }
+    return;
+  }
+  if (Array.isArray(expression.any)) {
+    for (const child of expression.any) {
+      collectExpressionFactIds(child, factIds);
+    }
+    return;
+  }
+  if (Object.hasOwn(expression, "not")) {
+    collectExpressionFactIds(expression.not, factIds);
+  }
+}
+
+function collectCompletionPredicateFacts(expression, facts) {
+  const factIds = new Set();
+  collectExpressionFactIds(expression, factIds);
+  const stateFacts = [];
+  for (const [factId, fact] of facts) {
+    if (!factIds.has(factId)) {
+      continue;
+    }
+    if (!fact.conditionReady) {
+      return undefined;
+    }
+    stateFacts.push(fact);
+  }
+  return stateFacts.length === factIds.size ? stateFacts : undefined;
+}
+
+function completionPredicateStateSpaceSize(facts, maxConditionStates) {
+  let size = 1;
+  for (const fact of facts) {
+    const stateCount = fact.allowedValues.length + 1;
+    if (size > Math.floor(maxConditionStates / stateCount)) {
+      return undefined;
+    }
+    size *= stateCount;
+  }
+  return size;
+}
+
+function forEachCompletionPredicateState(facts, visit) {
+  const state = new Map();
+  let keepGoing = true;
+  function traverse(index) {
+    if (!keepGoing) {
+      return;
+    }
+    if (index === facts.length) {
+      keepGoing = visit(new Map(state)) !== false;
+      return;
+    }
+    const fact = facts[index];
+    state.delete(fact.factId);
+    traverse(index + 1);
+    for (const value of fact.allowedValues) {
+      state.set(fact.factId, value);
+      traverse(index + 1);
+      if (!keepGoing) {
+        return;
+      }
+    }
+  }
+  traverse(0);
+}
+
+function validateCompletionPredicateSatisfiability(records, facts, maxConditionStates, errors) {
+  for (const record of records) {
+    if (!record.completionPredicateValid) {
+      continue;
+    }
+    const stateFacts = collectCompletionPredicateFacts(record.completionPredicate, facts);
+    if (!stateFacts) {
+      continue;
+    }
+    const predicatePath = `${record.path}/completion_predicate`;
+    if (completionPredicateStateSpaceSize(stateFacts, maxConditionStates) === undefined) {
+      addError(errors, "completion_predicate_state_space.limit_exceeded", predicatePath, `Completion predicate state space exceeds configured limit ${maxConditionStates}.`);
+      continue;
+    }
+    let satisfiable = false;
+    forEachCompletionPredicateState(stateFacts, (state) => {
+      if (matchesExpressionState(record.completionPredicate, state)) {
+        satisfiable = true;
+        return false;
+      }
+      return true;
+    });
+    if (!satisfiable) {
+      addError(errors, "completion_predicate.unsatisfiable", predicatePath, "completion_predicate cannot be true for any declared fact state.");
+    }
+  }
 }
 
 function stateWitness(state) {
@@ -529,6 +644,7 @@ function validateGraph(definition, records, terminalEntries, facts, maxCondition
     addError(errors, "entry_transition_id.unknown", "/entry_transition_id", `Unknown entry_transition_id: ${definition.entry_transition_id}.`);
   }
 
+  validateCompletionPredicateSatisfiability(records, facts, maxConditionStates, errors);
   const matchingRules = validateRuleCoverage(records, terminalIds, facts, maxConditionStates, errors);
   const adjacency = new Map();
   for (const [transitionId, record] of transitions) {

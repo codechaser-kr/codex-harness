@@ -104,10 +104,19 @@ terminal rule 배열, terminal 도달 가능성과 종료 불가능 순환을 �
 허용하지만 도달 가능한 각 transition과 SCC는 rule을 따라 적어도 하나의 terminal로 갈 수
 있어야 한다. 기존 자연어 전이표는 이 definition 또는 런타임에 연결하지 않는다.
 
+C3 semantic validation은 각 transition의 `completion_predicate`가 자신이 참조하는 선언 fact
+도메인의 어떤 상태에서라도 참이 될 수 있는지 검증한다. 참조하지 않는 fact는 이 판정의 상태
+공간에 포함하지 않는다. `exists`와 `not_exists` 의미를 위해 각 참조 fact의 누락 상태도
+도메인 상태로 포함하며, 어떤 상태에서도 참이 될 수 없는 predicate는
+`completion_predicate.unsatisfiable` 오류로 거부한다.
+
 조건 의미 검증은 선언 순서가 아닌 normalized fact의 유한 상태 공간을 결정적 순서로
 탐색한다. 기본 상태 공간 상한은 10,000개이며 `validateWorkflowDefinition`의
 `maxConditionStates` option으로 양의 정수 상한을 재정의할 수 있다. 곱셈 결과가 상한을
 넘으면 `condition_state_space.limit_exceeded` 구조화 오류를 반환하고 탐색하지 않는다.
+completion predicate satisfiability 검증도 같은 option을 해당 predicate가 참조하는 fact와
+누락 상태로 구성한 상태 공간에 적용한다. 이 상태 공간이 상한을 넘으면
+`completion_predicate_state_space.limit_exceeded` 구조화 오류를 반환하고 탐색하지 않는다.
 이 정적 검증은 C4 런타임 평가기와 CLI가 사용한다.
 
 ## C4 결정론적 평가와 CLI

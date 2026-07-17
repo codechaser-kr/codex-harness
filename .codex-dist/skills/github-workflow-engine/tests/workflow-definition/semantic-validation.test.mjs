@@ -45,6 +45,21 @@ test("accepts unconditional, conditional, and terminal-escaping cyclic graphs", 
   }
 });
 
+test("checks completion predicate satisfiability using only its referenced facts", async () => {
+  const fixture = await readFixture("semantic-valid.json");
+  const definition = structuredClone(fixture.cases[0].definition);
+  definition.normalized_fact_schema.push({
+    fact_id: "unrelated",
+    value_type: "integer",
+    allowed_values: Array.from({ length: 100 }, (_, index) => index),
+    evidence_required: false,
+  });
+
+  const result = validateWorkflowDefinition(definition, { maxConditionStates: 3 });
+  assert.equal(result.valid, true, JSON.stringify(result.errors));
+  assert.deepEqual(result.errors, []);
+});
+
 test("reports deterministic C3 graph and condition errors", async () => {
   const fixture = await readFixture("semantic-invalid.json");
   for (const scenario of fixture.cases) {

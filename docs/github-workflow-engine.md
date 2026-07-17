@@ -87,7 +87,8 @@ Workflow Engine이 전이를 평가할 때는 관찰된 사실과 의미 해석 
 | `workflow_id` | 워크플로우를 식별하는 고유 ID |
 | `version` | 정의와 평가 규칙의 버전 |
 | `target_type` | 대상이 `issue`, `pull_request` 또는 정의된 대상 유형인지 나타내는 값 |
-| `transition_id`, `priority` | 각 전이의 고유 ID와 같은 조건에서 적용할 우선순위 |
+| `transition_id` | 각 전이의 고유 ID |
+| `priority` | 같은 조건에서 적용할 우선순위 |
 | `normalized_fact_conditions` | 정규화된 사실에 적용할 조건과 필요한 근거 제약 |
 | `task_action_id` | 전이가 산출하거나 실행할 작업 또는 동작의 고유 ID |
 | `user_decision_specification` | 사용자 결정의 필요 여부, 선택지, 입력 형식, 결정 전 실행 금지 조건 |

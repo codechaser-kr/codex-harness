@@ -408,7 +408,8 @@ function validateRuleCoverage(records, terminalIds, facts, maxConditionStates, e
         addError(errors, "next_transition_rules.condition_overlap", record.ruleSet.rules[0]?.path ?? `${record.path}/next_transition_rules`, "Multiple conditional next transition rules match this declared fact state.", stateWitness(state));
         overlapReported = true;
       }
-      return !(gapReported && overlapReported);
+      // Continue collecting satisfiable rules after recording the first witnesses.
+      return true;
     });
   }
   return matchingRules;

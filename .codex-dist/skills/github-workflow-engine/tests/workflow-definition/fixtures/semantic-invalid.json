@@ -135,6 +135,40 @@
       "expected_code": "next_transition_rules.condition_gap"
     },
     {
+      "name": "coverage collects a late satisfiable rule after gap and overlap witnesses",
+      "mutations": [
+        {
+          "op": "append",
+          "path": ["normalized_fact_schema"],
+          "value": { "fact_id": "phase", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": false }
+        },
+        {
+          "op": "set",
+          "path": ["transitions", 0, "next_transition_rules"],
+          "value": [
+            { "condition": { "all": [{ "fact_id": "flag", "operator": "equals", "value": true }, { "fact_id": "phase", "operator": "equals", "value": false }] }, "transition_id": "complete" },
+            { "condition": { "fact_id": "phase", "operator": "equals", "value": false }, "transition_id": "complete" },
+            { "condition": { "all": [{ "fact_id": "flag", "operator": "equals", "value": false }, { "fact_id": "phase", "operator": "equals", "value": true }] }, "transition_id": "late" }
+          ]
+        },
+        {
+          "op": "append",
+          "path": ["transitions"],
+          "value": {
+            "transition_id": "late",
+            "normalized_fact_conditions": { "fact_id": "flag", "operator": "exists" },
+            "task_action_id": "FI-3",
+            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+            "completion_predicate": { "fact_id": "flag", "operator": "exists" },
+            "registered_executor_reference": null,
+            "next_transition_rules": [{ "condition": null, "transition_id": "complete" }]
+          }
+        }
+      ],
+      "expected_code": "next_transition_rules.condition_gap",
+      "absent_codes": ["transition.unreachable", "transition.no_terminal_path"]
+    },
+    {
       "name": "unconditional rule mixed with conditional rule",
       "mutations": [
         {

@@ -60,5 +60,8 @@ test("reports deterministic C3 graph and condition errors", async () => {
       assert.equal(typeof error.witness, "object");
       assert.equal(typeof error.message, "string");
     }
+    for (const absentCode of scenario.absent_codes ?? []) {
+      assert.equal(first.errors.some((item) => item.code === absentCode), false, `${scenario.name}: ${absentCode}`);
+    }
   }
 });

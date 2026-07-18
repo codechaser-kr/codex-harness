@@ -1,0 +1,246 @@
+{
+  "base_definition": {
+    "workflow_id": "semantic-base",
+    "version": "1.0.0",
+    "workflow_kind": "implementation",
+    "target_type": "issue",
+    "entry_transition_id": "start",
+    "terminal_transition_ids": ["complete"],
+    "normalized_fact_schema": [
+      { "fact_id": "flag", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": false }
+    ],
+    "transitions": [
+      {
+        "transition_id": "start",
+        "normalized_fact_conditions": { "fact_id": "flag", "operator": "exists" },
+        "task_action_id": "FI-1",
+        "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+        "completion_predicate": { "fact_id": "flag", "operator": "exists" },
+        "registered_executor_reference": null,
+        "next_transition_rules": [{ "condition": null, "transition_id": "complete" }]
+      },
+      {
+        "transition_id": "complete",
+        "normalized_fact_conditions": { "fact_id": "flag", "operator": "exists" },
+        "task_action_id": "FI-2",
+        "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+        "completion_predicate": { "fact_id": "flag", "operator": "exists" },
+        "registered_executor_reference": null,
+        "next_transition_rules": []
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "duplicate transition ID",
+      "mutations": [{ "op": "set", "path": ["transitions", 1, "transition_id"], "value": "start" }],
+      "expected_code": "transition_id.duplicate"
+    },
+    {
+      "name": "duplicate terminal transition ID",
+      "mutations": [{ "op": "set", "path": ["terminal_transition_ids"], "value": ["complete", "complete"] }],
+      "expected_code": "terminal_transition_id.duplicate"
+    },
+    {
+      "name": "unknown entry terminal and rule references",
+      "mutations": [
+        { "op": "set", "path": ["entry_transition_id"], "value": "missing-entry" },
+        { "op": "set", "path": ["terminal_transition_ids"], "value": ["missing-terminal"] },
+        { "op": "set", "path": ["transitions", 0, "next_transition_rules", 0, "transition_id"], "value": "missing-rule-target" }
+      ],
+      "expected_code": "entry_transition_id.unknown"
+    },
+    {
+      "name": "unreachable transition",
+      "mutations": [
+        {
+          "op": "append",
+          "path": ["transitions"],
+          "value": {
+            "transition_id": "detached",
+            "normalized_fact_conditions": { "fact_id": "flag", "operator": "exists" },
+            "task_action_id": "FI-3",
+            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+            "completion_predicate": { "fact_id": "flag", "operator": "exists" },
+            "registered_executor_reference": null,
+            "next_transition_rules": [{ "condition": null, "transition_id": "complete" }]
+          }
+        }
+      ],
+      "expected_code": "transition.unreachable"
+    },
+    {
+      "name": "terminal has rules",
+      "mutations": [{ "op": "set", "path": ["transitions", 1, "next_transition_rules"], "value": [{ "condition": null, "transition_id": "start" }] }],
+      "expected_code": "transition.terminal_rules_not_empty"
+    },
+    {
+      "name": "non-terminal has no rules",
+      "mutations": [{ "op": "set", "path": ["transitions", 0, "next_transition_rules"], "value": [] }],
+      "expected_code": "transition.non_terminal_rules_empty"
+    },
+    {
+      "name": "cycle without terminal path",
+      "mutations": [{ "op": "set", "path": ["transitions", 0, "next_transition_rules", 0, "transition_id"], "value": "start" }],
+      "expected_code": "transition.cycle_without_terminal"
+    },
+    {
+      "name": "cycle terminal rule is not a satisfiable escape",
+      "mutations": [
+        {
+          "op": "set",
+          "path": ["transitions", 0, "next_transition_rules"],
+          "value": [
+            { "condition": { "fact_id": "flag", "operator": "in", "value": [true, false] }, "transition_id": "start" },
+            { "condition": { "all": [{ "fact_id": "flag", "operator": "equals", "value": true }, { "fact_id": "flag", "operator": "equals", "value": false }] }, "transition_id": "complete" }
+          ]
+        }
+      ],
+      "expected_code": "transition.cycle_without_terminal"
+    },
+    {
+      "name": "conditional overlap",
+      "mutations": [
+        {
+          "op": "set",
+          "path": ["transitions", 0, "next_transition_rules"],
+          "value": [
+            { "condition": { "fact_id": "flag", "operator": "equals", "value": true }, "transition_id": "complete" },
+            { "condition": { "fact_id": "flag", "operator": "equals", "value": true }, "transition_id": "complete" }
+          ]
+        }
+      ],
+      "expected_code": "next_transition_rules.condition_overlap"
+    },
+    {
+      "name": "rule condition validates AST fact references",
+      "mutations": [
+        {
+          "op": "set",
+          "path": ["transitions", 0, "next_transition_rules"],
+          "value": [{ "condition": { "fact_id": "missing", "operator": "equals", "value": true }, "transition_id": "complete" }]
+        }
+      ],
+      "expected_code": "expression.fact.unknown"
+    },
+    {
+      "name": "conditional gap",
+      "mutations": [
+        {
+          "op": "set",
+          "path": ["transitions", 0, "next_transition_rules"],
+          "value": [{ "condition": { "fact_id": "flag", "operator": "equals", "value": true }, "transition_id": "complete" }]
+        }
+      ],
+      "expected_code": "next_transition_rules.condition_gap"
+    },
+    {
+      "name": "unsatisfiable completion predicate",
+      "mutations": [
+        {
+          "op": "set",
+          "path": ["transitions", 1, "completion_predicate"],
+          "value": {
+            "all": [
+              { "fact_id": "flag", "operator": "equals", "value": true },
+              { "not": { "fact_id": "flag", "operator": "equals", "value": true } }
+            ]
+          }
+        }
+      ],
+      "expected_code": "completion_predicate.unsatisfiable"
+    },
+    {
+      "name": "completion predicate state space limit includes missing state",
+      "options": { "maxConditionStates": 2 },
+      "mutations": [],
+      "expected_code": "completion_predicate_state_space.limit_exceeded"
+    },
+    {
+      "name": "coverage collects a late satisfiable rule after gap and overlap witnesses",
+      "mutations": [
+        {
+          "op": "append",
+          "path": ["normalized_fact_schema"],
+          "value": { "fact_id": "phase", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": false }
+        },
+        {
+          "op": "set",
+          "path": ["transitions", 0, "next_transition_rules"],
+          "value": [
+            { "condition": { "all": [{ "fact_id": "flag", "operator": "equals", "value": true }, { "fact_id": "phase", "operator": "equals", "value": false }] }, "transition_id": "complete" },
+            { "condition": { "fact_id": "phase", "operator": "equals", "value": false }, "transition_id": "complete" },
+            { "condition": { "all": [{ "fact_id": "flag", "operator": "equals", "value": false }, { "fact_id": "phase", "operator": "equals", "value": true }] }, "transition_id": "late" }
+          ]
+        },
+        {
+          "op": "append",
+          "path": ["transitions"],
+          "value": {
+            "transition_id": "late",
+            "normalized_fact_conditions": { "fact_id": "flag", "operator": "exists" },
+            "task_action_id": "FI-3",
+            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+            "completion_predicate": { "fact_id": "flag", "operator": "exists" },
+            "registered_executor_reference": null,
+            "next_transition_rules": [{ "condition": null, "transition_id": "complete" }]
+          }
+        }
+      ],
+      "expected_code": "next_transition_rules.condition_gap",
+      "absent_codes": ["transition.unreachable", "transition.no_terminal_path"]
+    },
+    {
+      "name": "unconditional rule mixed with conditional rule",
+      "mutations": [
+        {
+          "op": "set",
+          "path": ["transitions", 0, "next_transition_rules"],
+          "value": [
+            { "condition": null, "transition_id": "complete" },
+            { "condition": { "fact_id": "flag", "operator": "equals", "value": true }, "transition_id": "complete" }
+          ]
+        }
+      ],
+      "expected_code": "next_transition_rules.unconditional_mixed"
+    },
+    {
+      "name": "condition state space limit",
+      "options": { "maxConditionStates": 1 },
+      "mutations": [
+        {
+          "op": "set",
+          "path": ["transitions", 0, "next_transition_rules"],
+          "value": [
+            { "condition": { "fact_id": "flag", "operator": "equals", "value": true }, "transition_id": "complete" },
+            { "condition": { "fact_id": "flag", "operator": "equals", "value": false }, "transition_id": "complete" }
+          ]
+        }
+      ],
+      "expected_code": "condition_state_space.limit_exceeded"
+    },
+    {
+      "name": "relevant condition state space limit",
+      "options": { "maxConditionStates": 3 },
+      "mutations": [
+        {
+          "op": "append",
+          "path": ["normalized_fact_schema"],
+          "value": { "fact_id": "phase", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": false }
+        },
+        {
+          "op": "set",
+          "path": ["transitions", 0, "next_transition_rules"],
+          "value": [
+            { "condition": { "all": [{ "fact_id": "flag", "operator": "equals", "value": true }, { "fact_id": "phase", "operator": "equals", "value": true }] }, "transition_id": "complete" },
+            { "condition": { "all": [{ "fact_id": "flag", "operator": "equals", "value": true }, { "fact_id": "phase", "operator": "equals", "value": false }] }, "transition_id": "complete" },
+            { "condition": { "all": [{ "fact_id": "flag", "operator": "equals", "value": false }, { "fact_id": "phase", "operator": "equals", "value": true }] }, "transition_id": "complete" },
+            { "condition": { "all": [{ "fact_id": "flag", "operator": "equals", "value": false }, { "fact_id": "phase", "operator": "equals", "value": false }] }, "transition_id": "complete" }
+          ]
+        }
+      ],
+      "expected_code": "condition_state_space.limit_exceeded",
+      "expected_path": "/transitions/0/next_transition_rules"
+    }
+  ]
+}

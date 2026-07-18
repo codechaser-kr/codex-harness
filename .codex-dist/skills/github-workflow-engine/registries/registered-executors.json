@@ -12,6 +12,18 @@
     "runtime_reference": "github-simple-executor"
   },
   {
+    "executor_id": "issue-creation",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "issue-creation"
+  },
+  {
+    "executor_id": "feature-proposal-triage",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "feature-proposal-triage"
+  },
+  {
     "executor_id": "target-harness-code-editor",
     "executor_kind": "skill",
     "side_effect_scope": "repository_file_change",

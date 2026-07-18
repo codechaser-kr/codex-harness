@@ -177,6 +177,35 @@ test("policy-review adapter maps observations in definition order and preserves 
   assert.deepEqual(observations, observationsBefore);
 });
 
+test("policy-review adapter rejects missing and unexpected source contracts before observation validation", async () => {
+  const definition = await readJson(definitionUrl);
+  const missingContractDefinition = structuredClone(definition);
+  missingContractDefinition.normalized_fact_schema.push({
+    ...structuredClone(missingContractDefinition.normalized_fact_schema[0]),
+    fact_id: "uncontracted_fact",
+  });
+
+  const missingContract = normalizePolicyReviewFacts(missingContractDefinition, null);
+  assertAtomicFailure(missingContract, "source_contract_mismatch");
+  assert.deepEqual(missingContract.errors, [{
+    code: "source_contract.missing",
+    path: `/normalized_fact_schema/${definition.normalized_fact_schema.length}/fact_id`,
+    message: "Missing source contract for fact_id uncontracted_fact.",
+  }]);
+  assert.deepEqual(normalizePolicyReviewFacts(missingContractDefinition, null), missingContract);
+
+  const unexpectedContractDefinition = structuredClone(definition);
+  const [removedFact] = unexpectedContractDefinition.normalized_fact_schema.splice(0, 1);
+  const unexpectedContract = normalizePolicyReviewFacts(unexpectedContractDefinition, null);
+  assertAtomicFailure(unexpectedContract, "source_contract_mismatch");
+  assert.deepEqual(unexpectedContract.errors, [{
+    code: "source_contract.unexpected",
+    path: `/source_contracts/${removedFact.fact_id}`,
+    message: `Unexpected source contract for fact_id ${removedFact.fact_id}.`,
+  }]);
+  assert.deepEqual(normalizePolicyReviewFacts(unexpectedContractDefinition, null), unexpectedContract);
+});
+
 test("policy-review adapter rejects workflow mismatch, wrong sources, and wrong skill executors atomically", async () => {
   const definition = await readJson(definitionUrl);
   const wrongWorkflow = structuredClone(definition);

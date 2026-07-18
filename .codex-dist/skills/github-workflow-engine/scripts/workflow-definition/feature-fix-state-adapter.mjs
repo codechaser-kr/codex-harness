@@ -51,6 +51,40 @@ function stopped(reason, workflowId, errors) {
   };
 }
 
+function validateSourceContracts(definition) {
+  if (!Array.isArray(definition?.normalized_fact_schema)
+    || definition.normalized_fact_schema.some((fact) => !isPlainObject(fact) || !isNonEmptyString(fact.fact_id))) {
+    return [];
+  }
+
+  const errors = [];
+  const definitionFactIds = new Set();
+  for (let index = 0; index < definition.normalized_fact_schema.length; index += 1) {
+    const factId = definition.normalized_fact_schema[index].fact_id;
+    definitionFactIds.add(factId);
+    if (!SOURCE_CONTRACTS.has(factId)) {
+      addError(
+        errors,
+        "source_contract.missing",
+        "/normalized_fact_schema/" + index + "/fact_id",
+        "Missing source contract for fact_id " + factId + ".",
+      );
+    }
+  }
+
+  for (const factId of [...SOURCE_CONTRACTS.keys()].sort()) {
+    if (!definitionFactIds.has(factId)) {
+      addError(
+        errors,
+        "source_contract.unexpected",
+        pointer("/source_contracts", factId),
+        "Unexpected source contract for fact_id " + factId + ".",
+      );
+    }
+  }
+  return errors;
+}
+
 function validateObservations(observations) {
   const errors = [];
   if (!Array.isArray(observations)) {
@@ -120,6 +154,11 @@ export function normalizeFeatureFixFacts(definition, observations) {
       path: "/workflow_id",
       message: "Expected workflow_id feature-fix.",
     }]);
+  }
+
+  const sourceContractErrors = validateSourceContracts(definition);
+  if (sourceContractErrors.length > 0) {
+    return stopped("source_contract_mismatch", definition.workflow_id, sourceContractErrors);
   }
 
   const observationErrors = validateObservations(observations);

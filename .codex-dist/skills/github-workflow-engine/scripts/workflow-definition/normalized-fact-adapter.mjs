@@ -4,15 +4,15 @@ const EVIDENCE_FIELDS = ["source_kind", "source_reference", "field_reference"];
 const FACT_TYPES = new Set(["boolean", "string", "integer"]);
 const SOURCE_KINDS = new Set(["github_state", "local_state", "user_input", "skill_output"]);
 
-function escapePointerSegment(segment) {
+export function escapePointerSegment(segment) {
   return String(segment).replaceAll("~", "~0").replaceAll("/", "~1");
 }
 
-function pointer(path, segment) {
+export function pointer(path, segment) {
   return `${path}/${escapePointerSegment(segment)}`;
 }
 
-function isPlainObject(value) {
+export function isPlainObject(value) {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return false;
   }

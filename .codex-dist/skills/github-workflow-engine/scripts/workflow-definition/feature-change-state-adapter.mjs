@@ -1,4 +1,8 @@
-import { normalizeFactCandidates } from "./normalized-fact-adapter.mjs";
+import {
+  isPlainObject,
+  normalizeFactCandidates,
+  pointer,
+} from "./normalized-fact-adapter.mjs";
 
 const OBSERVATION_FIELDS = ["fact_id", "value", "source_kind", "source_reference", "field_reference"];
 const SOURCE_CONTRACTS = new Map([
@@ -13,22 +17,6 @@ const SOURCE_CONTRACTS = new Map([
   ["all_completion_items_reflected", { sourceKind: "github_state" }],
   ["feature_change_issue_closed", { sourceKind: "github_state" }],
 ]);
-
-function escapePointerSegment(segment) {
-  return String(segment).replaceAll("~", "~0").replaceAll("/", "~1");
-}
-
-function pointer(path, segment) {
-  return `${path}/${escapePointerSegment(segment)}`;
-}
-
-function isPlainObject(value) {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return false;
-  }
-  const prototype = Object.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
-}
 
 function isNonEmptyString(value) {
   return typeof value === "string" && value.length > 0;

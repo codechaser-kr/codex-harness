@@ -144,6 +144,12 @@ state는 plain object여야 한다. 선언되지 않은 fact, value type 불일�
 predicate가 참인 non-terminal은 `next_transition_rules`를 평가해 정확히 하나의 rule만
 일치할 때 이동한다. 0개 또는 복수 일치는 각각 중단 오류이며 선언 순서나 priority로
 선택하지 않는다. 같은 호출에서 transition을 다시 방문하면 `evaluation_cycle`로 중단한다.
+이 순서는 terminal transition에도 동일하게 적용된다. terminal도
+`normalized_fact_conditions`가 참이어야 하며, 거짓이면 중단한다. 진입 조건이 참이더라도
+`completion_predicate`가 거짓이면 `action_required`, 둘 다 참일 때만 `completed`를 반환한다.
+terminal의 `normalized_fact_conditions`와 `completion_predicate`를 동일하게 두는 것은 schema
+필수 제약이 아니다. 현재 설치 Definition은 완료 상태에서 진입과 완료를 동시에 만족시키기
+위한 권장 관용구로 이 방식을 사용한다.
 
 `cli.mjs`는 다음 read-only 명령을 제공하고 stdout에는 구조화 JSON만 쓴다.
 

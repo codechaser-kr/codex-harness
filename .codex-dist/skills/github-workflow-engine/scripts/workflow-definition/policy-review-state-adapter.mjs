@@ -3,6 +3,7 @@ import { normalizeFactCandidates } from "./normalized-fact-adapter.mjs";
 const OBSERVATION_FIELDS = ["fact_id", "value", "source_kind", "source_reference", "field_reference"];
 const SOURCE_CONTRACTS = new Map([
   ["policy_review_requested", { sourceKind: "user_input" }],
+  ["feature_proposal_policy_review_transition_completed", { sourceKind: "github_state" }],
   ["policy_review_draft_confirmed", { sourceKind: "user_input" }],
   ["policy_review_issue_created", { sourceKind: "github_state" }],
   ["policy_design_proposal_usable", { sourceKind: "skill_output", sourceReference: "policy-plan" }],

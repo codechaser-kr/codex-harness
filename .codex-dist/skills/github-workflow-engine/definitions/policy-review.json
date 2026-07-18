@@ -7,6 +7,7 @@
   "terminal_transition_ids": ["complete-policy-review"],
   "normalized_fact_schema": [
     { "fact_id": "policy_review_requested", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
+    { "fact_id": "feature_proposal_policy_review_transition_completed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
     { "fact_id": "policy_review_draft_confirmed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
     { "fact_id": "policy_review_issue_created", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
     { "fact_id": "policy_design_proposal_usable", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
@@ -24,7 +25,12 @@
   "transitions": [
     {
       "transition_id": "draft-policy-review",
-      "normalized_fact_conditions": { "fact_id": "policy_review_requested", "operator": "equals", "value": true },
+      "normalized_fact_conditions": {
+        "any": [
+          { "fact_id": "policy_review_requested", "operator": "equals", "value": true },
+          { "fact_id": "feature_proposal_policy_review_transition_completed", "operator": "equals", "value": true }
+        ]
+      },
       "task_action_id": "PR-1",
       "user_decision_specification": {
         "required": true,

@@ -32,6 +32,7 @@ function validObservations() {
   return [
     observation("feature_change_transition_result", "existing_issue_updated", "github_state", "issue #95"),
     observation("policy_review_requested", true, "user_input", "request issue #95"),
+    observation("feature_proposal_policy_review_transition_completed", true, "github_state", "feature proposal issue #93"),
     observation("policy_design_proposal_usable", true, "skill_output", "policy-plan"),
     observation("design_document_implementation_started", true, "local_state", "workspace"),
     observation("feature_change_transition_candidates_usable", true, "skill_output", "policy-review-next-triage"),
@@ -68,7 +69,7 @@ test("policy-review definition passes C2/C3 validation and uses registered execu
   const schema = JSON.parse(await readFile(schemaUrl, "utf8"));
 
   assert.equal(schema.$schema, "https://json-schema.org/draft/2020-12/schema");
-  assert.equal(Object.keys(states).length, 12);
+  assert.equal(Object.keys(states).length, 13);
   assert.deepEqual(definition.transitions.map((transition) => transition.task_action_id), [
     "PR-1", "PR-2", "PR-3", "PR-4", "PR-5", "PR-6", "PR-7", "PR-8", "PR-9",
   ]);
@@ -106,6 +107,7 @@ test("policy-review representative states resolve to exactly one expected action
   const definitionBefore = structuredClone(definition);
   const cases = [
     ["new_request", "PR-1", "issue-creation"],
+    ["completed_feature_proposal_transition", "PR-1", "issue-creation"],
     ["confirmed_draft", "PR-2", "github-simple-executor"],
     ["created_issue", "PR-3", "policy-plan"],
     ["confirmed_policy_design", "PR-4", "github-simple-executor"],
@@ -165,6 +167,11 @@ test("policy-review adapter maps observations in definition order and preserves 
     source_reference: "policy-plan",
     field_reference: "facts.policy_design_proposal_usable",
   }]);
+  assert.deepEqual(result.evidence_by_fact.feature_proposal_policy_review_transition_completed, [{
+    source_kind: "github_state",
+    source_reference: "feature proposal issue #93",
+    field_reference: "facts.feature_proposal_policy_review_transition_completed",
+  }]);
   assert.notEqual(result.evidence_by_fact.policy_review_requested[0], observations[1]);
   assert.deepEqual(definition, definitionBefore);
   assert.deepEqual(observations, observationsBefore);
@@ -183,6 +190,12 @@ test("policy-review adapter rejects workflow mismatch, wrong sources, and wrong 
   ]);
   assertAtomicFailure(wrongSource, "invalid_observations");
   assert.equal(hasError(wrongSource, "observation.source_kind.mismatch", "/observations/0/source_kind"), true);
+
+  const wrongTransitionSource = normalizePolicyReviewFacts(definition, [
+    observation("feature_proposal_policy_review_transition_completed", true, "user_input", "request issue #95"),
+  ]);
+  assertAtomicFailure(wrongTransitionSource, "invalid_observations");
+  assert.equal(hasError(wrongTransitionSource, "observation.source_kind.mismatch", "/observations/0/source_kind"), true);
 
   for (const [factId, sourceReference] of [
     ["policy_design_proposal_usable", "policy-review-next-triage"],

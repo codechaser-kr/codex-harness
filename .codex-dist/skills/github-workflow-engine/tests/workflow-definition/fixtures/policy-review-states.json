@@ -3,6 +3,10 @@
     "policy_review_requested": true,
     "policy_review_draft_confirmed": false
   },
+  "completed_feature_proposal_transition": {
+    "feature_proposal_policy_review_transition_completed": true,
+    "policy_review_draft_confirmed": false
+  },
   "confirmed_draft": {
     "policy_review_requested": true,
     "policy_review_draft_confirmed": true,

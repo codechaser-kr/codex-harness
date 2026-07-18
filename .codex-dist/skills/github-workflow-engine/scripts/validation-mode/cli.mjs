@@ -1,3 +1,5 @@
+import { pathToFileURL } from "node:url";
+
 import { compareValidationResults } from "./comparator.mjs";
 
 function isPlainObject(value) {

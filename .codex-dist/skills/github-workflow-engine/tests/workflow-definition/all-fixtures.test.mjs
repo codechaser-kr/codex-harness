@@ -10,9 +10,14 @@ import "./structural-validation.test.mjs";
 import "./semantic-validation.test.mjs";
 import "./evaluator.test.mjs";
 import "./feature-proposal.test.mjs";
+import "./normalized-fact-adapter.test.mjs";
+import "./policy-review.test.mjs";
+import "./feature-change.test.mjs";
+import "./feature-fix.test.mjs";
 import "../validation-mode/validation-mode.test.mjs";
 import "../validation-mode/runtime-wiring.test.mjs";
 import "../validation-mode/feature-proposal-validation.integration.test.mjs";
+import "../validation-mode/issue-workflows-validation.integration.test.mjs";
 
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -22,25 +27,39 @@ const jsonArtifacts = [
   "schemas/workflow-definition.schema.json",
   "registries/registered-executors.json",
   "definitions/feature-proposal.json",
+  "definitions/policy-review.json",
+  "definitions/feature-change.json",
+  "definitions/feature-fix.json",
   "tests/workflow-definition/fixtures/structural-valid.json",
   "tests/workflow-definition/fixtures/structural-invalid.json",
   "tests/workflow-definition/fixtures/semantic-valid.json",
   "tests/workflow-definition/fixtures/semantic-invalid.json",
   "tests/workflow-definition/fixtures/evaluation-cases.json",
   "tests/workflow-definition/fixtures/feature-proposal-states.json",
+  "tests/workflow-definition/fixtures/policy-review-states.json",
+  "tests/workflow-definition/fixtures/feature-change-states.json",
+  "tests/workflow-definition/fixtures/feature-fix-states.json",
   "tests/validation-mode/fixtures/validation-mode-cases.json",
 ];
 
 const requiredArtifacts = [
   "references/workflow-definition-contract.md",
   "references/validation-mode-contract.md",
+  "references/normalized-fact-adapter-contract.md",
   "schemas/workflow-definition.schema.json",
   "registries/registered-executors.json",
   "definitions/feature-proposal.json",
+  "definitions/policy-review.json",
+  "definitions/feature-change.json",
+  "definitions/feature-fix.json",
   "scripts/workflow-definition/parser.mjs",
   "scripts/workflow-definition/expression.mjs",
   "scripts/workflow-definition/validator.mjs",
   "scripts/workflow-definition/evaluator.mjs",
+  "scripts/workflow-definition/normalized-fact-adapter.mjs",
+  "scripts/workflow-definition/policy-review-state-adapter.mjs",
+  "scripts/workflow-definition/feature-change-state-adapter.mjs",
+  "scripts/workflow-definition/feature-fix-state-adapter.mjs",
   "scripts/workflow-definition/cli.mjs",
   "scripts/validation-mode/comparator.mjs",
   "scripts/validation-mode/cli.mjs",
@@ -48,6 +67,10 @@ const requiredArtifacts = [
   "tests/workflow-definition/semantic-validation.test.mjs",
   "tests/workflow-definition/evaluator.test.mjs",
   "tests/workflow-definition/feature-proposal.test.mjs",
+  "tests/workflow-definition/normalized-fact-adapter.test.mjs",
+  "tests/workflow-definition/policy-review.test.mjs",
+  "tests/workflow-definition/feature-change.test.mjs",
+  "tests/workflow-definition/feature-fix.test.mjs",
   "tests/workflow-definition/all-fixtures.test.mjs",
   "tests/workflow-definition/fixtures/structural-valid.json",
   "tests/workflow-definition/fixtures/structural-invalid.json",
@@ -55,9 +78,13 @@ const requiredArtifacts = [
   "tests/workflow-definition/fixtures/semantic-invalid.json",
   "tests/workflow-definition/fixtures/evaluation-cases.json",
   "tests/workflow-definition/fixtures/feature-proposal-states.json",
+  "tests/workflow-definition/fixtures/policy-review-states.json",
+  "tests/workflow-definition/fixtures/feature-change-states.json",
+  "tests/workflow-definition/fixtures/feature-fix-states.json",
   "tests/validation-mode/validation-mode.test.mjs",
   "tests/validation-mode/runtime-wiring.test.mjs",
   "tests/validation-mode/feature-proposal-validation.integration.test.mjs",
+  "tests/validation-mode/issue-workflows-validation.integration.test.mjs",
   "tests/validation-mode/fixtures/validation-mode-cases.json",
 ];
 

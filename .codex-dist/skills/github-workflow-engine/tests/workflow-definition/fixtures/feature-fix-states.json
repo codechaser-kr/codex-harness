@@ -1,0 +1,120 @@
+{
+  "new_request": {
+    "feature_fix_requested": true,
+    "feature_fix_draft_confirmed": false
+  },
+  "confirmed_draft": {
+    "feature_fix_requested": true,
+    "feature_fix_draft_confirmed": true,
+    "feature_fix_issue_created": false
+  },
+  "created_issue": {
+    "feature_fix_requested": true,
+    "feature_fix_draft_confirmed": true,
+    "feature_fix_issue_created": true,
+    "fix_analysis_result_usable": false,
+    "fix_analysis_confirmed": false
+  },
+  "analysis_output_waiting_for_confirmation": {
+    "feature_fix_requested": true,
+    "feature_fix_draft_confirmed": true,
+    "feature_fix_issue_created": true,
+    "fix_analysis_result_usable": true,
+    "fix_analysis_confirmed": false
+  },
+  "confirmed_analysis": {
+    "feature_fix_requested": true,
+    "feature_fix_draft_confirmed": true,
+    "feature_fix_issue_created": true,
+    "fix_analysis_result_usable": true,
+    "fix_analysis_confirmed": true,
+    "fix_plan_proposal_usable": false,
+    "fix_plan_confirmed": false
+  },
+  "plan_output_waiting_for_confirmation": {
+    "feature_fix_requested": true,
+    "feature_fix_draft_confirmed": true,
+    "feature_fix_issue_created": true,
+    "fix_analysis_result_usable": true,
+    "fix_analysis_confirmed": true,
+    "fix_plan_proposal_usable": true,
+    "fix_plan_confirmed": false
+  },
+  "confirmed_plan": {
+    "feature_fix_requested": true,
+    "feature_fix_draft_confirmed": true,
+    "feature_fix_issue_created": true,
+    "fix_analysis_result_usable": true,
+    "fix_analysis_confirmed": true,
+    "fix_plan_proposal_usable": true,
+    "fix_plan_confirmed": true,
+    "feature_fix_plan_reflected": false
+  },
+  "before_implementation_start": {
+    "feature_fix_requested": true,
+    "feature_fix_draft_confirmed": true,
+    "feature_fix_issue_created": true,
+    "fix_analysis_result_usable": true,
+    "fix_analysis_confirmed": true,
+    "fix_plan_proposal_usable": true,
+    "fix_plan_confirmed": true,
+    "feature_fix_plan_reflected": true,
+    "implementation_flow_started": false,
+    "all_planned_work_units_merged": false,
+    "all_completion_items_reflected": false
+  },
+  "implementation_started_waiting_for_merge": {
+    "feature_fix_requested": true,
+    "feature_fix_draft_confirmed": true,
+    "feature_fix_issue_created": true,
+    "fix_analysis_result_usable": true,
+    "fix_analysis_confirmed": true,
+    "fix_plan_proposal_usable": true,
+    "fix_plan_confirmed": true,
+    "feature_fix_plan_reflected": true,
+    "implementation_flow_started": true,
+    "all_planned_work_units_merged": false,
+    "all_completion_items_reflected": false
+  },
+  "work_units_merged_waiting_for_completion_items": {
+    "feature_fix_requested": true,
+    "feature_fix_draft_confirmed": true,
+    "feature_fix_issue_created": true,
+    "fix_analysis_result_usable": true,
+    "fix_analysis_confirmed": true,
+    "fix_plan_proposal_usable": true,
+    "fix_plan_confirmed": true,
+    "feature_fix_plan_reflected": true,
+    "implementation_flow_started": true,
+    "all_planned_work_units_merged": true,
+    "all_completion_items_reflected": false
+  },
+  "implementation_complete_waiting_for_issue_close": {
+    "feature_fix_requested": true,
+    "feature_fix_draft_confirmed": true,
+    "feature_fix_issue_created": true,
+    "fix_analysis_result_usable": true,
+    "fix_analysis_confirmed": true,
+    "fix_plan_proposal_usable": true,
+    "fix_plan_confirmed": true,
+    "feature_fix_plan_reflected": true,
+    "implementation_flow_started": true,
+    "all_planned_work_units_merged": true,
+    "all_completion_items_reflected": true,
+    "feature_fix_issue_closed": false
+  },
+  "terminal": {
+    "feature_fix_requested": true,
+    "feature_fix_draft_confirmed": true,
+    "feature_fix_issue_created": true,
+    "fix_analysis_result_usable": true,
+    "fix_analysis_confirmed": true,
+    "fix_plan_proposal_usable": true,
+    "fix_plan_confirmed": true,
+    "feature_fix_plan_reflected": true,
+    "implementation_flow_started": true,
+    "all_planned_work_units_merged": true,
+    "all_completion_items_reflected": true,
+    "feature_fix_issue_closed": true
+  }
+}

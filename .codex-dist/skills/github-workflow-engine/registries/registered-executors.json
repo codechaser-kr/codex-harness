@@ -24,6 +24,36 @@
     "runtime_reference": "feature-proposal-triage"
   },
   {
+    "executor_id": "policy-plan",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "policy-plan"
+  },
+  {
+    "executor_id": "policy-review-next-triage",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "policy-review-next-triage"
+  },
+  {
+    "executor_id": "feature-plan",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "feature-plan"
+  },
+  {
+    "executor_id": "fix-analysis",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "fix-analysis"
+  },
+  {
+    "executor_id": "fix-plan",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "fix-plan"
+  },
+  {
     "executor_id": "target-harness-code-editor",
     "executor_kind": "skill",
     "side_effect_scope": "repository_file_change",

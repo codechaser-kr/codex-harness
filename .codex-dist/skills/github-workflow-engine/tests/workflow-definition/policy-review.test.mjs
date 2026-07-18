@@ -96,6 +96,11 @@ test("policy-review definition passes C2/C3 validation and uses registered execu
   }
   assert.equal(definition.transitions.find((item) => item.task_action_id === "PR-5").registered_executor_reference, null);
   assert.equal(definition.transitions.find((item) => item.task_action_id === "PR-9").registered_executor_reference, null);
+  const reflectTransitionPredicate = definition.transitions
+    .find((item) => item.task_action_id === "PR-8").completion_predicate;
+  const completeTransition = definition.transitions.find((item) => item.task_action_id === "PR-9");
+  assert.deepEqual(reflectTransitionPredicate, completeTransition.normalized_fact_conditions);
+  assert.deepEqual(reflectTransitionPredicate, completeTransition.completion_predicate);
 
   const validation = validateWorkflowDefinition(definition);
   assert.equal(validation.valid, true, JSON.stringify(validation.errors));

@@ -87,6 +87,65 @@ test("implementation definition preserves FI mapping, executor boundaries, and v
   assert.deepEqual(feedbackDirection.next_transition_rules.map((rule) => rule.transition_id), [
     "apply-feedback-fix", "apply-feedback-fix", "post-feedback-result-comment", "post-feedback-result-comment",
   ]);
+  assert.equal(definition.normalized_fact_schema.some((fact) => /reject.*(reason|rationale)/i.test(fact.fact_id)), false);
+
+  const reviewInspection = definition.transitions.find((transition) => transition.task_action_id === "FI-14");
+  assert.deepEqual(reviewInspection.next_transition_rules, [
+    { condition: { fact_id: "review_mode", operator: "equals", value: "claude_code_review" }, transition_id: "run-claude-code-review" },
+    { condition: { fact_id: "review_mode", operator: "equals", value: "claude_awesome_code_review" }, transition_id: "run-claude-awesome-code-review" },
+    { condition: { fact_id: "review_mode", operator: "equals", value: "codex_awesome_code_review" }, transition_id: "run-codex-awesome-code-review" },
+  ]);
+  for (const [taskActionId, executorId] of [
+    ["FI-15", "claude/code-review"],
+    ["FI-16", "claude/awesome-code-review"],
+    ["FI-17", "codex/awesome-code-review"],
+  ]) {
+    const transition = definition.transitions.find((item) => item.task_action_id === taskActionId);
+    const executor = registry.find((entry) => entry.executor_id === executorId);
+    assert.equal(transition.registered_executor_reference, executorId);
+    assert.deepEqual([executor.executor_kind, executor.side_effect_scope], ["review_mode", "review_output"]);
+    assert.equal(executor.executor_kind === "skill" && executor.side_effect_scope === "proposal_output", false);
+    assert.deepEqual(transition.next_transition_rules, [{ condition: null, transition_id: "normalize-review-results" }]);
+  }
+
+  assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-18").next_transition_rules, [
+    { condition: { fact_id: "review_feedback_importance", operator: "equals", value: "no_publishable_feedback" }, transition_id: "check-review-feedback-targets" },
+    { condition: { fact_id: "review_feedback_importance", operator: "equals", value: "publishable_feedback" }, transition_id: "draft-review-comments" },
+  ]);
+  assert.equal(
+    /marker|fallback|summary/i.test(JSON.stringify({
+      fact_ids: definition.normalized_fact_schema.map((fact) => fact.fact_id),
+      review_states: fixture.review_feedback_cases.map((scenario) => scenario.state),
+    })),
+    false,
+  );
+
+  const feedbackTargetCheck = definition.transitions.find((transition) => transition.task_action_id === "FI-24");
+  assert.deepEqual(feedbackTargetCheck.completion_predicate, {
+    all: [
+      { fact_id: "github_review_threads_observed", operator: "equals", value: true },
+      { fact_id: "review_feedback_inventory", operator: "exists" },
+    ],
+  });
+
+  assert.equal(definition.transitions.find((transition) => transition.task_action_id === "FI-32").registered_executor_reference, null);
+  assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-33").next_transition_rules, [
+    { condition: { fact_id: "remaining_feedback_status", operator: "equals", value: "unhandled_feedback_present" }, transition_id: "determine-feedback-direction" },
+    { condition: { fact_id: "remaining_feedback_status", operator: "equals", value: "unresolved_thread_present" }, transition_id: "determine-feedback-resolution" },
+    { condition: { fact_id: "remaining_feedback_status", operator: "equals", value: "all_resolved" }, transition_id: "determine-pull-request-merge" },
+  ]);
+
+  const mergeDecision = definition.transitions.find((transition) => transition.task_action_id === "FI-34");
+  assert.deepEqual(mergeDecision.user_decision_specification.options.map((option) => option.decision_id), ["merge_confirmed", "merge_deferred"]);
+  assert.deepEqual(mergeDecision.completion_predicate, {
+    fact_id: "pull_request_merge_decision", operator: "equals", value: "merge_confirmed",
+  });
+  assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-35").completion_predicate, {
+    all: [
+      { fact_id: "pull_request_merged", operator: "equals", value: true },
+      { fact_id: "post_merge_reflection_completed", operator: "equals", value: true },
+    ],
+  });
 
   const nextCommit = definition.transitions.find((transition) => transition.task_action_id === "FI-8");
   assert.deepEqual(nextCommit.next_transition_rules, [
@@ -160,6 +219,23 @@ test("implementation branch and repeat states resolve deterministically", async 
   }
 });
 
+test("implementation review and feedback states resolve to one action or completion without mutation", async () => {
+  const [definition, fixture] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
+  for (const scenario of fixture.review_feedback_cases) {
+    const stateBefore = structuredClone(scenario.state);
+    const result = evaluateWorkflowDefinition(definition, scenario.state, {
+      currentTransitionId: scenario.current_transition_id,
+    });
+    assert.equal(result.status, scenario.status, scenario.name);
+    if (scenario.status === "action_required") {
+      assert.equal(result.task_action_id, scenario.task_action_id, scenario.name);
+    } else {
+      assert.equal(result.transition_id, "complete-implementation", scenario.name);
+    }
+    assert.deepEqual(scenario.state, stateBefore, scenario.name);
+  }
+});
+
 test("implementation adapter normalizes exact source contracts in definition order without inference", async () => {
   const [definition, fixture] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
   const observations = observationsFromFixture(fixture);
@@ -177,9 +253,14 @@ test("implementation adapter normalizes exact source contracts in definition ord
     field_reference: "facts.review_mode",
   }]);
   assert.deepEqual(result.evidence_by_fact.review_feedback_inventory, [{
-    source_kind: "github_state",
-    source_reference: "PR #99 review threads",
+    source_kind: "local_state",
+    source_reference: "unresolved threads and processed feedback comparison",
     field_reference: "facts.review_feedback_inventory",
+  }]);
+  assert.deepEqual(result.evidence_by_fact.github_review_threads_observed, [{
+    source_kind: "github_state",
+    source_reference: "PR #99 unresolved review threads",
+    field_reference: "facts.github_review_threads_observed",
   }]);
   assert.deepEqual(result.evidence_by_fact.remaining_feedback_status, [{
     source_kind: "local_state",
@@ -257,6 +338,39 @@ test("implementation adapter fail-closes contract, source, duplicate, conflictin
   const invalidEnum = normalizeImplementationFacts(definition, [{ ...implementationProgress, value: "pending_assessment" }]);
   assertAtomicFailure(invalidEnum, "invalid_fact_candidates");
   assert.equal(hasError(invalidEnum, "candidate.value.not_allowed", "/candidates/0/value"), true);
+
+  for (const [factId, value] of [
+    ["review_mode", "unknown_review_mode"],
+    ["review_comment_posting_direction", "post_as_drafted"],
+    ["review_feedback_direction", "reject_with_generated_reason"],
+    ["feedback_resolution", "partially_resolved"],
+    ["remaining_feedback_status", "marker_comment_present"],
+    ["pull_request_merge_decision", "automatically_merge"],
+  ]) {
+    const observation = observations.find((item) => item.fact_id === factId);
+    const result = normalizeImplementationFacts(definition, [{ ...observation, value }]);
+    assertAtomicFailure(result, "invalid_fact_candidates");
+    assert.equal(hasError(result, "candidate.value.not_allowed", "/candidates/0/value"), true, factId);
+  }
+
+  for (const [factId, sourceKind] of [
+    ["review_mode_checked", "github_state"],
+    ["review_feedback_importance", "github_state"],
+    ["github_review_threads_observed", "local_state"],
+    ["review_feedback_inventory", "github_state"],
+    ["review_feedback_direction", "local_state"],
+    ["feedback_resolution", "github_state"],
+    ["feedback_resolution_reflected", "github_state"],
+    ["remaining_feedback_status", "github_state"],
+    ["pull_request_merge_decision", "github_state"],
+    ["pull_request_merged", "local_state"],
+    ["post_merge_reflection_completed", "github_state"],
+  ]) {
+    const observation = observations.find((item) => item.fact_id === factId);
+    const result = normalizeImplementationFacts(definition, [{ ...observation, source_kind: sourceKind }]);
+    assertAtomicFailure(result, "invalid_observations");
+    assert.equal(hasError(result, "observation.source_kind.mismatch", "/observations/0/source_kind"), true, factId);
+  }
 
   const duplicateConflict = normalizeImplementationFacts(definition, [
     observations[0],

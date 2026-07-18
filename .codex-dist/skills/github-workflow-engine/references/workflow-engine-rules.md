@@ -10,6 +10,28 @@
 - 이슈와 PR 본문 형식은 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`를 기준으로 판정한다.
 - `github-templates.md`는 이슈 title prefix, label, 필수 섹션, 연결 규칙 판정에 사용한다.
 
+## 명시적 검증 모드 규칙
+
+검증 모드는 사용자가 현재 요청에서 `검증 모드`를 명시할 때만 적용한다. 일반 실행, 단순
+`검증` 표현, 운영 비교에는 자동 적용하지 않는다. 아래 규칙은 일반 제안·분석 호출, 사용자
+결정 반영, 자동 실행, 실행 주체 선택, 로그 쓰기보다 우선한다.
+
+| 항목 | 검증 모드 규칙 |
+| --- | --- |
+| 고정 입력 | GitHub/local raw snapshot을 각각 한 번 관찰하고 한 번 정규화해 request를 고정한다. Definition validate/evaluate도 한 번만 수행한다. |
+| registry 분류 | evaluator `action_required`의 `registered_executor_reference`를 `registries/registered-executors.json`에서 한 번만 validate/resolve한다. `registered_executor_reference: null`은 deterministic-only action이다. non-null reference의 registry load/resolve 실패 또는 reference와 다른 `executor_id`, `executor_kind`, `side_effect_scope`, `runtime_reference` 필수 field 누락·불일치는 session/executor 시작 전 `stopped`이며 deterministic-only로 추정하지 않는다. |
+| 결정론적 경로 | evaluation이 `completed` 또는 `stopped`이거나, resolve된 등록 entry가 `executor_kind === "skill" && side_effect_scope === "proposal_output"`이 아닌 경우에는 정상 registered executor를 호출하지 않고 `deterministic_evaluation` terminal result를 반환한다. |
+| session 시작 조건 | resolve된 entry가 `executor_kind === "skill" && side_effect_scope === "proposal_output"`일 때만 고정된 skill/version/model/reasoning/role/input을 확인한 뒤 정확히 10개 session을 시작한다. 식별자나 read-only/no-mutating-tool 조건을 확인할 수 없으면 시작 전 `stopped`다. |
+| 독립 session set | 정확히 10개 fresh independent session만 사용한다. index는 1..10, session ID는 모두 고유해야 하며 reuse/continue, prompt/result/context sharing은 금지한다. batch도 각 호출의 immutable input과 독립성을 보존해야 한다. |
+| probe와 executor | probe는 read-only sandbox에서 skill reference를 side-effect-free로 호출한다. 정상 registered executor execution은 호출하지 않으며 `registered_executor_invoked`는 `false`다. |
+| 완료 대기와 비교 | 10개 모두 complete return할 때까지 wait-all 한다. 결과는 CLI stdin envelope `{ request, session_results }`로 C2 comparator에 전달하고 comparator `pass`만 허용한다. |
+| 중단 | 한 session의 start/return/contract 실패, mismatch, duplicate/missing index 또는 ID, blocked output, executor invocation, side effect는 모두 `stopped`다. majority, retry, representative adoption은 금지한다. |
+| 부작용과 종료 | GitHub/file/comment/branch/commit/PR 변경, 정상 workflow state transition, user decision reflection, 로그 쓰기는 하지 않는다. pass도 normal workflow state transition이 아닌 validation terminal result다. `.harness/logs/github-workflow-log.md`는 읽거나 쓰지 않는다. |
+
+검증 모드의 사용자 반환에는 request_id, snapshot/evaluation source, 10 session IDs, comparator
+result, side-effect evidence를 포함한다. C3는 실제 session 실행과 이 반환을 연결하지만, C2
+comparator는 실행 주체나 dry-run/예측 호출을 수행하지 않는다.
+
 ## 산출물 판정 규칙
 
 - PR 제목의 `PR 제목 판정 통과`와 각 산출물의 `... 사용 가능` 또는 `... 제시 가능` 기준은 모두 충족해야 한다. 하나라도 충족하지 못하면 공통 `산출물 보류`로 판정하고 미충족 기준을 산출한다. PR 제목의 세부 긍정 판정 기준은 최종 판정 근거로 각각 유지한다.

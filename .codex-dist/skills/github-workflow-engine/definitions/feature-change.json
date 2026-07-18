@@ -1,0 +1,123 @@
+{
+  "workflow_id": "feature-change",
+  "version": "1.0.0",
+  "workflow_kind": "feature_change",
+  "target_type": "issue",
+  "entry_transition_id": "draft-feature-change",
+  "terminal_transition_ids": ["complete-feature-change"],
+  "normalized_fact_schema": [
+    { "fact_id": "feature_change_requested", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
+    { "fact_id": "feature_change_draft_confirmed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
+    { "fact_id": "feature_change_issue_created", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
+    { "fact_id": "feature_plan_proposal_usable", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
+    { "fact_id": "feature_plan_confirmed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
+    { "fact_id": "feature_plan_reflected", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
+    { "fact_id": "implementation_flow_started", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
+    { "fact_id": "all_planned_work_units_merged", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
+    { "fact_id": "all_completion_items_reflected", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
+    { "fact_id": "feature_change_issue_closed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true }
+  ],
+  "transitions": [
+    {
+      "transition_id": "draft-feature-change",
+      "normalized_fact_conditions": { "fact_id": "feature_change_requested", "operator": "equals", "value": true },
+      "task_action_id": "FC-1",
+      "user_decision_specification": {
+        "required": true,
+        "options": [
+          { "decision_id": "confirm_draft", "label": "초안 확정" },
+          { "decision_id": "revise_draft", "label": "초안 수정" }
+        ],
+        "allow_free_form": true,
+        "block_execution_until_confirmed": true
+      },
+      "completion_predicate": { "fact_id": "feature_change_draft_confirmed", "operator": "equals", "value": true },
+      "registered_executor_reference": "issue-creation",
+      "next_transition_rules": [{ "condition": null, "transition_id": "create-feature-change-issue" }]
+    },
+    {
+      "transition_id": "create-feature-change-issue",
+      "normalized_fact_conditions": { "fact_id": "feature_change_draft_confirmed", "operator": "equals", "value": true },
+      "task_action_id": "FC-2",
+      "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+      "completion_predicate": { "fact_id": "feature_change_issue_created", "operator": "equals", "value": true },
+      "registered_executor_reference": "github-simple-executor",
+      "next_transition_rules": [{ "condition": null, "transition_id": "plan-feature-change" }]
+    },
+    {
+      "transition_id": "plan-feature-change",
+      "normalized_fact_conditions": { "fact_id": "feature_change_issue_created", "operator": "equals", "value": true },
+      "task_action_id": "FC-3",
+      "user_decision_specification": {
+        "required": true,
+        "options": [
+          { "decision_id": "confirm_feature_plan", "label": "변경 계획 확정" },
+          { "decision_id": "revise_feature_plan", "label": "변경 계획 수정" }
+        ],
+        "allow_free_form": true,
+        "block_execution_until_confirmed": true
+      },
+      "completion_predicate": {
+        "all": [
+          { "fact_id": "feature_plan_proposal_usable", "operator": "equals", "value": true },
+          { "fact_id": "feature_plan_confirmed", "operator": "equals", "value": true }
+        ]
+      },
+      "registered_executor_reference": "feature-plan",
+      "next_transition_rules": [{ "condition": null, "transition_id": "reflect-feature-plan" }]
+    },
+    {
+      "transition_id": "reflect-feature-plan",
+      "normalized_fact_conditions": {
+        "all": [
+          { "fact_id": "feature_plan_proposal_usable", "operator": "equals", "value": true },
+          { "fact_id": "feature_plan_confirmed", "operator": "equals", "value": true }
+        ]
+      },
+      "task_action_id": "FC-4",
+      "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+      "completion_predicate": { "fact_id": "feature_plan_reflected", "operator": "equals", "value": true },
+      "registered_executor_reference": "github-simple-executor",
+      "next_transition_rules": [{ "condition": null, "transition_id": "handoff-common-implementation-flow" }]
+    },
+    {
+      "transition_id": "handoff-common-implementation-flow",
+      "normalized_fact_conditions": { "fact_id": "feature_plan_reflected", "operator": "equals", "value": true },
+      "task_action_id": "FC-5",
+      "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+      "completion_predicate": {
+        "all": [
+          { "fact_id": "implementation_flow_started", "operator": "equals", "value": true },
+          { "fact_id": "all_planned_work_units_merged", "operator": "equals", "value": true },
+          { "fact_id": "all_completion_items_reflected", "operator": "equals", "value": true }
+        ]
+      },
+      "registered_executor_reference": null,
+      "next_transition_rules": [{ "condition": null, "transition_id": "close-feature-change-issue" }]
+    },
+    {
+      "transition_id": "close-feature-change-issue",
+      "normalized_fact_conditions": {
+        "all": [
+          { "fact_id": "implementation_flow_started", "operator": "equals", "value": true },
+          { "fact_id": "all_planned_work_units_merged", "operator": "equals", "value": true },
+          { "fact_id": "all_completion_items_reflected", "operator": "equals", "value": true }
+        ]
+      },
+      "task_action_id": "FC-6",
+      "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+      "completion_predicate": { "fact_id": "feature_change_issue_closed", "operator": "equals", "value": true },
+      "registered_executor_reference": "github-simple-executor",
+      "next_transition_rules": [{ "condition": null, "transition_id": "complete-feature-change" }]
+    },
+    {
+      "transition_id": "complete-feature-change",
+      "normalized_fact_conditions": { "fact_id": "feature_change_issue_closed", "operator": "equals", "value": true },
+      "task_action_id": "FC-7",
+      "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
+      "completion_predicate": { "fact_id": "feature_change_issue_closed", "operator": "equals", "value": true },
+      "registered_executor_reference": null,
+      "next_transition_rules": []
+    }
+  ]
+}

@@ -54,6 +54,42 @@
     "runtime_reference": "fix-plan"
   },
   {
+    "executor_id": "branch-proposal",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "branch-proposal"
+  },
+  {
+    "executor_id": "commit-plan",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "commit-plan"
+  },
+  {
+    "executor_id": "commit",
+    "executor_kind": "skill",
+    "side_effect_scope": "repository_file_change",
+    "runtime_reference": "commit"
+  },
+  {
+    "executor_id": "pr-proposal",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "pr-proposal"
+  },
+  {
+    "executor_id": "pr-creation",
+    "executor_kind": "skill",
+    "side_effect_scope": "github_state_change",
+    "runtime_reference": "pr-creation"
+  },
+  {
+    "executor_id": "review-comment",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "review-comment"
+  },
+  {
     "executor_id": "target-harness-code-editor",
     "executor_kind": "skill",
     "side_effect_scope": "repository_file_change",

@@ -1,0 +1,128 @@
+{
+  "new_request": {
+    "policy_review_requested": true,
+    "policy_review_draft_confirmed": false
+  },
+  "confirmed_draft": {
+    "policy_review_requested": true,
+    "policy_review_draft_confirmed": true,
+    "policy_review_issue_created": false
+  },
+  "created_issue": {
+    "policy_review_requested": true,
+    "policy_review_draft_confirmed": true,
+    "policy_review_issue_created": true,
+    "policy_design_proposal_usable": false,
+    "policy_design_confirmed": false
+  },
+  "confirmed_policy_design": {
+    "policy_review_requested": true,
+    "policy_review_draft_confirmed": true,
+    "policy_review_issue_created": true,
+    "policy_design_proposal_usable": true,
+    "policy_design_confirmed": true,
+    "policy_design_reflected": false
+  },
+  "reflected_policy_design_before_implementation": {
+    "policy_review_requested": true,
+    "policy_review_draft_confirmed": true,
+    "policy_review_issue_created": true,
+    "policy_design_proposal_usable": true,
+    "policy_design_confirmed": true,
+    "policy_design_reflected": true,
+    "design_document_implementation_started": false,
+    "design_document_pr_merged": false
+  },
+  "implementation_started_waiting_for_merge": {
+    "policy_review_requested": true,
+    "policy_review_draft_confirmed": true,
+    "policy_review_issue_created": true,
+    "policy_design_proposal_usable": true,
+    "policy_design_confirmed": true,
+    "policy_design_reflected": true,
+    "design_document_implementation_started": true,
+    "design_document_pr_merged": false
+  },
+  "design_document_merged": {
+    "policy_review_requested": true,
+    "policy_review_draft_confirmed": true,
+    "policy_review_issue_created": true,
+    "policy_design_proposal_usable": true,
+    "policy_design_confirmed": true,
+    "policy_design_reflected": true,
+    "design_document_implementation_started": true,
+    "design_document_pr_merged": true,
+    "design_document_result_reflected": false
+  },
+  "design_document_result_reflected": {
+    "policy_review_requested": true,
+    "policy_review_draft_confirmed": true,
+    "policy_review_issue_created": true,
+    "policy_design_proposal_usable": true,
+    "policy_design_confirmed": true,
+    "policy_design_reflected": true,
+    "design_document_implementation_started": true,
+    "design_document_pr_merged": true,
+    "design_document_result_reflected": true,
+    "feature_change_transition_candidates_usable": false
+  },
+  "transition_candidates_waiting_for_direction": {
+    "policy_review_requested": true,
+    "policy_review_draft_confirmed": true,
+    "policy_review_issue_created": true,
+    "policy_design_proposal_usable": true,
+    "policy_design_confirmed": true,
+    "policy_design_reflected": true,
+    "design_document_implementation_started": true,
+    "design_document_pr_merged": true,
+    "design_document_result_reflected": true,
+    "feature_change_transition_candidates_usable": true
+  },
+  "existing_direction_not_reflected": {
+    "policy_review_requested": true,
+    "policy_review_draft_confirmed": true,
+    "policy_review_issue_created": true,
+    "policy_design_proposal_usable": true,
+    "policy_design_confirmed": true,
+    "policy_design_reflected": true,
+    "design_document_implementation_started": true,
+    "design_document_pr_merged": true,
+    "design_document_result_reflected": true,
+    "feature_change_transition_candidates_usable": true,
+    "feature_change_transition_direction": "existing_feature_issue",
+    "feature_change_transition_reflected": false,
+    "policy_review_issue_closed": false
+  },
+  "completed_existing_issue": {
+    "policy_review_requested": true,
+    "policy_review_draft_confirmed": true,
+    "policy_review_issue_created": true,
+    "policy_design_proposal_usable": true,
+    "policy_design_confirmed": true,
+    "policy_design_reflected": true,
+    "design_document_implementation_started": true,
+    "design_document_pr_merged": true,
+    "design_document_result_reflected": true,
+    "feature_change_transition_candidates_usable": true,
+    "feature_change_transition_direction": "existing_feature_issue",
+    "feature_change_transition_reflected": true,
+    "policy_review_issue_closed": true,
+    "feature_change_transition_result": "existing_issue_updated"
+  },
+  "completed_new_issue": {
+    "policy_review_requested": true,
+    "policy_review_draft_confirmed": true,
+    "policy_review_issue_created": true,
+    "policy_design_proposal_usable": true,
+    "policy_design_confirmed": true,
+    "policy_design_reflected": true,
+    "design_document_implementation_started": true,
+    "design_document_pr_merged": true,
+    "design_document_result_reflected": true,
+    "feature_change_transition_candidates_usable": true,
+    "feature_change_transition_direction": "new_feature_issue",
+    "feature_change_transition_reflected": true,
+    "policy_review_issue_closed": true,
+    "feature_change_transition_result": "new_issue_flow_started"
+  }
+}

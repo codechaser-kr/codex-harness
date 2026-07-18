@@ -9,6 +9,10 @@ import test from "node:test";
 import "./structural-validation.test.mjs";
 import "./semantic-validation.test.mjs";
 import "./evaluator.test.mjs";
+import "./feature-proposal.test.mjs";
+import "../validation-mode/validation-mode.test.mjs";
+import "../validation-mode/runtime-wiring.test.mjs";
+import "../validation-mode/feature-proposal-validation.integration.test.mjs";
 
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -17,31 +21,44 @@ const installScript = join(repositoryRoot, "install.sh");
 const jsonArtifacts = [
   "schemas/workflow-definition.schema.json",
   "registries/registered-executors.json",
+  "definitions/feature-proposal.json",
   "tests/workflow-definition/fixtures/structural-valid.json",
   "tests/workflow-definition/fixtures/structural-invalid.json",
   "tests/workflow-definition/fixtures/semantic-valid.json",
   "tests/workflow-definition/fixtures/semantic-invalid.json",
   "tests/workflow-definition/fixtures/evaluation-cases.json",
+  "tests/workflow-definition/fixtures/feature-proposal-states.json",
+  "tests/validation-mode/fixtures/validation-mode-cases.json",
 ];
 
 const requiredArtifacts = [
   "references/workflow-definition-contract.md",
+  "references/validation-mode-contract.md",
   "schemas/workflow-definition.schema.json",
   "registries/registered-executors.json",
+  "definitions/feature-proposal.json",
   "scripts/workflow-definition/parser.mjs",
   "scripts/workflow-definition/expression.mjs",
   "scripts/workflow-definition/validator.mjs",
   "scripts/workflow-definition/evaluator.mjs",
   "scripts/workflow-definition/cli.mjs",
+  "scripts/validation-mode/comparator.mjs",
+  "scripts/validation-mode/cli.mjs",
   "tests/workflow-definition/structural-validation.test.mjs",
   "tests/workflow-definition/semantic-validation.test.mjs",
   "tests/workflow-definition/evaluator.test.mjs",
+  "tests/workflow-definition/feature-proposal.test.mjs",
   "tests/workflow-definition/all-fixtures.test.mjs",
   "tests/workflow-definition/fixtures/structural-valid.json",
   "tests/workflow-definition/fixtures/structural-invalid.json",
   "tests/workflow-definition/fixtures/semantic-valid.json",
   "tests/workflow-definition/fixtures/semantic-invalid.json",
   "tests/workflow-definition/fixtures/evaluation-cases.json",
+  "tests/workflow-definition/fixtures/feature-proposal-states.json",
+  "tests/validation-mode/validation-mode.test.mjs",
+  "tests/validation-mode/runtime-wiring.test.mjs",
+  "tests/validation-mode/feature-proposal-validation.integration.test.mjs",
+  "tests/validation-mode/fixtures/validation-mode-cases.json",
 ];
 
 async function parseJsonArtifacts(root) {
@@ -98,6 +115,34 @@ function assertJsonCliResult(result, expectedExitCode) {
   return JSON.parse(result.stdout);
 }
 
+function assertMatchingCliResults(sourceResult, installedResult, expectedExitCode) {
+  const sourceJson = assertJsonCliResult(sourceResult, expectedExitCode);
+  const installedJson = assertJsonCliResult(installedResult, expectedExitCode);
+  assert.deepEqual(
+    {
+      status: installedResult.status,
+      stdout: installedResult.stdout,
+      stderr: installedResult.stderr,
+    },
+    {
+      status: sourceResult.status,
+      stdout: sourceResult.stdout,
+      stderr: sourceResult.stderr,
+    },
+  );
+  assert.deepEqual(installedJson, sourceJson);
+}
+
+function makeValidationSessionResults(fixture) {
+  return Array.from({ length: 10 }, (_, offset) => ({
+    request_id: fixture.request.request_id,
+    session_index: offset + 1,
+    session_id: `install-validation-session-${String(offset + 1).padStart(2, "0")}`,
+    observed_invocation_specification: structuredClone(fixture.request.invocation_specification),
+    ...structuredClone(fixture.session_result_template),
+  }));
+}
+
 function isNestedSpawnDenied(result) {
   return result.error?.code === "EPERM";
 }
@@ -108,6 +153,15 @@ test("workflow definition foundation inventory and JSON artifacts are complete",
     assert.equal(files.includes(relativePath), true, `Missing required artifact: ${relativePath}`);
   }
   await parseJsonArtifacts(sourceSkillDirectory);
+});
+
+test("install.sh has valid shell syntax", (t) => {
+  const result = runProcess("sh", ["-n", installScript]);
+  if (isNestedSpawnDenied(result)) {
+    t.skip("The current execution sandbox does not permit nested child processes.");
+    return;
+  }
+  assertProcessSucceeded(result, "sh -n install.sh");
 });
 
 test("installer preserves the github-workflow-engine distribution", async (t) => {
@@ -135,7 +189,10 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
   await assertTreesMatch(sourceSkillDirectory, installedSkillDirectory);
   await parseJsonArtifacts(installedSkillDirectory);
 
-  const evaluationCases = JSON.parse(await readFile(join(sourceSkillDirectory, "tests/workflow-definition/fixtures/evaluation-cases.json"), "utf8"));
+  const [evaluationCases, validationFixture] = await Promise.all([
+    readFile(join(sourceSkillDirectory, "tests/workflow-definition/fixtures/evaluation-cases.json"), "utf8").then(JSON.parse),
+    readFile(join(sourceSkillDirectory, "tests/validation-mode/fixtures/validation-mode-cases.json"), "utf8").then(JSON.parse),
+  ]);
   const definitionPath = join(temporaryRoot, "definition.json");
   const statePath = join(temporaryRoot, "state.json");
   const cycleDefinitionPath = join(temporaryRoot, "cycle-definition.json");
@@ -159,20 +216,31 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
       return;
     }
     const installedResult = runProcess(process.execPath, [installedCli, ...command.argumentsList]);
-    const sourceJson = assertJsonCliResult(sourceResult, command.exitCode);
-    const installedJson = assertJsonCliResult(installedResult, command.exitCode);
-    assert.deepEqual(
-      {
-        status: installedResult.status,
-        stdout: installedResult.stdout,
-        stderr: installedResult.stderr,
-      },
-      {
-        status: sourceResult.status,
-        stdout: sourceResult.stdout,
-        stderr: sourceResult.stderr,
-      },
-    );
-    assert.deepEqual(installedJson, sourceJson);
+    assertMatchingCliResults(sourceResult, installedResult, command.exitCode);
+  }
+
+  const sourceValidationCli = join(sourceSkillDirectory, "scripts/validation-mode/cli.mjs");
+  const installedValidationCli = join(installedSkillDirectory, "scripts/validation-mode/cli.mjs");
+  const validationResults = makeValidationSessionResults(validationFixture);
+  const validationCommands = [
+    { input: JSON.stringify({ request: validationFixture.request, session_results: validationResults }), exitCode: 0 },
+    {
+      input: JSON.stringify({
+        request: validationFixture.request,
+        session_results: validationResults.map((result, index) => index === 9
+          ? { ...result, semantic_decisions: { ...result.semantic_decisions, direction: "feature_change" } }
+          : result),
+      }),
+      exitCode: 1,
+    },
+  ];
+  for (const command of validationCommands) {
+    const sourceResult = runProcess(process.execPath, [sourceValidationCli], { input: command.input });
+    if (isNestedSpawnDenied(sourceResult)) {
+      t.skip("The current execution sandbox does not permit nested Node child processes.");
+      return;
+    }
+    const installedResult = runProcess(process.execPath, [installedValidationCli], { input: command.input });
+    assertMatchingCliResults(sourceResult, installedResult, command.exitCode);
   }
 });

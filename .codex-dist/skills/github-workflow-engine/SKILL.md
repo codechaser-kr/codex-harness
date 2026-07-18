@@ -11,6 +11,7 @@ description: GitHub Issue, PR, label, checklist, review thread, comment를 기�
 
 - `references/workflow-engine-rules.md` 전체를 항상 읽는다.
 - 현재 작업 판정이나 실행에 이슈 유형 label, 제목, 본문, 템플릿, 연관 이슈 계약이 필요하면 `references/github-templates.md`를 읽는다.
+- 사용자가 **현재 요청에서 검증 모드**를 명시적으로 요청했으면 일반 실행 전에 `references/validation-mode-contract.md` 전체를 읽는다.
 
 필요한 경우 대상 저장소의 `.harness/logs/github-workflow-log.md`를 읽는다. 로그는 `workflow-engine-rules.md`에서 보조 근거로 인정한 항목만 사용한다. `docs/github-workflow-engine.md`는 런타임 판정 원천으로 읽지 않는다.
 
@@ -26,6 +27,51 @@ description: GitHub Issue, PR, label, checklist, review thread, comment를 기�
 8. 작업 진입, 구조화 실행 요청과 결과, 중단, 재개를 `.harness/logs/github-workflow-log.md`에 기록한다.
 
 PR merge는 사람이 수행한다. Workflow Engine은 merge 알림이나 GitHub 실행 상태를 근거로 merge 이후 작업만 수행한다. 최종 판단, 사용자 결정 해석, 커밋 생성 여부 판단, PR 생성 여부 판단은 실행 주체에 위임하지 않는다. 리뷰 내용 생성은 사용자가 확정한 리뷰 실행 모드에 대해 `리뷰 실행 주체 선택`으로 확정된 실행 주체만 담당하며, 결정론적 실행기, 저비용 실행 서브에이전트, 타겟 하네스 코드 수정 서브에이전트에는 맡기지 않는다. Workflow Engine은 리뷰 결과 정규화와 게시할 리뷰 피드백 존재 또는 없음 판정을 담당한다.
+
+## 명시적 검증 모드
+
+검증 모드는 사용자가 **현재 요청에서 검증 모드**를 명시했을 때만 활성화한다. 일반 실행,
+단순한 `검증` 표현, 운영 비교, 과거 요청의 검증 모드 언급만으로는 활성화하지 않는다. 이
+분기는 제안·분석 스킬의 일반 호출, 사용자 결정 반영, 자동 실행 절차, 실행 주체 선택, 로그
+기록보다 우선한다.
+
+1. GitHub/local raw state를 읽기 전용으로 정확히 한 번 관찰해 `state_snapshot`을 고정하고,
+   그 관찰을 `normalized_fact_state`로 정확히 한 번 정규화한다. 같은 고정 입력으로 Workflow
+   Definition validate/evaluate를 정확히 한 번 수행해 validation request를 만든다.
+2. evaluator가 `action_required`를 반환하면 `registered_executor_reference`를
+   `registries/registered-executors.json`에서 한 번만 validate/resolve한다. `registered_executor_reference: null`이면
+   deterministic-only action으로 처리한다. non-null reference의 registry load/resolve 실패 또는
+   reference와 다른 `executor_id`, `executor_kind`, `side_effect_scope`, `runtime_reference` 필수 field 누락·불일치는
+   session/executor 시작 전 `stopped`로 반환하며 deterministic-only로 추정하지 않는다.
+3. resolve된 entry가 `executor_kind === "skill" && side_effect_scope === "proposal_output"`일 때만
+   request의 skill reference, skill version, model, reasoning, role, input을 고정하고 10-session
+   validation probe 대상이 된다. 그 밖의 등록 entry는 정상 registered executor를 호출하지 않고
+   `validation_mode_status: deterministic_evaluation`과 evaluation result를 반환하고 종료한다. evaluator가
+   `completed` 또는 `stopped`를 반환한 경우도 같은 deterministic evaluation terminal result로 종료한다.
+4. probe session 시작 전에 고정 식별자와 read-only/no-mutating-tool sandbox를 확인하고,
+   런타임이 강제할 수 있는 유한한 deadline을 확인한다. 하나라도 확인하거나 강제할 수 없으면
+   10개 session 시작 전 `stopped`로 반환한다. 모델이나 deadline 값을 hardcode하거나 세션별 설정을
+   바꾸지 않는다.
+5. 같은 immutable invocation specification으로 정확히 10개의 fresh independent session을 시작하고,
+   정확히 같은 유한 deadline 조건을 10개 fresh independent session 모두에 적용한다. 기존 session
+   reuse/continue, prompt/result/context sharing은 금지한다. 동시성 제한으로 batch를 사용해도 매 호출은
+   fresh immutable input만 받고 다른 session의 결과를 받지 않는다.
+6. 각 session은 read-only sandbox와 state-changing tools 없는 조건에서 skill reference를
+   side-effect-free validation probe로 호출한다. 이 probe 호출은 정상 Workflow Definition의
+   registered executor execution이 아니며, session result의 `registered_executor_invoked`는
+   반드시 `false`다. GitHub, file, comment, branch, commit, PR을 변경하지 않는다.
+7. 10개 모두 complete return할 때까지 wait-all 하되 wait-all도 이 deadline으로 유한하게 제한한다.
+   deadline을 초과한 session과 중단 시 아직 실행 중인 session은 런타임에서 종료하거나 close하고
+   session return 실패로 기록해 시작된 session을 방치하지 않는다. timeout/return 실패나 start,
+   session contract, unique session ID/index, side-effect evidence 실패가 하나라도 있으면
+   부분 `session_results`를 comparator에 전달하지 않고 retry, majority, representative adoption 없이 전체 검증을 `stopped`로 종료한다.
+8. 완료한 result는 임시 파일 없이 stdin JSON envelope `{ "request", "session_results" }`로
+   `scripts/validation-mode/cli.mjs`에 전달한다. comparator가 `pass`일 때도 normal structured
+   execution, user decision reflection, GitHub/file/comment/branch/commit/PR 변경을 하지 않고
+   validation terminal result를 반환하고 종료한다.
+9. 검증 모드에서는 `.harness/logs/github-workflow-log.md`도 파일이므로 읽거나 쓰지 않는다.
+   사용자 반환에는 request_id, snapshot/evaluation source, 10 session IDs, comparator result,
+   side-effect evidence를 포함한다.
 
 ## 자동 실행 절차
 

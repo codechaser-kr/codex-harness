@@ -21,6 +21,12 @@ Schema가 정의하는 계약 객체는 모두 닫힌 객체다. 선언되지 �
 `transition_id`와 모든 참조 ID는 `task_action_id`와 별개의 일반 안정 ID다. 이 ID들에
 `task_action_id` 형식을 적용하지 않는다.
 
+## 설치 Definition
+
+설치된 workflow definition은 `../definitions/*.json`에 둔다. 각 definition은 이 계약과
+schema를 따르는 독립 JSON 문서이며, 등록 executor reference를 사용하기 전에 validator로
+구조 및 semantic validation을 통과해야 한다.
+
 ## Fact 선언
 
 `normalized_fact_schema`의 각 fact는 `fact_id`, `value_type`, `allowed_values`,

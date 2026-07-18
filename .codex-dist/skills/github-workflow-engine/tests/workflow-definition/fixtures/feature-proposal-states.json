@@ -1,0 +1,73 @@
+{
+  "new_request": {
+    "feature_proposal_requested": true,
+    "feature_proposal_draft_confirmed": false
+  },
+  "confirmed_draft": {
+    "feature_proposal_requested": true,
+    "feature_proposal_draft_confirmed": true,
+    "feature_proposal_issue_created": false
+  },
+  "created_issue": {
+    "feature_proposal_requested": true,
+    "feature_proposal_draft_confirmed": true,
+    "feature_proposal_issue_created": true
+  },
+  "direction_confirmed_not_reflected": {
+    "feature_proposal_requested": true,
+    "feature_proposal_draft_confirmed": true,
+    "feature_proposal_issue_created": true,
+    "feature_proposal_direction": "policy_review",
+    "feature_proposal_direction_reflected": false
+  },
+  "policy_review_direction": {
+    "feature_proposal_requested": true,
+    "feature_proposal_draft_confirmed": true,
+    "feature_proposal_issue_created": true,
+    "feature_proposal_direction": "policy_review",
+    "feature_proposal_direction_reflected": true,
+    "feature_proposal_issue_closed": false
+  },
+  "feature_change_direction": {
+    "feature_proposal_requested": true,
+    "feature_proposal_draft_confirmed": true,
+    "feature_proposal_issue_created": true,
+    "feature_proposal_direction": "feature_change",
+    "feature_proposal_direction_reflected": true,
+    "feature_proposal_issue_closed": false
+  },
+  "do_not_proceed_direction": {
+    "feature_proposal_requested": true,
+    "feature_proposal_draft_confirmed": true,
+    "feature_proposal_issue_created": true,
+    "feature_proposal_direction": "do_not_proceed",
+    "feature_proposal_direction_reflected": true,
+    "feature_proposal_issue_closed": false
+  },
+  "completed_do_not_proceed": {
+    "feature_proposal_requested": true,
+    "feature_proposal_draft_confirmed": true,
+    "feature_proposal_issue_created": true,
+    "feature_proposal_direction": "do_not_proceed",
+    "feature_proposal_direction_reflected": true,
+    "feature_proposal_issue_closed": true
+  },
+  "completed_policy_review": {
+    "feature_proposal_requested": true,
+    "feature_proposal_draft_confirmed": true,
+    "feature_proposal_issue_created": true,
+    "feature_proposal_direction": "policy_review",
+    "feature_proposal_direction_reflected": true,
+    "feature_proposal_issue_closed": true,
+    "next_workflow": "policy_review"
+  },
+  "completed_feature_change": {
+    "feature_proposal_requested": true,
+    "feature_proposal_draft_confirmed": true,
+    "feature_proposal_issue_created": true,
+    "feature_proposal_direction": "feature_change",
+    "feature_proposal_direction_reflected": true,
+    "feature_proposal_issue_closed": true,
+    "next_workflow": "feature_change"
+  }
+}

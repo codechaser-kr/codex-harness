@@ -1,0 +1,71 @@
+{
+  "request": {
+    "request_id": "validation-request-001",
+    "workflow_id": "feature-proposal",
+    "version": "1.0.0",
+    "task_action_id": "FP-3",
+    "state_snapshot": {
+      "github_state": {
+        "issue": { "number": 95, "state": "open" }
+      },
+      "local_state": {
+        "branch": "feat/issue-95-feature-proposal-validation-mode"
+      }
+    },
+    "normalized_fact_state": {
+      "feature_proposal_requested": true,
+      "feature_proposal_draft_confirmed": true,
+      "feature_proposal_issue_created": true
+    },
+    "evaluation_result": {
+      "status": "action_required",
+      "transition_id": "determine-proposal-direction",
+      "task_action_id": "FP-3",
+      "user_decision_specification": {
+        "required": true,
+        "options": [
+          { "decision_id": "do_not_proceed", "label": "진행하지 않음" },
+          { "decision_id": "policy_review", "label": "정책 검토 필요" },
+          { "decision_id": "feature_change", "label": "기능 변경 필요" }
+        ],
+        "allow_free_form": true,
+        "block_execution_until_confirmed": true
+      },
+      "registered_executor_reference": "feature-proposal-triage",
+      "completion_predicate": { "fact_id": "feature_proposal_direction", "operator": "exists" }
+    },
+    "expected_session_count": 10,
+    "invocation_specification": {
+      "skill_reference": "feature-proposal-triage",
+      "skill_version": "1.0.0",
+      "model_identifier": "test-model",
+      "reasoning_configuration": { "effort": "high" },
+      "role_configuration": { "role": "feature_proposal_reviewer" },
+      "input": {
+        "proposal_id": "proposal-001",
+        "evidence": ["issue-body", "request-state"]
+      }
+    }
+  },
+  "session_result_template": {
+    "output_status": "usable",
+    "normalized_structured_contract_fields": {
+      "recommendation": { "direction": "policy_review" },
+      "rationale_codes": ["cross-cutting-policy-impact", "requires-policy-review"]
+    },
+    "semantic_decisions": {
+      "direction": "policy_review",
+      "confidence": "high",
+      "next_steps": ["create-policy-review"]
+    },
+    "registered_executor_invoked": false,
+    "side_effects": {
+      "github_state_changes": [],
+      "github_comments": [],
+      "repository_files": [],
+      "branches": [],
+      "commits": [],
+      "pull_requests": []
+    }
+  }
+}

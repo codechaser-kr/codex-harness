@@ -163,7 +163,6 @@ function assertEmptySideEffects(results) {
 test("issue workflow proposal-output actions use ten isolated reproducible probes", async () => {
   const registry = await readJson(registryUrl);
   const registryBefore = structuredClone(registry);
-  let normalExecutorInvocationCount = 0;
 
   for (const workflowCase of workflowCases) {
     const { definition, states } = await readInputs(workflowCase.workflowId);
@@ -232,7 +231,6 @@ test("issue workflow proposal-output actions use ten isolated reproducible probe
     assert.deepEqual(states, statesBefore, workflowCase.workflowId);
   }
 
-  assert.equal(normalExecutorInvocationCount, 0);
   assert.deepEqual(registry, registryBefore);
 });
 
@@ -269,7 +267,6 @@ test("one changed semantic result stops each issue workflow without adopting a m
 test("issue workflow state-change, internal handoff, and terminal paths stay deterministic-only", async () => {
   const registry = await readJson(registryUrl);
   let probeCount = 0;
-  let normalExecutorInvocationCount = 0;
 
   for (const workflowCase of workflowCases) {
     const { definition, states } = await readInputs(workflowCase.workflowId);
@@ -303,5 +300,4 @@ test("issue workflow state-change, internal handoff, and terminal paths stay det
   }
 
   assert.equal(probeCount, 0);
-  assert.equal(normalExecutorInvocationCount, 0);
 });

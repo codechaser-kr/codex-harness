@@ -8,8 +8,10 @@ const OBSERVATION_FIELDS = ["fact_id", "value", "source_kind", "source_reference
 const SOURCE_CONTRACTS = new Map([
   ["implementation_requested", { sourceKind: "user_input" }],
   ["branch_proposal_usable", { sourceKind: "skill_output", sourceReference: "branch-proposal" }],
+  ["branch_proposal_confirmed", { sourceKind: "user_input" }],
   ["implementation_branch_switched", { sourceKind: "local_state" }],
   ["implementation_plan_usable", { sourceKind: "skill_output", sourceReference: "commit-plan" }],
+  ["implementation_plan_confirmed", { sourceKind: "user_input" }],
   ["implementation_plan_reflected", { sourceKind: "github_state" }],
   ["implementation_work_unit_state", { sourceKind: "local_state" }],
   ["implementation_commit_message_proposal_usable", { sourceKind: "skill_output", sourceReference: "commit" }],
@@ -18,6 +20,7 @@ const SOURCE_CONTRACTS = new Map([
   ["implementation_progress", { sourceKind: "local_state" }],
   ["implementation_branch_pushed", { sourceKind: "local_state" }],
   ["pull_request_draft_usable", { sourceKind: "skill_output", sourceReference: "pr-proposal" }],
+  ["pull_request_draft_confirmed", { sourceKind: "user_input" }],
   ["pull_request_creation_requested", { sourceKind: "user_input" }],
   ["pull_request_created", { sourceKind: "github_state" }],
   ["review_mode", { sourceKind: "user_input" }],

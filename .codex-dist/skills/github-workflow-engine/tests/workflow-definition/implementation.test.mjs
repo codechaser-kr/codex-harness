@@ -94,9 +94,57 @@ test("implementation definition preserves FI mapping, executor boundaries, and v
     { condition: { fact_id: "implementation_progress", operator: "equals", value: "all_work_units_completed" }, transition_id: "push-implementation-branch" },
   ]);
 
+  for (const [taskActionId, proposalFactId, confirmationFactId] of [
+    ["FI-1", "branch_proposal_usable", "branch_proposal_confirmed"],
+    ["FI-3", "implementation_plan_usable", "implementation_plan_confirmed"],
+    ["FI-10", "pull_request_draft_usable", "pull_request_draft_confirmed"],
+  ]) {
+    assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === taskActionId).completion_predicate, {
+      all: [
+        { fact_id: proposalFactId, operator: "equals", value: true },
+        { fact_id: confirmationFactId, operator: "equals", value: true },
+      ],
+    });
+  }
+  assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-11").completion_predicate, {
+    fact_id: "pull_request_creation_requested", operator: "equals", value: true,
+  });
+  assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-12").completion_predicate, {
+    fact_id: "pull_request_created", operator: "equals", value: true,
+  });
+
   const validation = validateWorkflowDefinition(definition);
   assert.equal(validation.valid, true, JSON.stringify(validation.errors));
   assert.deepEqual(validation.errors, []);
+});
+
+test("implementation pre-PR states resolve from entry to exactly one expected action without mutation", async () => {
+  const [definition, fixture] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
+  const cumulativeState = {};
+
+  for (const scenario of fixture.pre_pr_cases) {
+    Object.assign(cumulativeState, structuredClone(scenario.updates));
+    const state = structuredClone(cumulativeState);
+    const stateBefore = structuredClone(state);
+    const result = evaluateWorkflowDefinition(definition, state);
+    assert.equal(result.status, "action_required", scenario.name);
+    assert.equal(result.task_action_id, scenario.task_action_id, scenario.name);
+    assert.deepEqual(state, stateBefore, scenario.name);
+  }
+});
+
+test("implementation pre-PR condition mismatch stops without mutating state", async () => {
+  const definition = await readJson(definitionUrl);
+  const state = { branch_proposal_usable: true, branch_proposal_confirmed: false };
+  const stateBefore = structuredClone(state);
+  const result = evaluateWorkflowDefinition(definition, state, { currentTransitionId: "switch-branch" });
+
+  assert.deepEqual(result, {
+    status: "stopped",
+    reason: "current_transition_condition_not_met",
+    transition_id: "switch-branch",
+  });
+  assert.deepEqual(state, stateBefore);
 });
 
 test("implementation branch and repeat states resolve deterministically", async () => {
@@ -138,6 +186,23 @@ test("implementation adapter normalizes exact source contracts in definition ord
     source_reference: "processed feedback comparison",
     field_reference: "facts.remaining_feedback_status",
   }]);
+  for (const [factId, sourceReference] of [
+    ["branch_proposal_confirmed", "branch proposal decision"],
+    ["implementation_plan_confirmed", "implementation plan decision"],
+    ["pull_request_draft_confirmed", "PR draft decision"],
+    ["pull_request_creation_requested", "PR creation decision"],
+  ]) {
+    assert.deepEqual(result.evidence_by_fact[factId], [{
+      source_kind: "user_input",
+      source_reference: sourceReference,
+      field_reference: `facts.${factId}`,
+    }]);
+  }
+  assert.deepEqual(result.evidence_by_fact.pull_request_created, [{
+    source_kind: "github_state",
+    source_reference: "PR #99",
+    field_reference: "facts.pull_request_created",
+  }]);
   assert.deepEqual(normalizeImplementationFacts(definition, observations), result);
   assert.deepEqual(definition, definitionBefore);
   assert.deepEqual(observations, observationsBefore);
@@ -171,6 +236,27 @@ test("implementation adapter fail-closes contract, source, duplicate, conflictin
   const wrongSource = normalizeImplementationFacts(definition, [{ ...reviewMode, source_kind: "github_state" }]);
   assertAtomicFailure(wrongSource, "invalid_observations");
   assert.equal(hasError(wrongSource, "observation.source_kind.mismatch", "/observations/0/source_kind"), true);
+
+  for (const [factId, sourceKind] of [
+    ["branch_proposal_confirmed", "skill_output"],
+    ["implementation_plan_confirmed", "github_state"],
+    ["pull_request_draft_confirmed", "skill_output"],
+  ]) {
+    const confirmation = observations.find((observation) => observation.fact_id === factId);
+    const invalidConfirmation = normalizeImplementationFacts(definition, [{ ...confirmation, source_kind: sourceKind }]);
+    assertAtomicFailure(invalidConfirmation, "invalid_observations");
+    assert.equal(hasError(invalidConfirmation, "observation.source_kind.mismatch", "/observations/0/source_kind"), true, factId);
+  }
+
+  const branchProposal = observations.find((observation) => observation.fact_id === "branch_proposal_usable");
+  const wrongReference = normalizeImplementationFacts(definition, [{ ...branchProposal, source_reference: "commit-plan" }]);
+  assertAtomicFailure(wrongReference, "invalid_observations");
+  assert.equal(hasError(wrongReference, "observation.source_reference.mismatch", "/observations/0/source_reference"), true);
+
+  const implementationProgress = observations.find((observation) => observation.fact_id === "implementation_progress");
+  const invalidEnum = normalizeImplementationFacts(definition, [{ ...implementationProgress, value: "pending_assessment" }]);
+  assertAtomicFailure(invalidEnum, "invalid_fact_candidates");
+  assert.equal(hasError(invalidEnum, "candidate.value.not_allowed", "/candidates/0/value"), true);
 
   const duplicateConflict = normalizeImplementationFacts(definition, [
     observations[0],

@@ -48,18 +48,23 @@ PR merge는 사람이 수행한다. Workflow Engine은 merge 알림이나 GitHub
    validation probe 대상이 된다. 그 밖의 등록 entry는 정상 registered executor를 호출하지 않고
    `validation_mode_status: deterministic_evaluation`과 evaluation result를 반환하고 종료한다. evaluator가
    `completed` 또는 `stopped`를 반환한 경우도 같은 deterministic evaluation terminal result로 종료한다.
-4. probe 대상에서 런타임이 고정 식별자 또는 read-only/no-mutating-tool sandbox를 확인하거나 강제할 수
-   없으면 session 시작 전 `stopped`로 반환한다. 모델을 hardcode하거나 세션별 설정을 바꾸지 않는다.
-5. 같은 immutable invocation specification으로 정확히 10개의 fresh independent session을
-   시작한다. 기존 session reuse/continue, prompt/result/context sharing은 금지한다. 동시성 제한으로
-   batch를 사용해도 매 호출은 fresh immutable input만 받고 다른 session의 결과를 받지 않는다.
+4. probe session 시작 전에 고정 식별자와 read-only/no-mutating-tool sandbox를 확인하고,
+   런타임이 강제할 수 있는 유한한 deadline을 확인한다. 하나라도 확인하거나 강제할 수 없으면
+   10개 session 시작 전 `stopped`로 반환한다. 모델이나 deadline 값을 hardcode하거나 세션별 설정을
+   바꾸지 않는다.
+5. 같은 immutable invocation specification으로 정확히 10개의 fresh independent session을 시작하고,
+   정확히 같은 유한 deadline 조건을 10개 fresh independent session 모두에 적용한다. 기존 session
+   reuse/continue, prompt/result/context sharing은 금지한다. 동시성 제한으로 batch를 사용해도 매 호출은
+   fresh immutable input만 받고 다른 session의 결과를 받지 않는다.
 6. 각 session은 read-only sandbox와 state-changing tools 없는 조건에서 skill reference를
    side-effect-free validation probe로 호출한다. 이 probe 호출은 정상 Workflow Definition의
    registered executor execution이 아니며, session result의 `registered_executor_invoked`는
    반드시 `false`다. GitHub, file, comment, branch, commit, PR을 변경하지 않는다.
-7. 10개 모두 complete return할 때까지 wait-all 한다. start, return, session contract, unique
-   session ID/index, side-effect evidence 중 하나라도 실패하면 retry, majority, representative
-   adoption 없이 `stopped`로 종료한다.
+7. 10개 모두 complete return할 때까지 wait-all 하되 wait-all도 이 deadline으로 유한하게 제한한다.
+   deadline을 초과한 session과 중단 시 아직 실행 중인 session은 런타임에서 종료하거나 close하고
+   session return 실패로 기록해 시작된 session을 방치하지 않는다. timeout/return 실패나 start,
+   session contract, unique session ID/index, side-effect evidence 실패가 하나라도 있으면
+   부분 `session_results`를 comparator에 전달하지 않고 retry, majority, representative adoption 없이 전체 검증을 `stopped`로 종료한다.
 8. 완료한 result는 임시 파일 없이 stdin JSON envelope `{ "request", "session_results" }`로
    `scripts/validation-mode/cli.mjs`에 전달한다. comparator가 `pass`일 때도 normal structured
    execution, user decision reflection, GitHub/file/comment/branch/commit/PR 변경을 하지 않고

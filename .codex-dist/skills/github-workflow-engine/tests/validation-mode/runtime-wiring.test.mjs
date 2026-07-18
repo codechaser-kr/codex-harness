@@ -131,7 +131,7 @@ test("runtime instructions keep validation mode explicit, isolated, and side-eff
     "read-only sandbox",
     "wait-all",
     "comparator `pass`만 허용",
-    "majority, retry, representative adoption은 금지",
+    "retry, majority, representative adoption 없이",
     "normal workflow state transition이 아닌 validation terminal result",
   ]) {
     assert.equal(rules.includes(phrase), true, phrase);
@@ -146,6 +146,22 @@ test("runtime instructions keep validation mode explicit, isolated, and side-eff
   ]) {
     assert.equal(skill.includes(phrase), true, `SKILL.md: ${phrase}`);
     assert.equal(rules.includes(phrase), true, `workflow-engine-rules.md: ${phrase}`);
+  }
+  for (const phrase of [
+    "probe session 시작 전에",
+    "런타임이 강제할 수 있는 유한한 deadline",
+    "10개 session 시작 전 `stopped`",
+    "정확히 같은 유한 deadline 조건을 10개 fresh independent session 모두에 적용",
+    "wait-all도 이 deadline으로 유한하게 제한",
+    "deadline을 초과한 session",
+    "런타임에서 종료하거나 close",
+    "session return 실패로 기록",
+    "시작된 session을 방치하지 않는다",
+    "부분 `session_results`를 comparator에 전달하지 않고",
+    "retry, majority, representative adoption 없이 전체 검증을 `stopped`로 종료",
+  ]) {
+    assert.equal(skill.includes(phrase), true, `SKILL.md deadline contract: ${phrase}`);
+    assert.equal(rules.includes(phrase), true, `workflow-engine-rules.md deadline contract: ${phrase}`);
   }
   for (const field of ["state_snapshot", "normalized_fact_state", "registered_executor_invoked", "github_state_changes", "pull_requests"]) {
     assert.equal(contract.includes(`\`${field}\``), true, field);

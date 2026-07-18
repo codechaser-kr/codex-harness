@@ -28,6 +28,32 @@ description: GitHub Issue, PR, label, checklist, review thread, comment를 기�
 
 PR merge는 사람이 수행한다. Workflow Engine은 merge 알림이나 GitHub 실행 상태를 근거로 merge 이후 작업만 수행한다. 최종 판단, 사용자 결정 해석, 커밋 생성 여부 판단, PR 생성 여부 판단은 실행 주체에 위임하지 않는다. 리뷰 내용 생성은 사용자가 확정한 리뷰 실행 모드에 대해 `리뷰 실행 주체 선택`으로 확정된 실행 주체만 담당하며, 결정론적 실행기, 저비용 실행 서브에이전트, 타겟 하네스 코드 수정 서브에이전트에는 맡기지 않는다. Workflow Engine은 리뷰 결과 정규화와 게시할 리뷰 피드백 존재 또는 없음 판정을 담당한다.
 
+## 일반 실행 Workflow Definition
+
+일반 실행에서 현재 작업이 공통 구현 흐름이면 `definitions/implementation.json`과
+`scripts/workflow-definition/implementation-state-adapter.mjs`를 선택한다. GitHub·로컬·사용자·스킬
+관측을 adapter의 evidence/source contract에 따라 `normalizeImplementationFacts`로 정확히 한 번
+정규화하고, 같은 결과에 `validateWorkflowDefinition`과 `evaluateWorkflowDefinition`을 각각 정확히 한 번 적용하는 단일 경로만 사용한다.
+
+최초 진입이 명확히 관측된 경우에만 `definition.entry_transition_id`를 `evaluateWorkflowDefinition`의
+`currentTransitionId`로 전달한다. 재개와 다음 반복에서는 이전 evaluation이 반환한 단일
+`transition_id`를 current transition id로 확정·기록하고, 해당 작업 완료 뒤 그 ID를
+`currentTransitionId`로 다시 전달해 Definition의 `next_transition_rules`가 다음 분기·반복을 결정하게
+한다. 다음 evaluation 결과의 단일 `transition_id`가 기록을 갱신한다.
+
+재개할 current transition id가 없거나 Definition에 존재하지 않거나 현재 normalized fact 조건과
+불일치하면 entry를 추정하거나 자연어 전이로 fallback하지 않고 구조화 중단한다. current transition
+id는 LLM이 임의로 추론하지 않으며 `task_action_id`와 혼용하지 않는다.
+
+evaluator의 `action_required`는 Definition이 반환한 단일 현재 작업의 `task_action_id`,
+`user_decision_specification`, `registered_executor_reference`, `completion_predicate`를 기존 상태 판정,
+사용자 결정, 구조화 실행 절차에 연결한다. `completed`는 완료로, adapter·Definition validation 또는
+evaluation의 `stopped`와 오류는 구조화 중단으로 연결한다. 실패를 자연어 구현 전이로 fallback하지
+않고, 일반 실행에서 자연어 전이표와 Definition을 이중 실행하거나 결과를 비교하지 않는다.
+
+명시적 검증 모드는 아래 별도 계약으로만 실행한다. 이 공통 구현 연결은 기능제안·정책검토·기능변경·
+기능결함의 기존 Workflow Definition 선택 경로를 변경하지 않는다.
+
 ## 명시적 검증 모드
 
 검증 모드는 사용자가 **현재 요청에서 검증 모드**를 명시했을 때만 활성화한다. 일반 실행,

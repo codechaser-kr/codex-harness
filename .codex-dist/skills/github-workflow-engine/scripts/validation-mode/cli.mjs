@@ -82,7 +82,7 @@ async function main() {
   process.exitCode = result.status === "pass" ? 0 : 1;
 }
 
-if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch(() => {
     process.stdout.write(`${JSON.stringify(stopped(null, "invalid_envelope", 0, "validation_mode.internal", "", "Validation CLI failed."))}\n`);
     process.exitCode = 1;

@@ -49,6 +49,16 @@ test("implementation definition preserves FI mapping, executor boundaries, and v
   assert.equal(JSON.stringify(definition).includes('"priority"'), false);
   assert.equal(definition.normalized_fact_schema.every((fact) => fact.evidence_required === true), true);
   assert.deepEqual(Object.keys(fixture.observation_sources), definition.normalized_fact_schema.map((fact) => fact.fact_id));
+  assert.deepEqual(
+    definition.normalized_fact_schema.find((fact) => fact.fact_id === "implementation_work_unit_phase")?.allowed_values,
+    ["work_pending", "file_changes_verified", "commit_message_confirmed", "commit_created", "all_work_units_completed"],
+  );
+  assert.equal(definition.normalized_fact_schema.some((fact) => fact.fact_id === "implementation_work_unit_state"), false);
+  for (const taskActionId of ["FI-5", "FI-6", "FI-7", "FI-8"]) {
+    const transition = definition.transitions.find((item) => item.task_action_id === taskActionId);
+    assert.equal(JSON.stringify(transition.normalized_fact_conditions).includes("implementation_work_unit_phase"), true, taskActionId);
+    assert.equal(JSON.stringify(transition.completion_predicate).includes("implementation_work_unit_phase"), true, taskActionId);
+  }
 
   for (const [taskActionId, executorReference] of Object.entries(fixture.executor_references)) {
     assert.equal(definition.transitions.find((transition) => transition.task_action_id === taskActionId)?.registered_executor_reference, executorReference);
@@ -149,9 +159,13 @@ test("implementation definition preserves FI mapping, executor boundaries, and v
 
   const nextCommit = definition.transitions.find((transition) => transition.task_action_id === "FI-8");
   assert.deepEqual(nextCommit.next_transition_rules, [
-    { condition: { fact_id: "implementation_progress", operator: "equals", value: "next_commit_unit" }, transition_id: "implement-work-unit" },
-    { condition: { fact_id: "implementation_progress", operator: "equals", value: "all_work_units_completed" }, transition_id: "push-implementation-branch" },
+    { condition: { fact_id: "implementation_work_unit_phase", operator: "in", value: ["work_pending", "file_changes_verified", "commit_message_confirmed", "commit_created"] }, transition_id: "implement-work-unit" },
+    { condition: { fact_id: "implementation_work_unit_phase", operator: "equals", value: "all_work_units_completed" }, transition_id: "push-implementation-branch" },
   ]);
+  assert.equal(definition.normalized_fact_schema.some((fact) => fact.fact_id === "implementation_progress"), false);
+  assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-9").normalized_fact_conditions, {
+    fact_id: "implementation_work_unit_phase", operator: "equals", value: "all_work_units_completed",
+  });
 
   for (const [taskActionId, proposalFactId, confirmationFactId] of [
     ["FI-1", "branch_proposal_usable", "branch_proposal_confirmed"],
@@ -227,7 +241,7 @@ test("FI-11 revise and create decisions resolve to exactly one next action witho
   }
 });
 
-test("implementation branch and repeat states resolve deterministically", async () => {
+test("implementation work-unit phase isolates stale prior-unit facts without mutating evaluator input", async () => {
   const [definition, fixture] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
   for (const scenario of fixture.branch_cases) {
     const stateBefore = structuredClone(scenario.state);
@@ -355,8 +369,8 @@ test("implementation adapter fail-closes contract, source, duplicate, conflictin
   assertAtomicFailure(wrongReference, "invalid_observations");
   assert.equal(hasError(wrongReference, "observation.source_reference.mismatch", "/observations/0/source_reference"), true);
 
-  const implementationProgress = observations.find((observation) => observation.fact_id === "implementation_progress");
-  const invalidEnum = normalizeImplementationFacts(definition, [{ ...implementationProgress, value: "pending_assessment" }]);
+  const implementationPhase = observations.find((observation) => observation.fact_id === "implementation_work_unit_phase");
+  const invalidEnum = normalizeImplementationFacts(definition, [{ ...implementationPhase, value: "pending_assessment" }]);
   assertAtomicFailure(invalidEnum, "invalid_fact_candidates");
   assert.equal(hasError(invalidEnum, "candidate.value.not_allowed", "/candidates/0/value"), true);
 

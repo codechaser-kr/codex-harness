@@ -106,7 +106,7 @@
   {
     "executor_id": "commit",
     "executor_kind": "skill",
-    "side_effect_scope": "repository_file_change",
+    "side_effect_scope": "proposal_output",
     "runtime_reference": "commit",
     "execution_class": "llm_session",
     "validation_strategy": "semantic_consensus"

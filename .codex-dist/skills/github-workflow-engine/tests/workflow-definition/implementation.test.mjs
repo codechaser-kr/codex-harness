@@ -71,8 +71,11 @@ test("implementation definition preserves FI mapping, executor boundaries, and v
   }
   assert.equal(definition.transitions.find((transition) => transition.task_action_id === "FI-6").user_decision_specification.required, true);
   assert.equal(definition.transitions.find((transition) => transition.task_action_id === "FI-27").user_decision_specification.required, true);
-  assert.equal(definition.transitions.find((transition) => transition.task_action_id === "FI-7").registered_executor_reference, null);
-  assert.equal(definition.transitions.find((transition) => transition.task_action_id === "FI-28").registered_executor_reference, null);
+  const commitExecutor = registry.find((entry) => entry.executor_id === "commit");
+  assert.deepEqual([commitExecutor.executor_kind, commitExecutor.side_effect_scope], ["skill", "proposal_output"]);
+  for (const [taskActionId, executorReference] of [["FI-6", "commit"], ["FI-27", "commit"], ["FI-7", null], ["FI-28", null]]) {
+    assert.equal(definition.transitions.find((transition) => transition.task_action_id === taskActionId)?.registered_executor_reference, executorReference);
+  }
   for (const transition of definition.transitions.filter((item) => item.user_decision_specification.required)) {
     assert.equal(transition.user_decision_specification.allow_free_form, true, transition.task_action_id);
   }

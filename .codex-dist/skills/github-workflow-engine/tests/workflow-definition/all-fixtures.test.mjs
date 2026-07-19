@@ -24,6 +24,7 @@ import "../validation-mode/implementation-flow-validation.integration.test.mjs";
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const installScript = join(repositoryRoot, "install.sh");
+const sourceTargetEditor = join(repositoryRoot, ".codex-dist/skills/target-harness-code-editor/SKILL.md");
 
 const jsonArtifacts = [
   "schemas/workflow-definition.schema.json",
@@ -62,6 +63,7 @@ const requiredArtifacts = [
   "scripts/workflow-definition/validator.mjs",
   "scripts/workflow-definition/evaluator.mjs",
   "scripts/workflow-definition/normalized-fact-adapter.mjs",
+  "scripts/workflow-definition/workflow-state-adapter.mjs",
   "scripts/workflow-definition/policy-review-state-adapter.mjs",
   "scripts/workflow-definition/feature-change-state-adapter.mjs",
   "scripts/workflow-definition/feature-fix-state-adapter.mjs",
@@ -169,13 +171,16 @@ function assertMatchingCliResults(sourceResult, installedResult, expectedExitCod
   assert.deepEqual(installedJson, sourceJson);
 }
 
-function makeValidationSessionResults(fixture) {
+function makeValidationSessionReceipts(fixture) {
   return Array.from({ length: 10 }, (_, offset) => ({
-    request_id: fixture.request.request_id,
+    request_id: fixture.semantic_request.request_id,
     session_index: offset + 1,
     session_id: `install-validation-session-${String(offset + 1).padStart(2, "0")}`,
-    observed_invocation_specification: structuredClone(fixture.request.invocation_specification),
-    ...structuredClone(fixture.session_result_template),
+    observed_state_snapshot: structuredClone(fixture.semantic_request.state_snapshot),
+    observed_invocation_specification: structuredClone(fixture.semantic_request.invocation_specification),
+    status: "usable",
+    outcome: structuredClone(fixture.semantic_outcome),
+    external_side_effects: [],
   }));
 }
 
@@ -224,6 +229,10 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
   const installedSkillDirectory = join(destinationRoot, "github-workflow-engine");
   await assertTreesMatch(sourceSkillDirectory, installedSkillDirectory);
   await parseJsonArtifacts(installedSkillDirectory);
+  assert.deepEqual(
+    await readFile(join(destinationRoot, "target-harness-code-editor/SKILL.md")),
+    await readFile(sourceTargetEditor),
+  );
 
   const [evaluationCases, validationFixture] = await Promise.all([
     readFile(join(sourceSkillDirectory, "tests/workflow-definition/fixtures/evaluation-cases.json"), "utf8").then(JSON.parse),
@@ -257,15 +266,15 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
 
   const sourceValidationCli = join(sourceSkillDirectory, "scripts/validation-mode/cli.mjs");
   const installedValidationCli = join(installedSkillDirectory, "scripts/validation-mode/cli.mjs");
-  const validationResults = makeValidationSessionResults(validationFixture);
+  const validationReceipts = makeValidationSessionReceipts(validationFixture);
   const validationCommands = [
-    { input: JSON.stringify({ request: validationFixture.request, session_results: validationResults }), exitCode: 0 },
+    { input: JSON.stringify({ request: validationFixture.semantic_request, receipts: validationReceipts }), exitCode: 0 },
     {
       input: JSON.stringify({
-        request: validationFixture.request,
-        session_results: validationResults.map((result, index) => index === 9
-          ? { ...result, semantic_decisions: { ...result.semantic_decisions, direction: "feature_change" } }
-          : result),
+        request: validationFixture.semantic_request,
+        receipts: validationReceipts.map((receipt, index) => index === 9
+          ? { ...receipt, outcome: { ...receipt.outcome, recommendation: { direction: "feature_change" } } }
+          : receipt),
       }),
       exitCode: 1,
     },

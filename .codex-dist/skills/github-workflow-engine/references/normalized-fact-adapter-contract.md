@@ -7,6 +7,16 @@ fact candidate를 workflow definition의 `normalized_fact_schema`에 맞춰 정�
 함수는 외부 IO, LLM, GitHub API, 파일 읽기나 변경을 호출하지 않는 순수 함수다. 입력 객체를
 변경하지 않으며 동일 입력에는 `JSON.stringify` 기준으로 같은 결과를 반환한다.
 
+정책검토, 기능변경, 기능결함, 공통 구현의 workflow-specific adapter는 public
+`normalize*Facts(definition, observations)` wrapper와 기존 오류/result shape를 유지하고,
+공통 observation/source-contract 검증은 내부 `workflow-state-adapter.mjs`의
+`normalizeWorkflowObservations`를 사용한다. wrapper별 source contract map만 workflow 고유 값이다.
+
+검증 모드에서 observation 또는 fact derivation의 재현성을 확인할 때는 같은 raw snapshot의
+10-session `semantic_consensus` 결과를 diagnostic observation으로만 비교한다. 전원 일치한 fact
+outcome도 이 adapter나 Workflow Definition evaluator에 전달하지 않으며 transition을 선택·진행하지
+않는다. ordinary workflow에서는 기존처럼 관측을 이 deterministic adapter에 정확히 한 번 전달한다.
+
 ## 입력
 
 `definition`에서 adapter가 사용하는 필드는 다음과 같다.

@@ -163,8 +163,23 @@ state, 평가 중단 오류는 exit 1이고 usage 오류는 exit 2다.
 
 ## Executor Registry
 
-`../registries/registered-executors.json`은 배열이며 각 항목은 `executor_id`,
-`executor_kind`, `side_effect_scope`, `runtime_reference`만 가진다. `runtime_reference`는
-기존 skill 또는 review mode 식별자일 뿐 실행 명령 문자열이 아니다. C2/C3 검증기는
-definition이 참조하는 ID가 이 레지스트리에 정확히 존재하고 현재 런타임에서 식별 가능한
-실행 주체인지 확인한다.
+`../registries/registered-executors.json`은 배열이며 각 항목은 ordinary 실행 주체 식별 필드
+`executor_id`, `executor_kind`, `side_effect_scope`, `runtime_reference`와 validation 전용 분류 필드
+`execution_class`, `validation_strategy`를 가진다. `runtime_reference`는 기존 skill, review mode 또는
+설치된 deterministic script 식별자이며 임의 실행 명령 문자열이 아니다.
+
+기본 registry와 `validateWorkflowDefinition(..., { registry })`의 custom registry는 같은 strict
+contract를 사용한다. registry는 비어 있지 않은 배열이어야 하고 각 entry는 위 여섯 필드만 정확히
+가진 plain object여야 한다. 모든 필드 값은 비어 있지 않은 문자열이고 `executor_id`는 고유해야 한다.
+`executor_kind`, `side_effect_scope`, `execution_class`, `validation_strategy`는 등록 enum에 속해야 하며,
+`llm_session`은 `semantic_consensus` 또는 `isolated_patch_consensus`만,
+`deterministic_tool`은 `run_once`만 사용할 수 있다. 추가·누락 필드, 중복 ID, `Set`, string array,
+non-plain entry, 잘못된 enum 또는 execution class/strategy 조합은 결정적인 `registry.load_failed`로
+거부한다.
+
+C2/C3 validator는 ordinary 실행에서도 registry 전체 구조와 definition의 executor reference 존재를
+항상 검증한다. 이 구조 검증은 classification metadata를 ordinary transition 선택에 사용하는 것과
+다르다. 유효한 `execution_class`와 `validation_strategy` 값은 ordinary Definition evaluation이나
+transition 선택의 입력이 아니며 validation mode를 활성화하지 않는다. 현재 사용자 요청에서
+validation mode가 명시적으로 활성화된 뒤에만 runtime이 이미 검증된 두 값을 읽어 diagnostic 비교
+전략을 선택한다.

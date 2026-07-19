@@ -1,52 +1,57 @@
-const EXPECTED_SESSION_COUNT = 10;
+import { createHash } from "node:crypto";
 
-const REQUEST_FIELDS = [
+const EXPECTED_SESSION_COUNT = 10;
+const PENDING_TOOL_ISSUED = "pending_tool_issued";
+const ISOLATED_SESSION_RELATION = "ten_independent_isolated_execution_sessions";
+const CONSENSUS_STRATEGIES = new Set(["semantic_consensus", "isolated_patch_consensus"]);
+const SEMANTIC_REQUEST_FIELDS = [
   "request_id",
-  "workflow_id",
-  "version",
-  "task_action_id",
+  "consensus_strategy",
   "state_snapshot",
-  "normalized_fact_state",
-  "evaluation_result",
-  "expected_session_count",
   "invocation_specification",
 ];
-const STATE_SNAPSHOT_FIELDS = ["github_state", "local_state"];
-const EVALUATION_RESULT_FIELDS = [
-  "status",
-  "transition_id",
-  "task_action_id",
-  "user_decision_specification",
-  "registered_executor_reference",
-  "completion_predicate",
+const ISOLATED_REQUEST_FIELDS = [
+  ...SEMANTIC_REQUEST_FIELDS,
+  "baseline",
+  "planned_session_relation",
+  "planned_session_slots",
 ];
+const PLANNED_SESSION_SLOT_FIELDS = [
+  "session_index",
+  "planned_execution_session_id",
+  "planned_workspace_id",
+];
+const STATE_SNAPSHOT_FIELDS = ["github_state", "local_state"];
 const INVOCATION_FIELDS = [
+  "route",
   "skill_reference",
   "skill_version",
   "model_identifier",
   "reasoning_configuration",
   "role_configuration",
+  "config_reference",
+  "deadline_configuration",
   "input",
 ];
-const SESSION_RESULT_FIELDS = [
+const SEMANTIC_RECEIPT_FIELDS = [
   "request_id",
   "session_index",
   "session_id",
+  "observed_state_snapshot",
   "observed_invocation_specification",
-  "output_status",
-  "normalized_structured_contract_fields",
-  "semantic_decisions",
-  "registered_executor_invoked",
-  "side_effects",
+  "status",
+  "outcome",
+  "external_side_effects",
 ];
-const SIDE_EFFECT_FIELDS = [
-  "github_state_changes",
-  "github_comments",
-  "repository_files",
-  "branches",
-  "commits",
-  "pull_requests",
+const ISOLATED_RECEIPT_FIELDS = [
+  ...SEMANTIC_RECEIPT_FIELDS,
+  "workspace_id",
+  "observed_baseline",
 ];
+const PATCH_OUTCOME_FIELDS = ["manifest", "canonical_patch", "patch_digest"];
+const DEADLINE_CONFIGURATION_FIELDS = ["timeout_ms"];
+const MANIFEST_ENTRY_FIELDS = ["path", "operation"];
+const PATCH_OPERATIONS = new Set(["add", "modify", "delete"]);
 
 function pointer(path, segment) {
   return `${path}/${String(segment).replaceAll("~", "~0").replaceAll("/", "~1")}`;
@@ -132,7 +137,7 @@ function validateJsonCompatible(value, path, errors, ancestors = new WeakSet()) 
   ancestors.delete(value);
 }
 
-function validateJsonPlainObject(value, path, errors, code) {
+function validatePlainJson(value, path, errors, code) {
   if (!isPlainObject(value)) {
     addError(errors, code, path, "Expected a plain object.");
     return;
@@ -140,11 +145,22 @@ function validateJsonPlainObject(value, path, errors, code) {
   validateJsonCompatible(value, path, errors);
 }
 
+function validateStateSnapshot(value, path, errors) {
+  if (!validateClosedObject(value, path, STATE_SNAPSHOT_FIELDS, errors, "state_snapshot")) {
+    return;
+  }
+  for (const field of STATE_SNAPSHOT_FIELDS) {
+    if (Object.hasOwn(value, field)) {
+      validatePlainJson(value[field], pointer(path, field), errors, `state_snapshot.${field}.type`);
+    }
+  }
+}
+
 function validateInvocationSpecification(value, path, errors) {
   if (!validateClosedObject(value, path, INVOCATION_FIELDS, errors, "invocation_specification")) {
     return;
   }
-  for (const field of ["skill_reference", "skill_version", "model_identifier"]) {
+  for (const field of ["route", "skill_reference", "skill_version", "model_identifier", "config_reference"]) {
     if (Object.hasOwn(value, field) && !isNonEmptyString(value[field])) {
       addError(errors, "invocation_specification.string.invalid", pointer(path, field), "Expected a non-empty string.");
     }
@@ -154,121 +170,322 @@ function validateInvocationSpecification(value, path, errors) {
       validateJsonCompatible(value[field], pointer(path, field), errors);
     }
   }
-}
-
-function validateStateSnapshot(value, path, errors) {
-  if (!validateClosedObject(value, path, STATE_SNAPSHOT_FIELDS, errors, "state_snapshot")) {
-    return;
-  }
-  for (const field of STATE_SNAPSHOT_FIELDS) {
-    if (Object.hasOwn(value, field)) {
-      validateJsonPlainObject(value[field], pointer(path, field), errors, `state_snapshot.${field}.type`);
+  if (Object.hasOwn(value, "deadline_configuration")) {
+    const deadlinePath = pointer(path, "deadline_configuration");
+    const deadline = value.deadline_configuration;
+    if (validateClosedObject(deadline, deadlinePath, DEADLINE_CONFIGURATION_FIELDS, errors, "deadline_configuration")
+      && Object.hasOwn(deadline, "timeout_ms")
+      && (!Number.isFinite(deadline.timeout_ms) || !Number.isInteger(deadline.timeout_ms) || deadline.timeout_ms <= 0)) {
+      addError(errors, "deadline_configuration.timeout_ms.invalid", pointer(deadlinePath, "timeout_ms"), "timeout_ms must be a positive finite integer.");
     }
   }
 }
 
-function validateEvaluationResult(value, path, request, errors) {
-  if (!validateClosedObject(value, path, EVALUATION_RESULT_FIELDS, errors, "evaluation_result")) {
+function validatePlannedIdentifier(value, path, errors, code) {
+  if (!isNonEmptyString(value)) {
+    addError(errors, code, path, "Expected a non-empty known identifier or pending_tool_issued.");
+    return false;
+  }
+  return true;
+}
+
+function validatePlannedSessionSlots(value, path, errors) {
+  if (!Array.isArray(value)) {
+    addError(errors, "planned_session_slots.type", path, "planned_session_slots must be an array.");
     return;
   }
-  if (Object.hasOwn(value, "status") && value.status !== "action_required") {
-    addError(errors, "evaluation_result.status.invalid", pointer(path, "status"), "evaluation_result status must be action_required.");
+  if (value.length !== EXPECTED_SESSION_COUNT) {
+    addError(errors, "planned_session_slots.count.invalid", path, "Exactly 10 planned session slots are required.");
   }
-  if (Object.hasOwn(value, "transition_id") && !isNonEmptyString(value.transition_id)) {
-    addError(errors, "evaluation_result.transition_id.invalid", pointer(path, "transition_id"), "Expected a non-empty string.");
-  }
-  if (Object.hasOwn(value, "task_action_id")) {
-    if (!isNonEmptyString(value.task_action_id)) {
-      addError(errors, "evaluation_result.task_action_id.invalid", pointer(path, "task_action_id"), "Expected a non-empty string.");
-    } else if (value.task_action_id !== request.task_action_id) {
-      addError(errors, "evaluation_result.task_action_id.mismatch", pointer(path, "task_action_id"), "evaluation_result task_action_id must match the request.");
+
+  const indices = new Set();
+  const knownSessionIds = new Set();
+  const knownWorkspaceIds = new Set();
+  for (let index = 0; index < value.length; index += 1) {
+    const slotPath = pointer(path, index);
+    const slot = value[index];
+    if (!validateClosedObject(slot, slotPath, PLANNED_SESSION_SLOT_FIELDS, errors, "planned_session_slot")) {
+      continue;
+    }
+    if (Object.hasOwn(slot, "session_index")) {
+      if (!Number.isInteger(slot.session_index) || slot.session_index < 1 || slot.session_index > EXPECTED_SESSION_COUNT) {
+        addError(errors, "planned_session_slot.session_index.invalid", pointer(slotPath, "session_index"), "session_index must be an integer from 1 to 10.");
+      } else {
+        if (indices.has(slot.session_index)) {
+          addError(errors, "planned_session_slot.session_index.duplicate", pointer(slotPath, "session_index"), `Duplicate planned session_index: ${slot.session_index}.`);
+        }
+        if (slot.session_index !== index + 1) {
+          addError(errors, "planned_session_slots.order.invalid", pointer(slotPath, "session_index"), "planned_session_slots must be ordered by session_index 1 through 10.");
+        }
+        indices.add(slot.session_index);
+      }
+    }
+
+    for (const [field, knownIds] of [
+      ["planned_execution_session_id", knownSessionIds],
+      ["planned_workspace_id", knownWorkspaceIds],
+    ]) {
+      if (!Object.hasOwn(slot, field)
+        || !validatePlannedIdentifier(slot[field], pointer(slotPath, field), errors, `planned_session_slot.${field}.invalid`)
+        || slot[field] === PENDING_TOOL_ISSUED) {
+        continue;
+      }
+      if (knownIds.has(slot[field])) {
+        addError(errors, `planned_session_slot.${field}.duplicate`, pointer(slotPath, field), `Duplicate known ${field}: ${slot[field]}.`);
+      }
+      knownIds.add(slot[field]);
     }
   }
-  if (Object.hasOwn(value, "registered_executor_reference")) {
-    if (!isNonEmptyString(value.registered_executor_reference)) {
-      addError(errors, "evaluation_result.registered_executor_reference.invalid", pointer(path, "registered_executor_reference"), "Expected a non-empty string.");
-    } else if (value.registered_executor_reference !== request.invocation_specification?.skill_reference) {
-      addError(errors, "evaluation_result.registered_executor_reference.mismatch", pointer(path, "registered_executor_reference"), "evaluation_result registered_executor_reference must match invocation skill_reference.");
-    }
-  }
-  for (const field of ["user_decision_specification", "completion_predicate"]) {
-    if (Object.hasOwn(value, field)) {
-      validateJsonPlainObject(value[field], pointer(path, field), errors, `evaluation_result.${field}.type`);
+  for (let index = 1; index <= EXPECTED_SESSION_COUNT; index += 1) {
+    if (!indices.has(index)) {
+      addError(errors, "planned_session_slot.session_index.missing", pointer(path, index - 1), `Missing planned session_index: ${index}.`);
     }
   }
 }
 
 function validateRequestInto(request, path, errors) {
-  if (!validateClosedObject(request, path, REQUEST_FIELDS, errors, "validation_request")) {
+  const requestFields = isPlainObject(request) && request.consensus_strategy === "isolated_patch_consensus"
+    ? ISOLATED_REQUEST_FIELDS
+    : SEMANTIC_REQUEST_FIELDS;
+  if (!validateClosedObject(request, path, requestFields, errors, "validation_request")) {
     return;
   }
-  for (const field of ["request_id", "workflow_id", "version", "task_action_id"]) {
-    if (Object.hasOwn(request, field) && !isNonEmptyString(request[field])) {
-      addError(errors, `${field}.invalid`, pointer(path, field), "Expected a non-empty string.");
-    }
+  if (Object.hasOwn(request, "request_id") && !isNonEmptyString(request.request_id)) {
+    addError(errors, "request_id.invalid", pointer(path, "request_id"), "Expected a non-empty string.");
+  }
+  if (Object.hasOwn(request, "consensus_strategy") && !CONSENSUS_STRATEGIES.has(request.consensus_strategy)) {
+    addError(errors, "consensus_strategy.invalid", pointer(path, "consensus_strategy"), "Unsupported consensus strategy.");
   }
   if (Object.hasOwn(request, "state_snapshot")) {
     validateStateSnapshot(request.state_snapshot, pointer(path, "state_snapshot"), errors);
   }
-  if (Object.hasOwn(request, "normalized_fact_state")) {
-    validateJsonPlainObject(request.normalized_fact_state, pointer(path, "normalized_fact_state"), errors, "normalized_fact_state.type");
-  }
-  if (Object.hasOwn(request, "evaluation_result")) {
-    validateEvaluationResult(request.evaluation_result, pointer(path, "evaluation_result"), request, errors);
-  }
-  if (Object.hasOwn(request, "expected_session_count") && request.expected_session_count !== EXPECTED_SESSION_COUNT) {
-    addError(errors, "expected_session_count.invalid", pointer(path, "expected_session_count"), "expected_session_count must be exactly 10.");
+  if (request.consensus_strategy === "isolated_patch_consensus" && Object.hasOwn(request, "baseline")) {
+    validatePlainJson(request.baseline, pointer(path, "baseline"), errors, "baseline.type");
   }
   if (Object.hasOwn(request, "invocation_specification")) {
     validateInvocationSpecification(request.invocation_specification, pointer(path, "invocation_specification"), errors);
   }
+  if (request.consensus_strategy === "isolated_patch_consensus") {
+    if (Object.hasOwn(request, "planned_session_relation")
+      && request.planned_session_relation !== ISOLATED_SESSION_RELATION) {
+      addError(
+        errors,
+        "planned_session_relation.invalid",
+        pointer(path, "planned_session_relation"),
+        `planned_session_relation must be ${ISOLATED_SESSION_RELATION}.`,
+      );
+    }
+    if (Object.hasOwn(request, "planned_session_slots")) {
+      validatePlannedSessionSlots(request.planned_session_slots, pointer(path, "planned_session_slots"), errors);
+    }
+  }
 }
 
-function validateSideEffects(value, path, errors) {
-  if (!validateClosedObject(value, path, SIDE_EFFECT_FIELDS, errors, "side_effects")) {
+function patchDigest(canonicalPatch) {
+  return `sha256:${createHash("sha256").update(canonicalPatch, "utf8").digest("hex")}`;
+}
+
+function validateManifestPath(value, path, errors) {
+  if (!isNonEmptyString(value)) {
+    addError(errors, "patch_outcome.manifest.path.invalid", path, "path must be a non-empty repository-relative path.");
+    return false;
+  }
+  if (value.includes("\0") || value.includes("\n") || value.includes("\r")
+    || value.startsWith("/") || /^[A-Za-z]:[\\/]/.test(value) || value.startsWith("\\\\")) {
+    addError(errors, "patch_outcome.manifest.path.invalid", path, "path must be a repository-relative path without NUL or newline characters.");
+    return false;
+  }
+  const segments = value.split(/[\\/]/);
+  if (segments.some((segment) => segment === "" || segment === "." || segment === "..")) {
+    addError(errors, "patch_outcome.manifest.path.invalid", path, "path must not contain empty, dot, or dot-dot segments.");
+    return false;
+  }
+  return true;
+}
+
+function validateManifest(manifest, path, errors) {
+  if (!Array.isArray(manifest)) {
+    addError(errors, "patch_outcome.manifest.type", path, "manifest must be an array.");
+    return [];
+  }
+  if (manifest.length === 0) {
+    addError(errors, "patch_outcome.manifest.empty", path, "manifest must contain at least one changed path.");
+  }
+  const validated = [];
+  const paths = new Set();
+  let previousPath;
+  for (let index = 0; index < manifest.length; index += 1) {
+    const entryPath = pointer(path, index);
+    const entry = manifest[index];
+    if (!validateClosedObject(entry, entryPath, MANIFEST_ENTRY_FIELDS, errors, "patch_outcome.manifest_entry")) {
+      continue;
+    }
+    const pathValue = entry.path;
+    const pathValid = validateManifestPath(pathValue, pointer(entryPath, "path"), errors);
+    if (!PATCH_OPERATIONS.has(entry.operation)) {
+      addError(errors, "patch_outcome.manifest.operation.invalid", pointer(entryPath, "operation"), "operation must be add, modify, or delete.");
+    }
+    if (pathValid) {
+      if (paths.has(pathValue)) {
+        addError(errors, "patch_outcome.manifest.path.duplicate", pointer(entryPath, "path"), `Duplicate manifest path: ${pathValue}.`);
+      }
+      if (previousPath !== undefined && previousPath >= pathValue) {
+        addError(errors, "patch_outcome.manifest.order.invalid", pointer(entryPath, "path"), "manifest paths must be unique and sorted in ascending code-unit order.");
+      }
+      paths.add(pathValue);
+      previousPath = pathValue;
+    }
+    if (pathValid && PATCH_OPERATIONS.has(entry.operation)) {
+      validated.push({ path: pathValue, operation: entry.operation });
+    }
+  }
+  return validated;
+}
+
+function canonicalPatchEntries(canonicalPatch, path, errors) {
+  if (canonicalPatch.includes("\0") || canonicalPatch.includes("\r")) {
+    addError(errors, "patch_outcome.canonical_patch.characters", path, "canonical_patch must not contain NUL or carriage-return characters.");
+  }
+  if (!canonicalPatch.endsWith("\n") || canonicalPatch.endsWith("\n\n")) {
+    addError(errors, "patch_outcome.canonical_patch.termination", path, "canonical_patch must end with exactly one newline.");
+  }
+  const lines = canonicalPatch.split("\n");
+  const starts = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    if (lines[index].startsWith("diff --git ")) {
+      starts.push(index);
+    }
+  }
+  if (starts.length === 0) {
+    addError(errors, "patch_outcome.canonical_patch.format", path, "canonical_patch must contain git unified diff records.");
+    return [];
+  }
+  if (starts[0] !== 0) {
+    addError(errors, "patch_outcome.canonical_patch.preamble", path, "canonical_patch must start with a diff --git record.");
+  }
+
+  const entries = [];
+  for (let sectionIndex = 0; sectionIndex < starts.length; sectionIndex += 1) {
+    const start = starts[sectionIndex];
+    const end = starts[sectionIndex + 1] ?? lines.length;
+    const section = lines.slice(start, end);
+    if (section.some((line) => /^(rename|copy) (from|to) /.test(line) || line.startsWith("similarity index "))) {
+      addError(errors, "patch_outcome.canonical_patch.rename_forbidden", path, "canonical_patch must be generated with rename and copy detection disabled.");
+      continue;
+    }
+    const preambleEnd = section.findIndex((line) => line.startsWith("@@ ") || line === "GIT binary patch");
+    const preamble = preambleEnd === -1 ? section : section.slice(0, preambleEnd);
+    const oldHeaders = preamble.filter((line) => line.startsWith("--- "));
+    const newHeaders = preamble.filter((line) => line.startsWith("+++ "));
+    if (oldHeaders.length !== 1 || newHeaders.length !== 1) {
+      addError(errors, "patch_outcome.canonical_patch.file_headers", path, "Each diff record must contain exactly one --- and +++ file header.");
+      continue;
+    }
+    const oldPath = oldHeaders[0].slice(4);
+    const newPath = newHeaders[0].slice(4);
+    let entry;
+    if (oldPath === "/dev/null" && newPath.startsWith("b/")) {
+      entry = { path: newPath.slice(2), operation: "add" };
+    } else if (newPath === "/dev/null" && oldPath.startsWith("a/")) {
+      entry = { path: oldPath.slice(2), operation: "delete" };
+    } else if (oldPath.startsWith("a/") && newPath.startsWith("b/") && oldPath.slice(2) === newPath.slice(2)) {
+      entry = { path: oldPath.slice(2), operation: "modify" };
+    } else {
+      addError(errors, "patch_outcome.canonical_patch.path_relation", path, "Diff file headers must describe an add, modify, or delete without rename.");
+      continue;
+    }
+    if (!validateManifestPath(entry.path, path, errors)) {
+      continue;
+    }
+
+    const expectedDiffHeader = `diff --git a/${entry.path} b/${entry.path}`;
+    if (section[0] !== expectedDiffHeader) {
+      addError(errors, "patch_outcome.canonical_patch.diff_header", path, `Diff header must be exactly: ${expectedDiffHeader}.`);
+      continue;
+    }
+    const newFileModes = section.filter((line) => line.startsWith("new file mode "));
+    const deletedFileModes = section.filter((line) => line.startsWith("deleted file mode "));
+    const operationMarkersValid = entry.operation === "add"
+      ? newFileModes.length === 1 && deletedFileModes.length === 0
+      : entry.operation === "delete"
+        ? deletedFileModes.length === 1 && newFileModes.length === 0
+        : newFileModes.length === 0 && deletedFileModes.length === 0;
+    if (!operationMarkersValid) {
+      addError(errors, "patch_outcome.canonical_patch.operation_marker", path, "File mode headers must agree with the add, modify, or delete operation.");
+      continue;
+    }
+    entries.push(entry);
+  }
+  return entries;
+}
+
+function validatePatchOutcome(outcome, path, errors) {
+  if (!validateClosedObject(outcome, path, PATCH_OUTCOME_FIELDS, errors, "patch_outcome")) {
     return;
   }
-  for (const field of SIDE_EFFECT_FIELDS) {
-    if (!Object.hasOwn(value, field)) {
-      continue;
-    }
-    const fieldPath = pointer(path, field);
-    if (!Array.isArray(value[field])) {
-      addError(errors, "side_effects.category.type", fieldPath, "Expected an array.");
-      continue;
-    }
-    validateJsonCompatible(value[field], fieldPath, errors);
+  const manifest = validateManifest(outcome.manifest, pointer(path, "manifest"), errors);
+  let patchEntries = [];
+  if (!isNonEmptyString(outcome.canonical_patch)) {
+    addError(errors, "patch_outcome.canonical_patch.invalid", pointer(path, "canonical_patch"), "canonical_patch must be a non-empty string.");
+  } else {
+    patchEntries = canonicalPatchEntries(outcome.canonical_patch, pointer(path, "canonical_patch"), errors);
+  }
+  if (manifest.length !== patchEntries.length
+    || manifest.some((entry, index) => entry.path !== patchEntries[index]?.path || entry.operation !== patchEntries[index]?.operation)) {
+    addError(errors, "patch_outcome.manifest_patch.mismatch", pointer(path, "manifest"), "manifest entries must exactly match canonical_patch changed paths, operations, and order.");
+  }
+  if (!isNonEmptyString(outcome.patch_digest)) {
+    addError(errors, "patch_outcome.patch_digest.invalid", pointer(path, "patch_digest"), "patch_digest must be a non-empty string.");
+  } else if (isNonEmptyString(outcome.canonical_patch) && outcome.patch_digest !== patchDigest(outcome.canonical_patch)) {
+    addError(errors, "patch_outcome.patch_digest.mismatch", pointer(path, "patch_digest"), "patch_digest does not match canonical_patch.");
   }
 }
 
-function validateSessionResultInto(result, path, errors) {
-  if (!validateClosedObject(result, path, SESSION_RESULT_FIELDS, errors, "session_result")) {
+function validateReceiptInto(receipt, path, request, errors) {
+  const receiptFields = request.consensus_strategy === "isolated_patch_consensus"
+    ? ISOLATED_RECEIPT_FIELDS
+    : SEMANTIC_RECEIPT_FIELDS;
+  if (!validateClosedObject(receipt, path, receiptFields, errors, "session_receipt")) {
     return;
   }
   for (const field of ["request_id", "session_id"]) {
-    if (Object.hasOwn(result, field) && !isNonEmptyString(result[field])) {
-      addError(errors, `session_result.${field}.invalid`, pointer(path, field), "Expected a non-empty string.");
+    if (Object.hasOwn(receipt, field) && !isNonEmptyString(receipt[field])) {
+      addError(errors, `session_receipt.${field}.invalid`, pointer(path, field), "Expected a non-empty string.");
     }
   }
-  if (Object.hasOwn(result, "session_index") && (!Number.isInteger(result.session_index) || result.session_index < 1 || result.session_index > EXPECTED_SESSION_COUNT)) {
-    addError(errors, "session_result.session_index.invalid", pointer(path, "session_index"), "session_index must be an integer from 1 to 10.");
+  if (Object.hasOwn(receipt, "session_index")
+    && (!Number.isInteger(receipt.session_index) || receipt.session_index < 1 || receipt.session_index > EXPECTED_SESSION_COUNT)) {
+    addError(errors, "session_receipt.session_index.invalid", pointer(path, "session_index"), "session_index must be an integer from 1 to 10.");
   }
-  if (Object.hasOwn(result, "observed_invocation_specification")) {
-    validateInvocationSpecification(result.observed_invocation_specification, pointer(path, "observed_invocation_specification"), errors);
+  if (Object.hasOwn(receipt, "observed_state_snapshot")) {
+    validateStateSnapshot(receipt.observed_state_snapshot, pointer(path, "observed_state_snapshot"), errors);
   }
-  if (Object.hasOwn(result, "output_status") && !["usable", "blocked"].includes(result.output_status)) {
-    addError(errors, "session_result.output_status.invalid", pointer(path, "output_status"), "output_status must be usable or blocked.");
+  if (request.consensus_strategy === "isolated_patch_consensus" && Object.hasOwn(receipt, "observed_baseline")) {
+    validatePlainJson(receipt.observed_baseline, pointer(path, "observed_baseline"), errors, "observed_baseline.type");
   }
-  for (const field of ["normalized_structured_contract_fields", "semantic_decisions"]) {
-    if (Object.hasOwn(result, field)) {
-      validateJsonPlainObject(result[field], pointer(path, field), errors, `session_result.${field}.type`);
+  if (Object.hasOwn(receipt, "observed_invocation_specification")) {
+    validateInvocationSpecification(receipt.observed_invocation_specification, pointer(path, "observed_invocation_specification"), errors);
+  }
+  if (Object.hasOwn(receipt, "status") && !["usable", "blocked", "timeout", "environment_mismatch"].includes(receipt.status)) {
+    addError(errors, "session_receipt.status.invalid", pointer(path, "status"), "Unsupported receipt status.");
+  }
+  if (Object.hasOwn(receipt, "outcome")) {
+    validatePlainJson(receipt.outcome, pointer(path, "outcome"), errors, "session_receipt.outcome.type");
+    if (request.consensus_strategy === "isolated_patch_consensus" && isPlainObject(receipt.outcome)) {
+      validatePatchOutcome(receipt.outcome, pointer(path, "outcome"), errors);
     }
   }
-  if (Object.hasOwn(result, "registered_executor_invoked") && typeof result.registered_executor_invoked !== "boolean") {
-    addError(errors, "session_result.registered_executor_invoked.type", pointer(path, "registered_executor_invoked"), "Expected a boolean.");
+  if (Object.hasOwn(receipt, "external_side_effects")) {
+    if (!Array.isArray(receipt.external_side_effects)) {
+      addError(errors, "external_side_effects.type", pointer(path, "external_side_effects"), "external_side_effects must be an array.");
+    } else {
+      validateJsonCompatible(receipt.external_side_effects, pointer(path, "external_side_effects"), errors);
+    }
   }
-  if (Object.hasOwn(result, "side_effects")) {
-    validateSideEffects(result.side_effects, pointer(path, "side_effects"), errors);
+  if (request.consensus_strategy === "isolated_patch_consensus") {
+    if (!isNonEmptyString(receipt.workspace_id)) {
+      addError(errors, "workspace_id.required", pointer(path, "workspace_id"), "isolated_patch_consensus requires a workspace_id.");
+    }
   }
 }
 
@@ -280,43 +497,32 @@ function semanticEqual(left, right) {
     return false;
   }
   if (Array.isArray(left) || Array.isArray(right)) {
-    if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) {
-      return false;
-    }
-    return left.every((item, index) => semanticEqual(item, right[index]));
+    return Array.isArray(left) && Array.isArray(right)
+      && left.length === right.length
+      && left.every((item, index) => semanticEqual(item, right[index]));
   }
   const leftKeys = Object.keys(left).sort();
   const rightKeys = Object.keys(right).sort();
-  if (leftKeys.length !== rightKeys.length || leftKeys.some((key, index) => key !== rightKeys[index])) {
-    return false;
+  return leftKeys.length === rightKeys.length
+    && leftKeys.every((key, index) => key === rightKeys[index] && semanticEqual(left[key], right[key]));
+}
+
+export function normalizeConsensusOutcome(value) {
+  if (Array.isArray(value)) {
+    return value.map(normalizeConsensusOutcome);
   }
-  return leftKeys.every((key) => semanticEqual(left[key], right[key]));
+  if (isPlainObject(value)) {
+    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, normalizeConsensusOutcome(value[key])]));
+  }
+  return value;
 }
 
 function requestIdFrom(request) {
   return isPlainObject(request) && isNonEmptyString(request.request_id) ? request.request_id : null;
 }
 
-function resultPath(entry) {
-  if (isPlainObject(entry.value) && Number.isInteger(entry.value.session_index)) {
-    return `/session_results/${entry.value.session_index}`;
-  }
-  return `/session_results/input-${entry.inputIndex}`;
-}
-
-function compareEntries(left, right) {
-  const leftIndex = isPlainObject(left.value) && Number.isInteger(left.value.session_index) ? left.value.session_index : Number.POSITIVE_INFINITY;
-  const rightIndex = isPlainObject(right.value) && Number.isInteger(right.value.session_index) ? right.value.session_index : Number.POSITIVE_INFINITY;
-  if (leftIndex !== rightIndex) {
-    return leftIndex - rightIndex;
-  }
-  const leftId = isPlainObject(left.value) && typeof left.value.session_id === "string" ? left.value.session_id : "";
-  const rightId = isPlainObject(right.value) && typeof right.value.session_id === "string" ? right.value.session_id : "";
-  return leftId.localeCompare(rightId) || left.inputIndex - right.inputIndex;
-}
-
-function stopped(requestId, reason, sessionCount, errors) {
-  return { request_id: requestId, status: "stopped", reason, session_count: sessionCount, errors };
+function stopped(requestId, reason, receiptCount, errors) {
+  return { request_id: requestId, status: "stopped", reason, receipt_count: receiptCount, errors };
 }
 
 export function validateValidationRequest(request) {
@@ -329,100 +535,146 @@ export function validateValidationRequest(request) {
   }
 }
 
-export function validateValidationSessionResult(result) {
+export function validateValidationSessionReceipt(receipt, request) {
   try {
     const errors = [];
-    validateSessionResultInto(result, "", errors);
+    validateReceiptInto(receipt, "", request, errors);
     return { valid: errors.length === 0, errors };
   } catch {
-    return { valid: false, errors: [{ code: "validation_mode.internal", path: "", message: "Session result could not be inspected." }] };
+    return { valid: false, errors: [{ code: "validation_mode.internal", path: "", message: "Session receipt could not be inspected." }] };
   }
 }
 
-export function compareValidationResults(request, results) {
+export function compareValidationResults(request, receipts) {
   try {
-    const requestId = requestIdFrom(request);
     const requestValidation = validateValidationRequest(request);
     if (!requestValidation.valid) {
-      return stopped(requestId, "invalid_request", Array.isArray(results) ? results.length : 0, requestValidation.errors);
+      return stopped(requestIdFrom(request), "invalid_request", Array.isArray(receipts) ? receipts.length : 0, requestValidation.errors);
     }
-    if (!Array.isArray(results)) {
-      return stopped(request.request_id, "invalid_results", 0, [{ code: "session_results.type", path: "/session_results", message: "Expected an array of session results." }]);
+    if (!Array.isArray(receipts)) {
+      return stopped(request.request_id, "invalid_receipts", 0, [{ code: "receipts.type", path: "/receipts", message: "Expected an array of session receipts." }]);
     }
 
     const errors = [];
-    if (results.length !== EXPECTED_SESSION_COUNT) {
-      addError(errors, "session_results.count.invalid", "/session_results", "Exactly 10 session results are required.");
+    if (receipts.length !== EXPECTED_SESSION_COUNT) {
+      addError(errors, "receipts.count.invalid", "/receipts", "Exactly 10 session receipts are required.");
     }
-    const entries = results.map((value, inputIndex) => ({ value, inputIndex })).sort(compareEntries);
+    const entries = receipts.map((value, inputIndex) => ({ value, inputIndex })).sort((left, right) => {
+      const leftIndex = Number.isInteger(left.value?.session_index) ? left.value.session_index : Number.POSITIVE_INFINITY;
+      const rightIndex = Number.isInteger(right.value?.session_index) ? right.value.session_index : Number.POSITIVE_INFINITY;
+      return leftIndex - rightIndex || left.inputIndex - right.inputIndex;
+    });
     const indices = new Map();
-    const sessionIds = new Map();
+    const plannedSlots = request.consensus_strategy === "isolated_patch_consensus"
+      ? new Map(request.planned_session_slots.map((slot) => [slot.session_index, slot]))
+      : new Map();
+    const sessionIds = new Set();
+    const workspaceIds = new Set();
+    let environmentMismatch = false;
+    let sessionFailure = false;
 
     for (const entry of entries) {
-      const path = resultPath(entry);
-      validateSessionResultInto(entry.value, path, errors);
+      const index = Number.isInteger(entry.value?.session_index) ? entry.value.session_index : `input-${entry.inputIndex}`;
+      const path = `/receipts/${index}`;
+      validateReceiptInto(entry.value, path, request, errors);
       if (!isPlainObject(entry.value)) {
         continue;
       }
-      const result = entry.value;
-      if (Number.isInteger(result.session_index) && result.session_index >= 1 && result.session_index <= EXPECTED_SESSION_COUNT) {
-        if (indices.has(result.session_index)) {
-          addError(errors, "session_index.duplicate", pointer(path, "session_index"), `Duplicate session_index: ${result.session_index}.`);
+      const receipt = entry.value;
+      if (Number.isInteger(receipt.session_index) && receipt.session_index >= 1 && receipt.session_index <= EXPECTED_SESSION_COUNT) {
+        if (indices.has(receipt.session_index)) {
+          addError(errors, "session_index.duplicate", pointer(path, "session_index"), `Duplicate session_index: ${receipt.session_index}.`);
         } else {
-          indices.set(result.session_index, result);
+          indices.set(receipt.session_index, receipt);
         }
       }
-      if (isNonEmptyString(result.session_id)) {
-        if (sessionIds.has(result.session_id)) {
-          addError(errors, "session_id.duplicate", pointer(path, "session_id"), `Duplicate session_id: ${result.session_id}.`);
-        } else {
-          sessionIds.set(result.session_id, result);
+      if (isNonEmptyString(receipt.session_id)) {
+        if (sessionIds.has(receipt.session_id)) {
+          addError(errors, "session_id.duplicate", pointer(path, "session_id"), `Duplicate session_id: ${receipt.session_id}.`);
+        }
+        sessionIds.add(receipt.session_id);
+      }
+      if (request.consensus_strategy === "isolated_patch_consensus" && isNonEmptyString(receipt.workspace_id)) {
+        if (workspaceIds.has(receipt.workspace_id)) {
+          addError(errors, "workspace_id.duplicate", pointer(path, "workspace_id"), `Duplicate workspace_id: ${receipt.workspace_id}.`);
+        }
+        workspaceIds.add(receipt.workspace_id);
+      }
+      const plannedSlot = plannedSlots.get(receipt.session_index);
+      if (plannedSlot) {
+        if (plannedSlot.planned_execution_session_id !== PENDING_TOOL_ISSUED
+          && receipt.session_id !== plannedSlot.planned_execution_session_id) {
+          addError(errors, "session_receipt.session_id.planned_mismatch", pointer(path, "session_id"), "Receipt session_id must match its known planned session slot.");
+        }
+        if (plannedSlot.planned_workspace_id !== PENDING_TOOL_ISSUED
+          && receipt.workspace_id !== plannedSlot.planned_workspace_id) {
+          addError(errors, "session_receipt.workspace_id.planned_mismatch", pointer(path, "workspace_id"), "Receipt workspace_id must match its known planned session slot.");
         }
       }
-      if (result.request_id !== request.request_id) {
-        addError(errors, "session_result.request_id.mismatch", pointer(path, "request_id"), "session request_id must match the validation request.");
+      if (receipt.request_id !== request.request_id) {
+        addError(errors, "session_receipt.request_id.mismatch", pointer(path, "request_id"), "Receipt request_id must match the validation request.");
       }
-      if (isPlainObject(result.observed_invocation_specification) && !semanticEqual(result.observed_invocation_specification, request.invocation_specification)) {
-        addError(errors, "session_result.invocation.mismatch", pointer(path, "observed_invocation_specification"), "Observed invocation specification must match the request.");
+      const baselineMismatch = request.consensus_strategy === "isolated_patch_consensus"
+        && !semanticEqual(receipt.observed_baseline, request.baseline);
+      if (!semanticEqual(receipt.observed_state_snapshot, request.state_snapshot)
+        || baselineMismatch
+        || !semanticEqual(receipt.observed_invocation_specification, request.invocation_specification)
+        || receipt.status === "environment_mismatch") {
+        environmentMismatch = true;
+        addError(errors, "session_receipt.environment.mismatch", path, "Session environment must match the fixed request.");
       }
-      if (result.output_status === "blocked") {
-        addError(errors, "session_result.output_status.blocked", pointer(path, "output_status"), "Blocked output is not usable for reproducibility comparison.");
+      if (["blocked", "timeout"].includes(receipt.status)) {
+        sessionFailure = true;
+        addError(errors, `session_receipt.status.${receipt.status}`, pointer(path, "status"), "Every session must return a usable outcome.");
       }
-      if (result.registered_executor_invoked === true) {
-        addError(errors, "registered_executor_invoked.forbidden", pointer(path, "registered_executor_invoked"), "Registered executors must not be invoked during validation mode.");
-      }
-      if (isPlainObject(result.side_effects)) {
-        for (const field of SIDE_EFFECT_FIELDS) {
-          if (Array.isArray(result.side_effects[field]) && result.side_effects[field].length > 0) {
-            addError(errors, "side_effects.nonempty", pointer(pointer(path, "side_effects"), field), "Validation mode session results must report no side effects.");
-          }
-        }
+      if (Array.isArray(receipt.external_side_effects) && receipt.external_side_effects.length > 0) {
+        addError(errors, "external_side_effects.nonempty", pointer(path, "external_side_effects"), "Consensus sessions must not change primary or external state.");
       }
     }
     for (let index = 1; index <= EXPECTED_SESSION_COUNT; index += 1) {
       if (!indices.has(index)) {
-        addError(errors, "session_index.missing", `/session_results/${index}/session_index`, `Missing session_index: ${index}.`);
+        addError(errors, "session_index.missing", `/receipts/${index}/session_index`, `Missing session_index: ${index}.`);
       }
     }
     if (errors.length > 0) {
-      return stopped(request.request_id, "invalid_results", results.length, errors);
+      const reason = environmentMismatch ? "environment_mismatch" : sessionFailure ? "session_failed" : "invalid_receipts";
+      return stopped(request.request_id, reason, receipts.length, errors);
     }
 
     const reference = indices.get(1);
     for (let index = 2; index <= EXPECTED_SESSION_COUNT; index += 1) {
-      const result = indices.get(index);
-      if (!semanticEqual(result.normalized_structured_contract_fields, reference.normalized_structured_contract_fields)) {
-        addError(errors, "comparison.normalized_structured_contract_fields.mismatch", `/session_results/${index}/normalized_structured_contract_fields`, "Normalized structured contract fields differ from session_index 1.");
-      }
-      if (!semanticEqual(result.semantic_decisions, reference.semantic_decisions)) {
-        addError(errors, "comparison.semantic_decisions.mismatch", `/session_results/${index}/semantic_decisions`, "Semantic decisions differ from session_index 1.");
+      if (!semanticEqual(indices.get(index).outcome, reference.outcome)) {
+        addError(errors, "comparison.outcome.mismatch", `/receipts/${index}/outcome`, "Normalized full outcome differs from session_index 1.");
       }
     }
     if (errors.length > 0) {
-      return stopped(request.request_id, "not_reproducible", results.length, errors);
+      return stopped(request.request_id, "not_unanimous", receipts.length, errors);
     }
-    return { request_id: request.request_id, status: "pass", reason: "reproducible", session_count: EXPECTED_SESSION_COUNT, errors: [] };
+
+    const unanimousOutcome = normalizeConsensusOutcome(reference.outcome);
+    const consensusReceipt = {
+      session_ids: [...indices.values()].map((receipt) => receipt.session_id),
+    };
+    if (request.consensus_strategy === "isolated_patch_consensus") {
+      consensusReceipt.workspace_ids = [...indices.values()].map((receipt) => receipt.workspace_id);
+    }
+    return {
+      request_id: request.request_id,
+      status: "pass",
+      reason: "unanimous",
+      consensus_strategy: request.consensus_strategy,
+      unanimous_outcome: unanimousOutcome,
+      consensus_receipt: consensusReceipt,
+      receipt_count: EXPECTED_SESSION_COUNT,
+      errors: [],
+    };
   } catch {
-    return stopped(requestIdFrom(request), "invalid_results", Array.isArray(results) ? results.length : 0, [{ code: "validation_mode.internal", path: "", message: "Validation results could not be compared." }]);
+    return stopped(requestIdFrom(request), "invalid_receipts", Array.isArray(receipts) ? receipts.length : 0, [{
+      code: "validation_mode.internal",
+      path: "",
+      message: "Validation receipts could not be compared.",
+    }]);
   }
 }
+
+export const compareValidationReceipts = compareValidationResults;

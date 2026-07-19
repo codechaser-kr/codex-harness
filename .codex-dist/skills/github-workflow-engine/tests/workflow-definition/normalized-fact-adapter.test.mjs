@@ -180,6 +180,8 @@ test("registers the five proposal executors exactly once", async () => {
       executor_kind: "skill",
       side_effect_scope: "proposal_output",
       runtime_reference: executorId,
+      execution_class: "llm_session",
+      validation_strategy: "semantic_consensus",
     }]);
   }
 });

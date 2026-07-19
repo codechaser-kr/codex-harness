@@ -47,6 +47,54 @@ test("returns a deterministic registry load error when the registry is unavailab
   assert.equal(hasError(first.errors, "registered_executor_reference.unknown", "/transitions/0/registered_executor_reference"), false);
 });
 
+test("default and custom registries use the same closed structured entry array contract", async () => {
+  const fixture = await readFixture("structural-valid.json");
+  const definition = fixture.cases[0].definition;
+  const validEntry = {
+    executor_id: "github-state-summary",
+    executor_kind: "skill",
+    side_effect_scope: "read_only",
+    runtime_reference: "github-state-summary",
+    execution_class: "llm_session",
+    validation_strategy: "semantic_consensus",
+  };
+  assert.equal(validateWorkflowDefinition(definition, { registry: [validEntry] }).valid, true);
+
+  const missingFieldEntry = { ...validEntry };
+  delete missingFieldEntry.runtime_reference;
+  const nonPlainEntry = Object.assign(Object.create({ inherited: true }), validEntry);
+  const malformedRegistries = [
+    null,
+    new Set(["github-state-summary"]),
+    ["github-state-summary"],
+    [],
+    [missingFieldEntry],
+    [nonPlainEntry],
+    [{ ...validEntry, executor_id: "" }],
+    [{ ...validEntry, extra: true }],
+    [{ ...validEntry, executor_kind: "command" }],
+    [{ ...validEntry, side_effect_scope: "unknown" }],
+    [{ ...validEntry, execution_class: "unknown" }],
+    [{ ...validEntry, validation_strategy: "unknown" }],
+    [{ ...validEntry, execution_class: "deterministic_tool" }],
+    [{ ...validEntry, validation_strategy: "run_once" }],
+    [{ ...validEntry }, { ...validEntry }],
+  ];
+
+  for (const registry of malformedRegistries) {
+    const first = validateWorkflowDefinition(definition, { registry });
+    const second = validateWorkflowDefinition(definition, { registry });
+    assert.deepEqual(first.errors, second.errors);
+    assert.equal(first.valid, false);
+    assert.deepEqual(first.errors.filter((error) => error.code === "registry.load_failed"), [{
+      code: "registry.load_failed",
+      path: "",
+      message: "Registered executor registry could not be loaded.",
+    }]);
+    assert.equal(first.errors.some((error) => error.code === "registered_executor_reference.unknown"), false);
+  }
+});
+
 test("accepts every workflow_kind task_action_id prefix", async () => {
   const fixture = await readFixture("structural-valid.json");
   const prefixCases = [

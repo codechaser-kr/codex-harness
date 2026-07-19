@@ -1,40 +1,105 @@
 ---
 name: target-harness-code-editor
-description: Workflow Engine이 검증한 대상 local run-harness 라우팅 결과와 완전한 불변 구조화 코드 수정 요청을 재검증하고, 선택된 편집 역할의 별도 실행 세션 결과만 반환합니다.
+description: Workflow Engine이 검증한 대상 local run-harness 라우팅과 불변 코드 수정 요청을 일반 모드에서 실행하고, 명시적 검증 모드에서는 10-workspace patch 재현성을 격리 진단합니다.
 ---
 
 # Target Harness Code Editor
 
-이 스킬은 Workflow Engine이 확정한 파일 수정 요청을 적용하는 중개 절차다. 메인 Workflow Engine은 orchestration session이고, 이 스킬은 그 세션에서 적용되는 위임 절차다. 이 스킬, Workflow Engine, 그리고 대상 프로젝트의 `run-harness`는 파일을 수정하지 않는다. 실제 파일 수정과 검증은 검증된 라우팅이 선택한 정확히 하나의 타겟 편집 역할의 별도 execution session만 수행한다.
+이 스킬은 Workflow Engine이 확정한 파일 수정 요청을 선택 타겟 역할에 위임하는 절차다. Workflow
+Engine과 이 스킬은 라우팅 또는 편집 판단을 대신하지 않는다. 일반 모드에서는 기존 단일 별도 편집
+session 계약을 유지하고, 검증 모드에서만 같은 baseline의 10개 격리 workspace와 실제 editing LLM
+session을 오케스트레이션한다. 검증 결과는 사용자 판단을 위한 diagnostic observation이며 primary
+수정이나 Workflow transition으로 채택하지 않는다.
 
 ## 먼저 읽을 문서
 
 - 설치된 `github-workflow-engine/references/workflow-engine-rules.md` 전체
+- 검증 모드이면 `github-workflow-engine/references/validation-mode-contract.md` 전체
 - 대상 프로젝트의 `AGENTS.md`, `.agents/skills/run-harness/SKILL.md`
 - 대상 프로젝트의 `.harness/docs/team-spec.md`, `.harness/docs/orchestration-plan.md`
-- 라우팅으로 선택된 역할의 `.codex/agents/<agent_file>.toml`과 `.agents/skills/<agent_file>/SKILL.md`
+- 선택 역할의 `.codex/agents/<agent_file>.toml`, `.agents/skills/<agent_file>/SKILL.md`
 
 ## 입력
 
-- `workflow-engine-rules.md`의 `구조화 실행 요청 사용 가능` 판정을 이미 통과한 완전하고 변경 불가능한 한 건의 구조화 코드 수정 요청을 받는다.
-- 대상 로컬 `run-harness`가 반환하고 Workflow Engine이 검증한 라우팅 결과를 함께 받는다. 이 결과에는 `routing_status`, 정확히 하나의 `selected_role_id`, `agent_config_path`, `local_skill_path`, `routing_evidence`, 선택 역할의 `model`, `model_reasoning_effort`, `sandbox_mode`가 있어야 한다.
-- 요청의 `request_id`로만 원 요청을 식별한다. 요청 본문, `target_baseline`, `work_type`, `target_ids_or_files`, `confirmed_request_values`를 보완, 재계산, 대체하거나 범위를 넓히지 않는다.
+- `구조화 실행 요청 사용 가능`과 `Target Harness Code Editor 선택 가능`을 통과한 변경 불가능한 요청
+- 유일한 `request_id`, `target_baseline`, `work_type`, `target_ids_or_files`,
+  `confirmed_request_values`, permission/tool/path 조건
+- 검증된 `routing_status`, 단일 `selected_role_id`, `agent_config_path`, `local_skill_path`,
+  `routing_evidence`, `model`, `model_reasoning_effort`, `sandbox_mode`
+- 메인 Workflow Engine orchestration session ID와 현재 사용자 요청에서 명시적으로 확인된 검증 모드
+  활성화 여부. 과거 요청이나 registry 분류만으로 활성화하지 않는다.
+- 검증 모드이면 `planned_session_relation = ten_independent_isolated_execution_sessions`와
+  index 1..10의 닫힌 `planned_session_slots` 정확히 10개. 각 slot은 known ID 또는
+  `pending_tool_issued`인 planned execution session/workspace ID를 가진다.
 
-## 책임
+요청값, baseline, 라우팅, 역할, model/reasoning/skill/config, 대상 파일 범위를 보완하거나 다시
+선택하지 않는다. 식별자는 `request_id`만 사용하고 fingerprint를 만들지 않는다.
 
-1. 요청이 파일 수정 작업인지와 `구조화 실행 요청 사용 가능` 판정 통과를 확인한다.
-2. 대상 프로젝트의 현재 기준 상태가 요청의 `target_baseline`과 일치하는지 확인하고, 로컬 `run-harness`, `team-spec.md`, `orchestration-plan.md`와 역할 자산이 모두 준비됐는지 확인한다.
-3. 전달받은 라우팅 결과의 `routing_status`, 단일 선택 역할, 경로, 근거와 선택 역할의 model, reasoning, sandbox를 대상 `team-spec.md`, `orchestration-plan.md`, agent TOML, local skill에 다시 대조한다. Workflow Engine 검증 뒤 기준 상태, 라우팅 근거, 선택 역할 자산 또는 설정이 바뀌지 않았음을 확인한다.
-4. 세션 시작 전에 대조한 역할 설정과 `permission_conditions`, `available_tool_conditions`, `command_execution_path`, `destructive_command_risk`가 불변 요청의 예정 실행 식별자·조건 및 라우팅 결과와 일치하는지 확인한다. 이 스킬은 라우팅을 새로 얻거나 `run-harness` 라우팅을 다시 수행하지 않는다.
-5. 세션 시작 전 대조를 모두 통과한 경우에만 메인 Workflow Engine의 orchestration session과 다른 별도 execution session 하나에서 정확히 하나의 선택 역할만 시작하도록 시도한다. 선택한 agent config, local skill, model, reasoning, sandbox와 불변 요청 및 검증된 라우팅 결과를 그대로 전달한다. 세션 시작 전 대조 실패로 별도 execution session 시작을 시도하지 않았거나, 시작을 시도했지만 도구가 실제 세션 ID를 발급하기 전에 실패하면 기존 `실행 세션 미시작 중단`으로 기록하고 실제 선택 역할을 실행하지 않는다.
-6. 실제 선택 역할은 발급된 별도 execution session에서 각 실제 명령 직전에 자신의 `permission_conditions`, `available_tool_conditions`, `command_execution_path`, `destructive_command_risk`를 다시 확인한다. 하나라도 불일치하거나 확인할 수 없으면 해당 명령을 실행하지 않고, 발급된 별도 세션에서 중단 결과를 반환한다.
-7. 선택 역할의 수행 결과 또는 실행 세션 미시작 중단 결과를 변경하지 않고 라우팅 고유 필드와 공통 구조화 실행 결과로 반환한다.
+## 공통 사전 검증
+
+1. 현재 primary baseline이 `target_baseline`과 일치하는지 확인한다.
+2. 전달된 라우팅을 대상 `run-harness`, `team-spec`, `orchestration-plan`, agent TOML, local skill에
+   재대조한다. 후보가 0개 또는 복수이거나 role/agent/skill/config가 다르면 파일을 변경하지 않는다.
+3. model, reasoning, sandbox, permission, available tool, command path, destructive risk가 요청과 같은지
+   확인한다. 확인 불가능하거나 불일치하면 session을 시작하지 않는다.
+
+## 일반 모드
+
+1. 공통 사전 검증을 통과하면 orchestration session과 다른 정확히 하나의 fresh execution session에서
+   선택 타겟 역할을 시작한다.
+2. 선택 역할은 전달된 불변 요청과 route/model/reasoning/skill/config를 사용해 primary에서 파일을
+   수정하고 각 명령 직전 permission/tool/path/risk를 재확인한다.
+3. 실제 session ID가 발급되기 전 실패는 `실행 세션 미시작 중단`, 발급 뒤 실패는 해당 실제 session의
+   중단 결과로 반환한다. 직접 수정 fallback이나 두 번째 편집 session은 금지한다.
+4. 기존 공통 구조화 실행 결과와 라우팅 고유 필드를 그대로 반환한다.
+
+## 검증 모드
+
+검증 모드는 `isolated_patch_consensus`이며 다음 순서를 바꾸지 않는다.
+
+1. primary를 변경하지 않은 채 `target_baseline`을 재확인하고, 같은 baseline에서 시작하는 격리
+   workspace를 정확히 10개 만든다. workspace ID는 모두 고유하고 같은 index의 request planned slot과
+   일치해야 한다. `pending_tool_issued`는 실제 발급 workspace ID로 해소한다.
+2. 정확히 10개의 fresh independent editing LLM session을 시작한다. 각 session은 서로 다른 격리
+   workspace 하나만 사용하고, 동일 request, route, model, reasoning, selected role, skill/version,
+   config, sandbox, permission/tool/path 조건과 동일 유한 deadline을 받는다. 실제 session ID도 같은
+   index의 known planned ID와 일치해야 하며 `pending_tool_issued`는 실제 발급 ID로 해소한다.
+3. session reuse/continue, 이전 session의 prompt/result/context/patch 공유, primary 편집, GitHub·branch·
+   commit·PR·comment 변경을 금지한다. 각 session은 자신의 workspace에서만 실제 파일을 편집·검증한다.
+4. 각 session 완료 뒤 deterministic normalization으로 닫힌 `{path, operation}` manifest와 canonical
+   patch를 만들고 SHA-256 `patch_digest`를 계산한다. Manifest path는 고유한 저장소 상대경로이고
+   code-unit 오름차순이며 operation은 `add|modify|delete`다. Canonical patch는 rename/copy detection을
+   끄고 고정 `diff --git`, `---`, `+++` header와 add/delete mode marker를 사용하며 manifest의
+   path/operation/order와 정확히 일치해야 한다. Node script는 editing agent를 시작하지 않으며 receipt와
+   patch를 검증·정규화·비교하는 데만 사용한다.
+5. 10개 모두를 유한 wait-all로 기다린다. timeout, blocked, 환경·baseline 불일치, 중복 session 또는
+   workspace ID, 외부 부작용, manifest/canonical patch/digest 불일치가 하나라도 있으면 실행 중 session을
+   종료·close하고 validation을 중단한다. retry, majority, representative patch 채택은 금지한다.
+6. `{ request, receipts }`를 validation comparator에 한 번 전달한다. `pass`의
+   `unanimous_outcome`과 mismatch를 모두 diagnostic observation으로만 사용한다.
+7. validation session/workspace는 primary 또는 외부 상태를 변경할 수 없다. 모든 editing 결과는 격리
+   workspace 안에만 남고, pass/mismatch로 원 파일 편집 결과를 채택하거나 Workflow Definition
+   transition을 선택·완료·진행하지 않는다.
+8. 최종 결과의 validation-only proof에는 authoritative session/workspace ID와 공통 correlation 필드만
+   둔다. isolated baseline은 request/receipts에서, manifest/canonical patch/digest는 comparator outcome과
+   receipts에서 읽으며 top-level proof field로 복제하지 않는다.
+9. 결과를 사용자에게 제시하고 skill/prompt 개선, validation 종료 또는 나중의 ordinary workflow 실행
+   중 다음 행동을 명시적으로 결정하도록 요청한 뒤 종료한다. 이 결정을 Workflow Definition
+   transition으로 추가하지 않고 ordinary workflow를 자동 재개하지 않는다.
 
 ## 출력
 
-라우팅 고유 필드 `routing_status`, `selected_role_id`, `agent_config_path`, `local_skill_path`, `routing_evidence`, `model`, `model_reasoning_effort`, `sandbox_mode`와 함께 다음 공통 구조화 실행 결과 필드를 정확한 이름으로 반환한다.
+라우팅 고유 필드와 기존 공통 구조화 실행 결과 필드를 반환한다.
 
 ```text
+routing_status
+selected_role_id
+agent_config_path
+local_skill_path
+routing_evidence
+model
+model_reasoning_effort
+sandbox_mode
 request_id
 target_baseline
 actual_executor_type
@@ -57,28 +122,39 @@ postconditions_satisfied
 residual_risks_or_failure_reasons
 ```
 
-적용할 수 없는 실제 식별자 또는 비명령 실행 경로 필드는 `workflow-engine-rules.md`의 공통 계약에 따라 `not_applicable`과 해당 이유를 함께 반환한다.
+검증 모드에서는 다음 증명 필드를 추가한다.
 
-`actual_executor_type`, `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`, `actual_execution_session_id`는 성공 또는 세션이 발급된 중단에서는 중개 절차가 아니라 실제 파일 수정 실행을 맡아 시작된 선택 타겟 역할과 그 별도 execution session을 가리킨다. `actual_orchestration_session_id`는 메인 Workflow Engine의 orchestration session을, `actual_session_relation`은 두 세션의 별도 관계를 가리킨다. `actual_permission_conditions`, `actual_available_tool_conditions`, `actual_command_execution_path`와 `execution_path_recheck_result`는 중개 절차의 세션 시작 전 대조가 아니라 실제 선택 역할이 각 명령 직전에 수행한 재확인과 그 실제 값을 가리킨다. `실행 세션 미시작 중단`에서만 `actual_execution_session_id`와 `actual_session_relation`을 각각 지정된 `not_applicable` 및 사유로 반환할 수 있다.
+```text
+consensus_session_ids
+consensus_workspace_ids
+actual_execution_session_id_not_applicable_reason
+```
+
+일반 모드의 `actual_execution_session_id`는 단일 실제 편집 session을 가리킨다. 검증 모드에서는
+`consensus_session_ids`와 `consensus_workspace_ids`가 authoritative actual 식별자이며 request slot과
+대조된 고유 ID를 정확히 10개 기록한다. 이때 singular 필드는
+`actual_execution_session_id = not_applicable`,
+`actual_execution_session_id_not_applicable_reason = validation_consensus_uses_session_set`이고,
+`actual_session_relation = ten_independent_isolated_execution_sessions`다. 이 명시적 사유는 session을
+시작하지 못한 `execution_session_not_started`와 혼용하지 않는다.
 
 ## 하지 않는 일
 
-- 파일을 직접 읽기 전용 확인 외의 방식으로 수정, 생성, 삭제하거나 직접 수정 fallback을 사용하지 않는다.
-- 사용자 의도, 현재 상태, 작업 전이, 실행 범위, 커밋, PR, 리뷰, 모델 또는 역할 선택을 결정하거나 재판단하지 않는다.
-- `run-harness` 라우팅을 새로 얻거나 대체하지 않고, 전달받은 라우팅 결과를 다른 역할로 바꾸지 않는다. 선택 역할의 model, reasoning, sandbox, agent config, local skill을 재정의하거나 더 저렴한 모델로 바꾸지 않는다.
-- 라우팅 후보가 없거나 여러 개일 때 임의 역할을 선택하거나 같은 세션에서 직접 수행하지 않는다.
+- 라우팅을 새로 수행하거나 다른 역할, model, reasoning, skill, config를 선택하지 않는다.
+- 일반 모드에서 복수 session을 시작하거나 검증 모드에서 primary를 session workspace로 사용하지 않는다.
+- 불일치 결과를 다수결로 채택하거나 patch를 수동 병합·보정하지 않는다.
+- validation session/workspace에서 primary 또는 외부 상태를 변경하지 않는다.
+- unanimous patch를 원래 편집 결과로 자동 채택하지 않는다.
+- 이 스킬 또는 Node script가 실제 editing LLM을 호출한 것처럼 허위 receipt를 만들지 않는다.
+- commit, push, PR, GitHub 상태, review thread 또는 하네스 로그를 변경하지 않는다.
 
-## 사용자 결정
+## 중단 조건과 후속 전이
 
-- 없다. 사용자 결정과 구조화 요청 확정은 Workflow Engine의 책임이다.
-
-## 중단 조건
-
-- 이 스킬은 유효한 `request_id`, orchestration context, Workflow Engine이 검증해 전달한 라우팅 입력으로 `Target Harness Code Editor 선택 가능`을 통과한 뒤에만 호출된다. 요청 식별 자체가 불가능하거나 검증된 라우팅 입력이 없으면 target editor를 호출하지 않고 Workflow Engine이 선택 전 `구조화 실행 중단`으로 처리한다.
-- target editor가 호출된 뒤 역할·모델·reasoning·sandbox·권한·도구·경로·파괴적 위험 조건의 사전 검증에 실패해 별도 execution session 시작을 시도하지 않았거나, 시작을 시도했지만 도구가 실제 세션 ID를 발급하기 전에 실패한 경우는 `실행 세션 미시작 중단`으로 명시한다. 두 경우 모두 `routing_status = aborted`, 예정 관계 `separate_execution_session`, 실제 세션 ID 미발급, `changed_files`와 `github_state_changes` 빈 값, `performed_actions`·`verification_results`·`residual_risks_or_failure_reasons`에 실제로 수행한 사전 검증과 중단 원인이 기록된 조건을 모두 충족할 때 지정된 세션 `not_applicable` 필드를 사용한다. 세션 시작 시도·실패 기록은 시도한 경우에만 요구하고, 시도하지 않은 경우에는 시도하지 않았음과 실제 사전 검증 실패 근거를 기록한다. 이 실행 세션 미시작 중단에서는 검증된 입력 라우팅의 `routing_status`만 `aborted`로 전이하고 나머지 라우팅 고유 필드는 항상 입력과 일치해야 한다.
-- 실제 execution session ID가 발급된 뒤의 중단은 기존 실제 별도 세션 ID와 `actual_session_relation` 검증을 유지한다. target editor 호출 전 선택 중단이나 구조화 요청 식별 불능 상태를 target editor 결과로 변환하지 않는다.
-
-## 후속 전이
-
-- 성공 또는 중단의 공통 구조화 실행 결과만 `github-workflow-engine`에 반환한다.
-- Workflow Engine이 요청-결과 상관관계, 실행 범위, 성공 또는 중단과 다음 상태 전이를 판정한다.
+사전 검증 실패, session 미시작/실패, consensus 실패, baseline 변경은 모두
+`routing_status: aborted`, 빈 변경 결과와 구체적인 재개 조건으로 반환한다. 실제 session ID가 발급된
+뒤의 중단은 발급된 모든 ID와 상태를 보존한다. 10개 fan-out이 완료된 뒤의 중단은 두 consensus ID
+배열에 정확히 10개를 기록하고 `validation_consensus_uses_session_set` 사유를 사용한다. fan-out 전에
+아무 session도 시작하지 못한 중단은 기존 `execution_session_not_started` 사유와 빈 consensus 배열을
+사용한다. 일부만 시작된 불완전 set은 발급된 ID와 실패 근거를 보존하지만 target editor 출력 사용 가능
+판정을 통과하지 못하고 validation 중단으로 처리한다. 완전한 pass도 진단 결과만 반환하며 Workflow
+Engine은 이를 ordinary 구조화 실행 성공이나 다음 Workflow transition에 연결하지 않는다.

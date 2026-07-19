@@ -32,7 +32,18 @@ const WORKFLOW_KINDS = new Set(Object.keys(WORKFLOW_PREFIXES));
 const TARGET_TYPES = new Set(["issue", "pull_request", "repository"]);
 const FACT_TYPES = new Set(["boolean", "string", "integer"]);
 const TASK_ACTION_ID = /^(FP|PR|FC|FF|FI)-[1-9][0-9]*$/;
-const REGISTRY_FIELDS = ["executor_id", "executor_kind", "side_effect_scope", "runtime_reference"];
+const REGISTRY_FIELDS = [
+  "executor_id",
+  "executor_kind",
+  "side_effect_scope",
+  "runtime_reference",
+  "execution_class",
+  "validation_strategy",
+];
+const EXECUTION_CLASSES = new Set(["llm_session", "deterministic_tool"]);
+const VALIDATION_STRATEGIES = new Set(["semantic_consensus", "isolated_patch_consensus", "run_once"]);
+const EXECUTOR_KINDS = new Set(["skill", "review_mode", "deterministic_tool"]);
+const SIDE_EFFECT_SCOPES = new Set(["read_only", "github_state_change", "proposal_output", "repository_file_change", "review_output"]);
 export const DEFAULT_MAX_CONDITION_STATES = 10_000;
 
 function pointer(path, segment) {
@@ -41,6 +52,14 @@ function pointer(path, segment) {
 
 function isObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isPlainObject(value) {
+  if (!isObject(value)) {
+    return false;
+  }
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
 }
 
 function addError(errors, code, path, message, witness) {
@@ -97,19 +116,25 @@ function valueMatchesType(value, valueType) {
 }
 
 function registryIds(registry) {
-  if (registry instanceof Set) {
-    return registry;
-  }
-  if (!Array.isArray(registry)) {
+  if (!Array.isArray(registry) || registry.length === 0) {
     return undefined;
   }
   const executorIds = new Set();
   for (const entry of registry) {
-    const executorId = typeof entry === "string" ? entry : entry?.executor_id;
-    if (!isNonEmptyString(executorId)) {
+    if (!isPlainObject(entry)
+      || Object.keys(entry).length !== REGISTRY_FIELDS.length
+      || REGISTRY_FIELDS.some((field) => !Object.hasOwn(entry, field) || !isNonEmptyString(entry[field]))
+      || !EXECUTOR_KINDS.has(entry.executor_kind)
+      || !SIDE_EFFECT_SCOPES.has(entry.side_effect_scope)
+      || !EXECUTION_CLASSES.has(entry.execution_class)
+      || !VALIDATION_STRATEGIES.has(entry.validation_strategy)
+      || ((entry.execution_class === "deterministic_tool") !== (entry.validation_strategy === "run_once"))) {
       return undefined;
     }
-    executorIds.add(executorId);
+    if (executorIds.has(entry.executor_id)) {
+      return undefined;
+    }
+    executorIds.add(entry.executor_id);
   }
   return executorIds;
 }
@@ -117,16 +142,7 @@ function registryIds(registry) {
 function loadDefaultRegistry() {
   try {
     const registryUrl = new URL("../../registries/registered-executors.json", import.meta.url);
-    const registry = JSON.parse(readFileSync(registryUrl, "utf8"));
-    if (!Array.isArray(registry) || registry.some((entry) => {
-      if (!isObject(entry) || Object.keys(entry).length !== REGISTRY_FIELDS.length) {
-        return true;
-      }
-      return REGISTRY_FIELDS.some((field) => !isNonEmptyString(entry[field]));
-    })) {
-      return undefined;
-    }
-    return registry;
+    return JSON.parse(readFileSync(registryUrl, "utf8"));
   } catch {
     return undefined;
   }

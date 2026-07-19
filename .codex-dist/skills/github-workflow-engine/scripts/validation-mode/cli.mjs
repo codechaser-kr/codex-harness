@@ -16,12 +16,12 @@ function requestIdFrom(value) {
     : null;
 }
 
-function stopped(requestId, reason, sessionCount, code, path, message) {
+function stopped(requestId, reason, receiptCount, code, path, message) {
   return {
     request_id: requestId,
     status: "stopped",
     reason,
-    session_count: sessionCount,
+    receipt_count: receiptCount,
     errors: [{ code, path, message }],
   };
 }
@@ -31,7 +31,7 @@ export function runValidationModeEnvelope(envelope) {
     if (!isPlainObject(envelope)) {
       return stopped(null, "invalid_envelope", 0, "validation_envelope.type", "", "Expected a JSON object envelope.");
     }
-    const fields = ["request", "session_results"];
+    const fields = ["request", "receipts"];
     for (const key of Object.keys(envelope).sort()) {
       if (!fields.includes(key)) {
         return stopped(requestIdFrom(envelope), "invalid_envelope", 0, "validation_envelope.additional_property", `/${key}`, `Unexpected property: ${key}.`);
@@ -42,7 +42,7 @@ export function runValidationModeEnvelope(envelope) {
         return stopped(requestIdFrom(envelope), "invalid_envelope", 0, "validation_envelope.required", `/${field}`, `Missing required property: ${field}.`);
       }
     }
-    return compareValidationResults(envelope.request, envelope.session_results);
+    return compareValidationResults(envelope.request, envelope.receipts);
   } catch {
     return stopped(null, "invalid_envelope", 0, "validation_mode.internal", "", "Validation envelope could not be inspected.");
   }

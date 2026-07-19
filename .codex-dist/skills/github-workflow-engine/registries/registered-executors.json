@@ -1,80 +1,170 @@
 [
   {
+    "executor_id": "workflow-definition-evaluator",
+    "executor_kind": "deterministic_tool",
+    "side_effect_scope": "read_only",
+    "runtime_reference": "scripts/workflow-definition/evaluator.mjs",
+    "execution_class": "deterministic_tool",
+    "validation_strategy": "run_once"
+  },
+  {
+    "executor_id": "validation-mode-comparator",
+    "executor_kind": "deterministic_tool",
+    "side_effect_scope": "read_only",
+    "runtime_reference": "scripts/validation-mode/comparator.mjs",
+    "execution_class": "deterministic_tool",
+    "validation_strategy": "run_once"
+  },
+  {
     "executor_id": "github-state-summary",
     "executor_kind": "skill",
     "side_effect_scope": "read_only",
-    "runtime_reference": "github-state-summary"
+    "runtime_reference": "github-state-summary",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
   },
   {
     "executor_id": "github-simple-executor",
     "executor_kind": "skill",
     "side_effect_scope": "github_state_change",
-    "runtime_reference": "github-simple-executor"
+    "runtime_reference": "github-simple-executor",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
   },
   {
     "executor_id": "issue-creation",
     "executor_kind": "skill",
     "side_effect_scope": "proposal_output",
-    "runtime_reference": "issue-creation"
+    "runtime_reference": "issue-creation",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
   },
   {
     "executor_id": "feature-proposal-triage",
     "executor_kind": "skill",
     "side_effect_scope": "proposal_output",
-    "runtime_reference": "feature-proposal-triage"
+    "runtime_reference": "feature-proposal-triage",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
   },
   {
     "executor_id": "policy-plan",
     "executor_kind": "skill",
     "side_effect_scope": "proposal_output",
-    "runtime_reference": "policy-plan"
+    "runtime_reference": "policy-plan",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
   },
   {
     "executor_id": "policy-review-next-triage",
     "executor_kind": "skill",
     "side_effect_scope": "proposal_output",
-    "runtime_reference": "policy-review-next-triage"
+    "runtime_reference": "policy-review-next-triage",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
   },
   {
     "executor_id": "feature-plan",
     "executor_kind": "skill",
     "side_effect_scope": "proposal_output",
-    "runtime_reference": "feature-plan"
+    "runtime_reference": "feature-plan",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
   },
   {
     "executor_id": "fix-analysis",
     "executor_kind": "skill",
     "side_effect_scope": "proposal_output",
-    "runtime_reference": "fix-analysis"
+    "runtime_reference": "fix-analysis",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
   },
   {
     "executor_id": "fix-plan",
     "executor_kind": "skill",
     "side_effect_scope": "proposal_output",
-    "runtime_reference": "fix-plan"
+    "runtime_reference": "fix-plan",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
+  },
+  {
+    "executor_id": "branch-proposal",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "branch-proposal",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
+  },
+  {
+    "executor_id": "commit-plan",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "commit-plan",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
+  },
+  {
+    "executor_id": "commit",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "commit",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
+  },
+  {
+    "executor_id": "pr-proposal",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "pr-proposal",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
+  },
+  {
+    "executor_id": "pr-creation",
+    "executor_kind": "skill",
+    "side_effect_scope": "github_state_change",
+    "runtime_reference": "pr-creation",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
+  },
+  {
+    "executor_id": "review-comment",
+    "executor_kind": "skill",
+    "side_effect_scope": "proposal_output",
+    "runtime_reference": "review-comment",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
   },
   {
     "executor_id": "target-harness-code-editor",
     "executor_kind": "skill",
     "side_effect_scope": "repository_file_change",
-    "runtime_reference": "target-harness-code-editor"
+    "runtime_reference": "target-harness-code-editor",
+    "execution_class": "llm_session",
+    "validation_strategy": "isolated_patch_consensus"
   },
   {
     "executor_id": "claude/code-review",
     "executor_kind": "review_mode",
     "side_effect_scope": "review_output",
-    "runtime_reference": "claude/code-review"
+    "runtime_reference": "claude/code-review",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
   },
   {
     "executor_id": "claude/awesome-code-review",
     "executor_kind": "review_mode",
     "side_effect_scope": "review_output",
-    "runtime_reference": "claude/awesome-code-review"
+    "runtime_reference": "claude/awesome-code-review",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
   },
   {
     "executor_id": "codex/awesome-code-review",
     "executor_kind": "review_mode",
     "side_effect_scope": "review_output",
-    "runtime_reference": "codex/awesome-code-review"
+    "runtime_reference": "codex/awesome-code-review",
+    "execution_class": "llm_session",
+    "validation_strategy": "semantic_consensus"
   }
 ]

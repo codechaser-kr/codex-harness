@@ -76,6 +76,12 @@
     { "name": "next work unit repeats implementation", "current_transition_id": "plan-next-commit-unit", "state": { "implementation_commit_created": true, "implementation_progress": "next_commit_unit", "implementation_plan_reflected": true, "implementation_work_unit_state": "pending" }, "task_action_id": "FI-5" },
     { "name": "all work units proceed to push", "current_transition_id": "plan-next-commit-unit", "state": { "implementation_commit_created": true, "implementation_progress": "all_work_units_completed" }, "task_action_id": "FI-9" }
   ],
+  "pull_request_creation_cases": [
+    { "name": "revised pull request draft returns to draft action", "state": { "implementation_branch_pushed": true, "pull_request_draft_usable": true, "pull_request_draft_confirmed": false, "pull_request_creation_requested": false }, "task_action_id": "FI-10" },
+    { "name": "revised decision overrides stale creation request", "state": { "implementation_branch_pushed": true, "pull_request_draft_usable": true, "pull_request_draft_confirmed": false, "pull_request_creation_requested": true }, "task_action_id": "FI-10" },
+    { "name": "create decision waits for creation request completion", "state": { "implementation_branch_pushed": true, "pull_request_draft_usable": true, "pull_request_draft_confirmed": true, "pull_request_creation_requested": false }, "task_action_id": "FI-11" },
+    { "name": "pull request creation proceeds to create action", "state": { "implementation_branch_pushed": true, "pull_request_draft_usable": true, "pull_request_draft_confirmed": true, "pull_request_creation_requested": true }, "task_action_id": "FI-12" }
+  ],
   "review_feedback_cases": [
     { "name": "review mode decision is pending", "current_transition_id": "select-review-mode", "state": { "pull_request_created": true }, "status": "action_required", "task_action_id": "FI-13" },
     { "name": "review dependency inspection is pending", "current_transition_id": "inspect-review-mode", "state": { "review_mode": "claude_code_review", "review_mode_checked": false }, "status": "action_required", "task_action_id": "FI-14" },

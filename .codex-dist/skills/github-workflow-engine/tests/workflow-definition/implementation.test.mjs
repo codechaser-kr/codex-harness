@@ -166,8 +166,15 @@ test("implementation definition preserves FI mapping, executor boundaries, and v
     });
   }
   assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-11").completion_predicate, {
-    fact_id: "pull_request_creation_requested", operator: "equals", value: true,
+    any: [
+      { fact_id: "pull_request_creation_requested", operator: "equals", value: true },
+      { fact_id: "pull_request_draft_confirmed", operator: "equals", value: false },
+    ],
   });
+  assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-11").next_transition_rules, [
+    { condition: { fact_id: "pull_request_draft_confirmed", operator: "equals", value: false }, transition_id: "draft-pull-request" },
+    { condition: { fact_id: "pull_request_draft_confirmed", operator: "equals", value: true }, transition_id: "create-pull-request" },
+  ]);
   assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-12").completion_predicate, {
     fact_id: "pull_request_created", operator: "equals", value: true,
   });
@@ -204,6 +211,20 @@ test("implementation pre-PR condition mismatch stops without mutating state", as
     transition_id: "switch-branch",
   });
   assert.deepEqual(state, stateBefore);
+});
+
+test("FI-11 revise and create decisions resolve to exactly one next action without cycling", async () => {
+  const [definition, fixture] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
+
+  for (const scenario of fixture.pull_request_creation_cases) {
+    const stateBefore = structuredClone(scenario.state);
+    const result = evaluateWorkflowDefinition(definition, scenario.state, {
+      currentTransitionId: "request-pull-request-creation",
+    });
+    assert.equal(result.status, "action_required", scenario.name);
+    assert.equal(result.task_action_id, scenario.task_action_id, scenario.name);
+    assert.deepEqual(scenario.state, stateBefore, scenario.name);
+  }
 });
 
 test("implementation branch and repeat states resolve deterministically", async () => {

@@ -13,6 +13,7 @@ const urls = {
   artifactOutput: new URL("../../references/artifact-output-contract.md", import.meta.url),
   githubTemplates: new URL("../../references/github-templates.md", import.meta.url),
   implementation: new URL("../../definitions/implementation.json", import.meta.url),
+  workflowDoc: new URL("../../../../../docs/github-workflow-engine.md", import.meta.url),
   simpleExecutor: new URL("../../../github-simple-executor/SKILL.md", import.meta.url),
   targetEditor: new URL("../../../target-harness-code-editor/SKILL.md", import.meta.url),
   reviewComment: new URL("../../../review-comment/SKILL.md", import.meta.url),
@@ -130,12 +131,13 @@ test("existence operators are documented without a value field", async () => {
 });
 
 test("every review feedback requires a diff location and provider failures stay conditional", async () => {
-  const [skill, reviewRuntime, claudeReview, reviewComment, implementation] = await Promise.all([
+  const [skill, reviewRuntime, claudeReview, reviewComment, implementation, workflowDoc] = await Promise.all([
     read("skill"),
     read("reviewRuntime"),
     read("claudeReview"),
     read("reviewComment"),
     read("implementation"),
+    read("workflowDoc"),
   ]);
 
   assert.match(reviewRuntime, /모든 `\[차단\]`, `\[중요\]`, `\[사소\]`, `\[제안\]`, `\[학습\]`, `\[칭찬\]` 피드백의 파일 경로, diff line, GitHub diff position/);
@@ -148,6 +150,8 @@ test("every review feedback requires a diff location and provider failures stay 
     assert.doesNotMatch(source, /비실행 피드백 재분류|reclassify_non_actionable_feedback/);
     assert.match(source, /피드백 철회|withdraw_review_feedback/);
   }
+  assert.doesNotMatch(workflowDoc, /비실행 피드백 재분류|reclassify_non_actionable_feedback/);
+  assert.match(workflowDoc, /review thread 게시 위치 재지정[\s\S]*피드백 철회[\s\S]*기타 의견 입력/);
 });
 
 test("artifact output rules use grouped sections", async () => {

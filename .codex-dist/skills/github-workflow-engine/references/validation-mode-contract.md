@@ -19,6 +19,11 @@ pass/mismatch, 다수결 또는 대표 결과를 자동 산출하거나 채택�
 
 ## 실행과 무결성
 
+검증 session의 수명 주기는 실제로 `spawn` 도구를 호출해 ID를 발급받은 구성 요소가 소유한다. Workflow
+Engine이 검증 호출을 직접 fan-out하면 Workflow Engine이 소유하고, `target-harness-code-editor`가 격리
+편집 검증을 fan-out하면 target editor가 소유한다. 부모는 하위 실행 주체가 직접 발급받은 child ID를
+추적하거나 중복으로 `close_agent`하지 않는다.
+
 1. 10개 의도된 slot마다 fresh independent LLM session 하나를 시작하려고 시도한다. 완전 fan-out이면
    session ID는 모두 고유한 정확히 10개이며 session reuse/continue와 prompt, context, result 공유를
    금지한다.
@@ -31,10 +36,14 @@ pass/mismatch, 다수결 또는 대표 결과를 자동 산출하거나 채택�
    환경 불일치 등 실패 사유를 그대로 보존한다. fan-out이 불완전하면 발급된 모든 ID와 사용 가능한 모든
    raw result, 관측된 session/workspace 수와 명시적 무결성 실패 사유를 보존하며 누락 ID·결과를 만들거나
    재시도하지 않는다.
-5. 결과·오류·timeout을 보존하고 소비한 뒤, 완전 또는 불완전 fan-out에서 실제 발급된 모든 session
-   ID에 `close_agent`를 호출한다. `completed` 또는 `timed_out`만으로 정리됐다고 보지 않는다.
+5. 생성 주체가 결과·오류·timeout을 보존하고 소비한 뒤, 완전 또는 불완전 fan-out에서 자신이 직접
+   발급받은 모든 session ID에 `close_agent`를 호출한다. `completed` 또는 `timed_out`만으로 정리됐다고
+   보지 않는다.
    `close_agent` 성공 또는 `not_found`를 실행 리소스 정리 완료로 기록하고, `not_found`일 때 내부 상태
-   DB를 직접 수정하지 않는다. 정리 결과는 raw result의 의미나 실험 무결성 판정을 바꾸지 않는다.
+   DB를 직접 수정하지 않는다. Workflow Engine 직접 fan-out은 Workflow Engine의 진단 결과에, target
+   editor fan-out은 기존 `integrity_verification`과 `integrity_failure_reasons`에 정리 결과와 실패를
+   기록한다. 새 cleanup 필드는 만들지 않으며 정리 결과는 raw result의 의미나 실험 무결성 판정을
+   바꾸지 않는다.
 6. 완전 무결성은 정확히 10개의 고유 session, 동일 고정 조건, 결과 보존, 필요한 격리, 외부·primary
    부수 효과 부재를 요구한다. 하나라도 충족하지 못하면 불완전 fan-out을 포함한 실험 무결성 실패로
    보고하고 결과를 채택하지 않는다.

@@ -15,7 +15,6 @@ session을 오케스트레이션한다. 검증 결과는 사용자 판단을 위
 
 - 설치된 `github-workflow-engine/references/structured-execution-contract.md`에서 `명령 실행 경로 규칙`, `구조화 실행 요청 판정 규칙`, `구조화 실행 결과와 요청-결과 상관관계 판정 규칙`, `구조화 실행 성공과 중단 판정 규칙`, `실행 주체 선택 판정 규칙`, `Target Harness Code Editor 준비도, 라우팅, 출력 사용 가능 판정` 섹션만 읽는다.
 - 검증 모드이면 `github-workflow-engine/references/validation-mode-contract.md`에서 `대상과 고정 조건`, `실행과 무결성`, `사용자 반환과 종료` 섹션만 읽는다.
-- 설치된 `harness/references/logging-contract.md`에서 `Subagent 실행 리소스 정리` 섹션만 읽는다.
 - 대상 프로젝트의 `AGENTS.md`, `.agents/skills/run-harness/SKILL.md`
 - 대상 프로젝트의 `.harness/docs/team-spec.md`, `.harness/docs/orchestration-plan.md`
 - 선택 역할의 `.codex/agents/<agent_file>.toml`, `.agents/skills/<agent_file>/SKILL.md`
@@ -49,11 +48,17 @@ session을 오케스트레이션한다. 검증 결과는 사용자 판단을 위
    수정하고 각 명령 직전 permission/tool/path/risk를 재확인한다.
 3. 실제 session ID가 발급되기 전 실패는 `실행 세션 미시작 중단`, 발급 뒤 실패는 해당 실제 session의
    중단 결과로 반환한다. 직접 수정 fallback이나 두 번째 편집 session은 금지한다.
-4. 결과·오류·timeout과 실제 session ID를 먼저 보존한 뒤, 성공·실패·중단과 무관하게 Workflow Engine에
-   결과를 반환하기 전에 실제 발급된 session ID에 `close_agent`를 호출한다. `close_agent` 성공 또는
-   `not_found`를 실행 리소스 정리 완료로 기록하며 `not_found`일 때 내부 상태 DB를 직접 수정하지 않는다.
-5. 기존 공통 구조화 실행 결과와 라우팅 고유 필드를 그대로 반환한다. 정리 호출은 보존한 결과의 의미나
-   Workflow 상태 전이 판정을 바꾸지 않는다.
+4. 이 스킬이 `spawn` 도구를 직접 호출해 발급받은 일반 편집 session ID만 추적한다. 결과·오류·timeout과
+   실제 session ID를 먼저 보존한 뒤, 성공·실패·중단과 무관하게 Workflow Engine에 결과를 반환하기 전에
+   해당 ID에 `close_agent`를 호출한다. `close_agent` 성공 또는 `not_found`를 실행 리소스 정리 완료로
+   기록하며 `not_found`일 때 내부 상태 DB를 직접 수정하지 않는다.
+5. 기존 공통 구조화 실행 결과와 라우팅 고유 필드를 그대로 반환한다. `verification_results`에는 직접
+   발급받은 ID별 정리 시도와 결과를 기록하고, 정리 실패는 `residual_risks_or_failure_reasons`에 기록한다.
+   새 cleanup 필드, schema 또는 registry는 만들지 않는다. 정리 호출은 보존한 결과의 의미나 Workflow
+   상태 전이 판정을 바꾸지 않는다.
+6. Workflow Engine은 이 스킬이 직접 발급받은 ID를 중복으로 닫지 않는다. 이 스킬도 선택 타겟 역할이
+   내부에서 별도의 child session을 직접 생성했다면 그 ID를 닫지 않고, 해당 생성 주체가 반환한 기존
+   검증·남은 위험 필드의 정리 근거만 보존한다.
 
 ## 검증 모드
 
@@ -73,10 +78,13 @@ session을 오케스트레이션한다. 검증 결과는 사용자 판단을 위
    가능한 raw result, 관측된 session/workspace 수, 명시적 무결성 실패 사유를 기록한다. retry하거나
    누락 ID·결과를 만들지 않는다. timeout, blocked, 환경·baseline 불일치, 중복 ID 또는 외부 부수 효과도
    실험 무결성 실패로 기록한다.
-5. 결과·오류·timeout을 보존하고 소비한 뒤, 10개 의도된 slot에서 실제 발급된 모든 session ID에
-   `close_agent`를 호출한다. `completed` 또는 `timed_out`은 실행 리소스 정리 완료가 아니다.
+5. 이 스킬이 `spawn` 도구를 직접 호출해 10개 의도된 slot에서 실제 발급받은 모든 검증 session ID의
+   결과·오류·timeout을 보존하고 소비한 뒤 각 ID에 `close_agent`를 호출한다. `completed` 또는
+   `timed_out`은 실행 리소스 정리 완료가 아니다.
    `close_agent` 성공 또는 `not_found`를 정리 완료로 기록하고 `not_found`일 때 내부 상태 DB를 직접
-   수정하지 않는다. 정리 결과는 raw result 의미나 실험 무결성 판정을 바꾸지 않는다.
+   수정하지 않는다. 정리 결과는 기존 `integrity_verification`에, 정리 실패는 기존
+   `integrity_failure_reasons`에 기록한다. 새 cleanup 필드는 만들지 않으며, 정리 결과는 raw result
+   의미나 실험 무결성 판정을 바꾸지 않는다.
 6. patch를 정규화하거나 비교하지 않는다. pass/mismatch, 다수결, 대표 patch, 결과 채택은 금지한다.
    validation session/workspace 결과로 primary 파일을 수정하거나 Workflow Definition transition을
    선택·완료·진행하지 않는다.

@@ -1,6 +1,6 @@
 # 구조화 실행 계약
 
-이 문서는 사용자 입력 해석, 확정된 작업의 실행 범위, 실행 중단과 재개, 명령 권한 경로, 구조화 요청·결과·상관관계·성공·중단, 실행 주체 선택과 Target Harness Code Editor 준비도를 정의한다. 작업 전이, 전용 스킬 산출물, 상태 관측, 리뷰 형식, 검증 모드와 서브에이전트 공통 수명 주기는 이 문서의 책임이 아니다. 각각 `definitions/*.json`과 `evaluator.mjs`, `artifact-output-contract.md`, `state-observation-contract.md`, `review-runtime-contract.md`, `validation-mode-contract.md`, 하네스의 `references/logging-contract.md`를 따른다.
+이 문서는 사용자 입력 해석, 확정된 작업의 실행 범위, 실행 중단과 재개, 명령 권한 경로, 구조화 요청·결과·상관관계·성공·중단, 실행 주체 선택과 Target Harness Code Editor 준비도를 정의한다. 작업 전이, 전용 스킬 산출물, 상태 관측, 리뷰 형식과 검증 모드는 이 문서의 책임이 아니다. 각각 `definitions/*.json`과 `evaluator.mjs`, `artifact-output-contract.md`, `state-observation-contract.md`, `review-runtime-contract.md`, `validation-mode-contract.md`를 따른다.
 
 ## 사용자 입력 판정 규칙
 
@@ -133,6 +133,21 @@
 - 리뷰 내용 생성은 사용자가 확정한 리뷰 실행 모드에 대해 `리뷰 실행 주체 선택`으로 확정된 실행 주체만 담당한다. 결정론적 실행기, 저비용 실행 서브에이전트, 타겟 하네스 코드 수정 서브에이전트에는 리뷰 내용 생성을 위임하지 않는다. Workflow Engine은 리뷰 결과 정규화와 게시할 리뷰 피드백 존재 또는 없음 판정을 담당한다.
 - 위 선택 판정에 맞는 실행 주체가 없으면 `구조화 실행 중단`으로 판정한다.
 
+## 생성 주체별 서브에이전트 수명 주기
+
+- 서브에이전트 수명 주기는 `spawn` 도구를 호출해 ID를 직접 발급받은 구성 요소가 소유한다. 생성 주체는
+  결과·오류·timeout을 먼저 보존한 뒤 자신이 직접 발급받은 ID에만 `close_agent`를 호출한다.
+- Workflow Engine은 자신이 직접 fan-out한 검증 session과 상태 요약·단순 실행·리뷰 실행 주체를 별도
+  subagent로 직접 시작한 session만 닫는다. 같은 session의 단순 스킬 호출은 수명 주기 대상이 아니다.
+- `target-harness-code-editor`는 자신이 직접 발급받은 일반 편집 session과 검증 fan-out session만 닫는다.
+  Workflow Engine은 이 child ID를 추적하거나 중복으로 `close_agent`하지 않는다.
+- 하위 실행 주체는 직접 발급받은 ID별 정리 시도와 결과를 기존 `verification_results`에 기록하고, 정리
+  실패를 기존 `residual_risks_or_failure_reasons`에 기록해 부모에게 반환한다. 새 cleanup 필드, schema,
+  registry는 만들지 않는다.
+- 부모는 구조화 결과 사용 가능 판정에서 위 근거가 발급된 ID와 모두 대응하는지 검증한다. 근거 누락,
+  소유하지 않은 ID의 정리 시도 또는 정리 실패가 있으면 구조화 실행 성공으로 판정하지 않는다. 정리
+  호출은 이미 보존한 실행 결과의 의미를 바꾸지 않는다.
+
 ## Target Harness Code Editor 준비도, 라우팅, 출력 사용 가능 판정
 
 이 절이 파일 수정 실행 주체의 최종 선택·중단 판정과 target editor 출력 사용 가능 판정을 담당한다.
@@ -142,7 +157,7 @@
 | 대상 하네스 준비됨 | `target-harness-code-editor`가 설치되어 있고, 대상 프로젝트의 `AGENTS.md`, 로컬 `run-harness` 스킬, `.harness/docs/team-spec.md`, `.harness/docs/orchestration-plan.md`가 존재하며, 요청의 `target_baseline`이 대상 프로젝트의 현재 기준 상태와 일치한다. |
 | 대상 코드 수정 라우팅 사용 가능 | Workflow Engine이 로컬 `run-harness`에서 받은 라우팅 결과에 `routing_status`, 정확히 하나의 `selected_role_id`, `agent_config_path`, `local_skill_path`, `routing_evidence`, 선택 역할의 `model`, `model_reasoning_effort`, `sandbox_mode`가 있음을 확인한다. 그 결과와 선택 역할의 team-spec 역할 카드, agent TOML, local skill, 예정 실행 식별자 및 조건을 대조해 일치함을 검증한다. 현재 실행 중 누락된 전용 스킬, 실행기 구현, 모델 설정을 새로 만들거나 변경해 이 판정을 충족시킨 경우에는 통과하지 않는다. |
 | Target Harness Code Editor 선택 가능 | 파일 수정 작업이며 `대상 하네스 준비됨`, `대상 코드 수정 라우팅 사용 가능`이 모두 충족되고, 유효한 `request_id`·orchestration context와 검증된 라우팅 결과를 완전한 불변 구조화 실행 요청과 함께 `target-harness-code-editor` 입력으로 전달할 수 있다. 이 조건을 충족하지 못하면 target editor를 호출하지 않고 Workflow Engine이 선택 전에 `구조화 실행 중단`으로 처리한다. |
-| Target Harness Code Editor 출력 사용 가능 | ordinary 실행에서 target editor가 `Target Harness Code Editor 선택 가능`을 통과한 입력으로 실제 호출된 경우에만 기존 `구조화 실행 결과 사용 가능`과 `실행 범위 준수`를 적용한다. 일반 모드의 성공 또는 실제 execution session ID가 발급된 뒤의 중단이면 반환된 `routing_status`, `selected_role_id`, `agent_config_path`, `local_skill_path`, `routing_evidence`, `model`, `model_reasoning_effort`, `sandbox_mode`가 Workflow Engine이 검증해 전달한 입력 라우팅 결과와 모두 일치하며 실제 실행 주체가 선택 역할의 agent config, local skill, model, reasoning, sandbox를 사용한 별도 execution session임이 확인된다. validation mode 결과는 10개의 raw result와 무결성 정보를 사용자에게 제시하는 terminal diagnostic이며 출력 사용 가능 판정, 구조화 실행 성공 또는 다음 transition에 연결하지 않는다. 실행 세션 미시작 중단이면 `routing_status`만 `aborted`로 전이할 수 있고 나머지 라우팅 고유 필드는 검증해 전달한 입력과 항상 일치해야 하며, 전용 중단 조건과 세션 `not_applicable` 사유 대조를 통과해야 한다. 불완전 fan-out, 선택 전 중단, 구조화 요청 식별 불능, 검증된 라우팅 입력 누락은 target editor 출력 사용 가능 판정 대상이 아니다. |
+| Target Harness Code Editor 출력 사용 가능 | ordinary 실행에서 target editor가 `Target Harness Code Editor 선택 가능`을 통과한 입력으로 실제 호출된 경우에만 기존 `구조화 실행 결과 사용 가능`과 `실행 범위 준수`를 적용한다. 일반 모드의 성공 또는 실제 execution session ID가 발급된 뒤의 중단이면 반환된 `routing_status`, `selected_role_id`, `agent_config_path`, `local_skill_path`, `routing_evidence`, `model`, `model_reasoning_effort`, `sandbox_mode`가 Workflow Engine이 검증해 전달한 입력 라우팅 결과와 모두 일치하며 실제 실행 주체가 선택 역할의 agent config, local skill, model, reasoning, sandbox를 사용한 별도 execution session임이 확인된다. target editor가 직접 발급받은 모든 ID의 정리 시도와 결과가 기존 `verification_results`에 있고, 정리 실패가 있으면 기존 `residual_risks_or_failure_reasons`에 누락 없이 기록됐는지도 검증한다. Workflow Engine은 이 child ID를 중복으로 `close_agent`하지 않는다. 근거 누락, 소유권 위반 또는 정리 실패는 구조화 실행 성공으로 판정하지 않는다. validation mode 결과는 10개의 raw result와 무결성 정보를 사용자에게 제시하는 terminal diagnostic이며 출력 사용 가능 판정, 구조화 실행 성공 또는 다음 transition에 연결하지 않는다. 실행 세션 미시작 중단이면 `routing_status`만 `aborted`로 전이할 수 있고 나머지 라우팅 고유 필드는 검증해 전달한 입력과 항상 일치해야 하며, 전용 중단 조건과 세션 `not_applicable` 사유 대조를 통과해야 한다. 불완전 fan-out, 선택 전 중단, 구조화 요청 식별 불능, 검증된 라우팅 입력 누락은 target editor 출력 사용 가능 판정 대상이 아니다. |
 | 대상 코드 수정 구조화 중단 | 대상 하네스 또는 실행 스킬 누락, 기준 상태 불일치, 라우팅 결과 누락, 라우팅 후보 0개 또는 복수, Workflow Engine 검증 뒤의 라우팅·역할 자산·설정 변경, 현재 실행 중 전용 스킬·실행기 구현·모델 설정의 신규 생성 또는 변경, 역할·agent·skill·model·reasoning·sandbox·권한·도구·경로·파괴적 위험 불일치, 별도 execution session 시작 불가, 출력 사용 가능 실패 중 하나 이상이 있다. 누락 또는 불일치의 재개 조건은 설치 또는 하네스 생성기 갱신 후 해당 실행을 다시 시작하는 것이다. |
 
 - `대상 코드 수정 구조화 중단`이면 파일을 변경하지 않고 공통 구조화 실행 결과로 중단을 반환한다. `direct-edit fallback`과 라우팅 우회는 허용하지 않는다.

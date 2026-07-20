@@ -16,7 +16,6 @@ description: GitHub Issue, PR, label, checklist, review thread, comment를 관�
 
 - `references/workflow-definition-contract.md`
 - `references/normalized-fact-adapter-contract.md`
-- `../harness/references/logging-contract.md`의 서브에이전트 결과 보존과 실행 리소스 수명 주기 계약
 
 작업에 해당하는 계약만 추가로 읽는다.
 
@@ -129,15 +128,21 @@ reasoning, role, skill version, config, input과 deadline으로 정확히 10개�
 
 ## 서브에이전트 수명 주기
 
-Workflow Engine이 발급한 모든 ID를 현재 오케스트레이션에서 추적한다. 결과·오류·timeout을 먼저
-보존하고 소비한 뒤 성공·실패·중단과 관계없이 다음 전이 또는 최종 응답 전에 각 ID에 `close_agent`를
-호출한다. `completed`와 `timed_out`은 결과 상태이지 실행 리소스 정리 완료가 아니다. `close_agent`
-성공 또는 `not_found`를 정리 완료로 취급하며, `not_found`는 이미 런타임에서 제거된 상태로 기록하되
-내부 상태 DB를 직접 수정하지 않는다. 정리 결과는 보존한 결과의 의미와 Workflow Definition 전이
-판정을 바꾸지 않는다.
+Workflow Engine은 자신이 `spawn` 도구를 직접 호출해 발급받은 ID만 현재 오케스트레이션에서 추적하고
+닫는다. 여기에는 Workflow Engine이 직접 fan-out한 검증 session과, 상태 요약·단순 실행·리뷰 실행
+주체를 별도 subagent로 직접 시작한 session이 포함된다. 같은 session에서 스킬 지시를 읽고 수행하는
+단순 스킬 호출은 새 실행 리소스를 만들지 않으므로 수명 주기 관리 대상이 아니다.
 
-검증 모드에서도 10개 의도된 slot에서 실제 발급된 모든 session ID에 같은 절차로 `close_agent`를
-호출한다.
+직접 발급받은 session의 결과·오류·timeout을 먼저 보존하고 소비한 뒤 성공·실패·중단과 관계없이 다음
+전이 또는 최종 응답 전에 각 ID에 `close_agent`를 호출한다. `completed`와 `timed_out`은 결과 상태이지
+실행 리소스 정리 완료가 아니다. `close_agent` 성공 또는 `not_found`를 정리 완료로 취급하며,
+`not_found`는 이미 런타임에서 제거된 상태로 기록하되 내부 상태 DB를 직접 수정하지 않는다. 정리
+결과는 보존한 결과의 의미와 Workflow Definition 전이 판정을 바꾸지 않는다.
+
+`target-harness-code-editor`처럼 하위 실행 주체가 직접 발급받은 child ID는 해당 실행 주체가 소유한다.
+Workflow Engine은 그 ID를 추적하거나 중복으로 `close_agent`하지 않고, 반환된 `verification_results`와
+`residual_risks_or_failure_reasons`에서 정리 시도와 결과 또는 실패 근거를 검증한다. 새 cleanup 필드,
+schema 또는 registry는 만들지 않는다.
 
 ## 로그와 출력
 

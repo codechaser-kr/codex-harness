@@ -131,6 +131,50 @@ test("rejects removed expression operators and not expressions", async () => {
   }
 });
 
+test("reports conflicting expression forms in deterministic order", async () => {
+  for (const [forms, expected] of [
+    [["leaf", "all"], "Expression contains conflicting forms: leaf, all."],
+    [["leaf", "any"], "Expression contains conflicting forms: leaf, any."],
+    [["all", "any"], "Expression contains conflicting forms: all, any."],
+    [["leaf", "all", "any"], "Expression contains conflicting forms: leaf, all, any."],
+  ]) {
+    const definition = await validDefinition();
+    const expression = {};
+    if (forms.includes("leaf")) {
+      expression.fact_id = "issue_open";
+      expression.operator = "exists";
+    }
+    if (forms.includes("all")) expression.all = [];
+    if (forms.includes("any")) expression.any = [];
+    definition.transitions[0].completion_predicate = expression;
+
+    const errors = validateWorkflowDefinition(definition).errors;
+    const formErrors = errors.filter((error) => error.code === "expression.form");
+    assert.equal(formErrors.length, 1, forms.join("+"));
+    assert.deepEqual(formErrors[0], {
+      code: "expression.form",
+      path: "/transitions/0/completion_predicate",
+      message: expected,
+    });
+    assert.deepEqual(Object.keys(formErrors[0]).sort(), ["code", "message", "path"]);
+  }
+
+  const definition = await validDefinition();
+  definition.transitions[0].completion_predicate = {
+    fact_id: "issue_open",
+    operator: "exists",
+    all: [],
+    priority: "legacy",
+  };
+  const errors = validateWorkflowDefinition(definition).errors;
+  assert.equal(hasError(errors, "priority.forbidden", "/transitions/0/completion_predicate/priority"), true);
+  assert.deepEqual(errors.find((error) => error.code === "expression.form"), {
+    code: "expression.form",
+    path: "/transitions/0/completion_predicate",
+    message: "Expression contains conflicting forms: leaf, all.",
+  });
+});
+
 test("requires direct executor_reference and accepts string or explicit null", async () => {
   const definition = await validDefinition();
   definition.transitions[0].executor_reference = "not-installed-yet";

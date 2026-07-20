@@ -178,7 +178,10 @@ function validateExpressionInto(value, path, facts, errors) {
     if (Object.hasOwn(value, "priority")) {
       addError(errors, "priority.forbidden", childPath(path, "priority"), "priority is not allowed.");
     }
-    addError(errors, "expression.form", path, "Expression must contain exactly one supported form.");
+    const message = forms.length > 1
+      ? `Expression contains conflicting forms: ${forms.join(", ")}.`
+      : "Expression must contain exactly one supported form.";
+    addError(errors, "expression.form", path, message);
     return;
   }
   if (forms[0] === "leaf") {

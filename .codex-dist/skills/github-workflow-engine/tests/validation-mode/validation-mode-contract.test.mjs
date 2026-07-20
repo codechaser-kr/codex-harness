@@ -3,7 +3,6 @@ import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
 const skillUrl = new URL("../../SKILL.md", import.meta.url);
-const rulesUrl = new URL("../../references/workflow-engine-rules.md", import.meta.url);
 const contractUrl = new URL("../../references/validation-mode-contract.md", import.meta.url);
 const targetEditorUrl = new URL("../../../target-harness-code-editor/SKILL.md", import.meta.url);
 
@@ -12,14 +11,13 @@ async function read(url) {
 }
 
 test("validation mode requires explicit activation, ten independent sessions, raw results, and user judgment", async () => {
-  const [skill, rules, contract, targetEditor] = await Promise.all([
+  const [skill, contract, targetEditor] = await Promise.all([
     read(skillUrl),
-    read(rulesUrl),
     read(contractUrl),
     read(targetEditorUrl),
   ]);
 
-  for (const source of [skill, rules, contract, targetEditor]) {
+  for (const source of [skill, contract, targetEditor]) {
     assert.match(source, /명시적(?:으로)? 요청|명시.*검증 모드/);
     assert.match(source, /정확히 10개|10개의 fresh independent|독립 session 10개/);
     assert.match(source, /raw result/);

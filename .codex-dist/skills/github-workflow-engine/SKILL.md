@@ -1,115 +1,86 @@
 ---
 name: github-workflow-engine
-description: GitHub Issue, PR, label, checklist, review thread, comment를 기준으로 현재 작업 상태를 읽고 다음 Workflow 작업을 산출합니다. 확정된 자동 실행은 구조화 실행 요청으로 선택된 실행 주체에 위임합니다. 다음 계획, 워크플로우 재개, PR merge 반영, GitHub 실행 상태, 구현 흐름 요청에서 사용합니다.
+description: GitHub Issue, PR, label, checklist, review thread, comment를 관측하고 선언형 Workflow Definition으로 현재 작업과 다음 작업을 평가합니다. 확정된 자동 실행은 구조화 실행 요청으로 선택된 실행 주체에 위임합니다.
 ---
 
 # GitHub Workflow Engine
 
-이 스킬은 GitHub 실행 상태와 현재 코드 상태를 읽어 `references/workflow-engine-rules.md`의 판정 결과를 적용하는 Workflow Engine이다. Workflow Engine의 책임은 현재 작업, 진행 판단, 실행 범위, 사용자 결정을 확정하고, 구조화 실행 요청을 만들며, 실행 주체를 선택하고, 반환 결과를 검증하는 데 있다. 실제 GitHub 상태 변경, 파일 변경, 브랜치, 커밋, PR, 댓글, review thread 변경은 선택된 실행 주체만 수행한다. 작업 전이와 구조화 실행의 판정 기준은 `workflow-engine-rules.md`가 정의한다.
+이 스킬은 GitHub와 로컬 상태를 정규화한 뒤 Workflow Definition을 평가하는 얇은 오케스트레이터다.
+작업 전이의 단일 원천은 `definitions/*.json`, 각 state adapter와
+`scripts/workflow-definition/evaluator.mjs`다. 실제 GitHub 상태 변경, 파일 변경, 브랜치, 커밋, PR,
+댓글과 review thread 변경은 선택된 실행 주체만 수행한다.
 
-## 먼저 읽을 문서
+## 계약 읽기
 
-- `references/workflow-engine-rules.md` 전체를 항상 읽는다.
-- 현재 작업 판정이나 실행에 이슈 유형 label, 제목, 본문, 템플릿, 연관 이슈 계약이 필요하면 `references/github-templates.md`를 읽는다.
-- 사용자가 **현재 요청에서 검증 모드**를 명시적으로 요청했으면 일반 실행 전에 `references/validation-mode-contract.md` 전체를 읽는다.
+항상 다음 계약을 읽는다.
 
-필요한 경우 대상 저장소의 `.harness/logs/github-workflow-log.md`를 읽는다. 로그는 `workflow-engine-rules.md`에서 보조 근거로 인정한 항목만 사용한다. `docs/github-workflow-engine.md`는 런타임 판정 원천으로 읽지 않는다.
+- `references/workflow-definition-contract.md`
+- `references/normalized-fact-adapter-contract.md`
+- `../harness/references/logging-contract.md`의 서브에이전트 결과 보존과 실행 리소스 수명 주기 계약
 
-## 책임
+작업에 해당하는 계약만 추가로 읽는다.
 
-1. 기준 이슈, 기준 PR, 새 요청 여부, 재개 요청 여부를 식별한다.
-2. `workflow-engine-rules.md`의 판정 규칙으로 현재 작업, 진행 판단, 실행 범위와 사용자 결정을 확정한다.
-3. 현재 작업이 전용 스킬의 초안, 후보, 분석 결과를 요구하면 해당 제안·분석 스킬을 호출하고, 산출물 판정 규칙을 적용한다. 보류 판정이면 상태를 확정하거나 사용자 결정 대상으로 제시하지 않는다.
-4. 상태 근거의 읽기 전용 수집이 필요하면 `github-state-summary`를 지원 단위로 호출하고, 반환한 관측값만 판정 입력으로 사용한다.
-5. 사용자 결정이 필요한 작업이면 결정 대상, 선택지, `기타 의견 입력`, 입력 예시를 번호 목록으로 제시한다.
-6. `자동 실행`이면 구조화 실행 요청을 확정하고 실행 주체 선택 판정을 적용한 뒤, 선택된 실행 주체가 반환한 결과를 검증한다.
-7. 구조화 실행 성공일 때만 GitHub 실행 상태와 현재 코드 상태를 다시 읽고 다음 작업 판정을 반복한다.
-8. 작업 진입, 구조화 실행 요청과 결과, 중단, 재개를 `.harness/logs/github-workflow-log.md`에 기록한다.
+- raw GitHub·로컬 상태를 수집하거나 관측 근거를 분류할 때 `references/state-observation-contract.md`
+- 전용 제안·분석 스킬의 결과를 사용할 때 `references/artifact-output-contract.md`
+- 리뷰를 실행·정규화·게시·대응할 때 `references/review-runtime-contract.md`
+- 확정된 작업을 자동 실행할 때 `references/structured-execution-contract.md`
+- 사용자가 현재 요청에서 검증 모드를 명시했을 때만 `references/validation-mode-contract.md`
+- 이슈 또는 PR 템플릿, 제목, label, 연관 이슈 계약이 필요할 때 `references/github-templates.md`
 
-Workflow Engine이 생성한 모든 서브에이전트는 현재 오케스트레이션 문맥에서 발급 ID를 추적한다. 각
-결과·오류·timeout을 먼저 보존하고 소비한 뒤, 성공·실패·중단과 무관하게 다음 전이 또는 최종 응답 전에
-각 ID에 `close_agent`를 호출한다. `completed`와 `timed_out`은 작업 결과 상태이지 실행 리소스 정리
-상태가 아니다. `close_agent` 성공 또는 `not_found`를 정리 완료로 취급하고, `not_found`는 이미
-런타임에서 제거된 상태로 기록하되 내부 상태 DB를 직접 수정하지 않는다. 정리 호출은 보존한 결과의
-의미와 Workflow Definition 상태 전이 판정을 바꾸지 않는다.
+필요한 경우 대상 저장소의 `.harness/logs/github-workflow-log.md`를 보조 근거로 읽는다.
+`docs/github-workflow-engine.md`는 설계 문서이며 런타임 입력으로 읽지 않는다.
 
-PR merge는 사람이 수행한다. Workflow Engine은 merge 알림이나 GitHub 실행 상태를 근거로 merge 이후 작업만 수행한다. 최종 판단, 사용자 결정 해석, 커밋 생성 여부 판단, PR 생성 여부 판단은 실행 주체에 위임하지 않는다. 리뷰 내용 생성은 사용자가 확정한 리뷰 실행 모드에 대해 `리뷰 실행 주체 선택`으로 확정된 실행 주체만 담당하며, 결정론적 실행기, 저비용 실행 서브에이전트, 타겟 하네스 코드 수정 서브에이전트에는 맡기지 않는다. Workflow Engine은 리뷰 결과 정규화와 게시할 리뷰 피드백 존재 또는 없음 판정을 담당한다.
+## Workflow 선택
 
-## 일반 실행 Workflow Definition
+기준 대상과 이슈 유형을 관측한 뒤 다음 매핑 중 정확히 하나를 선택한다.
 
-일반 실행에서 현재 작업이 공통 구현 흐름이면 `definitions/implementation.json`과
-`scripts/workflow-definition/implementation-state-adapter.mjs`를 선택한다. GitHub·로컬·사용자·스킬
-관측을 adapter의 evidence/source contract에 따라 `normalizeImplementationFacts`로 정확히 한 번
-정규화하고, 내부에서 Definition validation을 수행하는 `evaluateWorkflowDefinition`을 같은 결과에
-정확히 한 번 적용하는 단일 경로만 사용한다. runtime에서 evaluator 호출 전에
-`validateWorkflowDefinition`을 중복 호출하지 않는다.
+| `workflow_id` | Definition | state adapter | 정규화 함수 |
+| --- | --- | --- | --- |
+| `feature-proposal` | `definitions/feature-proposal.json` | `scripts/workflow-definition/feature-proposal-state-adapter.mjs` | `normalizeFeatureProposalFacts` |
+| `policy-review` | `definitions/policy-review.json` | `scripts/workflow-definition/policy-review-state-adapter.mjs` | `normalizePolicyReviewFacts` |
+| `feature-change` | `definitions/feature-change.json` | `scripts/workflow-definition/feature-change-state-adapter.mjs` | `normalizeFeatureChangeFacts` |
+| `feature-fix` | `definitions/feature-fix.json` | `scripts/workflow-definition/feature-fix-state-adapter.mjs` | `normalizeFeatureFixFacts` |
+| `implementation` | `definitions/implementation.json` | `scripts/workflow-definition/implementation-state-adapter.mjs` | `normalizeImplementationFacts` |
 
-최초 진입이 명확히 관측된 경우에만 `definition.entry_task_action_id`를
-`evaluateWorkflowDefinition`의 `currentTaskActionId`로 전달한다. 재개와 다음 반복에서는 이전
-evaluation이 반환한 단일 `task_action_id`를 현재 작업 ID로 확정·기록하고, 해당 작업 완료 뒤 같은
-ID를 `currentTaskActionId`로 다시 전달한다. Definition의 `next_transition_rules`가 다음 분기·반복을
-결정하고 다음 evaluation의 단일 `task_action_id`가 기록을 갱신한다.
+각 전용 state adapter는 workflow별 static source contract를 검증한 뒤 공통 fact 정규화 계약으로
+관측값을 변환한다. 런타임에서 source contract를 구성하거나 보완하지 않는다.
 
-재개할 current task action ID가 없거나 Definition에 존재하지 않거나 현재 normalized fact 조건과
-불일치하면 entry를 추정하거나 자연어 전이로 fallback하지 않고 구조화 중단한다. 작업 ID는 LLM이
-임의로 추론하지 않는다.
+이슈 유형 label과 제목이 충돌하거나 유형을 하나로 확정할 수 없으면 Workflow를 추정하지 않고
+중단한다. 공통 구현 흐름으로 진입하는 Definition의 작업이 반환된 뒤에는 `implementation`을 선택한다.
 
-evaluator의 `action_required`는 Definition이 반환한 단일 현재 작업의 `task_action_id`,
-`user_decision_options`, `executor_reference`, `completion_predicate`를 기존 상태 판정,
-사용자 결정, 구조화 실행 절차에 연결한다. `completed`는 완료로, adapter·Definition validation 또는
-evaluation의 `stopped`와 오류는 구조화 중단으로 연결한다. 실패를 자연어 구현 전이로 fallback하지
-않고, 일반 실행에서 자연어 전이표와 Definition을 이중 실행하거나 결과를 비교하지 않는다.
+## 선언형 평가 루프
 
-명시적 검증 모드는 아래 별도 계약으로만 실행한다. 이 공통 구현 연결은 기능제안·정책검토·기능변경·
-기능결함의 기존 Workflow Definition 선택 경로를 변경하지 않는다.
+모든 일반 실행은 다음 단일 경로만 사용한다.
 
-## 명시적 검증 모드
+1. 기준 이슈 또는 PR과 raw GitHub·로컬·사용자·스킬 상태를 읽기 전용 snapshot으로 수집한다.
+2. 선택한 state adapter로 관측값을 정확히 한 번 정규화한다.
+3. 정규화 성공 결과를 `evaluateWorkflowDefinition`에 정확히 한 번 전달한다. evaluator가 내부에서
+   Definition을 검증하므로 런타임에서 `validateWorkflowDefinition`을 중복 호출하지 않는다.
+4. 최초 진입이면 `definition.entry_task_action_id`, 재개 또는 반복이면 이전 evaluation이 반환한
+   `task_action_id`를 `currentTaskActionId`로 전달한다.
+5. `action_required`가 반환한 단일 `task_action_id`, `user_decision_options`, `executor_reference`,
+   `completion_predicate`를 현재 작업의 실행 입력으로 사용한다.
+6. 작업 완료 뒤 상태를 다시 관측·정규화하고 같은 `task_action_id`를 `currentTaskActionId`로 전달한다.
+   Definition의 `next_transition_rules`와 evaluator가 다음 단일 작업 또는 완료를 결정한다.
+7. `completed`면 흐름을 완료한다. adapter 또는 Definition validation 실패, evaluator의 `stopped`,
+   매칭 없음·복수 매칭과 오류는 중단한다.
 
-검증 모드는 사용자가 **현재 요청에서 검증 모드**를 명시했을 때만 활성화한다. 일반 실행,
-단순한 `검증` 표현, 운영 비교, 과거 요청의 검증 모드 언급만으로는 활성화하지 않는다. 이
-분기는 일반 Workflow Definition 평가, 사용자 결정 반영, 자동 실행 절차와 로그 기록보다 먼저
-선택하는 terminal diagnostic이다. 목적은 같은 입력에서 실제 LLM 호출의 재현성을 관찰해 사용자에게
-skill/prompt 개선 근거를 제공하는 것이다.
+현재 또는 다음 `task_action_id`를 자연어로 추론하거나 전이표로 보완하지 않는다. Definition에 없는
+ID, 현재 정규화 상태와 불일치하는 ID, 재개 ID 누락을 entry로 대체하지 않는다. 실패 시 다른 흐름의
+Definition을 시도하거나 자연어 판정과 이중 실행·비교하지 않는다.
 
-1. 진단할 LLM 의존 호출을 현재 작업과 직접 `executor_reference`로 식별한다. Definition validation은
-   참조가 안정적인 비어 있지 않은 문자열 또는 `null`인지만 검사하며 registry로 존재 여부를 검사하지
-   않는다. 실제 호출 전에는 선택된 실행 주체 또는 대상 하네스 계약으로 해당 target의 설치·라우팅·
-   모델·권한·실행 가능 여부를 확인하고, 확인할 수 없으면 session을 시작하지 않고 중단한다. parser,
-   adapter, evaluator 같은 결정론적 제어 도구는 검증 대상이 아니며 한 번만 실행할 수 있다.
-2. 원 호출의 GitHub/local raw state를 읽기 전용으로 한 번 수집해 고정한다. 결정론적으로 관측 가능한
-   fact는 현재 진단 대상을 찾는 데만 사용할 수 있으며 transition을 진행·완료 상태로 기록하지 않는다.
-3. 동일 snapshot, route, model, reasoning, role, skill version, config, input과 deadline으로 정확히 10개의
-   fresh independent LLM session을 시작한다. session reuse/continue와 prompt/result/context 공유를
-   금지하고 session ID는 모두 고유해야 한다.
-4. 검증 대상의 자체 실행 계약이 격리 workspace를 요구하면 같은 baseline에서 각 session의 workspace를
-   분리하고 workspace ID도 모두 고유해야 한다. 그렇지 않으면 workspace나 patch 형식을 추가로 요구하지
-   않는다.
-5. 각 raw result와 session ID, 고정 조건의 관측값, 중단 사유를 그대로 보존한다. timeout, 환경 불일치,
-   ID 중복, 결과 누락, 외부 또는 primary 상태 변경은 실험 무결성 실패로만 보고한다. 결과 보존 뒤
-   10개 의도된 slot에서 실제 발급된 모든 session ID에 `close_agent`를 호출하고, 정리 결과를 실험
-   무결성 및 raw result 의미와 분리해 기록한다.
-6. 결과의 의미나 patch가 같은지 자동 비교하지 않는다. 다수결, 대표 결과, pass/mismatch,
-   `unanimous_outcome`, 결과 채택은 금지한다. 검증 결과로 Workflow Definition transition을 선택·완료·
-   진행하거나 일반 workflow를 자동 재개하지 않는다.
-7. 10개 raw result와 무결성 확인 결과를 사용자에게 제시하고, 재현성 판단과 skill/prompt 개선 여부를
-   사용자에게 요청한 뒤 종료한다. 이 판단은 Workflow Definition transition이 아니다.
+## 사용자 결정
 
-## 자동 실행 절차
+`action_required.user_decision_options`가 비어 있지 않으면 사용자 결정으로 멈춘다. 결정 대상과
+선택지를 번호 목록으로 제시하고 `기타 의견 입력`을 마지막 항목에 포함한다. 번호, 선택지 문구,
+`기타 의견 입력 항목 번호: 의견`, `기타 의견 입력: 의견`만 유효 입력으로 처리한다. 일반 진행 표현을
+선택으로 추정하지 않는다. 사용자가 확정한 값은 다음 snapshot의 사용자 관측값으로 정규화하며,
+사용자 결정을 실행 주체에 위임하지 않는다.
 
-진행 판단이 `자동 실행`일 때만 다음 순서로 수행한다.
-
-1. 확정된 현재 작업, 실행 범위, 사용자 결정과 기준 상태를 바탕으로 실행 종류와 실행 주체 후보를 식별한다.
-2. `실행 주체 선택 판정 규칙`을 적용해 실행 주체를 선택한다. 읽기 전용 상태 요약은 `github-state-summary`를 선택할 수 있으나 반환값으로 현재 작업이나 전이를 확정하지 않는다. 현재 작업이 리뷰 실행이면 `리뷰 실행 주체 선택` 판정을 적용한다. 그 밖의 확정된 단순 상태 변경에 결정론적 도구 경로가 있으면 추가 LLM 판단 없이 결정론적 실행기를 최우선으로 선택한다. 결정론적 경로가 없고 판단, 값 재해석, 범위 변경이 필요 없는 단순 단일 비파일 동작일 때만 `github-simple-executor`를 선택한다. 파일 수정은 Workflow Engine이 먼저 대상 프로젝트의 로컬 `run-harness`에서 라우팅 결과를 받고, 대상 `.harness/docs/team-spec.md`, `.harness/docs/orchestration-plan.md`, agent TOML, local skill과 선택 역할의 model, reasoning, sandbox를 검증한다. 하나라도 없거나 라우팅이 불일치하면 직접 수정으로 우회하지 않고 `구조화 실행 중단`으로 판정한다. 이 검증을 통과시키기 위해 현재 실행 중 전용 스킬, 실행기 구현, 모델 설정을 생성하거나 변경하지 않는다. 필요한 자산의 신규 도입·변경은 하네스 설치 또는 하네스 생성기 변경 흐름에서만 수행한다.
-3. 파일 수정이면 검증된 라우팅 결과와 선택 역할 설정을 포함해 메인 Workflow Engine orchestration session과 예정 별도 execution session 하나의 관계를 연결하는 완전한 구조화 실행 요청을 확정한다. 비파일 작업은 확정된 현재 작업, 실행 범위, 사용자 결정과 기준 상태에 선택된 실행 주체와 예정 세션 관계를 포함한 완전한 구조화 실행 요청을 구성한다. 요청에 없는 값이나 확정되지 않은 값은 실행 주체가 보완하거나 다시 판단할 수 없도록 한다.
-4. `workflow-engine-rules.md`의 `구조화 실행 요청 사용 가능` 판정을 적용한다. 파일 수정은 `Target Harness Code Editor 선택 가능`도 함께 통과해야 한다.
-5. 파일 수정에서는 사용 가능 판정을 통과한 완전한 요청과 Workflow Engine이 검증한 라우팅 결과를 `target-harness-code-editor` 절차에 전달하고, 선택 역할의 실제 수정 서브에이전트 하나를 별도 execution session으로 시작한다. 비파일 작업은 확정된 구조화 실행 요청만 선택한 실행 주체에 전달한다. 도구 호출 뒤 발급된 실제 ID는 요청의 예정 세션 관계와 `구조화 실행 결과와 요청-결과 상관관계 판정 규칙`에 따라 연결한다.
-6. 실행 주체가 반환한 구조화 실행 결과에 구조화 실행 결과 사용 가능, 요청-결과 상관관계, 실행 범위 준수, 구조화 실행 성공 또는 중단 판정을 적용한다. 파일 수정 결과의 실제 실행 식별자는 중개 절차가 아니라 선택 역할의 실제 수정 서브에이전트를 가리켜야 한다. 실행 주체는 확정된 값이나 실행 범위를 재판단하거나 넓힐 수 없다.
-7. `구조화 실행 성공`일 때만 GitHub 실행 상태와 현재 코드 상태를 다시 읽고 `현재 작업 산출 규칙`부터 반복한다. `구조화 실행 중단`이면 값을 재판단하거나 범위를 넓혀 재시도하지 않고, 중단 사유와 `workflow-engine-rules.md`가 산출한 재개 조건을 출력한다. 필요한 자산이나 설정이 없거나 검증 결과와 불일치한 경우의 재개 조건은 해당 자산·설정을 설치하거나 하네스 생성기를 갱신한 뒤 다시 실행하는 것이다.
-
-## 제안·분석 스킬 연결
+## 전용 스킬 연결
 
 | 필요한 산출물 | 호출할 스킬 |
-| ------------- | ----------- |
+| --- | --- |
 | 이슈 초안 | `issue-creation` |
 | 기능제안 진행 방향 후보 | `feature-proposal-triage` |
 | 정책 설계 계획 | `policy-plan` |
@@ -124,70 +95,56 @@ skill/prompt 개선 근거를 제공하는 것이다.
 | PR 생성 요청값 | `pr-creation` |
 | 리뷰 코멘트 게시 초안 | `review-comment` |
 
-위 제안·분석 스킬은 후보, 초안, 분석 결과만 만든다. 상태 확정과 실행 요청 확정은 Workflow Engine이 맡고, 실제 변경은 선택된 실행 주체만 수행한다.
+전용 스킬은 후보, 초안 또는 분석 결과만 반환한다. 결과는
+`artifact-output-contract.md`를 통과한 경우에만 다음 관측 snapshot에 포함한다. 보류 결과를 상태나
+사용자 결정으로 확정하지 않는다.
 
-## 읽기 전용 지원 스킬
+## 자동 실행
 
-| 필요한 산출물 | 호출할 스킬 |
-| ------------- | ----------- |
-| 출처가 있는 GitHub·로컬 상태 관측 | `github-state-summary` |
+`action_required.executor_reference`가 있고 사용자 결정이 모두 반영된 작업만 자동 실행 후보가 된다.
+`structured-execution-contract.md`로 실행 범위, 불변 요청, 실행 주체, 명령 경로, 요청-결과 상관관계와
+사후조건을 검증한다.
 
-`github-state-summary`는 읽기 전용 관측 결과만 반환한다. Workflow Engine이 상태 요약 출력 사용 가능 여부와 최종 판단을 맡는다.
+- 결정론적 비파일 경로가 있으면 추가 LLM 판단 없이 사용한다.
+- 결정론적 경로가 없는 확정된 단일 비파일 동작만 `github-simple-executor`에 맡길 수 있다.
+- 파일 수정은 대상 프로젝트의 로컬 `run-harness`가 반환한 단일 역할 라우팅과 역할 자산·모델·권한을
+  검증한 뒤 `target-harness-code-editor`에 전달한다. 직접 수정 fallback은 사용하지 않는다.
+- 리뷰 내용은 사용자가 확정한 리뷰 실행 모드의 실행 주체만 생성한다.
 
-## 실행 스킬
+구조화 실행 성공일 때만 상태를 다시 관측해 선언형 평가 루프를 반복한다. 요청·결과·범위·사후조건
+검증 실패는 값을 재해석하거나 범위를 넓혀 재시도하지 않고 계약이 산출한 사유와 재개 조건으로
+중단한다.
 
-| 선택 조건 | 실행 주체 |
-| --------- | --------- |
-| 결정론적 경로가 없고 정확히 하나의 확정된 비파일 단순 상태 변경 | `github-simple-executor` |
-| 파일 수정이고 Workflow Engine이 대상 로컬 `run-harness`의 단일 역할 라우팅과 역할 자산·설정을 검증함 | `target-harness-code-editor` |
+## 명시적 검증 모드
 
-`github-simple-executor`와 `target-harness-code-editor`는 일반 구조화 실행 결과만 반환하며, 상태 확정과 다음 전이는 Workflow Engine이 맡는다. 파일 수정에서 후자는 Workflow Engine이 검증한 라우팅 결과를 재검증하는 중개 절차이며, 선택된 역할의 별도 execution session만 실제 수정 실행 주체로 기록한다. 직접 수정 fallback은 사용하지 않는다.
+검증 모드는 사용자가 현재 요청에서 명시적으로 요청한 경우에만 실행하는 terminal diagnostic이다.
+선택된 실행 주체 또는 대상 하네스 계약으로 실행 가능 여부를 확인한 뒤, 같은 snapshot, route, model,
+reasoning, role, skill version, config, input과 deadline으로 정확히 10개의 fresh independent session을
+호출한다. parser, adapter와 evaluator는 결정론적이므로 반복하지 않는다.
 
-## 리뷰 실행 모드
+각 raw result와 session ID, 고정 조건, 오류와 timeout을 보존한다. 결과 의미나 patch 일치 여부를 자동
+비교하지 않고, 다수결·대표 결과·결과 채택을 하지 않는다. 10개 raw result와 무결성 확인 결과를
+사용자에게 제시하고 재현성은 사용자가 판단한다. 검증 결과로 작업 전이를 진행하거나 일반 workflow를
+자동 재개하지 않는다.
 
-| 모드 | 실행 주체 |
-| ---- | --------- |
-| `claude/code-review` | Claude Code `/code-review` |
-| `claude/awesome-code-review` | Claude 환경의 `awesome-code-review` |
-| `codex/awesome-code-review` | Codex 전역 `awesome-code-review` |
+## 서브에이전트 수명 주기
 
-Workflow Engine은 `workflow-engine-rules.md`의 리뷰 실행 모드 판정 결과로 실행 모드를 확정하고 `리뷰 실행 주체 선택` 판정을 적용한다. 리뷰 실행 자체와 리뷰 내용 생성은 구조화 실행 요청과 실행 주체 선택 절차를 거쳐 선택된 리뷰 실행 주체가 수행한다. 실행 주체는 리뷰 실행 stdout을 `/tmp` 아래 파일에 저장하며, 파일명에 PR 번호, head commit SHA, 리뷰 실행 모드를 포함한다. Workflow Engine은 저장된 파일 경로를 입력으로 결과를 PR Review Template으로 정규화한다. 정규화 결과는 현재 PR 번호와 head commit SHA를 본문과 파일명에 포함한 별도 `/tmp` 파일에 저장하고 해당 경로를 실행 로그에 기록한다. Workflow Engine은 `게시할 리뷰 피드백 존재` 또는 `게시할 리뷰 피드백 없음` 판정을 적용한다. 게시할 리뷰 피드백이 있을 때만 리뷰 코멘트 게시 초안을 만들고, 없으면 `리뷰 대응 대상 확인`으로 전환한다.
+Workflow Engine이 발급한 모든 ID를 현재 오케스트레이션에서 추적한다. 결과·오류·timeout을 먼저
+보존하고 소비한 뒤 성공·실패·중단과 관계없이 다음 전이 또는 최종 응답 전에 각 ID에 `close_agent`를
+호출한다. `completed`와 `timed_out`은 결과 상태이지 실행 리소스 정리 완료가 아니다. `close_agent`
+성공 또는 `not_found`를 정리 완료로 취급하며, `not_found`는 이미 런타임에서 제거된 상태로 기록하되
+내부 상태 DB를 직접 수정하지 않는다. 정리 결과는 보존한 결과의 의미와 Workflow Definition 전이
+판정을 바꾸지 않는다.
 
-리뷰 실행 모드 선택지는 대상 저장소의 `.harness/workflow-engine.json`에 저장된 사용 가능 모드에서 만든다. 저장된 사용 가능 모드가 없거나 설정 파일이 없으면 하네스 설치 또는 갱신 재실행 조건을 안내하고 중단한다. Claude 리뷰 실행 실패가 `Claude CLI 재로그인 필요`로 판정되면 토큰 만료 가능성만 안내하고 중단한다.
+검증 모드에서도 10개 의도된 slot에서 실제 발급된 모든 session ID에 같은 절차로 `close_agent`를
+호출한다.
 
-## 명령 실행
+## 로그와 출력
 
-명령 실행이 포함된 구조화 실행 요청을 만들 때 `workflow-engine-rules.md`의 명령 실행 경로 규칙으로 `command_execution_path`, 권한 조건, 사용 가능 도구 조건, 변경 손실 위험을 기록한다. 사용자 결정은 현재 작업과 실행 범위를 확정하는 별도 절차로 유지한다.
+작업 진입, evaluation 결과, 사용자 결정, 구조화 실행 요청·결과, 중단과 재개를 대상 저장소의
+`.harness/logs/github-workflow-log.md`에 기록한다. `request_id`, 기준 snapshot, `workflow_id`,
+`task_action_id`, adapter 정규화 결과와 근거, 사용자 결정, 실행 범위, 실행 주체와 세션 관계,
+사후조건, 검증 결과, 남은 위험 또는 재개 조건을 추적할 수 있어야 한다.
 
-실제 명령 호출 직전에 실행 주체가 같은 규칙으로 `실행 직전 경로 재판정 통과`를 확인한다. 기록한 경로와 직전 판정 경로가 다르거나, 권한 또는 도구 조건을 확인할 수 없거나, 변경 손실 가능 명령의 추가 조건을 충족하지 못하면 명령을 호출하지 않고 `구조화 실행 중단`으로 반환한다. 권한 확인 경로 대상 명령은 일반 경로를 먼저 실패시키지 않고 권한 확인 경로로 실행한다.
-
-## 외부 의존성 확인
-
-Workflow Engine은 외부 의존성이 필요한 현재 작업에 진입하기 전에 하네스 설치 또는 갱신 시 저장된 실행 가능 상태를 확인한다.
-
-- 커밋 메시지 제안은 `.harness/workflow-engine.json`의 `dependencies.commit.available` 값으로 판단한다.
-- 리뷰 실행 모드 사용 가능 여부는 하네스 설치 또는 갱신 시 저장된 `.harness/workflow-engine.json`의 사용 가능 상태로 확인한다.
-- 저장된 사용 가능 상태가 없으면 하네스 설치 또는 갱신 재실행 조건을 안내하고 중단한다.
-- 선택된 리뷰 실행 모드는 사용자의 명시 선택으로 확정한다.
-
-## 출력 기준
-
-사용자 결정, 일반 `중단`(구조화 실행 중단 포함), 완료로 멈출 때는 다음 항목을 포함한다.
-
-- 현재 이슈 또는 PR
-- 현재 작업
-- 진행 판단
-- 중단 사유, 완료 근거, 또는 사용자 결정 질문
-- 선택 가능한 응답 번호 목록과 입력 예시
-
-선택 가능한 응답을 제시할 때는 `기타 의견 입력`을 마지막 번호 항목에 포함한다.
-
-판정 결과가 `자동 실행`인 작업만 자동 실행 절차로 진행한다. 판정 결과가 `사용자 결정`, `중단`, `완료`이면 출력 기준에 따라 응답한다.
-
-## 로그 기록
-
-작업에 진입하거나 구조화 실행 요청을 만들고, 실행 결과를 검증하거나, 중단 또는 재개할 때 대상 저장소의 `.harness/logs/github-workflow-log.md`에 기록한다. 상세 필드와 유효성은 `workflow-engine-rules.md`의 구조화 실행 요청, 구조화 실행 결과와 요청-결과 상관관계, 구조화 실행 성공과 중단 판정 규칙을 그대로 따른다.
-
-로그는 `request_id`, `target_baseline`, 예정·실제 실행 주체와 세션 관계, 실제 경로 재판정, 변경 파일과 GitHub 상태, 검증 결과와 사후조건, 남은 위험 또는 실패 사유를 요청-결과 상관관계로 추적할 수 있어야 한다. 원 요청의 식별과 선택은 `request_id` 일치로만 기록하고 판정하며, 선택된 원 요청과 결과의 나머지 계약 필드는 별도 정합성 검증 대상으로 기록한다. 기존 작업 기록에는 대상 이슈 또는 PR, 작업 대상 식별자, 워크플로우 유형, 현재 작업, 적용한 조건, 확정된 사용자 결정 또는 사용자 결정 필요 여부, 완료기준과 충족 근거, 재개 조건도 함께 남긴다.
-
-반복 가능한 작업은 해당 대상을 유일하게 구분할 수 있는 작업 대상 식별자를 기록한다.
+사용자 결정, 중단 또는 완료로 멈출 때는 현재 이슈 또는 PR, `workflow_id`, `task_action_id`, 진행 판단,
+중단 사유·완료 근거·결정 질문을 제시한다. 선택지가 있으면 번호 목록과 입력 예시를 함께 제시한다.

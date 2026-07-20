@@ -10,7 +10,7 @@ description: 기능제안, 정책검토, 기능변경, 기능결함 GitHub 이�
 ## 먼저 읽을 문서
 
 - `../github-workflow-engine/references/github-templates.md`
-- `../github-workflow-engine/references/workflow-engine-rules.md`에서 `Issue Creation 출력 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/artifact-output-contract.md`에서 `Issue Creation 출력 판정 규칙` 섹션만 읽는다.
 
 대상 저장소에 `.github/ISSUE_TEMPLATE/*.md`가 있으면 해당 파일을 실제 본문 형식의 단일 원천으로 먼저 읽는다. `github-templates.md`는 본문 복제본이 아니라 title prefix, label, 필수 섹션, 연결 규칙을 검증하는 계약 문서로 사용한다.
 

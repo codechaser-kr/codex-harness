@@ -22,6 +22,8 @@ const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const installScript = join(repositoryRoot, "install.sh");
 const sourceTargetEditor = join(repositoryRoot, ".codex-dist/skills/target-harness-code-editor/SKILL.md");
+const removedRulesRelativePath = ["references/workflow-engine", "rules.md"].join("-");
+const removedRulesFilenamePattern = new RegExp(["workflow-engine", "rules\\.md"].join("-"));
 
 const jsonArtifacts = [
   "definitions/feature-proposal.json",
@@ -45,6 +47,10 @@ const requiredArtifacts = [
   "references/workflow-definition-contract.md",
   "references/validation-mode-contract.md",
   "references/normalized-fact-adapter-contract.md",
+  "references/artifact-output-contract.md",
+  "references/state-observation-contract.md",
+  "references/review-runtime-contract.md",
+  "references/structured-execution-contract.md",
   "definitions/feature-proposal.json",
   "definitions/policy-review.json",
   "definitions/feature-change.json",
@@ -56,6 +62,7 @@ const requiredArtifacts = [
   "scripts/workflow-definition/evaluator.mjs",
   "scripts/workflow-definition/normalized-fact-adapter.mjs",
   "scripts/workflow-definition/workflow-state-adapter.mjs",
+  "scripts/workflow-definition/feature-proposal-state-adapter.mjs",
   "scripts/workflow-definition/policy-review-state-adapter.mjs",
   "scripts/workflow-definition/feature-change-state-adapter.mjs",
   "scripts/workflow-definition/feature-fix-state-adapter.mjs",
@@ -167,7 +174,41 @@ test("workflow definition foundation inventory and JSON artifacts are complete",
     assert.equal(files.includes(relativePath), true, `Missing required artifact: ${relativePath}`);
   }
   assert.equal(files.includes("schemas/workflow-definition.schema.json"), false);
+  assert.equal(files.includes(removedRulesRelativePath), false);
   await parseJsonArtifacts(sourceSkillDirectory);
+});
+
+test("runtime contracts do not duplicate natural-language transition tables", async () => {
+  const forbiddenTransitionContractText = [
+    "작업 전이표",
+    "현재 작업 산출 규칙",
+    "재사용 상태 규칙",
+  ];
+  for (const relativePath of [
+    "references/artifact-output-contract.md",
+    "references/state-observation-contract.md",
+    "references/review-runtime-contract.md",
+    "references/structured-execution-contract.md",
+  ]) {
+    const source = await readFile(join(sourceSkillDirectory, relativePath), "utf8");
+    assert.doesNotMatch(source, /^## 작업 전이 규칙$/m, relativePath);
+    for (const forbiddenText of forbiddenTransitionContractText) {
+      assert.equal(
+        source.includes(forbiddenText),
+        false,
+        `${relativePath} contains legacy transition text: ${forbiddenText}`,
+      );
+    }
+  }
+});
+
+test("removed workflow rules filename is not referenced by distribution or docs", async () => {
+  for (const root of [join(repositoryRoot, ".codex-dist"), join(repositoryRoot, "docs")]) {
+    for (const relativePath of await listRegularFiles(root)) {
+      const source = await readFile(join(root, relativePath), "utf8");
+      assert.doesNotMatch(source, removedRulesFilenamePattern, join(root, relativePath));
+    }
+  }
 });
 
 test("install.sh has valid shell syntax", (t) => {
@@ -203,6 +244,7 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
   const installedSkillDirectory = join(destinationRoot, "github-workflow-engine");
   await assertTreesMatch(sourceSkillDirectory, installedSkillDirectory);
   assert.equal((await listRegularFiles(installedSkillDirectory)).includes("schemas/workflow-definition.schema.json"), false);
+  assert.equal((await listRegularFiles(installedSkillDirectory)).includes(removedRulesRelativePath), false);
   await parseJsonArtifacts(installedSkillDirectory);
   assert.deepEqual(
     await readFile(join(destinationRoot, "target-harness-code-editor/SKILL.md")),

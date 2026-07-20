@@ -9,7 +9,7 @@ description: PR 제목과 본문, base branch, 원격 head branch를 기준으�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/workflow-engine-rules.md`에서 `PR 제목 판정 규칙`과 `PR Creation 출력 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/artifact-output-contract.md`에서 `PR 제목 판정 규칙`과 `PR Creation 출력 판정 규칙` 섹션만 읽는다.
 - `../github-workflow-engine/references/github-templates.md`
 
 ## 입력
@@ -24,7 +24,7 @@ description: PR 제목과 본문, base branch, 원격 head branch를 기준으�
 
 1. 원격 head branch가 존재하는지 확인한다.
 2. 제목과 본문이 Workflow Engine에서 전달한 입력과 같은지 확인한다.
-3. PR 제목이 `workflow-engine-rules.md`의 PR 제목 판정 규칙을 벗어나는지 확인하고, 벗어나면 생성 전 보류 질문에 근거를 포함한다.
+3. PR 제목이 `artifact-output-contract.md`의 PR 제목 판정 규칙을 벗어나는지 확인하고, 벗어나면 생성 전 보류 질문에 근거를 포함한다.
 4. PR 본문의 `연관 이슈` 섹션에 `Refs #번호`가 있는지 확인한다.
 5. 제목, 본문, base branch, head branch와 생성 전 확인해야 할 보류 질문을 반환한다.
 6. 실제 GitHub PR 생성은 Workflow Engine이 확정한 구조화 실행 요청을 선택된 실행 주체가 수행한다.

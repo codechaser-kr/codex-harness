@@ -9,7 +9,7 @@ description: 기능결함 이슈와 확정된 원인 조사 결과를 기준으�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/workflow-engine-rules.md`에서 `Fix Plan 출력 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/artifact-output-contract.md`에서 `Fix Plan 출력 판정 규칙` 섹션만 읽는다.
 - `../github-workflow-engine/references/github-templates.md`
 
 ## 입력

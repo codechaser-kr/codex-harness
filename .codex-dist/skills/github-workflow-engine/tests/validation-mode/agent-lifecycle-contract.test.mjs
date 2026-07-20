@@ -3,7 +3,6 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const engineSkillUrl = new URL("../../SKILL.md", import.meta.url);
-const rulesUrl = new URL("../../references/workflow-engine-rules.md", import.meta.url);
 const validationContractUrl = new URL("../../references/validation-mode-contract.md", import.meta.url);
 const targetEditorUrl = new URL("../../../target-harness-code-editor/SKILL.md", import.meta.url);
 const harnessSkillUrl = new URL("../../../harness/SKILL.md", import.meta.url);
@@ -35,15 +34,15 @@ test("subagent result status is distinct from execution resource cleanup", async
 });
 
 test("all orchestrators preserve results before closing every issued agent", async () => {
-  const [engineSkill, rules, validationContract, targetEditor, designDocument] = await Promise.all([
+  const [engineSkill, loggingContract, validationContract, targetEditor, designDocument] = await Promise.all([
     read(engineSkillUrl),
-    read(rulesUrl),
+    read(loggingContractUrl),
     read(validationContractUrl),
     read(targetEditorUrl),
     read(designDocumentUrl),
   ]);
 
-  for (const source of [engineSkill, rules, validationContract, targetEditor, designDocument]) {
+  for (const source of [engineSkill, loggingContract, validationContract, targetEditor, designDocument]) {
     assert.match(source, /(?:결과|raw result|raw 결과)[\s\S]{0,500}(?:보존|기록)[\s\S]{0,500}close_agent/);
     assert.match(source, /close_agent[\s\S]{0,350}not_found/);
     assert.match(source, /내부 상태\s*DB를 직접 수정하지 않는다/);

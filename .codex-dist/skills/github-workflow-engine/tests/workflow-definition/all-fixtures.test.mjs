@@ -16,6 +16,7 @@ import "./feature-change.test.mjs";
 import "./feature-fix.test.mjs";
 import "./implementation.test.mjs";
 import "../validation-mode/validation-mode-contract.test.mjs";
+import "../validation-mode/agent-lifecycle-contract.test.mjs";
 
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -81,6 +82,7 @@ const requiredArtifacts = [
   "tests/workflow-definition/fixtures/feature-fix-states.json",
   "tests/workflow-definition/fixtures/implementation-states.json",
   "tests/validation-mode/validation-mode-contract.test.mjs",
+  "tests/validation-mode/agent-lifecycle-contract.test.mjs",
 ];
 
 async function parseJsonArtifacts(root) {

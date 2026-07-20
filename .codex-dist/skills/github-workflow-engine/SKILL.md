@@ -26,6 +26,13 @@ description: GitHub Issue, PR, label, checklist, review thread, comment를 기�
 7. 구조화 실행 성공일 때만 GitHub 실행 상태와 현재 코드 상태를 다시 읽고 다음 작업 판정을 반복한다.
 8. 작업 진입, 구조화 실행 요청과 결과, 중단, 재개를 `.harness/logs/github-workflow-log.md`에 기록한다.
 
+Workflow Engine이 생성한 모든 서브에이전트는 현재 오케스트레이션 문맥에서 발급 ID를 추적한다. 각
+결과·오류·timeout을 먼저 보존하고 소비한 뒤, 성공·실패·중단과 무관하게 다음 전이 또는 최종 응답 전에
+각 ID에 `close_agent`를 호출한다. `completed`와 `timed_out`은 작업 결과 상태이지 실행 리소스 정리
+상태가 아니다. `close_agent` 성공 또는 `not_found`를 정리 완료로 취급하고, `not_found`는 이미
+런타임에서 제거된 상태로 기록하되 내부 상태 DB를 직접 수정하지 않는다. 정리 호출은 보존한 결과의
+의미와 Workflow Definition 상태 전이 판정을 바꾸지 않는다.
+
 PR merge는 사람이 수행한다. Workflow Engine은 merge 알림이나 GitHub 실행 상태를 근거로 merge 이후 작업만 수행한다. 최종 판단, 사용자 결정 해석, 커밋 생성 여부 판단, PR 생성 여부 판단은 실행 주체에 위임하지 않는다. 리뷰 내용 생성은 사용자가 확정한 리뷰 실행 모드에 대해 `리뷰 실행 주체 선택`으로 확정된 실행 주체만 담당하며, 결정론적 실행기, 저비용 실행 서브에이전트, 타겟 하네스 코드 수정 서브에이전트에는 맡기지 않는다. Workflow Engine은 리뷰 결과 정규화와 게시할 리뷰 피드백 존재 또는 없음 판정을 담당한다.
 
 ## 일반 실행 Workflow Definition
@@ -78,7 +85,9 @@ skill/prompt 개선 근거를 제공하는 것이다.
    분리하고 workspace ID도 모두 고유해야 한다. 그렇지 않으면 workspace나 patch 형식을 추가로 요구하지
    않는다.
 5. 각 raw result와 session ID, 고정 조건의 관측값, 중단 사유를 그대로 보존한다. timeout, 환경 불일치,
-   ID 중복, 결과 누락, 외부 또는 primary 상태 변경은 실험 무결성 실패로만 보고한다.
+   ID 중복, 결과 누락, 외부 또는 primary 상태 변경은 실험 무결성 실패로만 보고한다. 결과 보존 뒤
+   10개 의도된 slot에서 실제 발급된 모든 session ID에 `close_agent`를 호출하고, 정리 결과를 실험
+   무결성 및 raw result 의미와 분리해 기록한다.
 6. 결과의 의미나 patch가 같은지 자동 비교하지 않는다. 다수결, 대표 결과, pass/mismatch,
    `unanimous_outcome`, 결과 채택은 금지한다. 검증 결과로 Workflow Definition transition을 선택·완료·
    진행하거나 일반 workflow를 자동 재개하지 않는다.

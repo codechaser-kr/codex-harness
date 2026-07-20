@@ -20,6 +20,17 @@
 - evaluator의 `action_required`가 반환한 단일 현재 작업만 기존 현재 작업 산출, 사용자 결정, 실행 주체 선택, 구조화 실행 요청·결과 판정에 연결한다. `completed`는 공통 구현 흐름 완료로 연결한다.
 - 이 규칙은 명시적 검증 모드와 분리되며 기능제안·정책검토·기능변경·기능결함의 기존 Workflow Definition 선택 경로를 변경하지 않는다.
 
+## 서브에이전트 수명 주기 규칙
+
+| 항목 | 판정 규칙 |
+| --- | --- |
+| 추적 범위 | 현재 Workflow Engine 오케스트레이션 문맥에서 발급된 subagent ID만 추적한다. 파일 기반 active-agent 목록, 별도 레지스트리, 내부 상태 DB 조회·수정은 사용하지 않는다. |
+| 결과와 정리 분리 | `completed`, `timed_out`, `failed`는 작업 결과 상태다. 실행 리소스 정리 완료로 해석하지 않는다. |
+| 보존 우선 | 결과, 오류 또는 timeout과 실제 session ID를 먼저 보존하고 소비한 뒤 `close_agent`를 호출한다. close 전에 결과를 폐기하지 않는다. |
+| 정리 시점 | 성공, 실패, timeout, 사용자 중단과 무관하게 다음 전이 또는 최종 응답 전에 현재 문맥에서 발급된 각 ID에 `close_agent`를 호출한다. |
+| 정리 완료 | `close_agent` 성공 또는 `not_found`를 실행 리소스 정리 완료로 취급한다. `not_found`는 이미 런타임에서 제거된 상태로 기록하고 내부 상태 DB를 직접 수정하지 않는다. 그 밖의 정리 실패는 별도 운영상 위험으로 기록한다. |
+| 판정 독립성 | `close_agent` 호출과 그 결과는 이미 보존한 실행 결과의 의미, 구조화 실행 성공·중단, 사용자 판단 또는 Workflow Definition 상태 전이 판정을 바꾸지 않는다. |
+
 ## 명시적 검증 모드 규칙
 
 검증 모드는 사용자가 현재 요청에서 `검증 모드`를 명시할 때만 적용한다. 일반 실행, 단순
@@ -35,7 +46,7 @@
 | 독립 session set | 정확히 10개 fresh independent LLM session에 동일 raw snapshot, route, model, reasoning, role, skill/version, config, input과 동일 유한 deadline을 전달한다. index는 1..10, session ID는 모두 고유하며 reuse/continue, prompt/result/context 공유는 금지한다. |
 | 격리 | 호출 대상의 자체 실행 계약이 요구할 때만 같은 baseline의 격리 workspace를 session마다 하나씩 사용한다. 이 경우 workspace ID도 10개 모두 고유해야 한다. |
 | 부수 효과 | validation session은 primary·GitHub·comment·branch·commit·PR을 변경하지 않는다. 외부 또는 primary 상태 변경은 실험 무결성 실패다. |
-| 완료 대기와 보존 | 유한 wait-all로 10개를 모두 수집하고 raw result, session ID, 고정 조건 관측값, 무결성 실패 사유를 보존한다. timeout, blocked, 환경 불일치, duplicate/missing ID, 외부 부작용은 자동 재시도하지 않는다. |
+| 완료 대기와 보존 | 유한 wait-all로 10개를 모두 수집하고 raw result, session ID, 고정 조건 관측값, 무결성 실패 사유를 보존한다. timeout, blocked, 환경 불일치, duplicate/missing ID, 외부 부작용은 자동 재시도하지 않는다. 보존 뒤 실제 발급된 모든 session ID에 `close_agent`를 호출하며 정리 결과는 raw result와 실험 무결성 판정에서 분리한다. |
 | 진단 종료 | 결과 의미와 patch의 일치 여부를 자동 비교하지 않는다. pass/mismatch, `unanimous_outcome`, 다수결, 대표 결과, 결과 채택은 금지하며 validation 결과로 Workflow Definition transition을 선택·완료·진행하거나 normal workflow를 자동 재개하지 않는다. |
 | 사용자 결정 | 결과를 제시한 뒤 skill/prompt 개선, validation 종료, 나중의 ordinary workflow 실행 중 다음 행동을 사용자가 명시적으로 결정하도록 요청한다. 이 결정은 Workflow Definition transition이 아니다. |
 | 증거 경계 | 실제 10개 LLM session의 raw result와 실행 식별자만 live evidence다. mock/control-plane fixture는 live evidence가 아니며 `.harness/logs/github-workflow-log.md`는 검증 입력·출력으로 읽거나 쓰지 않는다. |

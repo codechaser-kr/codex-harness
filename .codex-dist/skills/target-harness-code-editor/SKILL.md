@@ -48,7 +48,11 @@ session을 오케스트레이션한다. 검증 결과는 사용자 판단을 위
    수정하고 각 명령 직전 permission/tool/path/risk를 재확인한다.
 3. 실제 session ID가 발급되기 전 실패는 `실행 세션 미시작 중단`, 발급 뒤 실패는 해당 실제 session의
    중단 결과로 반환한다. 직접 수정 fallback이나 두 번째 편집 session은 금지한다.
-4. 기존 공통 구조화 실행 결과와 라우팅 고유 필드를 그대로 반환한다.
+4. 결과·오류·timeout과 실제 session ID를 먼저 보존한 뒤, 성공·실패·중단과 무관하게 Workflow Engine에
+   결과를 반환하기 전에 실제 발급된 session ID에 `close_agent`를 호출한다. `close_agent` 성공 또는
+   `not_found`를 실행 리소스 정리 완료로 기록하며 `not_found`일 때 내부 상태 DB를 직접 수정하지 않는다.
+5. 기존 공통 구조화 실행 결과와 라우팅 고유 필드를 그대로 반환한다. 정리 호출은 보존한 결과의 의미나
+   Workflow 상태 전이 판정을 바꾸지 않는다.
 
 ## 검증 모드
 
@@ -68,10 +72,14 @@ session을 오케스트레이션한다. 검증 결과는 사용자 판단을 위
    가능한 raw result, 관측된 session/workspace 수, 명시적 무결성 실패 사유를 기록한다. retry하거나
    누락 ID·결과를 만들지 않는다. timeout, blocked, 환경·baseline 불일치, 중복 ID 또는 외부 부수 효과도
    실험 무결성 실패로 기록한다.
-5. patch를 정규화하거나 비교하지 않는다. pass/mismatch, 다수결, 대표 patch, 결과 채택은 금지한다.
+5. 결과·오류·timeout을 보존하고 소비한 뒤, 10개 의도된 slot에서 실제 발급된 모든 session ID에
+   `close_agent`를 호출한다. `completed` 또는 `timed_out`은 실행 리소스 정리 완료가 아니다.
+   `close_agent` 성공 또는 `not_found`를 정리 완료로 기록하고 `not_found`일 때 내부 상태 DB를 직접
+   수정하지 않는다. 정리 결과는 raw result 의미나 실험 무결성 판정을 바꾸지 않는다.
+6. patch를 정규화하거나 비교하지 않는다. pass/mismatch, 다수결, 대표 patch, 결과 채택은 금지한다.
    validation session/workspace 결과로 primary 파일을 수정하거나 Workflow Definition transition을
    선택·완료·진행하지 않는다.
-6. 완전 fan-out이면 10개의 raw result와 무결성 결과를, 불완전 fan-out이면 사용 가능한 모든 raw result와
+7. 완전 fan-out이면 10개의 raw result와 무결성 결과를, 불완전 fan-out이면 사용 가능한 모든 raw result와
    실패 사유를 사용자에게 제시하고 skill/prompt 개선, validation 종료 또는 나중의 ordinary workflow 실행
    중 다음 행동을 명시적으로 결정하도록 요청한 뒤 종료한다. 이 결정은 Workflow Definition transition으로
    추가하지 않고 ordinary workflow를 자동 재개하지 않는다.

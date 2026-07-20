@@ -151,10 +151,14 @@ test("detects fixed-state cycles and returns structured definition and state err
   const invalidDefinitionResult = evaluateWorkflowDefinition(invalidDefinition, fixture.states.ready);
   assert.equal(invalidDefinitionResult.status, "stopped");
   assert.equal(invalidDefinitionResult.reason, "invalid_definition");
+  assert.equal(invalidDefinitionResult.task_action_id, null);
+  assert.deepEqual(Object.keys(invalidDefinitionResult).sort(), ["errors", "reason", "status", "task_action_id"]);
   assert.equal(hasError(invalidDefinitionResult, "task_action_id.invalid", "/transitions/0/task_action_id"), true);
 
   const unknownFact = evaluateWorkflowDefinition(fixture.definitions.entry_action_required, fixture.states.unknown_fact);
   assert.equal(unknownFact.reason, "invalid_state");
+  assert.equal(unknownFact.task_action_id, null);
+  assert.deepEqual(Object.keys(unknownFact).sort(), ["errors", "reason", "status", "task_action_id"]);
   assert.equal(hasError(unknownFact, "state.fact.unknown", "/unknown"), true);
 
   const wrongType = evaluateWorkflowDefinition(fixture.definitions.entry_action_required, fixture.states.wrong_type);

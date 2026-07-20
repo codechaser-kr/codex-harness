@@ -61,13 +61,16 @@ function validateNormalizedFactState(definition, state) {
   return errors;
 }
 
-function stopped(reason, taskActionId, extra = {}) {
-  return {
+function stopped(reason, taskActionId, errors) {
+  const result = {
     status: "stopped",
     reason,
     task_action_id: taskActionId ?? null,
-    ...extra,
   };
+  if (errors !== undefined) {
+    result.errors = errors;
+  }
+  return result;
 }
 
 /**
@@ -76,12 +79,12 @@ function stopped(reason, taskActionId, extra = {}) {
 export function evaluateWorkflowDefinition(definition, normalizedFactState, { currentTaskActionId } = {}) {
   const validation = validateWorkflowDefinition(definition);
   if (!validation.valid) {
-    return stopped("invalid_definition", null, { errors: validation.errors });
+    return stopped("invalid_definition", null, validation.errors);
   }
 
   const stateErrors = validateNormalizedFactState(definition, normalizedFactState);
   if (stateErrors.length > 0) {
-    return stopped("invalid_state", null, { errors: stateErrors });
+    return stopped("invalid_state", null, stateErrors);
   }
 
   const transitions = new Map(definition.transitions.map((transition) => [transition.task_action_id, transition]));

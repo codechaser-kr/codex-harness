@@ -9,7 +9,7 @@ description: 정책검토 이슈를 기준으로 변경하거나 적용할 정�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/workflow-engine-rules.md`에서 `Policy Plan 출력 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``정책 계획(`policy-plan`) 출력 판정 규칙`` 섹션만 읽는다.
 - `../github-workflow-engine/references/github-templates.md`
 
 ## 입력

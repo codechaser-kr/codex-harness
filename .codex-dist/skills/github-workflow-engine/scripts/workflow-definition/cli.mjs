@@ -2,6 +2,8 @@ import { parseJsonFile } from "./parser.mjs";
 import { evaluateWorkflowDefinition } from "./evaluator.mjs";
 import { validateWorkflowDefinition } from "./validator.mjs";
 
+const registeredOptions = new Set(["--definition", "--state", "--current-task-action-id"]);
+
 function usage(message) {
   return {
     exitCode: 2,
@@ -28,14 +30,14 @@ function parseOptions(argumentsList) {
   const values = {};
   for (let index = 0; index < tokens.length; index += 1) {
     const flag = tokens[index];
-    if (!["--definition", "--state", "--current-transition-id"].includes(flag)) {
+    if (!registeredOptions.has(flag)) {
       return { error: `Unexpected argument: ${flag}.` };
     }
     if (Object.hasOwn(values, flag)) {
       return { error: `Duplicate argument: ${flag}.` };
     }
     const value = tokens[index + 1];
-    if (typeof value !== "string" || value.startsWith("--")) {
+    if (typeof value !== "string" || registeredOptions.has(value)) {
       return { error: `Missing value for ${flag}.` };
     }
     if (value.length === 0) {
@@ -47,7 +49,7 @@ function parseOptions(argumentsList) {
   if (!values["--definition"]) {
     return { error: "--definition is required." };
   }
-  if (command === "validate" && (values["--state"] || values["--current-transition-id"])) {
+  if (command === "validate" && (values["--state"] || values["--current-task-action-id"])) {
     return { error: "validate accepts only --definition." };
   }
   if (command === "evaluate" && !values["--state"]) {
@@ -79,7 +81,7 @@ export async function runWorkflowDefinitionCli(argumentsList) {
     return invalidInput("invalid_state", stateResult.error);
   }
   const result = evaluateWorkflowDefinition(definitionResult.value, stateResult.value, {
-    currentTransitionId: parsedArguments.values["--current-transition-id"],
+    currentTaskActionId: parsedArguments.values["--current-task-action-id"],
   });
   return {
     exitCode: result.status === "action_required" || result.status === "completed" ? 0 : 1,

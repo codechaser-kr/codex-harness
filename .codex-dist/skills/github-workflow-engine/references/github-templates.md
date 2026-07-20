@@ -4,7 +4,7 @@ Workflow Engine은 이슈와 PR 본문에 사람이 확인할 작업 내용, 판
 
 이 파일은 GitHub Workflow Engine이 사용하는 템플릿 계약 문서다. 실제 이슈와 PR 본문 형식의 단일 원천은 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`다.
 
-Workflow Engine은 이 파일을 title prefix, label, 필수 섹션, 연결 규칙, 정합성 판정 기준을 검증하는 계약으로 사용한다.
+Workflow Engine은 이 파일을 title prefix, label, 필수 섹션, 연결 규칙을 판정하는 런타임 계약으로 사용한다.
 
 ## 이슈 템플릿
 
@@ -127,51 +127,4 @@ Workflow Engine이 이슈 유형 판단과 이슈 생성에 사용하는 프로�
 
 이슈 유형 판단은 제목 prefix보다 라벨을 우선한다. 제목 prefix와 라벨이 충돌하면 사용자 결정으로 넘기고, 사용자가 선택한 유형을 반영한다.
 
-프로젝트별 라벨 생성은 `repo-bootstrap` 저장소의 설치 절차가 담당한다. `codex-harness`는 라벨을 생성하지 않고, 타겟 레포에 Workflow Engine을 적용하거나 갱신할 때 위 라벨이 정확한 이름으로 존재하는지 검증한다.
-
 Issue Creation Skill은 이슈 유형별 라벨 집합 안에서 이슈 유형에 맞는 라벨 하나를 선택한다. 이슈 유형별 라벨 집합에 없는 라벨을 임의로 추가하지 않는다.
-
-## 타겟 템플릿 정합성 검사
-
-타겟 레포에 GitHub Workflow Engine을 적용하거나 하네스 운영 기준을 갱신할 때는 타겟 `.github` 템플릿과 이 계약의 정합성을 먼저 확인한다.
-
-### 기대 파일
-
-타겟 레포에는 기본적으로 다음 파일을 기대한다.
-
-- `.github/ISSUE_TEMPLATE/proposal_template.md`
-- `.github/ISSUE_TEMPLATE/decision_template.md`
-- `.github/ISSUE_TEMPLATE/feature_template.md`
-- `.github/ISSUE_TEMPLATE/fix_template.md`
-- `.github/pull_request_template.md`
-
-기존 타겟 레포가 다른 파일명을 쓰는 경우에도 title prefix, label, 필수 섹션, PR 연결 규칙을 만족하면 허용할 수 있다. 이 경우 매핑 근거를 기록한다.
-
-### 검사 항목
-
-이슈 템플릿은 다음 항목을 확인한다.
-
-- YAML frontmatter의 `title`이 이 문서의 제목 prefix와 같은가
-- YAML frontmatter의 `labels`가 이 문서의 라벨과 같은가
-- 타겟 GitHub 레포에 이슈 유형별 라벨 네 가지가 정확한 이름으로 존재하는가
-- 필수 섹션이 모두 존재하는가
-- 기능제안의 `판단 결과` 선택지가 계약과 같은가
-- 정책검토의 기본 후속 작업 체크리스트가 계약과 같은가
-- 기능변경의 작업 범위가 `포함`과 `제외`를 구분하는가
-- 기능결함의 문제 유형 선택지가 계약과 같은가
-
-PR 템플릿은 다음 항목을 확인한다.
-
-- 필수 섹션이 모두 존재하는가
-- `머지하기 전에 반드시 확인되어야 할 사항이 있다면 작성해 주세요. (optional)` 섹션을 merge 선행 조건 용도로 해석할 수 있는가
-- `연관 이슈 (optional)` 섹션이 있는가
-- `Refs #번호`를 사용할 수 있는 안내 또는 기본값을 유지하는가
-- Workflow Engine 관리 PR의 연결 키워드 기본값이 `Refs #번호`인가
-
-### 판정
-
-- `정합`: 계약의 prefix, label, 이슈 유형별 라벨 존재 여부, 필수 섹션, 연결 규칙을 모두 만족한다.
-- `허용된 확장`: 계약을 깨지 않고 타겟 도메인용 섹션이나 설명을 추가했다.
-- `불일치`: prefix, label, 이슈 유형별 라벨 존재 여부, 필수 섹션, 연결 규칙 중 하나라도 빠졌거나 충돌한다.
-
-불일치가 있으면 Workflow Engine은 차이, 영향 범위, 수정 후보를 사용자에게 보여주고, 사용자 결정으로 확정된 뒤 타겟 `.github` 템플릿 갱신을 진행한다.

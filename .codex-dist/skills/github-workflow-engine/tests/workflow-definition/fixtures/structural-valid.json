@@ -3,47 +3,26 @@
     {
       "name": "valid workflow definition",
       "definition": {
-        "workflow_id": "feature-change-flow",
-        "version": "1.0.0",
-        "workflow_kind": "feature_change",
-        "target_type": "issue",
-        "entry_transition_id": "collect-state",
-        "terminal_transition_ids": [
-          "complete"
-        ],
-        "normalized_fact_schema": [
-          {
-            "fact_id": "issue_open",
-            "value_type": "boolean",
-            "allowed_values": [
-              true,
-              false
-            ],
-            "evidence_required": true
-          },
-          {
-            "fact_id": "review_state",
-            "value_type": "string",
-            "allowed_values": [
-              "pending",
-              "approved"
-            ],
-            "evidence_required": false
-          },
-          {
-            "fact_id": "review_count",
-            "value_type": "integer",
-            "allowed_values": [
-              0,
-              1,
-              2
-            ],
-            "evidence_required": false
-          }
-        ],
+        "workflow_id": "feature-change",
+        "entry_task_action_id": "FC-1",
+        "facts": {
+          "issue_open": [
+            true,
+            false
+          ],
+          "review_state": [
+            "pending",
+            "approved"
+          ],
+          "review_count": [
+            0,
+            1,
+            2
+          ]
+        },
         "transitions": [
           {
-            "transition_id": "collect-state",
+            "task_action_id": "FC-1",
             "normalized_fact_conditions": {
               "all": [
                 {
@@ -52,26 +31,18 @@
                   "value": true
                 },
                 {
-                  "not": {
-                    "fact_id": "review_state",
-                    "operator": "equals",
-                    "value": "approved"
-                  }
+                  "fact_id": "review_state",
+                  "operator": "equals",
+                  "value": "pending"
                 }
               ]
             },
-            "task_action_id": "FC-1",
-            "user_decision_specification": {
-              "required": true,
-              "options": [
-                {
-                  "decision_id": "continue",
-                  "label": "Continue"
-                }
-              ],
-              "allow_free_form": false,
-              "block_execution_until_confirmed": true
-            },
+            "user_decision_options": [
+              {
+                "decision_id": "continue",
+                "label": "Continue"
+              }
+            ],
             "completion_predicate": {
               "fact_id": "review_count",
               "operator": "in",
@@ -80,16 +51,16 @@
                 2
               ]
             },
-            "registered_executor_reference": "github-state-summary",
+            "executor_reference": "github-state-summary",
             "next_transition_rules": [
               {
                 "condition": null,
-                "transition_id": "complete"
+                "task_action_id": "FC-2"
               }
             ]
           },
           {
-            "transition_id": "complete",
+            "task_action_id": "FC-2",
             "normalized_fact_conditions": {
               "any": [
                 {
@@ -99,18 +70,12 @@
                 }
               ]
             },
-            "task_action_id": "FC-2",
-            "user_decision_specification": {
-              "required": false,
-              "options": [],
-              "allow_free_form": true,
-              "block_execution_until_confirmed": false
-            },
+            "user_decision_options": [],
             "completion_predicate": {
               "fact_id": "issue_open",
               "operator": "not_exists"
             },
-            "registered_executor_reference": null,
+            "executor_reference": null,
             "next_transition_rules": []
           }
         ]

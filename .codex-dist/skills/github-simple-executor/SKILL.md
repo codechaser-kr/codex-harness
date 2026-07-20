@@ -9,7 +9,8 @@ description: 완전하고 변경 불가능한 구조화 실행 요청의 단일 
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/workflow-engine-rules.md`에서 `명령 실행 경로 규칙`, `구조화 실행 요청 판정 규칙`, `구조화 실행 결과와 요청-결과 상관관계 판정 규칙`, `구조화 실행 성공과 중단 판정 규칙`, `실행 주체 선택 판정 규칙`을 읽는다.
+- `../github-workflow-engine/references/structured-execution-contract.md`에서 `구조화 실행 요청 판정 규칙`, `구조화 실행 결과와 요청-결과 상관관계 판정 규칙`, `구조화 실행 성공과 중단 판정 규칙`, `실행 주체 선택 판정 규칙` 섹션만 읽는다.
+- 실제 명령의 권한 경로를 판정하고 실행 직전에 재판정할 때 `../github-workflow-engine/references/command-execution-path-contract.md`를 읽는다.
 
 ## 입력
 
@@ -23,7 +24,7 @@ description: 완전하고 변경 불가능한 구조화 실행 요청의 단일 
 1. 요청 식별, 작업과 범위, 기준 상태, 계약 조건, 실행 경로 조건, 예정 실행 주체, 예정 세션 관계를 즉시 검증한다.
 2. 실제 호출 직전에 명령 경로, 권한, 도구, 파괴적 명령 위험을 다시 확인한다.
 3. 결정론적 도구 경로가 없고, 값 재해석·판단·범위 변경 없이 가능한 정확히 하나의 확정된 비파일 단순 상태 변경만 수행한다.
-4. `workflow-engine-rules.md`의 일반 구조화 실행 결과 계약 전체를 반환한다. 실제 executor/model/skill/config/session, permission/tool/path 재판정, 수행 동작, 변경 파일, GitHub 상태 변경, 검증, 사후조건, 위험 또는 실패 사유를 빠짐없이 기록한다.
+4. `structured-execution-contract.md`의 일반 구조화 실행 결과 계약 전체를 반환한다. 실제 executor/model/skill/config/session, permission/tool/path 재판정, 수행 동작, 변경 파일, GitHub 상태 변경, 검증, 사후조건, 위험 또는 실패 사유를 빠짐없이 기록한다.
 
 ## 출력
 

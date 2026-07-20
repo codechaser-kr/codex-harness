@@ -48,16 +48,26 @@ test("accepts unconditional, conditional, and terminal-escaping cyclic graphs", 
 test("checks completion predicate satisfiability using only its referenced facts", async () => {
   const fixture = await readFixture("semantic-valid.json");
   const definition = structuredClone(fixture.cases[0].definition);
-  definition.normalized_fact_schema.push({
-    fact_id: "unrelated",
-    value_type: "integer",
-    allowed_values: Array.from({ length: 100 }, (_, index) => index),
-    evidence_required: false,
-  });
+  definition.facts.unrelated = Array.from({ length: 100 }, (_, index) => index);
 
   const result = validateWorkflowDefinition(definition, { maxConditionStates: 3 });
   assert.equal(result.valid, true, JSON.stringify(result.errors));
   assert.deepEqual(result.errors, []);
+});
+
+test("infers terminal actions only from empty next transition rules", async () => {
+  const fixture = await readFixture("semantic-valid.json");
+  const definition = structuredClone(fixture.cases[0].definition);
+  assert.deepEqual(
+    definition.transitions.filter((transition) => transition.next_transition_rules.length === 0).map((transition) => transition.task_action_id),
+    ["FI-2"],
+  );
+  assert.equal(validateWorkflowDefinition(definition).valid, true);
+
+  definition.transitions[1].next_transition_rules = [{ condition: null, task_action_id: "FI-1" }];
+  const result = validateWorkflowDefinition(definition);
+  assert.equal(result.valid, false);
+  assert.equal(result.errors.some((error) => error.code === "transition.no_terminal_path"), true);
 });
 
 test("reports deterministic C3 graph and condition errors", async () => {

@@ -15,20 +15,23 @@ import "./policy-review.test.mjs";
 import "./feature-change.test.mjs";
 import "./feature-fix.test.mjs";
 import "./implementation.test.mjs";
-import "../validation-mode/validation-mode.test.mjs";
-import "../validation-mode/runtime-wiring.test.mjs";
-import "../validation-mode/feature-proposal-validation.integration.test.mjs";
-import "../validation-mode/issue-workflows-validation.integration.test.mjs";
-import "../validation-mode/implementation-flow-validation.integration.test.mjs";
+import "../validation-mode/validation-mode-contract.test.mjs";
+import "../validation-mode/agent-lifecycle-contract.test.mjs";
+import "../skill-quality/skill-structure-contract.test.mjs";
+import "../skill-quality/reference-boundary-contract.test.mjs";
 
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const installScript = join(repositoryRoot, "install.sh");
 const sourceTargetEditor = join(repositoryRoot, ".codex-dist/skills/target-harness-code-editor/SKILL.md");
+const sourceHarnessTemplateCompatibility = join(
+  repositoryRoot,
+  ".codex-dist/skills/harness/references/workflow-engine-template-compatibility-contract.md",
+);
+const removedRulesRelativePath = ["references/workflow-engine", "rules.md"].join("-");
+const removedRulesFilenamePattern = new RegExp(["workflow-engine", "rules\\.md"].join("-"));
 
 const jsonArtifacts = [
-  "schemas/workflow-definition.schema.json",
-  "registries/registered-executors.json",
   "definitions/feature-proposal.json",
   "definitions/policy-review.json",
   "definitions/feature-change.json",
@@ -44,15 +47,22 @@ const jsonArtifacts = [
   "tests/workflow-definition/fixtures/feature-change-states.json",
   "tests/workflow-definition/fixtures/feature-fix-states.json",
   "tests/workflow-definition/fixtures/implementation-states.json",
-  "tests/validation-mode/fixtures/validation-mode-cases.json",
 ];
 
 const requiredArtifacts = [
   "references/workflow-definition-contract.md",
   "references/validation-mode-contract.md",
+  "references/agent-lifecycle-contract.md",
   "references/normalized-fact-adapter-contract.md",
-  "schemas/workflow-definition.schema.json",
-  "registries/registered-executors.json",
+  "references/artifact-output-contract.md",
+  "references/github-templates.md",
+  "references/state-observation-contract.md",
+  "references/review-runtime-contract.md",
+  "references/claude-review-executor-contract.md",
+  "references/structured-execution-contract.md",
+  "references/user-decision-contract.md",
+  "references/command-execution-path-contract.md",
+  "references/target-harness-execution-contract.md",
   "definitions/feature-proposal.json",
   "definitions/policy-review.json",
   "definitions/feature-change.json",
@@ -64,13 +74,12 @@ const requiredArtifacts = [
   "scripts/workflow-definition/evaluator.mjs",
   "scripts/workflow-definition/normalized-fact-adapter.mjs",
   "scripts/workflow-definition/workflow-state-adapter.mjs",
+  "scripts/workflow-definition/feature-proposal-state-adapter.mjs",
   "scripts/workflow-definition/policy-review-state-adapter.mjs",
   "scripts/workflow-definition/feature-change-state-adapter.mjs",
   "scripts/workflow-definition/feature-fix-state-adapter.mjs",
   "scripts/workflow-definition/implementation-state-adapter.mjs",
   "scripts/workflow-definition/cli.mjs",
-  "scripts/validation-mode/comparator.mjs",
-  "scripts/validation-mode/cli.mjs",
   "tests/workflow-definition/structural-validation.test.mjs",
   "tests/workflow-definition/semantic-validation.test.mjs",
   "tests/workflow-definition/evaluator.test.mjs",
@@ -91,12 +100,10 @@ const requiredArtifacts = [
   "tests/workflow-definition/fixtures/feature-change-states.json",
   "tests/workflow-definition/fixtures/feature-fix-states.json",
   "tests/workflow-definition/fixtures/implementation-states.json",
-  "tests/validation-mode/validation-mode.test.mjs",
-  "tests/validation-mode/runtime-wiring.test.mjs",
-  "tests/validation-mode/feature-proposal-validation.integration.test.mjs",
-  "tests/validation-mode/issue-workflows-validation.integration.test.mjs",
-  "tests/validation-mode/implementation-flow-validation.integration.test.mjs",
-  "tests/validation-mode/fixtures/validation-mode-cases.json",
+  "tests/validation-mode/validation-mode-contract.test.mjs",
+  "tests/validation-mode/agent-lifecycle-contract.test.mjs",
+  "tests/skill-quality/skill-structure-contract.test.mjs",
+  "tests/skill-quality/reference-boundary-contract.test.mjs",
 ];
 
 async function parseJsonArtifacts(root) {
@@ -171,19 +178,6 @@ function assertMatchingCliResults(sourceResult, installedResult, expectedExitCod
   assert.deepEqual(installedJson, sourceJson);
 }
 
-function makeValidationSessionReceipts(fixture) {
-  return Array.from({ length: 10 }, (_, offset) => ({
-    request_id: fixture.semantic_request.request_id,
-    session_index: offset + 1,
-    session_id: `install-validation-session-${String(offset + 1).padStart(2, "0")}`,
-    observed_state_snapshot: structuredClone(fixture.semantic_request.state_snapshot),
-    observed_invocation_specification: structuredClone(fixture.semantic_request.invocation_specification),
-    status: "usable",
-    outcome: structuredClone(fixture.semantic_outcome),
-    external_side_effects: [],
-  }));
-}
-
 function isNestedSpawnDenied(result) {
   return result.error?.code === "EPERM";
 }
@@ -193,7 +187,46 @@ test("workflow definition foundation inventory and JSON artifacts are complete",
   for (const relativePath of requiredArtifacts) {
     assert.equal(files.includes(relativePath), true, `Missing required artifact: ${relativePath}`);
   }
+  assert.equal(files.includes("schemas/workflow-definition.schema.json"), false);
+  assert.equal(files.includes(removedRulesRelativePath), false);
   await parseJsonArtifacts(sourceSkillDirectory);
+});
+
+test("runtime contracts do not duplicate natural-language transition tables", async () => {
+  const forbiddenTransitionContractText = [
+    "작업 전이표",
+    "현재 작업 산출 규칙",
+    "재사용 상태 규칙",
+  ];
+  for (const relativePath of [
+    "references/artifact-output-contract.md",
+    "references/state-observation-contract.md",
+    "references/review-runtime-contract.md",
+    "references/structured-execution-contract.md",
+    "references/user-decision-contract.md",
+    "references/command-execution-path-contract.md",
+    "references/target-harness-execution-contract.md",
+    "references/claude-review-executor-contract.md",
+  ]) {
+    const source = await readFile(join(sourceSkillDirectory, relativePath), "utf8");
+    assert.doesNotMatch(source, /^## 작업 전이 규칙$/m, relativePath);
+    for (const forbiddenText of forbiddenTransitionContractText) {
+      assert.equal(
+        source.includes(forbiddenText),
+        false,
+        `${relativePath} contains legacy transition text: ${forbiddenText}`,
+      );
+    }
+  }
+});
+
+test("removed workflow rules filename is not referenced by distribution or docs", async () => {
+  for (const root of [join(repositoryRoot, ".codex-dist"), join(repositoryRoot, "docs")]) {
+    for (const relativePath of await listRegularFiles(root)) {
+      const source = await readFile(join(root, relativePath), "utf8");
+      assert.doesNotMatch(source, removedRulesFilenamePattern, join(root, relativePath));
+    }
+  }
 });
 
 test("install.sh has valid shell syntax", (t) => {
@@ -228,16 +261,19 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
 
   const installedSkillDirectory = join(destinationRoot, "github-workflow-engine");
   await assertTreesMatch(sourceSkillDirectory, installedSkillDirectory);
+  assert.equal((await listRegularFiles(installedSkillDirectory)).includes("schemas/workflow-definition.schema.json"), false);
+  assert.equal((await listRegularFiles(installedSkillDirectory)).includes(removedRulesRelativePath), false);
   await parseJsonArtifacts(installedSkillDirectory);
   assert.deepEqual(
     await readFile(join(destinationRoot, "target-harness-code-editor/SKILL.md")),
     await readFile(sourceTargetEditor),
   );
+  assert.deepEqual(
+    await readFile(join(harnessDestination, "references/workflow-engine-template-compatibility-contract.md")),
+    await readFile(sourceHarnessTemplateCompatibility),
+  );
 
-  const [evaluationCases, validationFixture] = await Promise.all([
-    readFile(join(sourceSkillDirectory, "tests/workflow-definition/fixtures/evaluation-cases.json"), "utf8").then(JSON.parse),
-    readFile(join(sourceSkillDirectory, "tests/validation-mode/fixtures/validation-mode-cases.json"), "utf8").then(JSON.parse),
-  ]);
+  const evaluationCases = await readFile(join(sourceSkillDirectory, "tests/workflow-definition/fixtures/evaluation-cases.json"), "utf8").then(JSON.parse);
   const definitionPath = join(temporaryRoot, "definition.json");
   const statePath = join(temporaryRoot, "state.json");
   const cycleDefinitionPath = join(temporaryRoot, "cycle-definition.json");
@@ -261,31 +297,6 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
       return;
     }
     const installedResult = runProcess(process.execPath, [installedCli, ...command.argumentsList]);
-    assertMatchingCliResults(sourceResult, installedResult, command.exitCode);
-  }
-
-  const sourceValidationCli = join(sourceSkillDirectory, "scripts/validation-mode/cli.mjs");
-  const installedValidationCli = join(installedSkillDirectory, "scripts/validation-mode/cli.mjs");
-  const validationReceipts = makeValidationSessionReceipts(validationFixture);
-  const validationCommands = [
-    { input: JSON.stringify({ request: validationFixture.semantic_request, receipts: validationReceipts }), exitCode: 0 },
-    {
-      input: JSON.stringify({
-        request: validationFixture.semantic_request,
-        receipts: validationReceipts.map((receipt, index) => index === 9
-          ? { ...receipt, outcome: { ...receipt.outcome, recommendation: { direction: "feature_change" } } }
-          : receipt),
-      }),
-      exitCode: 1,
-    },
-  ];
-  for (const command of validationCommands) {
-    const sourceResult = runProcess(process.execPath, [sourceValidationCli], { input: command.input });
-    if (isNestedSpawnDenied(sourceResult)) {
-      t.skip("The current execution sandbox does not permit nested Node child processes.");
-      return;
-    }
-    const installedResult = runProcess(process.execPath, [installedValidationCli], { input: command.input });
     assertMatchingCliResults(sourceResult, installedResult, command.exitCode);
   }
 });

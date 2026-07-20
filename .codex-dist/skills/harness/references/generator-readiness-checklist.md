@@ -104,7 +104,7 @@
 - 세션 시작, 역할 완료, 실패, 보류, 종료 요약이 Markdown 로그에 남는다.
 - `session-log.md`와 `latest-session-summary.md`가 다음 실행의 입력이 된다.
 - `logging-policy.md`가 스크립트 없는 Markdown 로그 정책과 최신 요약 필드를 설명한다.
-- 역할 결과 상태는 `logging-contract.md`의 상태 규약을 따른다. 진행 중에는 `planned`, `in_progress`, `completed`, `timed_out`, `failed` 중 하나로 기록한다. 최종 응답 전 비동기 subagent는 `completed` 또는 `timed_out`으로 정리한다.
+- 역할 결과 상태는 `logging-contract.md`의 상태 규약을 따른다. 진행 중에는 `planned`, `in_progress`, `completed`, `timed_out`, `failed` 중 하나로 기록한다. 이 상태를 실행 리소스 정리와 혼동하지 않고, 결과·오류·timeout을 보존·소비한 뒤 성공·실패·중단과 무관하게 다음 전이 또는 최종 응답 전에 현재 오케스트레이션에서 발급된 모든 subagent ID에 `close_agent`를 호출한다. `close_agent` 성공 또는 `not_found`만 정리 완료로 취급하며 내부 상태 DB를 직접 수정하지 않는다.
 - 다음 시작 역할, 다음 하네스 재진입 Phase, 다시 읽을 입력, 최근 출력이 세션 종료 시점에 남는다.
 
 ### 9) 피드백 반영과 진화

@@ -9,7 +9,7 @@ description: 기능결함 이슈의 현상과 확인 위치를 기준으로 근�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/workflow-engine-rules.md`에서 `Fix Analysis 출력 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``결함 원인 분석(`fix-analysis`) 출력 판정 규칙`` 섹션만 읽는다.
 - `../github-workflow-engine/references/github-templates.md`
 
 ## 입력

@@ -1,8 +1,6 @@
 const LEAF_OPERATORS = new Set([
   "equals",
-  "not_equals",
   "in",
-  "not_in",
   "exists",
   "not_exists",
 ]);
@@ -124,7 +122,7 @@ function validateLeaf(value, path, facts, errors) {
     return;
   }
 
-  if (value.operator === "equals" || value.operator === "not_equals") {
+  if (value.operator === "equals") {
     validateValue(value.value, valuePath, fact, errors);
     return;
   }
@@ -163,17 +161,6 @@ function validateComposite(value, path, facts, errors, key) {
   }
 }
 
-function validateNot(value, path, facts, errors) {
-  if (!validateClosedObject(value, path, new Set(["not"]), errors, "expression")) {
-    return;
-  }
-  if (!Object.hasOwn(value, "not")) {
-    addError(errors, "expression.required", childPath(path, "not"), "Missing required property: not.");
-    return;
-  }
-  validateExpressionInto(value.not, childPath(path, "not"), facts, errors);
-}
-
 function validateExpressionInto(value, path, facts, errors) {
   if (!isObject(value)) {
     addError(errors, "expression.type", path, "Expression must be an object.");
@@ -185,20 +172,20 @@ function validateExpressionInto(value, path, facts, errors) {
     hasLeafKey ? "leaf" : null,
     Object.hasOwn(value, "all") ? "all" : null,
     Object.hasOwn(value, "any") ? "any" : null,
-    Object.hasOwn(value, "not") ? "not" : null,
   ].filter(Boolean);
 
   if (forms.length !== 1) {
     if (Object.hasOwn(value, "priority")) {
       addError(errors, "priority.forbidden", childPath(path, "priority"), "priority is not allowed.");
     }
-    addError(errors, "expression.form", path, "Expression must contain exactly one supported form.");
+    const message = forms.length > 1
+      ? `Expression contains conflicting forms: ${forms.join(", ")}.`
+      : "Expression must contain exactly one supported form.";
+    addError(errors, "expression.form", path, message);
     return;
   }
   if (forms[0] === "leaf") {
     validateLeaf(value, path, facts, errors);
-  } else if (forms[0] === "not") {
-    validateNot(value, path, facts, errors);
   } else {
     validateComposite(value, path, facts, errors, forms[0]);
   }
@@ -231,9 +218,6 @@ export function matchesExpressionState(expression, state) {
   if (Object.hasOwn(expression, "any") && Array.isArray(expression.any)) {
     return expression.any.some((item) => matchesExpressionState(item, state));
   }
-  if (Object.hasOwn(expression, "not")) {
-    return !matchesExpressionState(expression.not, state);
-  }
   if (!Object.hasOwn(expression, "fact_id") || !Object.hasOwn(expression, "operator")) {
     return false;
   }
@@ -251,14 +235,8 @@ export function matchesExpressionState(expression, state) {
   if (expression.operator === "equals") {
     return fact.value === expression.value;
   }
-  if (expression.operator === "not_equals") {
-    return fact.value !== expression.value;
-  }
   if (expression.operator === "in") {
     return Array.isArray(expression.value) && expression.value.includes(fact.value);
-  }
-  if (expression.operator === "not_in") {
-    return Array.isArray(expression.value) && !expression.value.includes(fact.value);
   }
   return false;
 }

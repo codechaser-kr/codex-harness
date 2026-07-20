@@ -26,21 +26,19 @@ function stopped(reason, workflowId, errors) {
 }
 
 function validateSourceContracts(definition, sourceContracts) {
-  if (!Array.isArray(definition?.normalized_fact_schema)
-    || definition.normalized_fact_schema.some((fact) => !isPlainObject(fact) || !isNonEmptyString(fact.fact_id))) {
+  if (!isPlainObject(definition?.facts)) {
     return [];
   }
 
   const errors = [];
   const definitionFactIds = new Set();
-  for (let index = 0; index < definition.normalized_fact_schema.length; index += 1) {
-    const factId = definition.normalized_fact_schema[index].fact_id;
+  for (const factId of Object.keys(definition.facts)) {
     definitionFactIds.add(factId);
     if (!sourceContracts.has(factId)) {
       addError(
         errors,
         "source_contract.missing",
-        `/normalized_fact_schema/${index}/fact_id`,
+        pointer("/facts", factId),
         `Missing source contract for fact_id ${factId}.`,
       );
     }

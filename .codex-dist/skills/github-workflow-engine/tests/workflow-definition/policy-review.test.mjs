@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { evaluateWorkflowDefinition } from "../../scripts/workflow-definition/evaluator.mjs";
@@ -8,8 +7,6 @@ import { normalizePolicyReviewFacts } from "../../scripts/workflow-definition/po
 import { validateWorkflowDefinition } from "../../scripts/workflow-definition/validator.mjs";
 
 const definitionUrl = new URL("../../definitions/policy-review.json", import.meta.url);
-const registryUrl = new URL("../../registries/registered-executors.json", import.meta.url);
-const schemaUrl = new URL("../../schemas/workflow-definition.schema.json", import.meta.url);
 const statesUrl = new URL("./fixtures/policy-review-states.json", import.meta.url);
 
 async function readJson(url) {
@@ -64,11 +61,8 @@ function hasError(result, code, path) {
   return result.errors.some((error) => error.code === code && error.path === path);
 }
 
-test("policy-review definition passes C2/C3 validation and uses registered executors with fixed scopes", async () => {
-  const [definition, registry, states] = await Promise.all([readJson(definitionUrl), readJson(registryUrl), readJson(statesUrl)]);
-  const schema = JSON.parse(await readFile(schemaUrl, "utf8"));
-
-  assert.equal(schema.$schema, "https://json-schema.org/draft/2020-12/schema");
+test("policy-review definition passes C2/C3 validation with direct executor references", async () => {
+  const [definition, states] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
   assert.equal(Object.keys(states).length, 13);
   assert.deepEqual(definition.transitions.map((transition) => transition.task_action_id), [
     "PR-1", "PR-2", "PR-3", "PR-4", "PR-5", "PR-6", "PR-7", "PR-8", "PR-9",
@@ -78,24 +72,13 @@ test("policy-review definition passes C2/C3 validation and uses registered execu
   for (const transition of definition.transitions.slice(0, -1)) {
     assert.deepEqual(transition.next_transition_rules, [{
       condition: null,
-      transition_id: definition.transitions[definition.transitions.indexOf(transition) + 1].transition_id,
+      task_action_id: definition.transitions[definition.transitions.indexOf(transition) + 1].task_action_id,
     }]);
   }
   assert.deepEqual(definition.transitions.at(-1).next_transition_rules, []);
 
-  const expectedScopes = new Map([
-    ["issue-creation", "proposal_output"],
-    ["policy-plan", "proposal_output"],
-    ["policy-review-next-triage", "proposal_output"],
-    ["github-simple-executor", "github_state_change"],
-  ]);
-  for (const [executorId, sideEffectScope] of expectedScopes) {
-    const matches = registry.filter((entry) => entry.executor_id === executorId);
-    assert.equal(matches.length, 1, executorId);
-    assert.equal(matches[0].side_effect_scope, sideEffectScope, executorId);
-  }
-  assert.equal(definition.transitions.find((item) => item.task_action_id === "PR-5").registered_executor_reference, null);
-  assert.equal(definition.transitions.find((item) => item.task_action_id === "PR-9").registered_executor_reference, null);
+  assert.equal(definition.transitions.find((item) => item.task_action_id === "PR-5").executor_reference, null);
+  assert.equal(definition.transitions.find((item) => item.task_action_id === "PR-9").executor_reference, null);
   const reflectTransitionPredicate = definition.transitions
     .find((item) => item.task_action_id === "PR-8").completion_predicate;
   const completeTransition = definition.transitions.find((item) => item.task_action_id === "PR-9");
@@ -130,13 +113,13 @@ test("policy-review representative states resolve to exactly one expected action
     const result = evaluateWorkflowDefinition(definition, state);
     assert.equal(result.status, "action_required", name);
     assert.equal(result.task_action_id, taskActionId, name);
-    assert.equal(result.registered_executor_reference, executorReference, name);
+    assert.equal(result.executor_reference, executorReference, name);
     assert.deepEqual(state, stateBefore, name);
   }
   for (const name of ["completed_existing_issue", "completed_new_issue"]) {
     assert.deepEqual(
       evaluateWorkflowDefinition(definition, states[name]),
-      { status: "completed", transition_id: "complete-policy-review" },
+      { status: "completed", task_action_id: "PR-9" },
       name,
     );
   }
@@ -149,7 +132,7 @@ test("policy-review representative states resolve to exactly one expected action
     const result = evaluateWorkflowDefinition(definition, state);
     assert.equal(result.status, "action_required", `${name} with ${resultValue}`);
     assert.equal(result.task_action_id, "PR-8", `${name} with ${resultValue}`);
-    assert.equal(result.registered_executor_reference, "github-simple-executor", `${name} with ${resultValue}`);
+    assert.equal(result.executor_reference, "github-simple-executor", `${name} with ${resultValue}`);
   }
   assert.deepEqual(definition, definitionBefore);
 });
@@ -165,8 +148,8 @@ test("policy-review adapter maps observations in definition order and preserves 
   assert.equal(result.status, "normalized");
   assert.equal(result.workflow_id, "policy-review");
   assert.equal(JSON.stringify(result), JSON.stringify(repeatedResult));
-  assert.deepEqual(Object.keys(result.normalized_fact_state), definition.normalized_fact_schema.map((fact) => fact.fact_id));
-  assert.deepEqual(Object.keys(result.evidence_by_fact), definition.normalized_fact_schema.map((fact) => fact.fact_id));
+  assert.deepEqual(Object.keys(result.normalized_fact_state), Object.keys(definition.facts));
+  assert.deepEqual(Object.keys(result.evidence_by_fact), Object.keys(definition.facts));
   assert.deepEqual(result.evidence_by_fact.policy_design_proposal_usable, [{
     source_kind: "skill_output",
     source_reference: "policy-plan",
@@ -185,28 +168,26 @@ test("policy-review adapter maps observations in definition order and preserves 
 test("policy-review adapter rejects missing and unexpected source contracts before observation validation", async () => {
   const definition = await readJson(definitionUrl);
   const missingContractDefinition = structuredClone(definition);
-  missingContractDefinition.normalized_fact_schema.push({
-    ...structuredClone(missingContractDefinition.normalized_fact_schema[0]),
-    fact_id: "uncontracted_fact",
-  });
+  missingContractDefinition.facts.uncontracted_fact = [true, false];
 
   const missingContract = normalizePolicyReviewFacts(missingContractDefinition, null);
   assertAtomicFailure(missingContract, "source_contract_mismatch");
   assert.deepEqual(missingContract.errors, [{
     code: "source_contract.missing",
-    path: `/normalized_fact_schema/${definition.normalized_fact_schema.length}/fact_id`,
+    path: "/facts/uncontracted_fact",
     message: "Missing source contract for fact_id uncontracted_fact.",
   }]);
   assert.deepEqual(normalizePolicyReviewFacts(missingContractDefinition, null), missingContract);
 
   const unexpectedContractDefinition = structuredClone(definition);
-  const [removedFact] = unexpectedContractDefinition.normalized_fact_schema.splice(0, 1);
+  const removedFactId = Object.keys(unexpectedContractDefinition.facts)[0];
+  delete unexpectedContractDefinition.facts[removedFactId];
   const unexpectedContract = normalizePolicyReviewFacts(unexpectedContractDefinition, null);
   assertAtomicFailure(unexpectedContract, "source_contract_mismatch");
   assert.deepEqual(unexpectedContract.errors, [{
     code: "source_contract.unexpected",
-    path: `/source_contracts/${removedFact.fact_id}`,
-    message: `Unexpected source contract for fact_id ${removedFact.fact_id}.`,
+    path: `/source_contracts/${removedFactId}`,
+    message: `Unexpected source contract for fact_id ${removedFactId}.`,
   }]);
   assert.deepEqual(normalizePolicyReviewFacts(unexpectedContractDefinition, null), unexpectedContract);
 });

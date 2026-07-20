@@ -9,7 +9,8 @@ description: GitHub와 로컬의 지정된 상태를 읽기 전용으로 수집�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/workflow-engine-rules.md`에서 `상태 읽기 규칙`, `상태 요약 출력 사용 가능 판정 규칙`, `실행 주체 선택 판정 규칙`을 읽는다.
+- `../github-workflow-engine/references/state-observation-contract.md`에서 `상태 읽기 규칙`과 `상태 요약 출력 사용 가능 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/structured-execution-contract.md`에서 `실행 주체 선택 판정 규칙` 섹션만 읽는다.
 
 ## 입력
 

@@ -1,19 +1,26 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { normalizeFactCandidates } from "../../scripts/workflow-definition/normalized-fact-adapter.mjs";
 
-const registryUrl = new URL("../../registries/registered-executors.json", import.meta.url);
 
 function definition() {
   return {
-    workflow_id: "adapter-test",
-    normalized_fact_schema: [
-      { fact_id: "decision", value_type: "string", allowed_values: ["accept", "reject"], evidence_required: true },
-      { fact_id: "count", value_type: "integer", allowed_values: [0, 1, 2], evidence_required: false },
-      { fact_id: "ready", value_type: "boolean", allowed_values: [true, false], evidence_required: false },
-    ],
+    workflow_id: "implementation",
+    entry_task_action_id: "FI-1",
+    facts: {
+      decision: ["accept", "reject"],
+      count: [0, 1, 2],
+      ready: [true, false],
+    },
+    transitions: [{
+      task_action_id: "FI-1",
+      normalized_fact_conditions: { fact_id: "ready", operator: "exists" },
+      user_decision_options: [],
+      completion_predicate: { fact_id: "ready", operator: "exists" },
+      executor_reference: null,
+      next_transition_rules: [],
+    }],
   };
 }
 
@@ -52,7 +59,7 @@ test("normalizes valid candidates and groups copied evidence by fact", () => {
 
   assert.deepEqual(result, {
     status: "normalized",
-    workflow_id: "adapter-test",
+    workflow_id: "implementation",
     normalized_fact_state: { decision: "accept", count: 2 },
     evidence_by_fact: {
       decision: [evidence()],
@@ -64,7 +71,7 @@ test("normalizes valid candidates and groups copied evidence by fact", () => {
 
 test("allows missing facts and emits keys in definition order", () => {
   const result = normalizeFactCandidates(definition(), [
-    candidate("ready", true),
+    candidate("ready", true, [evidence({ source_kind: "user_input", source_reference: "confirmation" })]),
     candidate("decision", "reject", [evidence()]),
   ]);
 
@@ -94,14 +101,14 @@ test("does not mutate inputs and returns byte-stable JSON for the same input", (
 
 test("rejects malformed definition projection without reading external state", () => {
   const invalidDefinition = definition();
-  invalidDefinition.normalized_fact_schema[0].unexpected = true;
-  invalidDefinition.normalized_fact_schema[1].allowed_values = [0, "1"];
+  invalidDefinition.facts.count = [0, "1"];
+  invalidDefinition.version = "1.0.0";
 
   const result = normalizeFactCandidates(invalidDefinition, []);
 
   assertAtomicFailure(result, "invalid_definition");
-  assert.equal(hasError(result, "object.additional_property", "/normalized_fact_schema/0/unexpected"), true);
-  assert.equal(hasError(result, "fact.allowed_values.type_mismatch", "/normalized_fact_schema/1/allowed_values/1"), true);
+  assert.equal(hasError(result, "object.additional_property", "/version"), true);
+  assert.equal(hasError(result, "fact.allowed_values.type_mismatch", "/facts/count/1"), true);
 });
 
 test("rejects unknown facts, wrong value types, values outside the domain, and duplicates", () => {
@@ -121,7 +128,7 @@ test("rejects unknown facts, wrong value types, values outside the domain, and d
   assert.equal(hasError(result, "candidate.fact_id.duplicate", "/candidates/4/fact_id"), true);
 });
 
-test("rejects missing required evidence and malformed or open candidate objects", () => {
+test("requires evidence universally and rejects malformed or open candidate objects", () => {
   const result = normalizeFactCandidates(definition(), [
     candidate("decision", "accept"),
     { fact_id: "count", value: 1, evidence: [], extra: true },
@@ -167,21 +174,4 @@ test("rejects non-array candidates and evidence", () => {
   ]);
   assertAtomicFailure(evidenceResult, "invalid_fact_candidates");
   assert.equal(hasError(evidenceResult, "candidate.evidence.type", "/candidates/0/evidence"), true);
-});
-
-test("registers the five proposal executors exactly once", async () => {
-  const registry = JSON.parse(await readFile(registryUrl, "utf8"));
-  const executorIds = ["policy-plan", "policy-review-next-triage", "feature-plan", "fix-analysis", "fix-plan"];
-
-  for (const executorId of executorIds) {
-    const matches = registry.filter((entry) => entry.executor_id === executorId);
-    assert.deepEqual(matches, [{
-      executor_id: executorId,
-      executor_kind: "skill",
-      side_effect_scope: "proposal_output",
-      runtime_reference: executorId,
-      execution_class: "llm_session",
-      validation_strategy: "semantic_consensus",
-    }]);
-  }
 });

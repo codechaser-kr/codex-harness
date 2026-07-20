@@ -1,39 +1,66 @@
 ---
 name: github-workflow-engine
-description: GitHub Issue, PR, label, checklist, review thread, comment를 관측하고 선언형 Workflow Definition으로 현재 작업과 다음 작업을 평가합니다. 확정된 자동 실행은 구조화 실행 요청으로 선택된 실행 주체에 위임합니다.
+description: GitHub 이슈와 PR의 관측 상태를 선언형 워크플로 정의에 적용해 현재 작업이나 다음 작업을 계산하고, 사용자 결정과 확정 실행을 조율합니다. 사용자가 `워크플로우 흐름으로 진행`, `계속 진행`, `다음 피드백`, `머지했습니다`처럼 기존 이슈·PR 흐름의 시작이나 재개를 요청할 때 사용합니다. 단일 코드 수정, 단순 리뷰, 커밋 메시지 작성은 각각 독립 작업 흐름으로 처리합니다.
 ---
 
 # GitHub Workflow Engine
 
-이 스킬은 GitHub와 로컬 상태를 정규화한 뒤 Workflow Definition을 평가하는 얇은 오케스트레이터다.
-작업 전이의 단일 원천은 `definitions/*.json`, 각 state adapter와
+이 스킬은 GitHub와 로컬 상태를 정규화한 뒤, 워크플로 정의의 규칙을 적용해 현재 또는 다음 작업을
+계산하는 흐름 조율자다. 작업 전이의 단일 기준은 `definitions/*.json`, 각 상태 변환기와
 `scripts/workflow-definition/evaluator.mjs`다. 실제 GitHub 상태 변경, 파일 변경, 브랜치, 커밋, PR,
-댓글과 review thread 변경은 선택된 실행 주체만 수행한다.
+댓글과 리뷰 대화 변경은 선택된 실행 주체만 수행한다.
+
+## 핵심 원칙
+
+- `definitions/*.json`은 작업과 전이 조건을 담은 데이터다.
+- `scripts/workflow-definition/*.mjs`는 정의 검증, 상태 정규화, 작업 계산을 수행하는 실행 코드다.
+- `references/*.md`는 아래 조건에 따라 읽는 참조문서이며, 전이는 `definitions/*.json`과 실행 코드의 결과로 결정한다.
+- 일반 실행은 관측, 한 번의 정규화, 한 번의 `evaluateWorkflowDefinition` 호출이라는 단일 경로를 따른다.
+- 사용자 결정은 사용자가 확정하고, 실행 주체는 확정된 범위만 수행한다. 규칙 불일치나 계약 실패가 발생하면 계약이 제시한 사유와 재개 조건으로 중단한다.
+
+## 사용 범위 예시
+
+다음 요청에서 사용한다:
+
+- “#93을 워크플로우 흐름으로 진행해주세요.”
+- “계속 진행해주세요. 다음 피드백을 처리합시다.”
+- “머지했습니다. 워크플로우 흐름을 이어가주세요.”
+
+다음 요청은 독립 작업 흐름으로 처리한다:
+
+- 단일 함수 또는 파일 수정: 대상 프로젝트의 코드 수정 흐름
+- 단순 diff 리뷰: 코드 리뷰 흐름
+- 현재 변경의 커밋 메시지 제안: 전역 `commit`
 
 ## 계약 읽기
 
-항상 다음 계약을 읽는다.
+워크플로 정의를 적용할 때 다음 계약을 기본 계약으로 읽는다.
 
 - `references/workflow-definition-contract.md`
 - `references/normalized-fact-adapter-contract.md`
 
-작업에 해당하는 계약만 추가로 읽는다.
+현재 작업에 해당하는 계약을 다음 기준으로 추가로 읽는다.
 
-- raw GitHub·로컬 상태를 수집하거나 관측 근거를 분류할 때 `references/state-observation-contract.md`
+- GitHub·로컬 원본 상태를 수집하거나 관측 근거를 분류할 때 `references/state-observation-contract.md`
 - 전용 제안·분석 스킬의 결과를 사용할 때 `references/artifact-output-contract.md`
+- 현재 작업에 사용자 선택지가 있거나 재개 요청의 사용자 입력을 해석할 때 `references/user-decision-contract.md`
 - 리뷰를 실행·정규화·게시·대응할 때 `references/review-runtime-contract.md`
+- 선택한 리뷰 실행 모드가 `claude/*`일 때 `references/claude-review-executor-contract.md`
 - 확정된 작업을 자동 실행할 때 `references/structured-execution-contract.md`
+- 실제 명령의 권한 경로를 판정하거나 실행 직전에 재판정할 때 `references/command-execution-path-contract.md`
+- 확정된 파일 수정 작업을 대상 하네스에 전달할 때 `references/target-harness-execution-contract.md`
 - 사용자가 현재 요청에서 검증 모드를 명시했을 때만 `references/validation-mode-contract.md`
-- 이슈 또는 PR 템플릿, 제목, label, 연관 이슈 계약이 필요할 때 `references/github-templates.md`
+- 이 스킬이 서브에이전트를 직접 생성하거나 하위 실행 주체의 정리 근거를 검증할 때 `references/agent-lifecycle-contract.md`
+- 이슈 또는 PR 템플릿, 제목, 라벨, 연관 이슈 계약이 필요할 때 `references/github-templates.md`
 
 필요한 경우 대상 저장소의 `.harness/logs/github-workflow-log.md`를 보조 근거로 읽는다.
-`docs/github-workflow-engine.md`는 설계 문서이며 런타임 입력으로 읽지 않는다.
+런타임 입력은 위 계약과 실행 코드로 한정한다. `docs/github-workflow-engine.md`는 설계 문서로 취급한다.
 
-## Workflow 선택
+## 워크플로 선택
 
-기준 대상과 이슈 유형을 관측한 뒤 다음 매핑 중 정확히 하나를 선택한다.
+기준 대상과 이슈 유형을 관측한 뒤 다음 매핑에서 정확히 하나를 선택한다.
 
-| `workflow_id` | Definition | state adapter | 정규화 함수 |
+| `workflow_id` | 워크플로 정의 | 상태 변환기 | 정규화 함수 |
 | --- | --- | --- | --- |
 | `feature-proposal` | `definitions/feature-proposal.json` | `scripts/workflow-definition/feature-proposal-state-adapter.mjs` | `normalizeFeatureProposalFacts` |
 | `policy-review` | `definitions/policy-review.json` | `scripts/workflow-definition/policy-review-state-adapter.mjs` | `normalizePolicyReviewFacts` |
@@ -41,40 +68,43 @@ description: GitHub Issue, PR, label, checklist, review thread, comment를 관�
 | `feature-fix` | `definitions/feature-fix.json` | `scripts/workflow-definition/feature-fix-state-adapter.mjs` | `normalizeFeatureFixFacts` |
 | `implementation` | `definitions/implementation.json` | `scripts/workflow-definition/implementation-state-adapter.mjs` | `normalizeImplementationFacts` |
 
-각 전용 state adapter는 workflow별 static source contract를 검증한 뒤 공통 fact 정규화 계약으로
-관측값을 변환한다. 런타임에서 source contract를 구성하거나 보완하지 않는다.
+각 상태 변환기는 워크플로별로 정해진 원본 데이터 계약을 검증한 뒤, 관측값을 공통 사실 형식으로
+정규화한다. 런타임은 정의된 원본 데이터 계약과 상태 변환기의 결과를 사용한다.
 
-이슈 유형 label과 제목이 충돌하거나 유형을 하나로 확정할 수 없으면 Workflow를 추정하지 않고
-중단한다. 공통 구현 흐름으로 진입하는 Definition의 작업이 반환된 뒤에는 `implementation`을 선택한다.
+이슈 유형은 라벨과 제목이 일치해 하나로 확정된 경우 선택한다. 두 값이 충돌하거나 단일 유형 확정
+조건을 충족하지 못하면 중단한다. 공통 구현 흐름에 진입하는 작업이 워크플로 정의에서 반환되면
+`implementation`을 선택한다.
 
-## 선언형 평가 루프
+## 선언형 작업 계산 절차
 
-모든 일반 실행은 다음 단일 경로만 사용한다.
+모든 일반 실행은 다음 단일 경로로 수행한다.
 
-1. 기준 이슈 또는 PR과 raw GitHub·로컬·사용자·스킬 상태를 읽기 전용 snapshot으로 수집한다.
-2. 선택한 state adapter로 관측값을 정확히 한 번 정규화한다.
-3. 정규화 성공 결과를 `evaluateWorkflowDefinition`에 정확히 한 번 전달한다. evaluator가 내부에서
-   Definition을 검증하므로 런타임에서 `validateWorkflowDefinition`을 중복 호출하지 않는다.
-4. 최초 진입이면 `definition.entry_task_action_id`, 재개 또는 반복이면 이전 evaluation이 반환한
+1. 기준 이슈 또는 PR과 GitHub·로컬·사용자·스킬의 원본 상태를 특정 시점의 읽기 전용 상태 묶음으로
+   수집한다.
+2. 선택한 상태 변환기로 관측값을 정확히 한 번 정규화한다.
+3. 정규화한 사실을 `evaluateWorkflowDefinition`에 정확히 한 번 전달한다. 이 함수는 워크플로 정의의
+   규칙을 적용해 현재 또는 다음 작업을 계산한다. 워크플로 정의 검증은 이 함수 내부의 단일 검증
+   경로를 사용한다.
+4. 최초 진입이면 `definition.entry_task_action_id`, 재개 또는 반복이면 이전 계산 결과가 반환한
    `task_action_id`를 `currentTaskActionId`로 전달한다.
 5. `action_required`가 반환한 단일 `task_action_id`, `user_decision_options`, `executor_reference`,
    `completion_predicate`를 현재 작업의 실행 입력으로 사용한다.
 6. 작업 완료 뒤 상태를 다시 관측·정규화하고 같은 `task_action_id`를 `currentTaskActionId`로 전달한다.
-   Definition의 `next_transition_rules`와 evaluator가 다음 단일 작업 또는 완료를 결정한다.
-7. `completed`면 흐름을 완료한다. adapter 또는 Definition validation 실패, evaluator의 `stopped`,
-   매칭 없음·복수 매칭과 오류는 중단한다.
+   워크플로 정의의 `next_transition_rules`와 `evaluateWorkflowDefinition`이 다음 단일 작업 또는 완료를
+   결정한다.
+7. `completed`면 흐름을 완료한다. 상태 변환기 또는 워크플로 정의 검증이 실패하거나
+   `evaluateWorkflowDefinition`이 `stopped`를 반환하면 중단한다. 일치하는 규칙이 없거나 여러
+   개인 경우와 오류가 발생한 경우도 중단 조건으로 처리한다.
 
-현재 또는 다음 `task_action_id`를 자연어로 추론하거나 전이표로 보완하지 않는다. Definition에 없는
-ID, 현재 정규화 상태와 불일치하는 ID, 재개 ID 누락을 entry로 대체하지 않는다. 실패 시 다른 흐름의
-Definition을 시도하거나 자연어 판정과 이중 실행·비교하지 않는다.
+현재 또는 다음 `task_action_id`는 evaluator가 반환한 값을 그대로 사용한다. 워크플로 정의에 없는
+ID, 현재 정규화 상태와 불일치하는 ID, 누락된 재개 ID가 발견되면 해당 계산의 사유와 함께 중단한다.
+실패 시 선택된 워크플로 정의의 중단 결과를 반환한다. 전이는 evaluator 호출 결과 한 경로로만 수행한다.
 
 ## 사용자 결정
 
-`action_required.user_decision_options`가 비어 있지 않으면 사용자 결정으로 멈춘다. 결정 대상과
-선택지를 번호 목록으로 제시하고 `기타 의견 입력`을 마지막 항목에 포함한다. 번호, 선택지 문구,
-`기타 의견 입력 항목 번호: 의견`, `기타 의견 입력: 의견`만 유효 입력으로 처리한다. 일반 진행 표현을
-선택으로 추정하지 않는다. 사용자가 확정한 값은 다음 snapshot의 사용자 관측값으로 정규화하며,
-사용자 결정을 실행 주체에 위임하지 않는다.
+`action_required.user_decision_options`에 값이 있으면 `user-decision-contract.md`를 읽고 사용자 결정으로
+멈춘다. 결정 대상과 선택지를 번호 목록으로 제시하고 계약이 허용한 입력으로 결정값을 확정한다. 사용자가
+확정한 값은 다음 상태 묶음의 사용자 관측값으로 정규화하고, 실행 주체에는 확정된 결정값만 전달한다.
 
 ## 전용 스킬 연결
 
@@ -95,61 +125,49 @@ Definition을 시도하거나 자연어 판정과 이중 실행·비교하지 �
 | 리뷰 코멘트 게시 초안 | `review-comment` |
 
 전용 스킬은 후보, 초안 또는 분석 결과만 반환한다. 결과는
-`artifact-output-contract.md`를 통과한 경우에만 다음 관측 snapshot에 포함한다. 보류 결과를 상태나
-사용자 결정으로 확정하지 않는다.
+`artifact-output-contract.md`의 요구사항을 충족한 경우에만 다음 관측 상태 묶음에 포함한다.
+보류 결과는 보류 상태로 유지한다.
 
 ## 자동 실행
 
-`action_required.executor_reference`가 있고 사용자 결정이 모두 반영된 작업만 자동 실행 후보가 된다.
-`structured-execution-contract.md`로 실행 범위, 불변 요청, 실행 주체, 명령 경로, 요청-결과 상관관계와
-사후조건을 검증한다.
+`action_required.executor_reference`가 있고 사용자 결정이 모두 반영된 작업을 자동 실행 후보로 삼는다.
+`structured-execution-contract.md`로 실행 범위, 실행 중 바꿀 수 없는 요청 값, 공통 실행 주체,
+요청과 결과의 대응 관계, 실행 후 충족해야 할 조건을 검증한다. 실제 명령 경로와 권한은
+`command-execution-path-contract.md`로 판정한다.
 
-- 결정론적 비파일 경로가 있으면 추가 LLM 판단 없이 사용한다.
-- 결정론적 경로가 없는 확정된 단일 비파일 동작만 `github-simple-executor`에 맡길 수 있다.
-- 파일 수정은 대상 프로젝트의 로컬 `run-harness`가 반환한 단일 역할 라우팅과 역할 자산·모델·권한을
-  검증한 뒤 `target-harness-code-editor`에 전달한다. 직접 수정 fallback은 사용하지 않는다.
-- 리뷰 내용은 사용자가 확정한 리뷰 실행 모드의 실행 주체만 생성한다.
+- 같은 입력에 항상 같은 결과를 내는 비파일 실행 경로를 우선 사용한다.
+- 결정론적 경로가 없는 확정된 단일 비파일 동작은 `github-simple-executor`에 맡긴다.
+- 파일 수정은 대상 프로젝트의 로컬 `run-harness`가 하나의 역할을 선택해 반환한 정보와
+  해당 역할의 자산·모델·권한을
+  `target-harness-execution-contract.md`로 검증한 뒤 `target-harness-code-editor`에 전달한다. 이 경로의
+  준비도나 검증에 실패하면 계약이 제시한 사유와 재개 조건으로 중단한다.
+- 리뷰 내용은 사용자가 확정한 리뷰 실행 모드의 실행 주체만 생성한다. `claude/*` 모드는
+  `claude-review-executor-contract.md`로 실행 실패와 재개 조건을 판정한다.
 
-구조화 실행 성공일 때만 상태를 다시 관측해 선언형 평가 루프를 반복한다. 요청·결과·범위·사후조건
-검증 실패는 값을 재해석하거나 범위를 넓혀 재시도하지 않고 계약이 산출한 사유와 재개 조건으로
-중단한다.
+구조화 실행 성공일 때만 상태를 다시 관측해 선언형 작업 계산 절차를 반복한다.
+요청·결과·범위·실행 후 조건을 검증하고, 검증에 실패하면 계약이 산출한 사유와 재개 조건으로
+중단한다. 검증 실패 상태에서는 요청 값과 실행 범위를 고정하고 계약이 제시한 재개 조건을 기다린다.
 
 ## 명시적 검증 모드
 
-검증 모드는 사용자가 현재 요청에서 명시적으로 요청한 경우에만 실행하는 terminal diagnostic이다.
-선택된 실행 주체 또는 대상 하네스 계약으로 실행 가능 여부를 확인한 뒤, 같은 snapshot, route, model,
-reasoning, role, skill version, config, input과 deadline으로 정확히 10개의 fresh independent session을
-호출한다. parser, adapter와 evaluator는 결정론적이므로 반복하지 않는다.
-
-각 raw result와 session ID, 고정 조건, 오류와 timeout을 보존한다. 결과 의미나 patch 일치 여부를 자동
-비교하지 않고, 다수결·대표 결과·결과 채택을 하지 않는다. 10개 raw result와 무결성 확인 결과를
-사용자에게 제시하고 재현성은 사용자가 판단한다. 검증 결과로 작업 전이를 진행하거나 일반 workflow를
-자동 재개하지 않는다.
+사용자가 현재 요청에서 검증 모드를 명시한 경우 검증 모드로 실행한다. 같은 조건의 서로 독립된 새 세션을 정확히
+10개 호출하고 결과를 사용자에게 제시한다. 재현성은 사용자가 판단한다. 검증 결과는 사용자 판단을 위한
+최종 진단 결과로 반환하고 검증 모드를 종료한다. 세부 조건과 오류 처리는
+`references/validation-mode-contract.md`를 따른다.
 
 ## 서브에이전트 수명 주기
 
-Workflow Engine은 자신이 `spawn` 도구를 직접 호출해 발급받은 ID만 현재 오케스트레이션에서 추적하고
-닫는다. 여기에는 Workflow Engine이 직접 fan-out한 검증 session과, 상태 요약·단순 실행·리뷰 실행
-주체를 별도 subagent로 직접 시작한 session이 포함된다. 같은 session에서 스킬 지시를 읽고 수행하는
-단순 스킬 호출은 새 실행 리소스를 만들지 않으므로 수명 주기 관리 대상이 아니다.
-
-직접 발급받은 session의 결과·오류·timeout을 먼저 보존하고 소비한 뒤 성공·실패·중단과 관계없이 다음
-전이 또는 최종 응답 전에 각 ID에 `close_agent`를 호출한다. `completed`와 `timed_out`은 결과 상태이지
-실행 리소스 정리 완료가 아니다. `close_agent` 성공 또는 `not_found`를 정리 완료로 취급하며,
-`not_found`는 이미 런타임에서 제거된 상태로 기록하되 내부 상태 DB를 직접 수정하지 않는다. 정리
-결과는 보존한 결과의 의미와 Workflow Definition 전이 판정을 바꾸지 않는다.
-
-`target-harness-code-editor`처럼 하위 실행 주체가 직접 발급받은 child ID는 해당 실행 주체가 소유한다.
-Workflow Engine은 그 ID를 추적하거나 중복으로 `close_agent`하지 않고, 반환된 `verification_results`와
-`residual_risks_or_failure_reasons`에서 정리 시도와 결과 또는 실패 근거를 검증한다. 새 cleanup 필드,
-schema 또는 registry는 만들지 않는다.
+`spawn`으로 ID를 직접 발급받은 실행 주체가 해당 ID의 소유자로서 추적과 종료를 담당한다. 결과를 먼저
+보존한 뒤 다음 전이 또는 최종 응답 전에 정리한다. 부모 실행 주체는 자신이 발급받은 ID만 종료하고,
+하위 실행 주체가 발급한 ID는 하위 실행 주체의 종료 결과로 확인한다. 세부 처리와 오류 기록은
+`references/agent-lifecycle-contract.md`를 따른다.
 
 ## 로그와 출력
 
-작업 진입, evaluation 결과, 사용자 결정, 구조화 실행 요청·결과, 중단과 재개를 대상 저장소의
-`.harness/logs/github-workflow-log.md`에 기록한다. `request_id`, 기준 snapshot, `workflow_id`,
-`task_action_id`, adapter 정규화 결과와 근거, 사용자 결정, 실행 범위, 실행 주체와 세션 관계,
-사후조건, 검증 결과, 남은 위험 또는 재개 조건을 추적할 수 있어야 한다.
+작업 진입, 계산 결과, 사용자 결정, 구조화 실행 요청·결과, 중단과 재개를 대상 저장소의
+`.harness/logs/github-workflow-log.md`에 기록한다. `request_id`, 기준 상태 묶음, `workflow_id`,
+`task_action_id`, 상태 변환기의 정규화 결과와 근거, 사용자 결정, 실행 범위, 실행 주체와 세션 관계,
+실행 후 조건, 검증 결과, 남은 위험 또는 재개 조건을 추적할 수 있어야 한다.
 
 사용자 결정, 중단 또는 완료로 멈출 때는 현재 이슈 또는 PR, `workflow_id`, `task_action_id`, 진행 판단,
 중단 사유·완료 근거·결정 질문을 제시한다. 선택지가 있으면 번호 목록과 입력 예시를 함께 제시한다.

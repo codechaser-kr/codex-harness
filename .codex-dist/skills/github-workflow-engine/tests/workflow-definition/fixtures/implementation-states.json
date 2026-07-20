@@ -650,7 +650,7 @@
     {
       "name": "reflected posting direction checks remaining locations",
       "state": {
-        "review_comment_posting_direction": "reclassify_non_actionable_feedback",
+        "review_comment_posting_direction": "withdraw_review_feedback",
         "review_comment_posting_direction_reflected": true
       },
       "status": "action_required",

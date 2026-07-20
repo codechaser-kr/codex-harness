@@ -17,11 +17,17 @@ import "./feature-fix.test.mjs";
 import "./implementation.test.mjs";
 import "../validation-mode/validation-mode-contract.test.mjs";
 import "../validation-mode/agent-lifecycle-contract.test.mjs";
+import "../skill-quality/skill-structure-contract.test.mjs";
+import "../skill-quality/reference-boundary-contract.test.mjs";
 
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const installScript = join(repositoryRoot, "install.sh");
 const sourceTargetEditor = join(repositoryRoot, ".codex-dist/skills/target-harness-code-editor/SKILL.md");
+const sourceHarnessTemplateCompatibility = join(
+  repositoryRoot,
+  ".codex-dist/skills/harness/references/workflow-engine-template-compatibility-contract.md",
+);
 const removedRulesRelativePath = ["references/workflow-engine", "rules.md"].join("-");
 const removedRulesFilenamePattern = new RegExp(["workflow-engine", "rules\\.md"].join("-"));
 
@@ -46,11 +52,17 @@ const jsonArtifacts = [
 const requiredArtifacts = [
   "references/workflow-definition-contract.md",
   "references/validation-mode-contract.md",
+  "references/agent-lifecycle-contract.md",
   "references/normalized-fact-adapter-contract.md",
   "references/artifact-output-contract.md",
+  "references/github-templates.md",
   "references/state-observation-contract.md",
   "references/review-runtime-contract.md",
+  "references/claude-review-executor-contract.md",
   "references/structured-execution-contract.md",
+  "references/user-decision-contract.md",
+  "references/command-execution-path-contract.md",
+  "references/target-harness-execution-contract.md",
   "definitions/feature-proposal.json",
   "definitions/policy-review.json",
   "definitions/feature-change.json",
@@ -90,6 +102,8 @@ const requiredArtifacts = [
   "tests/workflow-definition/fixtures/implementation-states.json",
   "tests/validation-mode/validation-mode-contract.test.mjs",
   "tests/validation-mode/agent-lifecycle-contract.test.mjs",
+  "tests/skill-quality/skill-structure-contract.test.mjs",
+  "tests/skill-quality/reference-boundary-contract.test.mjs",
 ];
 
 async function parseJsonArtifacts(root) {
@@ -189,6 +203,10 @@ test("runtime contracts do not duplicate natural-language transition tables", as
     "references/state-observation-contract.md",
     "references/review-runtime-contract.md",
     "references/structured-execution-contract.md",
+    "references/user-decision-contract.md",
+    "references/command-execution-path-contract.md",
+    "references/target-harness-execution-contract.md",
+    "references/claude-review-executor-contract.md",
   ]) {
     const source = await readFile(join(sourceSkillDirectory, relativePath), "utf8");
     assert.doesNotMatch(source, /^## 작업 전이 규칙$/m, relativePath);
@@ -249,6 +267,10 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
   assert.deepEqual(
     await readFile(join(destinationRoot, "target-harness-code-editor/SKILL.md")),
     await readFile(sourceTargetEditor),
+  );
+  assert.deepEqual(
+    await readFile(join(harnessDestination, "references/workflow-engine-template-compatibility-contract.md")),
+    await readFile(sourceHarnessTemplateCompatibility),
   );
 
   const evaluationCases = await readFile(join(sourceSkillDirectory, "tests/workflow-definition/fixtures/evaluation-cases.json"), "utf8").then(JSON.parse);

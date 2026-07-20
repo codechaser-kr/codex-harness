@@ -9,7 +9,8 @@ description: 완전하고 변경 불가능한 구조화 실행 요청의 단일 
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/structured-execution-contract.md`에서 `명령 실행 경로 규칙`, `구조화 실행 요청 판정 규칙`, `구조화 실행 결과와 요청-결과 상관관계 판정 규칙`, `구조화 실행 성공과 중단 판정 규칙`, `실행 주체 선택 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/structured-execution-contract.md`에서 `구조화 실행 요청 판정 규칙`, `구조화 실행 결과와 요청-결과 상관관계 판정 규칙`, `구조화 실행 성공과 중단 판정 규칙`, `실행 주체 선택 판정 규칙` 섹션만 읽는다.
+- 실제 명령의 권한 경로를 판정하고 실행 직전에 재판정할 때 `../github-workflow-engine/references/command-execution-path-contract.md`를 읽는다.
 
 ## 입력
 

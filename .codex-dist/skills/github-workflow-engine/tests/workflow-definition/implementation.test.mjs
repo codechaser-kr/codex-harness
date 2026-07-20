@@ -71,15 +71,17 @@ test("implementation definition preserves FI mapping, direct executor references
   }
 
   const commentPosting = definition.transitions.find((transition) => transition.task_action_id === "FI-20");
-  assert.deepEqual(commentPosting.user_decision_options.map((option) => option.decision_id), [
-    "reassign_review_thread_location",
-    "reclassify_non_actionable_feedback",
+  assert.deepEqual(commentPosting.user_decision_options, [
+    { decision_id: "reassign_review_thread_location", label: "review thread 게시 위치 재지정" },
+    { decision_id: "withdraw_review_feedback", label: "피드백 철회" },
   ]);
   assert.equal(commentPosting.user_decision_options.some((option) => option.decision_id === "post_as_drafted"), false);
   assert.deepEqual(
     definition.facts.review_comment_posting_direction,
-    ["reassign_review_thread_location", "reclassify_non_actionable_feedback"],
+    ["reassign_review_thread_location", "withdraw_review_feedback"],
   );
+  assert.equal(JSON.stringify(definition).includes("reclassify_non_actionable_feedback"), false);
+  assert.equal(JSON.stringify(definition).includes("비실행 피드백 재분류"), false);
 
   const feedbackDirection = definition.transitions.find((transition) => transition.task_action_id === "FI-25");
   assert.deepEqual(feedbackDirection.user_decision_options.map((option) => option.decision_id), ["accept_and_fix", "reject"]);

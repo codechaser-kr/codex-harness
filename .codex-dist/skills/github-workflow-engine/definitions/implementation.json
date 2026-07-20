@@ -104,7 +104,7 @@
     ],
     "review_comment_posting_direction": [
       "reassign_review_thread_location",
-      "reclassify_non_actionable_feedback"
+      "withdraw_review_feedback"
     ],
     "review_comment_posting_direction_reflected": [
       true,
@@ -928,8 +928,8 @@
           "label": "review thread 게시 위치 재지정"
         },
         {
-          "decision_id": "reclassify_non_actionable_feedback",
-          "label": "비실행 피드백 재분류"
+          "decision_id": "withdraw_review_feedback",
+          "label": "피드백 철회"
         }
       ],
       "completion_predicate": {

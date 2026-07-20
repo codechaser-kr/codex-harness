@@ -19,16 +19,18 @@ test("validation mode requires explicit activation, ten independent sessions, ra
 
   for (const source of [skill, contract, targetEditor]) {
     assert.match(source, /명시적(?:으로)? 요청|명시.*검증 모드/);
-    assert.match(source, /정확히 10개|10개의 fresh independent|독립 session 10개/);
-    assert.match(source, /raw result/);
+    assert.match(source, /정확히\s*10개|10개의 fresh independent|독립 session 10개/);
     assert.match(source, /사용자.*판단|사용자에게.*판단/);
-    assert.match(source, /자동 (비교|산출)|비교하지 않는다|일치 여부를 자동 비교하지 않는다/);
-    assert.match(source, /자동 재개하지 않는다/);
+    assert.match(source, /최종 진단 결과[\s\S]{0,40}종료|사용자 반환과 종료|terminal diagnostic/);
+  }
+  for (const source of [contract, targetEditor]) {
+    assert.match(source, /raw result/);
+    assert.match(source, /자동 (비교|산출)|자동으로\s*비교하지 않으며|비교하지 않는다|일치 여부를 자동 비교하지 않는다/);
   }
   assert.match(contract, /primary와 외부 상태를 변경하지 않는다/);
   assert.match(targetEditor, /격리[\s\S]*workspace/);
   assert.match(targetEditor, /완전 fan-out이면[\s\S]*정확히 10개/);
-  assert.match(skill, /선택된 실행 주체 또는 대상 하네스 계약[\s\S]*실행 가능 여부를 확인/);
+  assert.match(contract, /선택된 실행 주체 또는 대상 하네스 계약[\s\S]*실행 가능 여부를[\s\S]{0,30}확인/);
   assert.match(targetEditor, /사용자가 판단하는 코드 수정 호출 재현성/);
   assert.doesNotMatch(targetEditor, /unanimous patch/);
 });

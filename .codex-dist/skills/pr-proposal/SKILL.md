@@ -10,7 +10,7 @@ description: Workflow Engine 구현 흐름에서 기준 이슈, 변경 요약, �
 ## 먼저 읽을 문서
 
 - `../github-workflow-engine/references/github-templates.md`
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 `PR 제목 판정 규칙`과 `PR Proposal 출력 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/artifact-output-contract.md`에서 `PR 제목 판정 규칙`과 ``PR 제안(`pr-proposal`) 출력 판정 규칙`` 섹션만 읽는다.
 
 ## 입력
 

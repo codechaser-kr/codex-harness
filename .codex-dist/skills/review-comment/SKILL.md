@@ -10,7 +10,7 @@ description: PR Review Template 출력을 GitHub PR review thread 게시 초안�
 ## 먼저 읽을 문서
 
 - `../github-workflow-engine/references/review-runtime-contract.md`에서 `PR Review Template 판정 규칙`과 `리뷰 게시 위치 판정 규칙` 섹션만 읽는다.
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 `리뷰 코멘트 출력 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``리뷰 코멘트 출력 판정 규칙 (`review-comment`)`` 섹션만 읽는다.
 
 ## 입력
 

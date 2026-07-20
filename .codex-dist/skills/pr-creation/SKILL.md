@@ -9,7 +9,7 @@ description: PR 제목과 본문, base branch, 원격 head branch를 기준으�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 `PR 제목 판정 규칙`과 `PR Creation 출력 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/artifact-output-contract.md`에서 `PR 제목 판정 규칙`과 ``PR 생성(`pr-creation`) 출력 판정 규칙`` 섹션만 읽는다.
 - `../github-workflow-engine/references/github-templates.md`
 
 ## 입력

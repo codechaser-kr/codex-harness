@@ -9,7 +9,7 @@ description: 기능변경 이슈를 기준으로 브랜치/PR 단위별 작업 �
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 `Feature Plan 출력 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``기능 변경 계획(`feature-plan`) 출력 판정 규칙`` 섹션만 읽는다.
 - `../github-workflow-engine/references/github-templates.md`
 
 ## 입력

@@ -9,7 +9,7 @@ description: Workflow Engine 구현 흐름에서 작업 브랜치 전환이 완�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 `Commit Plan 출력 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``커밋 계획(`commit-plan`) 출력 판정 규칙`` 섹션만 읽는다.
 
 ## 입력
 

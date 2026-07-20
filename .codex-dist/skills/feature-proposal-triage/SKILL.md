@@ -9,7 +9,7 @@ description: 기능제안 이슈를 기준으로 진행하지 않음, 정책 검
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 `Feature Proposal Triage 출력 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``기능 제안 분류(`feature-proposal-triage`) 출력 판정 규칙`` 섹션만 읽는다.
 - `../github-workflow-engine/references/github-templates.md`
 
 ## 입력

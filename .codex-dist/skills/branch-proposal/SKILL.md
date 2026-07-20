@@ -9,7 +9,7 @@ description: Workflow Engine 구현 흐름에서 기준 이슈와 구현 계획�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 `Branch Proposal 출력 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``브랜치 제안(`branch-proposal`) 출력 판정 규칙`` 섹션만 읽는다.
 
 ## 입력
 

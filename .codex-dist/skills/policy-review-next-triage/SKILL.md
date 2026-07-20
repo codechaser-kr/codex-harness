@@ -9,7 +9,7 @@ description: 정책검토의 설계 문서 반영이 끝난 뒤 기존 기능변
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 `Policy Review Next Triage 출력 판정 규칙` 섹션만 읽는다.
+- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``정책 검토 후속 분류(`policy-review-next-triage`) 출력 판정 규칙`` 섹션만 읽는다.
 - `../github-workflow-engine/references/github-templates.md`
 
 ## 입력

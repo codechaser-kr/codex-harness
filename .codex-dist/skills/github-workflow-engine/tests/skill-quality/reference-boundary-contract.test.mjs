@@ -23,8 +23,47 @@ const urls = {
   ),
 };
 
+const artifactOutputConsumers = [
+  ["issue-creation", new URL("../../../issue-creation/SKILL.md", import.meta.url)],
+  ["feature-proposal-triage", new URL("../../../feature-proposal-triage/SKILL.md", import.meta.url)],
+  ["policy-plan", new URL("../../../policy-plan/SKILL.md", import.meta.url)],
+  ["policy-review-next-triage", new URL("../../../policy-review-next-triage/SKILL.md", import.meta.url)],
+  ["feature-plan", new URL("../../../feature-plan/SKILL.md", import.meta.url)],
+  ["fix-analysis", new URL("../../../fix-analysis/SKILL.md", import.meta.url)],
+  ["fix-plan", new URL("../../../fix-plan/SKILL.md", import.meta.url)],
+  ["commit-plan", new URL("../../../commit-plan/SKILL.md", import.meta.url)],
+  ["branch-proposal", new URL("../../../branch-proposal/SKILL.md", import.meta.url)],
+  ["pr-proposal", new URL("../../../pr-proposal/SKILL.md", import.meta.url)],
+  ["pr-creation", new URL("../../../pr-creation/SKILL.md", import.meta.url)],
+  ["review-comment", new URL("../../../review-comment/SKILL.md", import.meta.url)],
+];
+
 async function read(name) {
   return readFile(urls[name], "utf8");
+}
+
+function extractNamedSectionReferences(referenceLine) {
+  const markerIndex = referenceLine.indexOf("에서");
+  if (markerIndex === -1) return [];
+
+  const source = referenceLine.slice(markerIndex + 2);
+  const codeSpans = [];
+  let cursor = 0;
+  while (cursor < source.length) {
+    const openingIndex = source.indexOf("`", cursor);
+    if (openingIndex === -1) break;
+
+    const delimiterLength = source[openingIndex + 1] === "`" ? 2 : 1;
+    const delimiter = "`".repeat(delimiterLength);
+    const contentStart = openingIndex + delimiterLength;
+    const closingIndex = source.indexOf(delimiter, contentStart);
+    if (closingIndex === -1) break;
+
+    codeSpans.push(source.slice(contentStart, closingIndex));
+    cursor = closingIndex + delimiterLength;
+  }
+
+  return codeSpans;
 }
 
 test("user decisions are interpreted before automatic execution by one detailed contract", async () => {
@@ -110,4 +149,25 @@ test("artifact output rules use grouped sections", async () => {
   }
   assert.match(artifactOutput, /^### 리뷰 코멘트 출력 판정 규칙/m);
   assert.doesNotMatch(artifactOutput, /^## (?:Issue Creation|Feature Plan|Review Comment) 출력 판정 규칙$/m);
+});
+
+test("artifact output consumers reference existing named sections", async () => {
+  const artifactOutput = await read("artifactOutput");
+  const artifactHeadings = new Set(artifactOutput.split("\n").filter((line) => line.startsWith("### ")));
+  const consumerSources = await Promise.all(
+    artifactOutputConsumers.map(async ([name, url]) => [name, await readFile(url, "utf8")]),
+  );
+
+  for (const [name, source] of consumerSources) {
+    const referenceLine = source
+      .split("\n")
+      .find((line) => line.includes("artifact-output-contract.md"));
+    assert.ok(referenceLine, `${name} must reference artifact-output-contract.md`);
+
+    const sectionNames = extractNamedSectionReferences(referenceLine);
+    assert.ok(sectionNames.length > 0, `${name} must name an artifact output section`);
+    for (const sectionName of sectionNames) {
+      assert.ok(artifactHeadings.has(`### ${sectionName}`), `${name} references missing artifact output section: ${sectionName}`);
+    }
+  }
 });

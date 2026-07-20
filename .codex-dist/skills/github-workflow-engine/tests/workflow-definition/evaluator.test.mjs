@@ -23,8 +23,9 @@ function hasError(result, code, path) {
   return result.errors.some((error) => error.code === code && error.path === path);
 }
 
-function runCliProcess(argumentsList) {
+function runCliProcess(argumentsList, cwd) {
   return spawnSync(process.execPath, [cliPath, ...argumentsList], {
+    cwd,
     encoding: "utf8",
     timeout: 5_000,
   });
@@ -177,9 +178,13 @@ test("CLI returns JSON-serializable results and specified exit codes", async (t)
   const definitionPath = `${directory}/definition.json`;
   const statePath = `${directory}/state.json`;
   const cyclePath = `${directory}/cycle.json`;
+  const leadingDefinitionPath = `${directory}/--definition.json`;
+  const leadingStatePath = `${directory}/--state.json`;
   await writeFile(definitionPath, JSON.stringify(fixture.definitions.terminal_completed));
   await writeFile(statePath, JSON.stringify(fixture.states.done));
   await writeFile(cyclePath, JSON.stringify(fixture.definitions.fixed_state_cycle));
+  await writeFile(leadingDefinitionPath, JSON.stringify(fixture.definitions.terminal_completed));
+  await writeFile(leadingStatePath, JSON.stringify(fixture.states.done));
 
   const validate = await runWorkflowDefinitionCli(["validate", "--definition", definitionPath]);
   assert.equal(validate.exitCode, 0);
@@ -210,6 +215,16 @@ test("CLI returns JSON-serializable results and specified exit codes", async (t)
     assert.equal(hasError(response.result, "cli.usage", ""), true);
   }
 
+  for (const argumentsList of [
+    ["validate", "--definition", "--state"],
+    ["evaluate", "--definition", "--state", "--current-task-action-id"],
+  ]) {
+    const response = await runWorkflowDefinitionCli(argumentsList);
+    assert.equal(response.exitCode, 2);
+    assert.equal(response.result.reason, "usage_error");
+    assert.equal(hasError(response.result, "cli.usage", ""), true);
+  }
+
   await t.test("actual child process emits one JSON line with documented exit codes", async (childTest) => {
     const validateProcess = runCliProcess(["validate", "--definition", definitionPath]);
     if (validateProcess.error?.code === "EPERM") {
@@ -220,11 +235,27 @@ test("CLI returns JSON-serializable results and specified exit codes", async (t)
     assert.equal(validateProcess.status, 0);
     assert.deepEqual(parseSingleJsonLine(validateProcess), { status: "valid", errors: [] });
 
+    const leadingValidateProcess = runCliProcess(
+      ["validate", "--definition", "--definition.json"],
+      directory,
+    );
+    assert.equal(leadingValidateProcess.error, undefined, leadingValidateProcess.error?.message);
+    assert.equal(leadingValidateProcess.status, 0);
+    assert.deepEqual(parseSingleJsonLine(leadingValidateProcess), { status: "valid", errors: [] });
+
     await writeFile(statePath, JSON.stringify(fixture.states.done));
     const evaluateProcess = runCliProcess(["evaluate", "--definition", definitionPath, "--state", statePath]);
     assert.equal(evaluateProcess.error, undefined, evaluateProcess.error?.message);
     assert.equal(evaluateProcess.status, 0);
     assert.deepEqual(parseSingleJsonLine(evaluateProcess), { status: "completed", task_action_id: "FI-1" });
+
+    const leadingEvaluateProcess = runCliProcess(
+      ["evaluate", "--definition", "--definition.json", "--state", "--state.json"],
+      directory,
+    );
+    assert.equal(leadingEvaluateProcess.error, undefined, leadingEvaluateProcess.error?.message);
+    assert.equal(leadingEvaluateProcess.status, 0);
+    assert.deepEqual(parseSingleJsonLine(leadingEvaluateProcess), { status: "completed", task_action_id: "FI-1" });
 
     await writeFile(statePath, JSON.stringify(fixture.states.cycle));
     const stoppedProcess = runCliProcess(["evaluate", "--definition", cyclePath, "--state", statePath]);

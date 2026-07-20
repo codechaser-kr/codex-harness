@@ -34,7 +34,7 @@
         "block_execution_until_confirmed": true
       },
       "completion_predicate": { "fact_id": "feature_fix_draft_confirmed", "operator": "equals", "value": true },
-      "registered_executor_reference": "issue-creation",
+      "executor_reference": "issue-creation",
       "next_transition_rules": [{ "condition": null, "transition_id": "create-feature-fix-issue" }]
     },
     {
@@ -43,7 +43,7 @@
       "task_action_id": "FF-2",
       "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
       "completion_predicate": { "fact_id": "feature_fix_issue_created", "operator": "equals", "value": true },
-      "registered_executor_reference": "github-simple-executor",
+      "executor_reference": "github-simple-executor",
       "next_transition_rules": [{ "condition": null, "transition_id": "analyze-feature-fix" }]
     },
     {
@@ -65,7 +65,7 @@
           { "fact_id": "fix_analysis_confirmed", "operator": "equals", "value": true }
         ]
       },
-      "registered_executor_reference": "fix-analysis",
+      "executor_reference": "fix-analysis",
       "next_transition_rules": [{ "condition": null, "transition_id": "plan-feature-fix" }]
     },
     {
@@ -92,7 +92,7 @@
           { "fact_id": "fix_plan_confirmed", "operator": "equals", "value": true }
         ]
       },
-      "registered_executor_reference": "fix-plan",
+      "executor_reference": "fix-plan",
       "next_transition_rules": [{ "condition": null, "transition_id": "reflect-feature-fix-plan" }]
     },
     {
@@ -106,7 +106,7 @@
       "task_action_id": "FF-5",
       "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
       "completion_predicate": { "fact_id": "feature_fix_plan_reflected", "operator": "equals", "value": true },
-      "registered_executor_reference": "github-simple-executor",
+      "executor_reference": "github-simple-executor",
       "next_transition_rules": [{ "condition": null, "transition_id": "handoff-common-implementation-flow" }]
     },
     {
@@ -121,7 +121,7 @@
           { "fact_id": "all_completion_items_reflected", "operator": "equals", "value": true }
         ]
       },
-      "registered_executor_reference": null,
+      "executor_reference": null,
       "next_transition_rules": [{ "condition": null, "transition_id": "close-feature-fix-issue" }]
     },
     {
@@ -136,7 +136,7 @@
       "task_action_id": "FF-7",
       "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
       "completion_predicate": { "fact_id": "feature_fix_issue_closed", "operator": "equals", "value": true },
-      "registered_executor_reference": "github-simple-executor",
+      "executor_reference": "github-simple-executor",
       "next_transition_rules": [{ "condition": null, "transition_id": "complete-feature-fix" }]
     },
     {
@@ -145,7 +145,7 @@
       "task_action_id": "FF-8",
       "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
       "completion_predicate": { "fact_id": "feature_fix_issue_closed", "operator": "equals", "value": true },
-      "registered_executor_reference": null,
+      "executor_reference": null,
       "next_transition_rules": []
     }
   ]

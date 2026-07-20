@@ -7,7 +7,6 @@ import { parseJsonFile } from "../../scripts/workflow-definition/parser.mjs";
 import { validateWorkflowDefinition } from "../../scripts/workflow-definition/validator.mjs";
 
 const definitionUrl = new URL("../../definitions/feature-proposal.json", import.meta.url);
-const registryUrl = new URL("../../registries/registered-executors.json", import.meta.url);
 const schemaUrl = new URL("../../schemas/workflow-definition.schema.json", import.meta.url);
 const statesUrl = new URL("./fixtures/feature-proposal-states.json", import.meta.url);
 
@@ -18,15 +17,11 @@ async function readJson(url) {
 }
 
 test("feature-proposal definition parses and passes structural and semantic validation", async () => {
-  const [definition, registry, states] = await Promise.all([readJson(definitionUrl), readJson(registryUrl), readJson(statesUrl)]);
+  const [definition, states] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
   const schema = JSON.parse(await readFile(schemaUrl, "utf8"));
 
   assert.equal(schema.$schema, "https://json-schema.org/draft/2020-12/schema");
   assert.equal(Object.keys(states).length, 10);
-  for (const executorId of ["issue-creation", "feature-proposal-triage"]) {
-    const executor = registry.find((entry) => entry.executor_id === executorId);
-    assert.equal(executor?.side_effect_scope, "proposal_output", executorId);
-  }
   const validation = validateWorkflowDefinition(definition);
   assert.equal(validation.valid, true, JSON.stringify(validation.errors));
   assert.deepEqual(validation.errors, []);
@@ -52,7 +47,7 @@ test("feature-proposal evaluation returns the required action for each represent
 
     assert.equal(result.status, "action_required", name);
     assert.equal(result.task_action_id, taskActionId, name);
-    assert.equal(result.registered_executor_reference, executorReference, name);
+    assert.equal(result.executor_reference, executorReference, name);
     assert.deepEqual(state, stateBefore, name);
   }
   assert.deepEqual(definition, definitionBefore);

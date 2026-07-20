@@ -16,7 +16,7 @@
         "task_action_id": "FI-1",
         "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
         "completion_predicate": { "fact_id": "flag", "operator": "exists" },
-        "registered_executor_reference": null,
+        "executor_reference": null,
         "next_transition_rules": [{ "condition": null, "transition_id": "complete" }]
       },
       {
@@ -25,7 +25,7 @@
         "task_action_id": "FI-2",
         "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
         "completion_predicate": { "fact_id": "flag", "operator": "exists" },
-        "registered_executor_reference": null,
+        "executor_reference": null,
         "next_transition_rules": []
       }
     ]
@@ -62,7 +62,7 @@
             "task_action_id": "FI-3",
             "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
             "completion_predicate": { "fact_id": "flag", "operator": "exists" },
-            "registered_executor_reference": null,
+            "executor_reference": null,
             "next_transition_rules": [{ "condition": null, "transition_id": "complete" }]
           }
         }
@@ -182,7 +182,7 @@
             "task_action_id": "FI-3",
             "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
             "completion_predicate": { "fact_id": "flag", "operator": "exists" },
-            "registered_executor_reference": null,
+            "executor_reference": null,
             "next_transition_rules": [{ "condition": null, "transition_id": "complete" }]
           }
         }

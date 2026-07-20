@@ -12,10 +12,10 @@ fact candidate를 workflow definition의 `normalized_fact_schema`에 맞춰 정�
 공통 observation/source-contract 검증은 내부 `workflow-state-adapter.mjs`의
 `normalizeWorkflowObservations`를 사용한다. wrapper별 source contract map만 workflow 고유 값이다.
 
-검증 모드에서 observation 또는 fact derivation의 재현성을 확인할 때는 같은 raw snapshot의
-10-session `semantic_consensus` 결과를 diagnostic observation으로만 비교한다. 전원 일치한 fact
-outcome도 이 adapter나 Workflow Definition evaluator에 전달하지 않으며 transition을 선택·진행하지
-않는다. ordinary workflow에서는 기존처럼 관측을 이 deterministic adapter에 정확히 한 번 전달한다.
+검증 모드에서 observation 또는 fact derivation이 LLM 의존 호출이면 같은 raw snapshot으로 독립 session
+10개를 실제 실행하고 raw result를 사용자에게 제시한다. 이 adapter는 결과를 비교하거나 evaluator에
+전달하지 않으며 transition을 선택·진행하지 않는다. ordinary workflow에서는 기존처럼 관측을 이
+deterministic adapter에 정확히 한 번 전달한다.
 
 ## 입력
 
@@ -26,7 +26,7 @@ outcome도 이 adapter나 Workflow Definition evaluator에 전달하지 않으�
 
 각 fact 선언은 `fact_id`, `value_type`, `allowed_values`, `evidence_required`만 가지는 닫힌
 plain object다. 필드 의미는 `workflow-definition-contract.md`의 Fact 선언을 따른다. 전체
-workflow definition의 transition 및 registry 검증은 기존 definition validator의 책임이며,
+workflow definition의 transition 검증은 definition validator의 책임이며,
 adapter는 정규화에 필요한 위 두 필드와 fact 선언을 독립적으로 검증한다.
 
 `candidates`는 배열이다. 각 candidate는 다음 필드만 가지는 닫힌 plain object다.

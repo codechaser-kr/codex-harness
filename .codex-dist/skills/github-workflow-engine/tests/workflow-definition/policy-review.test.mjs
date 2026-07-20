@@ -8,7 +8,6 @@ import { normalizePolicyReviewFacts } from "../../scripts/workflow-definition/po
 import { validateWorkflowDefinition } from "../../scripts/workflow-definition/validator.mjs";
 
 const definitionUrl = new URL("../../definitions/policy-review.json", import.meta.url);
-const registryUrl = new URL("../../registries/registered-executors.json", import.meta.url);
 const schemaUrl = new URL("../../schemas/workflow-definition.schema.json", import.meta.url);
 const statesUrl = new URL("./fixtures/policy-review-states.json", import.meta.url);
 
@@ -64,8 +63,8 @@ function hasError(result, code, path) {
   return result.errors.some((error) => error.code === code && error.path === path);
 }
 
-test("policy-review definition passes C2/C3 validation and uses registered executors with fixed scopes", async () => {
-  const [definition, registry, states] = await Promise.all([readJson(definitionUrl), readJson(registryUrl), readJson(statesUrl)]);
+test("policy-review definition passes C2/C3 validation with direct executor references", async () => {
+  const [definition, states] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
   const schema = JSON.parse(await readFile(schemaUrl, "utf8"));
 
   assert.equal(schema.$schema, "https://json-schema.org/draft/2020-12/schema");
@@ -83,19 +82,8 @@ test("policy-review definition passes C2/C3 validation and uses registered execu
   }
   assert.deepEqual(definition.transitions.at(-1).next_transition_rules, []);
 
-  const expectedScopes = new Map([
-    ["issue-creation", "proposal_output"],
-    ["policy-plan", "proposal_output"],
-    ["policy-review-next-triage", "proposal_output"],
-    ["github-simple-executor", "github_state_change"],
-  ]);
-  for (const [executorId, sideEffectScope] of expectedScopes) {
-    const matches = registry.filter((entry) => entry.executor_id === executorId);
-    assert.equal(matches.length, 1, executorId);
-    assert.equal(matches[0].side_effect_scope, sideEffectScope, executorId);
-  }
-  assert.equal(definition.transitions.find((item) => item.task_action_id === "PR-5").registered_executor_reference, null);
-  assert.equal(definition.transitions.find((item) => item.task_action_id === "PR-9").registered_executor_reference, null);
+  assert.equal(definition.transitions.find((item) => item.task_action_id === "PR-5").executor_reference, null);
+  assert.equal(definition.transitions.find((item) => item.task_action_id === "PR-9").executor_reference, null);
   const reflectTransitionPredicate = definition.transitions
     .find((item) => item.task_action_id === "PR-8").completion_predicate;
   const completeTransition = definition.transitions.find((item) => item.task_action_id === "PR-9");
@@ -130,7 +118,7 @@ test("policy-review representative states resolve to exactly one expected action
     const result = evaluateWorkflowDefinition(definition, state);
     assert.equal(result.status, "action_required", name);
     assert.equal(result.task_action_id, taskActionId, name);
-    assert.equal(result.registered_executor_reference, executorReference, name);
+    assert.equal(result.executor_reference, executorReference, name);
     assert.deepEqual(state, stateBefore, name);
   }
   for (const name of ["completed_existing_issue", "completed_new_issue"]) {
@@ -149,7 +137,7 @@ test("policy-review representative states resolve to exactly one expected action
     const result = evaluateWorkflowDefinition(definition, state);
     assert.equal(result.status, "action_required", `${name} with ${resultValue}`);
     assert.equal(result.task_action_id, "PR-8", `${name} with ${resultValue}`);
-    assert.equal(result.registered_executor_reference, "github-simple-executor", `${name} with ${resultValue}`);
+    assert.equal(result.executor_reference, "github-simple-executor", `${name} with ${resultValue}`);
   }
   assert.deepEqual(definition, definitionBefore);
 });

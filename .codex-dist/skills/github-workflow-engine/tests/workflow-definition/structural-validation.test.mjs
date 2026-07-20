@@ -36,63 +36,14 @@ test("accepts a valid workflow definition", async () => {
   assert.deepEqual(result.errors, []);
 });
 
-test("returns a deterministic registry load error when the registry is unavailable", async () => {
+test("accepts direct executor references without a registry lookup", async () => {
   const fixture = await readFixture("structural-valid.json");
-  const first = validateWorkflowDefinition(fixture.cases[0].definition, { registry: null });
-  const second = validateWorkflowDefinition(fixture.cases[0].definition, { registry: null });
+  const definition = structuredClone(fixture.cases[0].definition);
+  definition.transitions[0].executor_reference = "not-installed-yet";
 
-  assert.equal(first.valid, false);
-  assert.deepEqual(first.errors, second.errors);
-  assert.equal(hasError(first.errors, "registry.load_failed", ""), true);
-  assert.equal(hasError(first.errors, "registered_executor_reference.unknown", "/transitions/0/registered_executor_reference"), false);
-});
-
-test("default and custom registries use the same closed structured entry array contract", async () => {
-  const fixture = await readFixture("structural-valid.json");
-  const definition = fixture.cases[0].definition;
-  const validEntry = {
-    executor_id: "github-state-summary",
-    executor_kind: "skill",
-    side_effect_scope: "read_only",
-    runtime_reference: "github-state-summary",
-    execution_class: "llm_session",
-    validation_strategy: "semantic_consensus",
-  };
-  assert.equal(validateWorkflowDefinition(definition, { registry: [validEntry] }).valid, true);
-
-  const missingFieldEntry = { ...validEntry };
-  delete missingFieldEntry.runtime_reference;
-  const nonPlainEntry = Object.assign(Object.create({ inherited: true }), validEntry);
-  const malformedRegistries = [
-    null,
-    new Set(["github-state-summary"]),
-    ["github-state-summary"],
-    [],
-    [missingFieldEntry],
-    [nonPlainEntry],
-    [{ ...validEntry, executor_id: "" }],
-    [{ ...validEntry, extra: true }],
-    [{ ...validEntry, executor_kind: "command" }],
-    [{ ...validEntry, side_effect_scope: "unknown" }],
-    [{ ...validEntry, execution_class: "unknown" }],
-    [{ ...validEntry, validation_strategy: "unknown" }],
-    [{ ...validEntry, execution_class: "deterministic_tool" }],
-    [{ ...validEntry, validation_strategy: "run_once" }],
-    [{ ...validEntry }, { ...validEntry }],
-  ];
-
-  for (const registry of malformedRegistries) {
-    const first = validateWorkflowDefinition(definition, { registry });
-    const second = validateWorkflowDefinition(definition, { registry });
-    assert.deepEqual(first.errors, second.errors);
-    assert.equal(first.valid, false);
-    assert.deepEqual(first.errors.filter((error) => error.code === "registry.load_failed"), [{
-      code: "registry.load_failed",
-      path: "",
-      message: "Registered executor registry could not be loaded.",
-    }]);
-    assert.equal(first.errors.some((error) => error.code === "registered_executor_reference.unknown"), false);
-  }
+  const result = validateWorkflowDefinition(definition);
+  assert.equal(result.valid, true, JSON.stringify(result.errors));
+  assert.deepEqual(result.errors, []);
 });
 
 test("accepts every workflow_kind task_action_id prefix", async () => {
@@ -132,7 +83,7 @@ test("rejects zero and leading-zero task action numbers", async () => {
   }
 });
 
-test("reports C2 fact, action, decision, AST, registry, and priority failures deterministically", async () => {
+test("reports C2 fact, action, decision, AST, and priority failures deterministically", async () => {
   const fixture = await readFixture("structural-invalid.json");
   const definition = fixture.cases[0].definition;
   const first = validateWorkflowDefinition(definition);
@@ -145,7 +96,6 @@ test("reports C2 fact, action, decision, AST, registry, and priority failures de
   assert.equal(hasError(first.errors, "expression.fact.unknown", "/transitions/0/normalized_fact_conditions/fact_id"), true);
   assert.equal(hasError(first.errors, "expression.value.not_allowed", "/transitions/0/completion_predicate/value"), true);
   assert.equal(hasError(first.errors, "decision_id.duplicate", "/transitions/0/user_decision_specification/options/1/decision_id"), true);
-  assert.equal(hasError(first.errors, "registered_executor_reference.unknown", "/transitions/0/registered_executor_reference"), true);
   assert.equal(hasError(first.errors, "task_action_id.duplicate", "/transitions/1/task_action_id"), true);
   assert.equal(hasError(first.errors, "expression.value.type_mismatch", "/transitions/1/normalized_fact_conditions/value/1"), true);
   assert.equal(hasError(first.errors, "expression.value.forbidden", "/transitions/1/completion_predicate/value"), true);

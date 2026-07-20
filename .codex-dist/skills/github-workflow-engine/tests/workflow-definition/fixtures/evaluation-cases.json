@@ -22,7 +22,7 @@
           "task_action_id": "FI-1",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "ready", "operator": "equals", "value": false },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": [{ "condition": null, "transition_id": "complete" }]
         },
         {
@@ -31,7 +31,7 @@
           "task_action_id": "FI-2",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "ready", "operator": "equals", "value": true },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": []
         }
       ]
@@ -70,7 +70,7 @@
           "task_action_id": "FI-1",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "completion_ready", "operator": "equals", "value": true },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": [
             { "condition": { "fact_id": "remaining_feedback", "operator": "equals", "value": true }, "transition_id": "review" },
             { "condition": { "fact_id": "remaining_feedback", "operator": "equals", "value": false }, "transition_id": "complete" }
@@ -82,7 +82,7 @@
           "task_action_id": "FI-2",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "action_done", "operator": "not_equals", "value": false },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": [{ "condition": null, "transition_id": "terminal" }]
         },
         {
@@ -91,7 +91,7 @@
           "task_action_id": "FI-3",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "action_done", "operator": "not_equals", "value": false },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": [{ "condition": null, "transition_id": "terminal" }]
         },
         {
@@ -100,7 +100,7 @@
           "task_action_id": "FI-4",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "action_done", "operator": "not_equals", "value": false },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": []
         }
       ]
@@ -127,7 +127,7 @@
           "task_action_id": "FI-1",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "done", "operator": "equals", "value": true },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": []
         }
       ]
@@ -154,7 +154,7 @@
           "task_action_id": "FI-1",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": [
             { "condition": { "fact_id": "ready", "operator": "equals", "value": true }, "transition_id": "true-action" },
             { "condition": { "fact_id": "ready", "operator": "not_equals", "value": true }, "transition_id": "false-action" }
@@ -166,7 +166,7 @@
           "task_action_id": "FI-2",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": [{ "condition": null, "transition_id": "terminal" }]
         },
         {
@@ -175,7 +175,7 @@
           "task_action_id": "FI-3",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": [{ "condition": null, "transition_id": "terminal" }]
         },
         {
@@ -184,7 +184,7 @@
           "task_action_id": "FI-4",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": []
         }
       ]
@@ -211,7 +211,7 @@
           "task_action_id": "FI-1",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": [
             { "condition": { "not": { "fact_id": "ready", "operator": "equals", "value": true } }, "transition_id": "true-action" },
             { "condition": { "not": { "fact_id": "ready", "operator": "equals", "value": false } }, "transition_id": "false-action" }
@@ -223,7 +223,7 @@
           "task_action_id": "FI-2",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": [{ "condition": null, "transition_id": "terminal" }]
         },
         {
@@ -232,7 +232,7 @@
           "task_action_id": "FI-3",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": [{ "condition": null, "transition_id": "terminal" }]
         },
         {
@@ -241,7 +241,7 @@
           "task_action_id": "FI-4",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "ready", "operator": "not_exists" },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": []
         }
       ]
@@ -268,7 +268,7 @@
           "task_action_id": "FI-1",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "exit_cycle", "operator": "exists" },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": [{ "condition": null, "transition_id": "loop" }]
         },
         {
@@ -277,7 +277,7 @@
           "task_action_id": "FI-2",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "exit_cycle", "operator": "exists" },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": [
             { "condition": { "fact_id": "exit_cycle", "operator": "equals", "value": true }, "transition_id": "terminal" },
             { "condition": { "fact_id": "exit_cycle", "operator": "equals", "value": false }, "transition_id": "loop" }
@@ -289,7 +289,7 @@
           "task_action_id": "FI-3",
           "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
           "completion_predicate": { "fact_id": "exit_cycle", "operator": "exists" },
-          "registered_executor_reference": null,
+          "executor_reference": null,
           "next_transition_rules": []
         }
       ]

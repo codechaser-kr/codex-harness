@@ -29,7 +29,7 @@
         "block_execution_until_confirmed": true
       },
       "completion_predicate": { "fact_id": "feature_proposal_draft_confirmed", "operator": "equals", "value": true },
-      "registered_executor_reference": "issue-creation",
+      "executor_reference": "issue-creation",
       "next_transition_rules": [{ "condition": null, "transition_id": "create-feature-proposal-issue" }]
     },
     {
@@ -38,7 +38,7 @@
       "task_action_id": "FP-2",
       "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
       "completion_predicate": { "fact_id": "feature_proposal_issue_created", "operator": "equals", "value": true },
-      "registered_executor_reference": "github-simple-executor",
+      "executor_reference": "github-simple-executor",
       "next_transition_rules": [{ "condition": null, "transition_id": "determine-proposal-direction" }]
     },
     {
@@ -56,7 +56,7 @@
         "block_execution_until_confirmed": true
       },
       "completion_predicate": { "fact_id": "feature_proposal_direction", "operator": "exists" },
-      "registered_executor_reference": "feature-proposal-triage",
+      "executor_reference": "feature-proposal-triage",
       "next_transition_rules": [{ "condition": null, "transition_id": "reflect-confirmed-direction" }]
     },
     {
@@ -65,7 +65,7 @@
       "task_action_id": "FP-4",
       "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
       "completion_predicate": { "fact_id": "feature_proposal_direction_reflected", "operator": "equals", "value": true },
-      "registered_executor_reference": "github-simple-executor",
+      "executor_reference": "github-simple-executor",
       "next_transition_rules": [
         { "condition": { "fact_id": "feature_proposal_direction", "operator": "equals", "value": "do_not_proceed" }, "transition_id": "close-do-not-proceed" },
         { "condition": { "fact_id": "feature_proposal_direction", "operator": "equals", "value": "policy_review" }, "transition_id": "transition-to-policy-review" },
@@ -88,7 +88,7 @@
           { "fact_id": "feature_proposal_issue_closed", "operator": "equals", "value": true }
         ]
       },
-      "registered_executor_reference": "github-simple-executor",
+      "executor_reference": "github-simple-executor",
       "next_transition_rules": [{ "condition": null, "transition_id": "complete-feature-proposal" }]
     },
     {
@@ -107,7 +107,7 @@
           { "fact_id": "next_workflow", "operator": "equals", "value": "policy_review" }
         ]
       },
-      "registered_executor_reference": "github-simple-executor",
+      "executor_reference": "github-simple-executor",
       "next_transition_rules": [{ "condition": null, "transition_id": "complete-feature-proposal" }]
     },
     {
@@ -126,7 +126,7 @@
           { "fact_id": "next_workflow", "operator": "equals", "value": "feature_change" }
         ]
       },
-      "registered_executor_reference": "github-simple-executor",
+      "executor_reference": "github-simple-executor",
       "next_transition_rules": [{ "condition": null, "transition_id": "complete-feature-proposal" }]
     },
     {
@@ -189,7 +189,7 @@
           }
         ]
       },
-      "registered_executor_reference": null,
+      "executor_reference": null,
       "next_transition_rules": []
     }
   ]

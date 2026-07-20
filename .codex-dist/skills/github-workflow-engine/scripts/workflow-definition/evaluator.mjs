@@ -111,7 +111,7 @@ export function evaluateWorkflowDefinition(definition, normalizedFactState, { cu
         transition_id: transition.transition_id,
         task_action_id: transition.task_action_id,
         user_decision_specification: transition.user_decision_specification,
-        registered_executor_reference: transition.registered_executor_reference,
+        executor_reference: transition.executor_reference,
         completion_predicate: transition.completion_predicate,
       };
     }

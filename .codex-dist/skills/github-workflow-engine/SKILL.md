@@ -48,7 +48,7 @@ PR merge는 사람이 수행한다. Workflow Engine은 merge 알림이나 GitHub
 id는 LLM이 임의로 추론하지 않으며 `task_action_id`와 혼용하지 않는다.
 
 evaluator의 `action_required`는 Definition이 반환한 단일 현재 작업의 `task_action_id`,
-`user_decision_specification`, `registered_executor_reference`, `completion_predicate`를 기존 상태 판정,
+`user_decision_specification`, `executor_reference`, `completion_predicate`를 기존 상태 판정,
 사용자 결정, 구조화 실행 절차에 연결한다. `completed`는 완료로, adapter·Definition validation 또는
 evaluation의 `stopped`와 오류는 구조화 중단으로 연결한다. 실패를 자연어 구현 전이로 fallback하지
 않고, 일반 실행에서 자연어 전이표와 Definition을 이중 실행하거나 결과를 비교하지 않는다.
@@ -61,60 +61,29 @@ evaluation의 `stopped`와 오류는 구조화 중단으로 연결한다. 실패
 검증 모드는 사용자가 **현재 요청에서 검증 모드**를 명시했을 때만 활성화한다. 일반 실행,
 단순한 `검증` 표현, 운영 비교, 과거 요청의 검증 모드 언급만으로는 활성화하지 않는다. 이
 분기는 일반 Workflow Definition 평가, 사용자 결정 반영, 자동 실행 절차와 로그 기록보다 먼저
-선택하는 terminal diagnostic이다. 목적은 같은 입력에서 LLM 결과가 재현되는지 관찰해 사용자에게
-skill/prompt 개선 근거를 제공하는 것이다. comparator의 pass/mismatch와 `unanimous_outcome`은 진단
-관측값일 뿐 원래 LLM 결과, 사용자 결정, 현재 작업 또는 Workflow Definition transition으로 채택하지
-않는다.
+선택하는 terminal diagnostic이다. 목적은 같은 입력에서 실제 LLM 호출의 재현성을 관찰해 사용자에게
+skill/prompt 개선 근거를 제공하는 것이다.
 
-1. registry는 일반 실행에서도 여섯 필드의 strict closed contract로 항상 검증한다. 현재 사용자 요청의
-   명시적 활성화가 없으면 유효한 validation 분류 값을 전략 선택에 사용하지 않고 일반 실행을 그대로
-   수행한다.
-2. 진단할 원 호출의 GitHub/local raw state를 읽기 전용으로 정확히 한 번 수집해 `state_snapshot`으로
-   고정한다. 결정론적으로 관측 가능한 fact는 adapter와 evaluator에 한 번 전달해 현재 진단 대상을
-   식별할 수 있지만, evaluation의 `transition_id`를 진행·완료 상태로 기록하지 않는다. fact derivation
-   자체가 LLM 판단이면 그 호출을 진단 대상으로 삼고 outcome을 adapter에 전달하지 않는다.
-3. 명시적 활성화 뒤에만 진단 대상 executor를 registry에서 한 번 resolve하고 `execution_class`와
-   `validation_strategy`로 비교 전략을 선택한다. 유효한 분류 값 자체는 검증 활성화나 ordinary
-   Definition evaluation/transition 선택의 입력이 아니다. registry 누락·중복·분류 필드 불일치는 모든
-   실행에서 strict registry validation 실패이며 validation session도 시작하지 않는다.
-4. parser, adapter, evaluator 같은 deterministic tool은 fan-out하지 않는다. 진단 대상 식별에 필요한
-   경우 고정 입력으로 한 번만 실행하고 comparator만 수집된 request/receipt에 한 번 실행한다.
-   comparator의 pass/mismatch 또는 `unanimous_outcome`을 adapter/evaluator에 다시 전달하지 않는다.
-5. `execution_class: deterministic_tool`, `validation_strategy: run_once` 대상은 반복 실행 없이 현재
-   deterministic 결과가 진단 대상이 아님을 보고하고 종료한다. `llm_session`의
-   `semantic_consensus` 또는 `isolated_patch_consensus`만 정확히 10개의 fresh independent LLM
-   session을 시작한다.
-6. 10개 session은 동일 raw snapshot, route, model, reasoning, role, skill/version, config, input과
-   동일한 유한 deadline을 사용한다. session reuse/continue와 prompt/result/context 공유를 금지하고,
-   고유 session ID를 요구한다. `isolated_patch_consensus` request는
-   `planned_session_relation = ten_independent_isolated_execution_sessions`와 index 1..10의
-   `planned_session_slots` 정확히 10개를 먼저 고정하고 known ID 또는 `pending_tool_issued`를 실제
-   session/workspace ID와 index별로 대조한다.
-7. 각 session은 primary나 외부 상태를 변경하지 않는다. GitHub·comment·branch·commit·PR 변경은
-   read-only plan outcome으로만 반환한다. 파일 편집은 `target-harness-code-editor`의 같은 baseline
-   격리 workspace에서만 수행한다.
-8. wait-all은 유한 deadline 안에서 10개 전부를 기다린다. timeout, blocked, 환경 불일치, session ID
-   중복, 외부 부작용, 결과 누락이 있으면 실행 중 session을 종료·close하고 상태 변경 전에 중단한다.
-   retry, majority, representative adoption은 금지한다.
-9. 완료 receipt는 임시 파일 없이 stdin envelope `{ "request", "receipts" }`로
-   `scripts/validation-mode/cli.mjs`에 한 번 전달한다. comparator는 객체 key를 정규화한 전체 outcome을
-   비교하며, pass일 때 `unanimous_outcome`과 실제 session/workspace ID만 가진 `consensus_receipt`를
-   반환한다. isolated baseline은 request/observed receipt에서, isolated patch data는
-   `unanimous_outcome`에서 읽는다. semantic request/receipt/result에는 workspace나 baseline
-   placeholder를 만들지 않는다.
-10. pass와 mismatch 모두 diagnostic observation으로만 반환한다. `semantic_consensus`의
-    `unanimous_outcome`과 `isolated_patch_consensus`의 canonical patch를 원 호출 결과로 채택하거나
-    primary 또는 외부 상태를 변경하지 않는다. 이 결과로 현재 transition을 선택·완료·진행하지 않고
-    일반 workflow를 자동 재개하지 않는다.
-11. 진단 결과와 함께 skill/prompt 개선 또는 나중의 일반 workflow 실행 중 무엇을 할지 사용자에게
-    명시적 결정을 요청한 뒤 종료한다. 이 결정은 Workflow Definition transition으로 추가하지 않는다.
-12. 검증 모드의 실제 fan-out과 wait-all은 Workflow Engine과 target editor 스킬이 수행한다. Node
-    scripts는 agent를 호출하지 않으며 request/receipt, normalization, digest, unanimous comparison만
-    결정론적으로 처리한다.
-13. `.harness/logs/github-workflow-log.md`는 검증 session의 입력이나 출력으로 읽거나 쓰지 않는다.
-    mock/control-plane fixture는 live evidence가 아니며 control-plane fixture는 live 10-session 수행 증거가 아니다. 사용자 반환에는 실제 session receipt를
-    근거로 한 session ID, isolated이면 workspace ID, 중단 사유를 포함하고, isolated baseline과 patch data는 기존
-    request/receipt/comparator outcome에서 읽는다.
+1. 진단할 LLM 의존 호출을 현재 작업과 직접 `executor_reference`로 식별한다. Definition validation은
+   참조가 안정적인 비어 있지 않은 문자열 또는 `null`인지만 검사하며 registry로 존재 여부를 검사하지
+   않는다. 실제 호출 전에는 선택된 실행 주체 또는 대상 하네스 계약으로 해당 target의 설치·라우팅·
+   모델·권한·실행 가능 여부를 확인하고, 확인할 수 없으면 session을 시작하지 않고 중단한다. parser,
+   adapter, evaluator 같은 결정론적 제어 도구는 검증 대상이 아니며 한 번만 실행할 수 있다.
+2. 원 호출의 GitHub/local raw state를 읽기 전용으로 한 번 수집해 고정한다. 결정론적으로 관측 가능한
+   fact는 현재 진단 대상을 찾는 데만 사용할 수 있으며 transition을 진행·완료 상태로 기록하지 않는다.
+3. 동일 snapshot, route, model, reasoning, role, skill version, config, input과 deadline으로 정확히 10개의
+   fresh independent LLM session을 시작한다. session reuse/continue와 prompt/result/context 공유를
+   금지하고 session ID는 모두 고유해야 한다.
+4. 검증 대상의 자체 실행 계약이 격리 workspace를 요구하면 같은 baseline에서 각 session의 workspace를
+   분리하고 workspace ID도 모두 고유해야 한다. 그렇지 않으면 workspace나 patch 형식을 추가로 요구하지
+   않는다.
+5. 각 raw result와 session ID, 고정 조건의 관측값, 중단 사유를 그대로 보존한다. timeout, 환경 불일치,
+   ID 중복, 결과 누락, 외부 또는 primary 상태 변경은 실험 무결성 실패로만 보고한다.
+6. 결과의 의미나 patch가 같은지 자동 비교하지 않는다. 다수결, 대표 결과, pass/mismatch,
+   `unanimous_outcome`, 결과 채택은 금지한다. 검증 결과로 Workflow Definition transition을 선택·완료·
+   진행하거나 일반 workflow를 자동 재개하지 않는다.
+7. 10개 raw result와 무결성 확인 결과를 사용자에게 제시하고, 재현성 판단과 skill/prompt 개선 여부를
+   사용자에게 요청한 뒤 종료한다. 이 판단은 Workflow Definition transition이 아니다.
 
 ## 자동 실행 절차
 

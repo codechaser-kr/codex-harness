@@ -1,6 +1,6 @@
 ---
 name: target-harness-code-editor
-description: Workflow Engine이 검증한 대상 local run-harness 라우팅과 불변 코드 수정 요청을 일반 모드에서 실행하고, 명시적 검증 모드에서는 10-workspace patch 재현성을 격리 진단합니다.
+description: Workflow Engine이 검증한 대상 local run-harness 라우팅과 불변 코드 수정 요청을 일반 모드에서 실행하고, 명시적 검증 모드에서는 사용자가 판단하는 코드 수정 호출 재현성을 격리 진단합니다.
 ---
 
 # Target Harness Code Editor
@@ -27,10 +27,7 @@ session을 오케스트레이션한다. 검증 결과는 사용자 판단을 위
 - 검증된 `routing_status`, 단일 `selected_role_id`, `agent_config_path`, `local_skill_path`,
   `routing_evidence`, `model`, `model_reasoning_effort`, `sandbox_mode`
 - 메인 Workflow Engine orchestration session ID와 현재 사용자 요청에서 명시적으로 확인된 검증 모드
-  활성화 여부. 과거 요청이나 registry 분류만으로 활성화하지 않는다.
-- 검증 모드이면 `planned_session_relation = ten_independent_isolated_execution_sessions`와
-  index 1..10의 닫힌 `planned_session_slots` 정확히 10개. 각 slot은 known ID 또는
-  `pending_tool_issued`인 planned execution session/workspace ID를 가진다.
+  활성화 여부. 과거 요청이나 실행 주체 분류만으로 활성화하지 않는다.
 
 요청값, baseline, 라우팅, 역할, model/reasoning/skill/config, 대상 파일 범위를 보완하거나 다시
 선택하지 않는다. 식별자는 `request_id`만 사용하고 fingerprint를 만들지 않는다.
@@ -55,39 +52,33 @@ session을 오케스트레이션한다. 검증 결과는 사용자 판단을 위
 
 ## 검증 모드
 
-검증 모드는 `isolated_patch_consensus`이며 다음 순서를 바꾸지 않는다.
+검증 모드는 코드 수정 호출 자체를 실제로 10회 실행해 사용자가 재현성을 판단하도록 하는 절차다.
 
 1. primary를 변경하지 않은 채 `target_baseline`을 재확인하고, 같은 baseline에서 시작하는 격리
-   workspace를 정확히 10개 만든다. workspace ID는 모두 고유하고 같은 index의 request planned slot과
-   일치해야 한다. `pending_tool_issued`는 실제 발급 workspace ID로 해소한다.
-2. 정확히 10개의 fresh independent editing LLM session을 시작한다. 각 session은 서로 다른 격리
-   workspace 하나만 사용하고, 동일 request, route, model, reasoning, selected role, skill/version,
-   config, sandbox, permission/tool/path 조건과 동일 유한 deadline을 받는다. 실제 session ID도 같은
-   index의 known planned ID와 일치해야 하며 `pending_tool_issued`는 실제 발급 ID로 해소한다.
+   workspace를 10개 의도된 slot마다 하나씩 만들려고 시도한다. 완전 fan-out이면 workspace ID는 모두
+   고유한 정확히 10개다.
+2. 10개 의도된 slot마다 fresh independent editing LLM session 하나를 시작하려고 시도한다. 각 session은
+   서로 다른 격리 workspace 하나만 사용하고, 동일 request, route, model, reasoning, selected role,
+   skill/version, config, sandbox, permission/tool/path 조건과 동일 유한 deadline을 받는다. 완전 fan-out이면
+   session ID는 모두 고유한 정확히 10개다.
 3. session reuse/continue, 이전 session의 prompt/result/context/patch 공유, primary 편집, GitHub·branch·
    commit·PR·comment 변경을 금지한다. 각 session은 자신의 workspace에서만 실제 파일을 편집·검증한다.
-4. 각 session 완료 뒤 deterministic normalization으로 닫힌 `{path, operation}` manifest와 canonical
-   patch를 만들고 SHA-256 `patch_digest`를 계산한다. Manifest path는 고유한 저장소 상대경로이고
-   code-unit 오름차순이며 operation은 `add|modify|delete`다. Canonical patch는 rename/copy detection을
-   끄고 고정 `diff --git`, `---`, `+++` header와 add/delete mode marker를 사용하며 manifest의
-   path/operation/order와 정확히 일치해야 한다. Node script는 editing agent를 시작하지 않으며 receipt와
-   patch를 검증·정규화·비교하는 데만 사용한다.
-5. 10개 모두를 유한 wait-all로 기다린다. timeout, blocked, 환경·baseline 불일치, 중복 session 또는
-   workspace ID, 외부 부작용, manifest/canonical patch/digest 불일치가 하나라도 있으면 실행 중 session을
-   종료·close하고 validation을 중단한다. retry, majority, representative patch 채택은 금지한다.
-6. `{ request, receipts }`를 validation comparator에 한 번 전달한다. `pass`의
-   `unanimous_outcome`과 mismatch를 모두 diagnostic observation으로만 사용한다.
-7. validation session/workspace는 primary 또는 외부 상태를 변경할 수 없다. 모든 editing 결과는 격리
-   workspace 안에만 남고, pass/mismatch로 원 파일 편집 결과를 채택하거나 Workflow Definition
-   transition을 선택·완료·진행하지 않는다.
-8. 최종 결과의 validation-only proof에는 authoritative session/workspace ID와 공통 correlation 필드만
-   둔다. isolated baseline은 request/receipts에서, manifest/canonical patch/digest는 comparator outcome과
-   receipts에서 읽으며 top-level proof field로 복제하지 않는다.
-9. 결과를 사용자에게 제시하고 skill/prompt 개선, validation 종료 또는 나중의 ordinary workflow 실행
-   중 다음 행동을 명시적으로 결정하도록 요청한 뒤 종료한다. 이 결정을 Workflow Definition
-   transition으로 추가하지 않고 ordinary workflow를 자동 재개하지 않는다.
+4. 시작된 session을 유한 wait-all로 기다리고 각 raw result, session/workspace ID, 조건 관측값과 실패
+   사유를 그대로 보존한다. fan-out이 일부만 시작됐거나 session 생성이 실패하면 발급된 모든 ID와 사용
+   가능한 raw result, 관측된 session/workspace 수, 명시적 무결성 실패 사유를 기록한다. retry하거나
+   누락 ID·결과를 만들지 않는다. timeout, blocked, 환경·baseline 불일치, 중복 ID 또는 외부 부수 효과도
+   실험 무결성 실패로 기록한다.
+5. patch를 정규화하거나 비교하지 않는다. pass/mismatch, 다수결, 대표 patch, 결과 채택은 금지한다.
+   validation session/workspace 결과로 primary 파일을 수정하거나 Workflow Definition transition을
+   선택·완료·진행하지 않는다.
+6. 완전 fan-out이면 10개의 raw result와 무결성 결과를, 불완전 fan-out이면 사용 가능한 모든 raw result와
+   실패 사유를 사용자에게 제시하고 skill/prompt 개선, validation 종료 또는 나중의 ordinary workflow 실행
+   중 다음 행동을 명시적으로 결정하도록 요청한 뒤 종료한다. 이 결정은 Workflow Definition transition으로
+   추가하지 않고 ordinary workflow를 자동 재개하지 않는다.
 
 ## 출력
+
+### 일반 모드 구조화 실행 결과
 
 라우팅 고유 필드와 기존 공통 구조화 실행 결과 필드를 반환한다.
 
@@ -122,21 +113,33 @@ postconditions_satisfied
 residual_risks_or_failure_reasons
 ```
 
-검증 모드에서는 다음 증명 필드를 추가한다.
+일반 모드의 `actual_execution_session_id`는 단일 실제 편집 session을 가리킨다.
+
+### 검증 모드 terminal diagnostic
+
+검증 모드는 일반 모드 구조화 실행 결과를 반환하지 않는다. 완전 또는 불완전 fan-out 모두 다음 필드만
+반환한다.
 
 ```text
-consensus_session_ids
-consensus_workspace_ids
-actual_execution_session_id_not_applicable_reason
+request_id
+target_baseline
+snapshot_source
+fixed_condition_observations
+observed_session_count
+observed_workspace_count (격리 workspace가 필요한 경우에만)
+validation_session_ids
+validation_workspace_ids (격리 workspace가 필요한 경우에만)
+raw_results
+integrity_verification
+integrity_failure_reasons
 ```
 
-일반 모드의 `actual_execution_session_id`는 단일 실제 편집 session을 가리킨다. 검증 모드에서는
-`consensus_session_ids`와 `consensus_workspace_ids`가 authoritative actual 식별자이며 request slot과
-대조된 고유 ID를 정확히 10개 기록한다. 이때 singular 필드는
-`actual_execution_session_id = not_applicable`,
-`actual_execution_session_id_not_applicable_reason = validation_consensus_uses_session_set`이고,
-`actual_session_relation = ten_independent_isolated_execution_sessions`다. 이 명시적 사유는 session을
-시작하지 못한 `execution_session_not_started`와 혼용하지 않는다.
+완전 fan-out의 `observed_session_count`는 10이고 `validation_session_ids`는 고유 ID 정확히 10개이며
+`raw_results`는 각 session의 원본 결과를 모두 보존한다. 격리 workspace를 사용한 완전 fan-out은
+`observed_workspace_count`와 `validation_workspace_ids`에도 각각 고유 ID 정확히 10개를 기록한다.
+불완전 fan-out은 발급된 모든 session/workspace ID와 사용 가능한 모든 raw result만 기록하고, 관측된
+count와 `integrity_failure_reasons`에 명시적 실패 사유를 남긴다. 누락 ID나 결과를 만들거나 재시도하지
+않는다. 이 진단에는 일반 모드 구조화 실행 결과 필드를 넣지 않으며 자동 결과 채택은 금지한다.
 
 ## 하지 않는 일
 
@@ -144,17 +147,12 @@ actual_execution_session_id_not_applicable_reason
 - 일반 모드에서 복수 session을 시작하거나 검증 모드에서 primary를 session workspace로 사용하지 않는다.
 - 불일치 결과를 다수결로 채택하거나 patch를 수동 병합·보정하지 않는다.
 - validation session/workspace에서 primary 또는 외부 상태를 변경하지 않는다.
-- unanimous patch를 원래 편집 결과로 자동 채택하지 않는다.
 - 이 스킬 또는 Node script가 실제 editing LLM을 호출한 것처럼 허위 receipt를 만들지 않는다.
 - commit, push, PR, GitHub 상태, review thread 또는 하네스 로그를 변경하지 않는다.
 
 ## 중단 조건과 후속 전이
 
-사전 검증 실패, session 미시작/실패, consensus 실패, baseline 변경은 모두
-`routing_status: aborted`, 빈 변경 결과와 구체적인 재개 조건으로 반환한다. 실제 session ID가 발급된
-뒤의 중단은 발급된 모든 ID와 상태를 보존한다. 10개 fan-out이 완료된 뒤의 중단은 두 consensus ID
-배열에 정확히 10개를 기록하고 `validation_consensus_uses_session_set` 사유를 사용한다. fan-out 전에
-아무 session도 시작하지 못한 중단은 기존 `execution_session_not_started` 사유와 빈 consensus 배열을
-사용한다. 일부만 시작된 불완전 set은 발급된 ID와 실패 근거를 보존하지만 target editor 출력 사용 가능
-판정을 통과하지 못하고 validation 중단으로 처리한다. 완전한 pass도 진단 결과만 반환하며 Workflow
-Engine은 이를 ordinary 구조화 실행 성공이나 다음 Workflow transition에 연결하지 않는다.
+일반 모드의 사전 검증 실패, session 미시작/실패, baseline 변경은 `routing_status: aborted`, 빈 변경
+결과와 구체적인 재개 조건으로 반환한다. 검증 모드는 완전 또는 불완전 fan-out 모두 위 terminal
+diagnostic에 관측된 ID, 사용 가능한 원본 결과와 무결성 실패 사유를 보존한다. 검증 결과는 ordinary
+구조화 실행 성공이나 다음 Workflow transition에 연결하지 않는다.

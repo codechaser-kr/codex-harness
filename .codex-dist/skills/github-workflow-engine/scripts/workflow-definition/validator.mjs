@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-
 import { matchesExpressionState, validateExpression } from "./expression.mjs";
 
 const ROOT_FIELDS = [
@@ -18,7 +16,7 @@ const TRANSITION_FIELDS = [
   "task_action_id",
   "user_decision_specification",
   "completion_predicate",
-  "registered_executor_reference",
+  "executor_reference",
   "next_transition_rules",
 ];
 const WORKFLOW_PREFIXES = {
@@ -32,18 +30,6 @@ const WORKFLOW_KINDS = new Set(Object.keys(WORKFLOW_PREFIXES));
 const TARGET_TYPES = new Set(["issue", "pull_request", "repository"]);
 const FACT_TYPES = new Set(["boolean", "string", "integer"]);
 const TASK_ACTION_ID = /^(FP|PR|FC|FF|FI)-[1-9][0-9]*$/;
-const REGISTRY_FIELDS = [
-  "executor_id",
-  "executor_kind",
-  "side_effect_scope",
-  "runtime_reference",
-  "execution_class",
-  "validation_strategy",
-];
-const EXECUTION_CLASSES = new Set(["llm_session", "deterministic_tool"]);
-const VALIDATION_STRATEGIES = new Set(["semantic_consensus", "isolated_patch_consensus", "run_once"]);
-const EXECUTOR_KINDS = new Set(["skill", "review_mode", "deterministic_tool"]);
-const SIDE_EFFECT_SCOPES = new Set(["read_only", "github_state_change", "proposal_output", "repository_file_change", "review_output"]);
 export const DEFAULT_MAX_CONDITION_STATES = 10_000;
 
 function pointer(path, segment) {
@@ -113,39 +99,6 @@ function valueMatchesType(value, valueType) {
     return typeof value === "string";
   }
   return valueType === "integer" && Number.isInteger(value);
-}
-
-function registryIds(registry) {
-  if (!Array.isArray(registry) || registry.length === 0) {
-    return undefined;
-  }
-  const executorIds = new Set();
-  for (const entry of registry) {
-    if (!isPlainObject(entry)
-      || Object.keys(entry).length !== REGISTRY_FIELDS.length
-      || REGISTRY_FIELDS.some((field) => !Object.hasOwn(entry, field) || !isNonEmptyString(entry[field]))
-      || !EXECUTOR_KINDS.has(entry.executor_kind)
-      || !SIDE_EFFECT_SCOPES.has(entry.side_effect_scope)
-      || !EXECUTION_CLASSES.has(entry.execution_class)
-      || !VALIDATION_STRATEGIES.has(entry.validation_strategy)
-      || ((entry.execution_class === "deterministic_tool") !== (entry.validation_strategy === "run_once"))) {
-      return undefined;
-    }
-    if (executorIds.has(entry.executor_id)) {
-      return undefined;
-    }
-    executorIds.add(entry.executor_id);
-  }
-  return executorIds;
-}
-
-function loadDefaultRegistry() {
-  try {
-    const registryUrl = new URL("../../registries/registered-executors.json", import.meta.url);
-    return JSON.parse(readFileSync(registryUrl, "utf8"));
-  } catch {
-    return undefined;
-  }
 }
 
 function validateFact(value, path, errors) {
@@ -298,7 +251,7 @@ function validateNextTransitionRules(value, path, facts, errors) {
   return result;
 }
 
-function validateTransition(value, path, workflowKind, facts, executorIds, taskActionIds, errors) {
+function validateTransition(value, path, workflowKind, facts, taskActionIds, errors) {
   const record = {
     path,
     transitionId: undefined,
@@ -342,11 +295,8 @@ function validateTransition(value, path, workflowKind, facts, executorIds, taskA
     record.completionPredicate = value.completion_predicate;
     record.completionPredicateValid = completionErrors.length === 0;
   }
-  if (Object.hasOwn(value, "registered_executor_reference")) {
-    const executorPath = pointer(path, "registered_executor_reference");
-    if (validateNullableStableId(value.registered_executor_reference, executorPath, errors, "registered_executor_reference.invalid") && value.registered_executor_reference !== null && executorIds && !executorIds.has(value.registered_executor_reference)) {
-      addError(errors, "registered_executor_reference.unknown", executorPath, `Unknown executor: ${value.registered_executor_reference}.`);
-    }
+  if (Object.hasOwn(value, "executor_reference")) {
+    validateNullableStableId(value.executor_reference, pointer(path, "executor_reference"), errors, "executor_reference.invalid");
   }
   if (Object.hasOwn(value, "next_transition_rules")) {
     record.ruleSet = validateNextTransitionRules(value.next_transition_rules, pointer(path, "next_transition_rules"), facts, errors);
@@ -731,18 +681,13 @@ function normalizeMaxConditionStates(value, errors) {
   return DEFAULT_MAX_CONDITION_STATES;
 }
 
-export function validateWorkflowDefinition(definition, { registry, maxConditionStates } = {}) {
+export function validateWorkflowDefinition(definition, { maxConditionStates } = {}) {
   const errors = [];
   const normalizedMaxConditionStates = normalizeMaxConditionStates(maxConditionStates, errors);
   if (!validateClosedObject(definition, "", new Set(ROOT_FIELDS), errors, "workflow")) {
     return { valid: false, errors };
   }
   validateRequired(definition, "", ROOT_FIELDS, errors, "workflow");
-  const executorIds = registryIds(registry === undefined ? loadDefaultRegistry() : registry);
-  if (!executorIds) {
-    addError(errors, "registry.load_failed", "", "Registered executor registry could not be loaded.");
-  }
-
   for (const field of ["workflow_id", "version", "entry_transition_id"]) {
     if (Object.hasOwn(definition, field)) {
       validateStableId(definition[field], pointer("", field), errors, `${field}.invalid`);
@@ -809,7 +754,6 @@ export function validateWorkflowDefinition(definition, { registry, maxConditionS
           `/transitions/${index}`,
           definition.workflow_kind,
           facts,
-          executorIds,
           taskActionIds,
           errors,
         ));

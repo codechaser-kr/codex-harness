@@ -70,7 +70,7 @@ leaf의 `operator`는 다음 중 하나다.
 - `task_action_id`
 - `user_decision_specification`
 - `completion_predicate`
-- `registered_executor_reference`
+- `executor_reference`
 - `next_transition_rules`
 
 `task_action_id`는 `FP-1`, `PR-1`, `FC-1`, `FF-1`, `FI-1`과 같은 형식만 허용한다. 공통
@@ -86,8 +86,8 @@ validator가 검증한다.
 `false`이면 option 배열은 비어 있을 수 있다. option의 `decision_id` 고유성 및 다른
 필드 간 운용 의미는 C2 semantic validator가 검증한다.
 
-`registered_executor_reference`는 문자열 또는 `null`이다. 실행기 참조가 등록 레지스트리를
-가리키는지는 C2 validator가 확인한다.
+`executor_reference`는 비어 있지 않은 안정 문자열 또는 `null`이다. 문자열은 호출할 실행 주체의
+직접 참조이며, Definition validator는 registry를 로드하거나 참조 대상의 존재를 확인하지 않는다.
 
 `next_transition_rules`는 필수 배열이다. 각 rule은 `condition`과 `transition_id`를 가진
 닫힌 객체다. `transition_id`는 비어 있지 않은 일반 안정 ID 문자열이며, `condition`은
@@ -102,7 +102,7 @@ rule을 하나 이상 가져야 한다. 조건부 rule 집합은 priority나 선
 ## C2/C3 교차 검증
 
 JSON Schema가 표현할 수 없는 객체 속성 기반 고유성, workflow kind와 action prefix의
-상관관계, registry 참조, fact 참조와 AST 의미 검증은 C2 semantic validator 책임이다.
+상관관계, fact 참조와 AST 의미 검증은 C2 semantic validator 책임이다.
 
 C3 graph validator는 transition ID 고유성, `entry_transition_id`,
 `terminal_transition_ids`, rule `transition_id` 참조의 존재, entry 기준 전체 도달성,
@@ -161,25 +161,13 @@ node cli.mjs evaluate --definition <path> --state <path> [--current-transition-i
 validate 성공과 evaluate의 `action_required` 또는 `completed`는 exit 0이다. definition,
 state, 평가 중단 오류는 exit 1이고 usage 오류는 exit 2다.
 
-## Executor Registry
+## 실행 주체 참조
 
-`../registries/registered-executors.json`은 배열이며 각 항목은 ordinary 실행 주체 식별 필드
-`executor_id`, `executor_kind`, `side_effect_scope`, `runtime_reference`와 validation 전용 분류 필드
-`execution_class`, `validation_strategy`를 가진다. `runtime_reference`는 기존 skill, review mode 또는
-설치된 deterministic script 식별자이며 임의 실행 명령 문자열이 아니다.
+`executor_reference`는 Workflow Definition이 반환하는 직접 실행 대상 식별자다. 이 값은 안정적인
+이름일 뿐 실행 권한, 실행 경로, 모델, 부수 효과 범위, validation 전략을 선언하지 않는다. 실제 호출
+가능 여부와 권한·모델·격리 조건은 선택된 실행 주체와 대상 하네스의 런타임 계약에서 확인한다.
 
-기본 registry와 `validateWorkflowDefinition(..., { registry })`의 custom registry는 같은 strict
-contract를 사용한다. registry는 비어 있지 않은 배열이어야 하고 각 entry는 위 여섯 필드만 정확히
-가진 plain object여야 한다. 모든 필드 값은 비어 있지 않은 문자열이고 `executor_id`는 고유해야 한다.
-`executor_kind`, `side_effect_scope`, `execution_class`, `validation_strategy`는 등록 enum에 속해야 하며,
-`llm_session`은 `semantic_consensus` 또는 `isolated_patch_consensus`만,
-`deterministic_tool`은 `run_once`만 사용할 수 있다. 추가·누락 필드, 중복 ID, `Set`, string array,
-non-plain entry, 잘못된 enum 또는 execution class/strategy 조합은 결정적인 `registry.load_failed`로
-거부한다.
-
-C2/C3 validator는 ordinary 실행에서도 registry 전체 구조와 definition의 executor reference 존재를
-항상 검증한다. 이 구조 검증은 classification metadata를 ordinary transition 선택에 사용하는 것과
-다르다. 유효한 `execution_class`와 `validation_strategy` 값은 ordinary Definition evaluation이나
-transition 선택의 입력이 아니며 validation mode를 활성화하지 않는다. 현재 사용자 요청에서
-validation mode가 명시적으로 활성화된 뒤에만 runtime이 이미 검증된 두 값을 읽어 diagnostic 비교
-전략을 선택한다.
+Definition validator와 evaluator는 실행 주체 목록을 가지지 않으며, 임의 shell 명령을 실행하지도
+않는다. `null`은 Definition 평가만으로 외부 실행 주체를 선택하지 않는 작업을 뜻한다. 검증 모드가
+명시적으로 요청되면 `executor_reference`로 식별된 실제 LLM 의존 호출을 독립 session 10개로 실행할 수
+있지만, 결과 비교·채택·다음 전이 선택은 수행하지 않는다.

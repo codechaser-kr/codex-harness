@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { fileURLToPath, pathToFileURL } from "node:url";
-import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import { runWorkflowDefinitionCli } from "../../scripts/workflow-definition/cli.mjs";
@@ -13,7 +12,6 @@ import { validateWorkflowDefinition } from "../../scripts/workflow-definition/va
 
 const fixtures = new URL("./fixtures/", import.meta.url);
 const cliPath = fileURLToPath(new URL("../../scripts/workflow-definition/cli.mjs", import.meta.url));
-const sourceScriptsDirectory = fileURLToPath(new URL("../../scripts/workflow-definition/", import.meta.url));
 
 async function readCases() {
   const result = await parseJsonFile(new URL("evaluation-cases.json", fixtures));
@@ -40,59 +38,6 @@ function parseSingleJsonLine(result) {
   const parsed = JSON.parse(document);
   assert.equal(JSON.stringify(parsed), document);
   return parsed;
-}
-
-async function importWorkflowModulesWithoutRegistry(t, registryContent) {
-  const directory = await mkdtemp(`${tmpdir()}/workflow-definition-registry-`);
-  t.after(() => rm(directory, { recursive: true, force: true }));
-  const scriptsDirectory = join(directory, "scripts", "workflow-definition");
-  await mkdir(scriptsDirectory, { recursive: true });
-  for (const name of ["parser.mjs", "expression.mjs", "validator.mjs", "evaluator.mjs", "cli.mjs"]) {
-    await writeFile(join(scriptsDirectory, name), await readFile(join(sourceScriptsDirectory, name)));
-  }
-  if (registryContent !== undefined) {
-    const registriesDirectory = join(directory, "registries");
-    await mkdir(registriesDirectory, { recursive: true });
-    await writeFile(join(registriesDirectory, "registered-executors.json"), registryContent);
-  }
-  return {
-    cliPath: join(scriptsDirectory, "cli.mjs"),
-    cli: await import(pathToFileURL(join(scriptsDirectory, "cli.mjs")).href),
-    evaluator: await import(pathToFileURL(join(scriptsDirectory, "evaluator.mjs")).href),
-    validator: await import(pathToFileURL(join(scriptsDirectory, "validator.mjs")).href),
-  };
-}
-
-async function assertRegistryLoadFailure(t, modules, definition, state) {
-  const directory = await mkdtemp(`${tmpdir()}/workflow-definition-registry-input-`);
-  t.after(() => rm(directory, { recursive: true, force: true }));
-  const definitionPath = join(directory, "definition.json");
-  const statePath = join(directory, "state.json");
-  await writeFile(definitionPath, JSON.stringify(definition));
-  await writeFile(statePath, JSON.stringify(state));
-
-  const validation = modules.validator.validateWorkflowDefinition(definition);
-  assert.equal(validation.valid, false);
-  assert.equal(hasError(validation, "registry.load_failed", ""), true);
-
-  const evaluation = modules.evaluator.evaluateWorkflowDefinition(definition, state);
-  assert.equal(evaluation.status, "stopped");
-  assert.equal(evaluation.reason, "invalid_definition");
-  assert.equal(hasError(evaluation, "registry.load_failed", ""), true);
-
-  const validate = await modules.cli.runWorkflowDefinitionCli(["validate", "--definition", definitionPath]);
-  assert.equal(validate.exitCode, 1);
-  assert.equal(validate.result.status, "stopped");
-  assert.equal(validate.result.reason, "invalid_definition");
-  assert.equal(hasError(validate.result, "registry.load_failed", ""), true);
-
-  const evaluate = await modules.cli.runWorkflowDefinitionCli(["evaluate", "--definition", definitionPath, "--state", statePath]);
-  assert.equal(evaluate.exitCode, 1);
-  assert.equal(evaluate.result.status, "stopped");
-  assert.equal(evaluate.result.reason, "invalid_definition");
-  assert.equal(hasError(evaluate.result, "registry.load_failed", ""), true);
-
-  return { definitionPath, statePath };
 }
 
 test("evaluation fixtures are valid C2/C3 definitions", async () => {
@@ -216,46 +161,6 @@ test("detects fixed-state cycles and returns structured definition and state err
   const outsideDomain = evaluateWorkflowDefinition(fixture.definitions.terminal_completed, fixture.states.outside_domain);
   assert.equal(outsideDomain.reason, "invalid_state");
   assert.equal(hasError(outsideDomain, "state.value.not_allowed", "/done"), true);
-});
-
-test("stops validator, evaluator, and CLI when the default registry cannot load", async (t) => {
-  const fixture = await readCases();
-  const modules = await importWorkflowModulesWithoutRegistry(t);
-  const { definitionPath, statePath } = await assertRegistryLoadFailure(
-    t,
-    modules,
-    fixture.definitions.terminal_completed,
-    fixture.states.done,
-  );
-
-  await t.test("CLI script emits structured registry errors", async (childTest) => {
-    for (const argumentsList of [
-      ["validate", "--definition", definitionPath],
-      ["evaluate", "--definition", definitionPath, "--state", statePath],
-    ]) {
-      const result = spawnSync(process.execPath, [modules.cliPath, ...argumentsList], {
-        encoding: "utf8",
-        timeout: 5_000,
-      });
-      if (result.error?.code === "EPERM") {
-        childTest.skip("The current execution sandbox does not permit nested Node child processes.");
-        return;
-      }
-      assert.equal(result.error, undefined, result.error?.message);
-      assert.equal(result.status, 1);
-      assert.equal(result.stderr, "");
-      const output = JSON.parse(result.stdout);
-      assert.equal(output.status, "stopped");
-      assert.equal(output.reason, "invalid_definition");
-      assert.equal(hasError(output, "registry.load_failed", ""), true);
-    }
-  });
-});
-
-test("stops validator, evaluator, and CLI when the default registry is malformed", async (t) => {
-  const fixture = await readCases();
-  const modules = await importWorkflowModulesWithoutRegistry(t, "{");
-  await assertRegistryLoadFailure(t, modules, fixture.definitions.terminal_completed, fixture.states.done);
 });
 
 test("CLI returns JSON-serializable results and specified exit codes", async (t) => {

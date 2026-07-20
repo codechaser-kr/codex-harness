@@ -15,11 +15,7 @@ import "./policy-review.test.mjs";
 import "./feature-change.test.mjs";
 import "./feature-fix.test.mjs";
 import "./implementation.test.mjs";
-import "../validation-mode/validation-mode.test.mjs";
-import "../validation-mode/runtime-wiring.test.mjs";
-import "../validation-mode/feature-proposal-validation.integration.test.mjs";
-import "../validation-mode/issue-workflows-validation.integration.test.mjs";
-import "../validation-mode/implementation-flow-validation.integration.test.mjs";
+import "../validation-mode/validation-mode-contract.test.mjs";
 
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -28,7 +24,6 @@ const sourceTargetEditor = join(repositoryRoot, ".codex-dist/skills/target-harne
 
 const jsonArtifacts = [
   "schemas/workflow-definition.schema.json",
-  "registries/registered-executors.json",
   "definitions/feature-proposal.json",
   "definitions/policy-review.json",
   "definitions/feature-change.json",
@@ -44,7 +39,6 @@ const jsonArtifacts = [
   "tests/workflow-definition/fixtures/feature-change-states.json",
   "tests/workflow-definition/fixtures/feature-fix-states.json",
   "tests/workflow-definition/fixtures/implementation-states.json",
-  "tests/validation-mode/fixtures/validation-mode-cases.json",
 ];
 
 const requiredArtifacts = [
@@ -52,7 +46,6 @@ const requiredArtifacts = [
   "references/validation-mode-contract.md",
   "references/normalized-fact-adapter-contract.md",
   "schemas/workflow-definition.schema.json",
-  "registries/registered-executors.json",
   "definitions/feature-proposal.json",
   "definitions/policy-review.json",
   "definitions/feature-change.json",
@@ -69,8 +62,6 @@ const requiredArtifacts = [
   "scripts/workflow-definition/feature-fix-state-adapter.mjs",
   "scripts/workflow-definition/implementation-state-adapter.mjs",
   "scripts/workflow-definition/cli.mjs",
-  "scripts/validation-mode/comparator.mjs",
-  "scripts/validation-mode/cli.mjs",
   "tests/workflow-definition/structural-validation.test.mjs",
   "tests/workflow-definition/semantic-validation.test.mjs",
   "tests/workflow-definition/evaluator.test.mjs",
@@ -91,12 +82,7 @@ const requiredArtifacts = [
   "tests/workflow-definition/fixtures/feature-change-states.json",
   "tests/workflow-definition/fixtures/feature-fix-states.json",
   "tests/workflow-definition/fixtures/implementation-states.json",
-  "tests/validation-mode/validation-mode.test.mjs",
-  "tests/validation-mode/runtime-wiring.test.mjs",
-  "tests/validation-mode/feature-proposal-validation.integration.test.mjs",
-  "tests/validation-mode/issue-workflows-validation.integration.test.mjs",
-  "tests/validation-mode/implementation-flow-validation.integration.test.mjs",
-  "tests/validation-mode/fixtures/validation-mode-cases.json",
+  "tests/validation-mode/validation-mode-contract.test.mjs",
 ];
 
 async function parseJsonArtifacts(root) {
@@ -171,19 +157,6 @@ function assertMatchingCliResults(sourceResult, installedResult, expectedExitCod
   assert.deepEqual(installedJson, sourceJson);
 }
 
-function makeValidationSessionReceipts(fixture) {
-  return Array.from({ length: 10 }, (_, offset) => ({
-    request_id: fixture.semantic_request.request_id,
-    session_index: offset + 1,
-    session_id: `install-validation-session-${String(offset + 1).padStart(2, "0")}`,
-    observed_state_snapshot: structuredClone(fixture.semantic_request.state_snapshot),
-    observed_invocation_specification: structuredClone(fixture.semantic_request.invocation_specification),
-    status: "usable",
-    outcome: structuredClone(fixture.semantic_outcome),
-    external_side_effects: [],
-  }));
-}
-
 function isNestedSpawnDenied(result) {
   return result.error?.code === "EPERM";
 }
@@ -234,10 +207,7 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
     await readFile(sourceTargetEditor),
   );
 
-  const [evaluationCases, validationFixture] = await Promise.all([
-    readFile(join(sourceSkillDirectory, "tests/workflow-definition/fixtures/evaluation-cases.json"), "utf8").then(JSON.parse),
-    readFile(join(sourceSkillDirectory, "tests/validation-mode/fixtures/validation-mode-cases.json"), "utf8").then(JSON.parse),
-  ]);
+  const evaluationCases = await readFile(join(sourceSkillDirectory, "tests/workflow-definition/fixtures/evaluation-cases.json"), "utf8").then(JSON.parse);
   const definitionPath = join(temporaryRoot, "definition.json");
   const statePath = join(temporaryRoot, "state.json");
   const cycleDefinitionPath = join(temporaryRoot, "cycle-definition.json");
@@ -261,31 +231,6 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
       return;
     }
     const installedResult = runProcess(process.execPath, [installedCli, ...command.argumentsList]);
-    assertMatchingCliResults(sourceResult, installedResult, command.exitCode);
-  }
-
-  const sourceValidationCli = join(sourceSkillDirectory, "scripts/validation-mode/cli.mjs");
-  const installedValidationCli = join(installedSkillDirectory, "scripts/validation-mode/cli.mjs");
-  const validationReceipts = makeValidationSessionReceipts(validationFixture);
-  const validationCommands = [
-    { input: JSON.stringify({ request: validationFixture.semantic_request, receipts: validationReceipts }), exitCode: 0 },
-    {
-      input: JSON.stringify({
-        request: validationFixture.semantic_request,
-        receipts: validationReceipts.map((receipt, index) => index === 9
-          ? { ...receipt, outcome: { ...receipt.outcome, recommendation: { direction: "feature_change" } } }
-          : receipt),
-      }),
-      exitCode: 1,
-    },
-  ];
-  for (const command of validationCommands) {
-    const sourceResult = runProcess(process.execPath, [sourceValidationCli], { input: command.input });
-    if (isNestedSpawnDenied(sourceResult)) {
-      t.skip("The current execution sandbox does not permit nested Node child processes.");
-      return;
-    }
-    const installedResult = runProcess(process.execPath, [installedValidationCli], { input: command.input });
     assertMatchingCliResults(sourceResult, installedResult, command.exitCode);
   }
 });

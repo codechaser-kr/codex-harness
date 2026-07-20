@@ -7,7 +7,6 @@ import { parseJsonFile } from "../../scripts/workflow-definition/parser.mjs";
 import { validateWorkflowDefinition } from "../../scripts/workflow-definition/validator.mjs";
 
 const definitionUrl = new URL("../../definitions/implementation.json", import.meta.url);
-const registryUrl = new URL("../../registries/registered-executors.json", import.meta.url);
 const statesUrl = new URL("./fixtures/implementation-states.json", import.meta.url);
 
 async function readJson(url) {
@@ -37,8 +36,8 @@ function hasError(result, code, path) {
   return result.errors.some((error) => error.code === code && error.path === path);
 }
 
-test("implementation definition preserves FI mapping, executor boundaries, and valid branching graph", async () => {
-  const [definition, registry, fixture] = await Promise.all([readJson(definitionUrl), readJson(registryUrl), readJson(statesUrl)]);
+test("implementation definition preserves FI mapping, direct executor references, and valid branching graph", async () => {
+  const [definition, fixture] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
 
   assert.deepEqual(
     [definition.workflow_id, definition.version, definition.workflow_kind, definition.target_type],
@@ -61,20 +60,15 @@ test("implementation definition preserves FI mapping, executor boundaries, and v
   }
 
   for (const [taskActionId, executorReference] of Object.entries(fixture.executor_references)) {
-    assert.equal(definition.transitions.find((transition) => transition.task_action_id === taskActionId)?.registered_executor_reference, executorReference);
+    assert.equal(definition.transitions.find((transition) => transition.task_action_id === taskActionId)?.executor_reference, executorReference);
   }
   for (const taskActionId of fixture.null_executor_actions) {
-    assert.equal(definition.transitions.find((transition) => transition.task_action_id === taskActionId)?.registered_executor_reference, null);
-  }
-  for (const executorId of new Set(Object.values(fixture.executor_references))) {
-    assert.equal(registry.filter((entry) => entry.executor_id === executorId).length, 1, executorId);
+    assert.equal(definition.transitions.find((transition) => transition.task_action_id === taskActionId)?.executor_reference, null);
   }
   assert.equal(definition.transitions.find((transition) => transition.task_action_id === "FI-6").user_decision_specification.required, true);
   assert.equal(definition.transitions.find((transition) => transition.task_action_id === "FI-27").user_decision_specification.required, true);
-  const commitExecutor = registry.find((entry) => entry.executor_id === "commit");
-  assert.deepEqual([commitExecutor.executor_kind, commitExecutor.side_effect_scope], ["skill", "proposal_output"]);
   for (const [taskActionId, executorReference] of [["FI-6", "commit"], ["FI-27", "commit"], ["FI-7", null], ["FI-28", null]]) {
-    assert.equal(definition.transitions.find((transition) => transition.task_action_id === taskActionId)?.registered_executor_reference, executorReference);
+    assert.equal(definition.transitions.find((transition) => transition.task_action_id === taskActionId)?.executor_reference, executorReference);
   }
   for (const transition of definition.transitions.filter((item) => item.user_decision_specification.required)) {
     assert.equal(transition.user_decision_specification.allow_free_form, true, transition.task_action_id);
@@ -114,10 +108,7 @@ test("implementation definition preserves FI mapping, executor boundaries, and v
     ["FI-17", "codex/awesome-code-review"],
   ]) {
     const transition = definition.transitions.find((item) => item.task_action_id === taskActionId);
-    const executor = registry.find((entry) => entry.executor_id === executorId);
-    assert.equal(transition.registered_executor_reference, executorId);
-    assert.deepEqual([executor.executor_kind, executor.side_effect_scope], ["review_mode", "review_output"]);
-    assert.equal(executor.executor_kind === "skill" && executor.side_effect_scope === "proposal_output", false);
+    assert.equal(transition.executor_reference, executorId);
     assert.deepEqual(transition.next_transition_rules, [{ condition: null, transition_id: "normalize-review-results" }]);
   }
 
@@ -141,7 +132,7 @@ test("implementation definition preserves FI mapping, executor boundaries, and v
     ],
   });
 
-  assert.equal(definition.transitions.find((transition) => transition.task_action_id === "FI-32").registered_executor_reference, null);
+  assert.equal(definition.transitions.find((transition) => transition.task_action_id === "FI-32").executor_reference, null);
   assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-33").next_transition_rules, [
     { condition: { fact_id: "remaining_feedback_status", operator: "equals", value: "unhandled_feedback_present" }, transition_id: "determine-feedback-direction" },
     { condition: { fact_id: "remaining_feedback_status", operator: "equals", value: "unresolved_thread_present" }, transition_id: "determine-feedback-resolution" },

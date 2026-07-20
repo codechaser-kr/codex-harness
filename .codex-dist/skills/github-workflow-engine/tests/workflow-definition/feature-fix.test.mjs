@@ -8,7 +8,6 @@ import { parseJsonFile } from "../../scripts/workflow-definition/parser.mjs";
 import { validateWorkflowDefinition } from "../../scripts/workflow-definition/validator.mjs";
 
 const definitionUrl = new URL("../../definitions/feature-fix.json", import.meta.url);
-const registryUrl = new URL("../../registries/registered-executors.json", import.meta.url);
 const schemaUrl = new URL("../../schemas/workflow-definition.schema.json", import.meta.url);
 const statesUrl = new URL("./fixtures/feature-fix-states.json", import.meta.url);
 
@@ -59,8 +58,8 @@ function hasError(result, code, path) {
   return result.errors.some((error) => error.code === code && error.path === path);
 }
 
-test("feature-fix definition has the exact identity, task IDs, evidence, and executor scopes", async () => {
-  const [definition, registry, states] = await Promise.all([readJson(definitionUrl), readJson(registryUrl), readJson(statesUrl)]);
+test("feature-fix definition has the exact identity, task IDs, evidence, and direct executor references", async () => {
+  const [definition, states] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
   const schema = JSON.parse(await readFile(schemaUrl, "utf8"));
 
   assert.equal(schema.$schema, "https://json-schema.org/draft/2020-12/schema");
@@ -83,19 +82,8 @@ test("feature-fix definition has the exact identity, task IDs, evidence, and exe
   }
   assert.deepEqual(definition.transitions.at(-1).next_transition_rules, []);
 
-  const expectedScopes = new Map([
-    ["issue-creation", "proposal_output"],
-    ["fix-analysis", "proposal_output"],
-    ["fix-plan", "proposal_output"],
-    ["github-simple-executor", "github_state_change"],
-  ]);
-  for (const [executorId, sideEffectScope] of expectedScopes) {
-    const matches = registry.filter((entry) => entry.executor_id === executorId);
-    assert.equal(matches.length, 1, executorId);
-    assert.equal(matches[0].side_effect_scope, sideEffectScope, executorId);
-  }
-  assert.equal(definition.transitions.find((item) => item.task_action_id === "FF-6").registered_executor_reference, null);
-  assert.equal(definition.transitions.find((item) => item.task_action_id === "FF-8").registered_executor_reference, null);
+  assert.equal(definition.transitions.find((item) => item.task_action_id === "FF-6").executor_reference, null);
+  assert.equal(definition.transitions.find((item) => item.task_action_id === "FF-8").executor_reference, null);
 
   const validation = validateWorkflowDefinition(definition);
   assert.equal(validation.valid, true, JSON.stringify(validation.errors));
@@ -119,7 +107,7 @@ test("feature-fix keeps common implementation as one handoff without branch, com
   assert.deepEqual(handoff.completion_predicate, {
     all: implementationFactIds.map((factId) => ({ fact_id: factId, operator: "equals", value: true })),
   });
-  assert.equal(handoff.registered_executor_reference, null);
+  assert.equal(handoff.executor_reference, null);
   assert.equal(definition.transitions.some((transition) => transition.task_action_id.startsWith("FI-")), false);
   assert.equal(definition.transitions.some((transition) => /branch|commit|pull-request|review/.test(transition.transition_id)), false);
 });
@@ -147,7 +135,7 @@ test("feature-fix representative states resolve to exactly one expected action o
     const result = evaluateWorkflowDefinition(definition, state);
     assert.equal(result.status, "action_required", name);
     assert.equal(result.task_action_id, taskActionId, name);
-    assert.equal(result.registered_executor_reference, executorReference, name);
+    assert.equal(result.executor_reference, executorReference, name);
     assert.deepEqual(state, stateBefore, name);
   }
   assert.deepEqual(
@@ -165,11 +153,11 @@ test("feature-fix cannot start fix-plan before usable, user-confirmed analysis",
     const result = evaluateWorkflowDefinition(definition, state);
     assert.equal(result.status, "action_required", factId);
     assert.equal(result.task_action_id, "FF-3", factId);
-    assert.equal(result.registered_executor_reference, "fix-analysis", factId);
+    assert.equal(result.executor_reference, "fix-analysis", factId);
   }
   const ready = evaluateWorkflowDefinition(definition, states.confirmed_analysis);
   assert.equal(ready.task_action_id, "FF-4");
-  assert.equal(ready.registered_executor_reference, "fix-plan");
+  assert.equal(ready.executor_reference, "fix-plan");
 });
 
 test("feature-fix cannot close the issue until all common implementation completion facts are true", async () => {
@@ -184,11 +172,11 @@ test("feature-fix cannot close the issue until all common implementation complet
     const result = evaluateWorkflowDefinition(definition, state);
     assert.equal(result.status, "action_required", factId);
     assert.equal(result.task_action_id, "FF-6", factId);
-    assert.equal(result.registered_executor_reference, null, factId);
+    assert.equal(result.executor_reference, null, factId);
   }
   const ready = evaluateWorkflowDefinition(definition, states.implementation_complete_waiting_for_issue_close);
   assert.equal(ready.task_action_id, "FF-7");
-  assert.equal(ready.registered_executor_reference, "github-simple-executor");
+  assert.equal(ready.executor_reference, "github-simple-executor");
 });
 
 test("feature-fix adapter accepts exact sources and returns copied facts in definition order", async () => {

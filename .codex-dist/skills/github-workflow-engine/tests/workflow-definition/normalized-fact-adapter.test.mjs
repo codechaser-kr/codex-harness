@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { normalizeFactCandidates } from "../../scripts/workflow-definition/normalized-fact-adapter.mjs";
 
-const registryUrl = new URL("../../registries/registered-executors.json", import.meta.url);
 
 function definition() {
   return {
@@ -167,21 +165,4 @@ test("rejects non-array candidates and evidence", () => {
   ]);
   assertAtomicFailure(evidenceResult, "invalid_fact_candidates");
   assert.equal(hasError(evidenceResult, "candidate.evidence.type", "/candidates/0/evidence"), true);
-});
-
-test("registers the five proposal executors exactly once", async () => {
-  const registry = JSON.parse(await readFile(registryUrl, "utf8"));
-  const executorIds = ["policy-plan", "policy-review-next-triage", "feature-plan", "fix-analysis", "fix-plan"];
-
-  for (const executorId of executorIds) {
-    const matches = registry.filter((entry) => entry.executor_id === executorId);
-    assert.deepEqual(matches, [{
-      executor_id: executorId,
-      executor_kind: "skill",
-      side_effect_scope: "proposal_output",
-      runtime_reference: executorId,
-      execution_class: "llm_session",
-      validation_strategy: "semantic_consensus",
-    }]);
-  }
 });

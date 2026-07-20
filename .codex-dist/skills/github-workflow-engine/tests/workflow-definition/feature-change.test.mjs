@@ -8,7 +8,6 @@ import { parseJsonFile } from "../../scripts/workflow-definition/parser.mjs";
 import { validateWorkflowDefinition } from "../../scripts/workflow-definition/validator.mjs";
 
 const definitionUrl = new URL("../../definitions/feature-change.json", import.meta.url);
-const registryUrl = new URL("../../registries/registered-executors.json", import.meta.url);
 const schemaUrl = new URL("../../schemas/workflow-definition.schema.json", import.meta.url);
 const statesUrl = new URL("./fixtures/feature-change-states.json", import.meta.url);
 
@@ -59,8 +58,8 @@ function hasError(result, code, path) {
   return result.errors.some((error) => error.code === code && error.path === path);
 }
 
-test("feature-change definition passes C2/C3 validation and uses fixed executor scopes", async () => {
-  const [definition, registry, states] = await Promise.all([readJson(definitionUrl), readJson(registryUrl), readJson(statesUrl)]);
+test("feature-change definition passes C2/C3 validation with direct executor references", async () => {
+  const [definition, states] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
   const schema = JSON.parse(await readFile(schemaUrl, "utf8"));
 
   assert.equal(schema.$schema, "https://json-schema.org/draft/2020-12/schema");
@@ -83,18 +82,8 @@ test("feature-change definition passes C2/C3 validation and uses fixed executor 
   }
   assert.deepEqual(definition.transitions.at(-1).next_transition_rules, []);
 
-  const expectedScopes = new Map([
-    ["issue-creation", "proposal_output"],
-    ["feature-plan", "proposal_output"],
-    ["github-simple-executor", "github_state_change"],
-  ]);
-  for (const [executorId, sideEffectScope] of expectedScopes) {
-    const matches = registry.filter((entry) => entry.executor_id === executorId);
-    assert.equal(matches.length, 1, executorId);
-    assert.equal(matches[0].side_effect_scope, sideEffectScope, executorId);
-  }
-  assert.equal(definition.transitions.find((item) => item.task_action_id === "FC-5").registered_executor_reference, null);
-  assert.equal(definition.transitions.find((item) => item.task_action_id === "FC-7").registered_executor_reference, null);
+  assert.equal(definition.transitions.find((item) => item.task_action_id === "FC-5").executor_reference, null);
+  assert.equal(definition.transitions.find((item) => item.task_action_id === "FC-7").executor_reference, null);
 
   const validation = validateWorkflowDefinition(definition);
   assert.equal(validation.valid, true, JSON.stringify(validation.errors));
@@ -118,7 +107,7 @@ test("feature-change keeps common implementation as a handoff without copying br
   assert.deepEqual(handoff.completion_predicate, {
     all: implementationFactIds.map((factId) => ({ fact_id: factId, operator: "equals", value: true })),
   });
-  assert.equal(handoff.registered_executor_reference, null);
+  assert.equal(handoff.executor_reference, null);
   assert.equal(definition.transitions.some((transition) => transition.task_action_id.startsWith("FI-")), false);
   assert.equal(definition.transitions.some((transition) => /branch|commit|pull-request|review/.test(transition.transition_id)), false);
 });
@@ -145,7 +134,7 @@ test("feature-change representative entry states resolve to exactly one expected
     const result = evaluateWorkflowDefinition(definition, state);
     assert.equal(result.status, "action_required", name);
     assert.equal(result.task_action_id, taskActionId, name);
-    assert.equal(result.registered_executor_reference, executorReference, name);
+    assert.equal(result.executor_reference, executorReference, name);
     assert.deepEqual(state, stateBefore, name);
   }
   assert.deepEqual(

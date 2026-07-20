@@ -445,7 +445,7 @@
         "task_action_id",
         "user_decision_specification",
         "completion_predicate",
-        "registered_executor_reference",
+        "executor_reference",
         "next_transition_rules"
       ],
       "properties": {
@@ -465,7 +465,7 @@
         "completion_predicate": {
           "$ref": "#/$defs/expression"
         },
-        "registered_executor_reference": {
+        "executor_reference": {
           "$ref": "#/$defs/nullableStableId"
         },
         "next_transition_rules": {

@@ -37,18 +37,18 @@ PR merge는 사람이 수행한다. Workflow Engine은 merge 알림이나 GitHub
 정확히 한 번 적용하는 단일 경로만 사용한다. runtime에서 evaluator 호출 전에
 `validateWorkflowDefinition`을 중복 호출하지 않는다.
 
-최초 진입이 명확히 관측된 경우에만 `definition.entry_transition_id`를 `evaluateWorkflowDefinition`의
-`currentTransitionId`로 전달한다. 재개와 다음 반복에서는 이전 evaluation이 반환한 단일
-`transition_id`를 current transition id로 확정·기록하고, 해당 작업 완료 뒤 그 ID를
-`currentTransitionId`로 다시 전달해 Definition의 `next_transition_rules`가 다음 분기·반복을 결정하게
-한다. 다음 evaluation 결과의 단일 `transition_id`가 기록을 갱신한다.
+최초 진입이 명확히 관측된 경우에만 `definition.entry_task_action_id`를
+`evaluateWorkflowDefinition`의 `currentTaskActionId`로 전달한다. 재개와 다음 반복에서는 이전
+evaluation이 반환한 단일 `task_action_id`를 현재 작업 ID로 확정·기록하고, 해당 작업 완료 뒤 같은
+ID를 `currentTaskActionId`로 다시 전달한다. Definition의 `next_transition_rules`가 다음 분기·반복을
+결정하고 다음 evaluation의 단일 `task_action_id`가 기록을 갱신한다.
 
-재개할 current transition id가 없거나 Definition에 존재하지 않거나 현재 normalized fact 조건과
-불일치하면 entry를 추정하거나 자연어 전이로 fallback하지 않고 구조화 중단한다. current transition
-id는 LLM이 임의로 추론하지 않으며 `task_action_id`와 혼용하지 않는다.
+재개할 current task action ID가 없거나 Definition에 존재하지 않거나 현재 normalized fact 조건과
+불일치하면 entry를 추정하거나 자연어 전이로 fallback하지 않고 구조화 중단한다. 작업 ID는 LLM이
+임의로 추론하지 않는다.
 
 evaluator의 `action_required`는 Definition이 반환한 단일 현재 작업의 `task_action_id`,
-`user_decision_specification`, `executor_reference`, `completion_predicate`를 기존 상태 판정,
+`user_decision_options`, `executor_reference`, `completion_predicate`를 기존 상태 판정,
 사용자 결정, 구조화 실행 절차에 연결한다. `completed`는 완료로, adapter·Definition validation 또는
 evaluation의 `stopped`와 오류는 구조화 중단으로 연결한다. 실패를 자연어 구현 전이로 fallback하지
 않고, 일반 실행에서 자연어 전이표와 Definition을 이중 실행하거나 결과를 비교하지 않는다.

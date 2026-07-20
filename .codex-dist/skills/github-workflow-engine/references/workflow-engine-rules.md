@@ -14,8 +14,8 @@
 
 - 일반 실행의 공통 구현 흐름은 `definitions/implementation.json`과 `scripts/workflow-definition/implementation-state-adapter.mjs`를 선택한다.
 - adapter의 evidence/source contract로 관측을 정확히 한 번 정규화한 뒤, 내부 validation을 수행하는 evaluator를 같은 `normalized_fact_state`에 정확히 한 번 호출한다. runtime에서 validator와 evaluator를 연속 호출하지 않는다.
-- 최초 진입이 명확히 관측된 경우에만 `entry_transition_id`를 evaluator의 `currentTransitionId`로 사용한다. 재개와 다음 반복에서는 이전 evaluation의 단일 `transition_id`를 current transition id로 확정·기록하고, 해당 작업 완료 뒤 같은 ID에서 Definition의 `next_transition_rules`를 평가해 다음 분기·반복으로 진행하며 다음 evaluation의 단일 `transition_id`로 기록을 갱신한다.
-- 재개할 current transition id가 없거나 Definition에 존재하지 않거나 현재 normalized fact 조건과 불일치하면 entry 추정 없이 구조화 중단한다. current transition id를 LLM이 임의 추론하거나 `task_action_id`와 혼용하지 않는다.
+- 최초 진입이 명확히 관측된 경우에만 `entry_task_action_id`를 evaluator의 `currentTaskActionId`로 사용한다. 재개와 다음 반복에서는 이전 evaluation의 단일 `task_action_id`를 현재 작업 ID로 확정·기록하고, 해당 작업 완료 뒤 같은 ID에서 Definition의 `next_transition_rules`를 평가해 다음 분기·반복으로 진행하며 다음 evaluation의 단일 `task_action_id`로 기록을 갱신한다.
+- 재개할 current task action ID가 없거나 Definition에 존재하지 않거나 현재 normalized fact 조건과 불일치하면 entry 추정 없이 구조화 중단한다. current task action ID를 LLM이 임의 추론하지 않는다.
 - adapter 또는 Definition validation이 실패하거나 evaluator가 `stopped`를 반환하면 구조화 중단한다. 자연어 구현 전이 fallback, 자연어 전이표와 Definition의 이중 실행·비교, 관측되지 않은 fact 추론은 허용하지 않는다.
 - evaluator의 `action_required`가 반환한 단일 현재 작업만 기존 현재 작업 산출, 사용자 결정, 실행 주체 선택, 구조화 실행 요청·결과 판정에 연결한다. `completed`는 공통 구현 흐름 완료로 연결한다.
 - 이 규칙은 명시적 검증 모드와 분리되며 기능제안·정책검토·기능변경·기능결함의 기존 Workflow Definition 선택 경로를 변경하지 않는다.

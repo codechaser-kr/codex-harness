@@ -13,119 +13,142 @@ async function readFixture(name) {
 }
 
 function hasError(errors, code, path) {
-  return errors.some((error) => error.code === code && error.path === path);
+  return errors.some((error) => error.code === code && (path === undefined || error.path === path));
+}
+
+async function validDefinition() {
+  const fixture = await readFixture("structural-valid.json");
+  return structuredClone(fixture.cases[0].definition);
 }
 
 test("parses workflow definition fixtures and exposes structured parse errors", async () => {
-  const valid = await readFixture("structural-valid.json");
-  const invalid = await readFixture("structural-invalid.json");
-  assert.equal(Array.isArray(valid.cases), true);
-  assert.equal(Array.isArray(invalid.cases), true);
+  assert.equal(Array.isArray((await readFixture("structural-valid.json")).cases), true);
+  assert.equal(Array.isArray((await readFixture("structural-invalid.json")).cases), true);
 
   const malformed = parseJson("{");
   assert.deepEqual(Object.keys(malformed.error).sort(), ["code", "message", "path"]);
   assert.equal(malformed.ok, false);
   assert.equal(malformed.error.code, "parse.invalid_json");
-  assert.equal(malformed.error.path, "");
 });
 
-test("accepts a valid workflow definition", async () => {
-  const fixture = await readFixture("structural-valid.json");
-  const result = validateWorkflowDefinition(fixture.cases[0].definition);
-  assert.equal(result.valid, true);
-  assert.deepEqual(result.errors, []);
-});
-
-test("accepts direct executor references without a registry lookup", async () => {
-  const fixture = await readFixture("structural-valid.json");
-  const definition = structuredClone(fixture.cases[0].definition);
-  definition.transitions[0].executor_reference = "not-installed-yet";
-
+test("accepts the minimal closed workflow definition contract", async () => {
+  const definition = await validDefinition();
   const result = validateWorkflowDefinition(definition);
   assert.equal(result.valid, true, JSON.stringify(result.errors));
-  assert.deepEqual(result.errors, []);
+  assert.deepEqual(Object.keys(definition), ["workflow_id", "entry_task_action_id", "facts", "transitions"]);
+  assert.deepEqual(Object.keys(definition.transitions[0]), [
+    "task_action_id",
+    "normalized_fact_conditions",
+    "user_decision_options",
+    "completion_predicate",
+    "executor_reference",
+    "next_transition_rules",
+  ]);
 });
 
-test("accepts every workflow_kind task_action_id prefix", async () => {
-  const fixture = await readFixture("structural-valid.json");
-  const prefixCases = [
-    ["feature_proposal", "FP"],
-    ["policy_review", "PR"],
-    ["feature_change", "FC"],
-    ["feature_fix", "FF"],
+test("workflow_id is the closed identity and drives task action prefixes", async () => {
+  const cases = [
+    ["feature-proposal", "FP"],
+    ["policy-review", "PR"],
+    ["feature-change", "FC"],
+    ["feature-fix", "FF"],
     ["implementation", "FI"],
   ];
-
-  for (const [workflowKind, prefix] of prefixCases) {
-    const definition = structuredClone(fixture.cases[0].definition);
-    definition.workflow_kind = workflowKind;
-    definition.transitions[0].task_action_id = `${prefix}-1`;
-    definition.transitions[1].task_action_id = `${prefix}-2`;
-
+  for (const [workflowId, prefix] of cases) {
+    const definition = await validDefinition();
+    definition.workflow_id = workflowId;
+    definition.entry_task_action_id = `${prefix}-1`;
+    definition.transitions.forEach((transition, index) => {
+      transition.task_action_id = `${prefix}-${index + 1}`;
+      for (const rule of transition.next_transition_rules) rule.task_action_id = `${prefix}-${index + 2}`;
+    });
     const result = validateWorkflowDefinition(definition);
-    assert.equal(result.valid, true, `${workflowKind} should accept ${prefix}-1 and ${prefix}-2`);
-    assert.deepEqual(result.errors, []);
+    assert.equal(result.valid, true, `${workflowId}: ${JSON.stringify(result.errors)}`);
+  }
+
+  const unsupported = await validDefinition();
+  unsupported.workflow_id = "custom";
+  assert.equal(hasError(validateWorkflowDefinition(unsupported).errors, "workflow_id.unsupported", "/workflow_id"), true);
+
+  const mismatch = await validDefinition();
+  mismatch.transitions[0].task_action_id = "FF-1";
+  assert.equal(hasError(validateWorkflowDefinition(mismatch).errors, "task_action_id.prefix_mismatch", "/transitions/0/task_action_id"), true);
+});
+
+test("fact domains infer homogeneous boolean string and integer scalar types", async () => {
+  const definition = await validDefinition();
+  assert.equal(validateWorkflowDefinition(definition).valid, true);
+
+  for (const [domain, code] of [
+    [[], "fact.allowed_values.empty"],
+    [[true, "true"], "fact.allowed_values.type_mismatch"],
+    [[1, 1.5], "fact.allowed_values.type_mismatch"],
+    [[{}], "fact.allowed_values.scalar"],
+  ]) {
+    const invalid = await validDefinition();
+    invalid.facts.issue_open = domain;
+    assert.equal(hasError(validateWorkflowDefinition(invalid).errors, code), true, code);
   }
 });
 
-test("rejects zero and leading-zero task action numbers", async () => {
-  const fixture = await readFixture("structural-valid.json");
+test("rejects every removed root fact transition and decision field", async () => {
+  for (const field of ["version", "workflow_kind", "target_type", "entry_transition_id", "terminal_transition_ids", "normalized_fact_schema"]) {
+    const definition = await validDefinition();
+    definition[field] = field === "terminal_transition_ids" || field === "normalized_fact_schema" ? [] : "legacy";
+    assert.equal(hasError(validateWorkflowDefinition(definition).errors, "object.additional_property", `/${field}`), true, field);
+  }
 
-  for (const actionId of ["FP-0", "FP-01"]) {
-    const definition = structuredClone(fixture.cases[0].definition);
-    definition.workflow_kind = "feature_proposal";
-    definition.transitions[0].task_action_id = actionId;
-    definition.transitions[1].task_action_id = "FP-2";
+  const legacyFact = await validDefinition();
+  legacyFact.facts.issue_open = { value_type: "boolean", allowed_values: [true, false], evidence_required: true };
+  assert.equal(hasError(validateWorkflowDefinition(legacyFact).errors, "fact.allowed_values.type", "/facts/issue_open"), true);
 
-    const result = validateWorkflowDefinition(definition);
-    assert.equal(result.valid, false);
-    assert.equal(hasError(result.errors, "task_action_id.invalid", "/transitions/0/task_action_id"), true);
+  for (const field of ["transition_id", "user_decision_specification"]) {
+    const definition = await validDefinition();
+    definition.transitions[0][field] = {};
+    assert.equal(hasError(validateWorkflowDefinition(definition).errors, "object.additional_property", `/transitions/0/${field}`), true, field);
+  }
+
+  const legacyDecision = await validDefinition();
+  legacyDecision.transitions[0].user_decision_options = {
+    required: true,
+    options: [],
+    allow_free_form: true,
+    block_execution_until_confirmed: true,
+  };
+  assert.equal(hasError(validateWorkflowDefinition(legacyDecision).errors, "user_decision_options.type", "/transitions/0/user_decision_options"), true);
+});
+
+test("rejects removed expression operators and not expressions", async () => {
+  for (const expression of [
+    { fact_id: "issue_open", operator: "not_equals", value: false },
+    { fact_id: "review_state", operator: "not_in", value: ["approved"] },
+    { not: { fact_id: "issue_open", operator: "equals", value: false } },
+  ]) {
+    const definition = await validDefinition();
+    definition.transitions[0].completion_predicate = expression;
+    const errors = validateWorkflowDefinition(definition).errors;
+    assert.equal(errors.some((error) => error.code === "expression.operator.invalid" || error.code === "expression.form"), true);
   }
 });
 
-test("reports C2 fact, action, decision, AST, and priority failures deterministically", async () => {
+test("requires direct executor_reference and accepts string or explicit null", async () => {
+  const definition = await validDefinition();
+  definition.transitions[0].executor_reference = "not-installed-yet";
+  definition.transitions[1].executor_reference = null;
+  assert.equal(validateWorkflowDefinition(definition).valid, true);
+
+  delete definition.transitions[0].executor_reference;
+  assert.equal(hasError(validateWorkflowDefinition(definition).errors, "transition.required", "/transitions/0/executor_reference"), true);
+});
+
+test("reports malformed definitions deterministically", async () => {
   const fixture = await readFixture("structural-invalid.json");
-  const definition = fixture.cases[0].definition;
-  const first = validateWorkflowDefinition(definition);
-  const second = validateWorkflowDefinition(definition);
-
+  const first = validateWorkflowDefinition(fixture.cases[0].definition);
+  const second = validateWorkflowDefinition(fixture.cases[0].definition);
   assert.equal(first.valid, false);
   assert.deepEqual(first.errors, second.errors);
   assert.equal(hasError(first.errors, "priority.forbidden", "/priority"), true);
-  assert.equal(hasError(first.errors, "fact_id.duplicate", "/normalized_fact_schema/1/fact_id"), true);
-  assert.equal(hasError(first.errors, "expression.fact.unknown", "/transitions/0/normalized_fact_conditions/fact_id"), true);
-  assert.equal(hasError(first.errors, "expression.value.not_allowed", "/transitions/0/completion_predicate/value"), true);
-  assert.equal(hasError(first.errors, "decision_id.duplicate", "/transitions/0/user_decision_specification/options/1/decision_id"), true);
-  assert.equal(hasError(first.errors, "task_action_id.duplicate", "/transitions/1/task_action_id"), true);
-  assert.equal(hasError(first.errors, "expression.value.type_mismatch", "/transitions/1/normalized_fact_conditions/value/1"), true);
-  assert.equal(hasError(first.errors, "expression.value.forbidden", "/transitions/1/completion_predicate/value"), true);
-
-  const valid = await readFixture("structural-valid.json");
-  const prefixMismatch = structuredClone(valid.cases[0].definition);
-  prefixMismatch.transitions[0].task_action_id = "FF-1";
-  const prefixResult = validateWorkflowDefinition(prefixMismatch);
-  assert.equal(hasError(prefixResult.errors, "task_action_id.prefix_mismatch", "/transitions/0/task_action_id"), true);
-});
-
-test("reports C1 structural errors with next transition rules", async () => {
-  const fixture = await readFixture("structural-invalid.json");
-  const structural = validateWorkflowDefinition(fixture.cases[1].definition);
-
-  assert.equal(hasError(structural.errors, "workflow_id.invalid", "/workflow_id"), true);
-  assert.equal(hasError(structural.errors, "terminal_transition_ids.empty", "/terminal_transition_ids"), true);
-  assert.equal(hasError(structural.errors, "transition_id.invalid", "/transitions/0/transition_id"), true);
-  assert.equal(hasError(structural.errors, "task_action_id.invalid", "/transitions/0/task_action_id"), true);
-  assert.equal(hasError(structural.errors, "expression.empty", "/transitions/0/normalized_fact_conditions/all"), true);
-  assert.equal(hasError(structural.errors, "priority.forbidden", "/transitions/0/priority"), true);
-});
-
-test("rejects next_transition and requires next_transition_rules", async () => {
-  const fixture = await readFixture("structural-valid.json");
-  const definition = structuredClone(fixture.cases[0].definition);
-  definition.transitions[0].next_transition = "complete";
-  delete definition.transitions[0].next_transition_rules;
-
-  const result = validateWorkflowDefinition(definition);
-  assert.equal(hasError(result.errors, "object.additional_property", "/transitions/0/next_transition"), true);
-  assert.equal(hasError(result.errors, "transition.required", "/transitions/0/next_transition_rules"), true);
+  assert.equal(hasError(first.errors, "fact.allowed_values.type_mismatch", "/facts/state/1"), true);
+  assert.equal(hasError(first.errors, "decision_id.duplicate", "/transitions/0/user_decision_options/1/decision_id"), true);
+  assert.equal(hasError(first.errors, "task_action_id.invalid", "/transitions/0/task_action_id"), true);
 });

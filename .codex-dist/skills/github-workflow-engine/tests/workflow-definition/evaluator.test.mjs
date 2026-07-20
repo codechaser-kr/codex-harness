@@ -48,7 +48,7 @@ test("evaluation fixtures are valid C2/C3 definitions", async () => {
   }
 });
 
-test("returns action_required from the entry transition and does not mutate inputs", async () => {
+test("returns action_required from the entry task action and does not mutate inputs", async () => {
   const fixture = await readCases();
   const definition = structuredClone(fixture.definitions.entry_action_required);
   const state = structuredClone(fixture.states.ready);
@@ -59,8 +59,8 @@ test("returns action_required from the entry transition and does not mutate inpu
   const second = evaluateWorkflowDefinition(definition, state);
 
   assert.equal(first.status, "action_required");
-  assert.equal(first.transition_id, "start");
   assert.equal(first.task_action_id, "FI-1");
+  assert.equal(Object.hasOwn(first, "transition_id"), false);
   assert.deepEqual(first, second);
   assert.deepEqual(definition, definitionBefore);
   assert.deepEqual(state, stateBefore);
@@ -72,35 +72,37 @@ test("selects exactly one true or false conditional next action", async () => {
 
   const review = evaluateWorkflowDefinition(definition, fixture.states.review_needed);
   assert.equal(review.status, "action_required");
-  assert.equal(review.transition_id, "review");
   assert.equal(review.task_action_id, "FI-2");
 
   const complete = evaluateWorkflowDefinition(definition, fixture.states.complete_needed);
   assert.equal(complete.status, "action_required");
-  assert.equal(complete.transition_id, "complete");
   assert.equal(complete.task_action_id, "FI-3");
 });
 
-test("completes terminal transitions and stops when the current condition is not met", async () => {
+test("completes terminal actions and resumes only by task_action_id", async () => {
   const fixture = await readCases();
 
   const completed = evaluateWorkflowDefinition(fixture.definitions.terminal_completed, fixture.states.done);
-  assert.deepEqual(completed, { status: "completed", transition_id: "complete" });
+  assert.deepEqual(completed, { status: "completed", task_action_id: "FI-1" });
 
   const incompleteTerminal = structuredClone(fixture.definitions.terminal_completed);
-  incompleteTerminal.normalized_fact_schema[0].allowed_values = [true, false];
+  incompleteTerminal.facts.done = [true, false];
   incompleteTerminal.transitions[0].normalized_fact_conditions = {
     fact_id: "done",
     operator: "exists"
   };
   const actionRequired = evaluateWorkflowDefinition(incompleteTerminal, { done: false });
   assert.equal(actionRequired.status, "action_required");
-  assert.equal(actionRequired.transition_id, "complete");
+  assert.equal(actionRequired.task_action_id, "FI-1");
 
-  const conditionNotMet = evaluateWorkflowDefinition(fixture.definitions.entry_action_required, fixture.states.not_ready);
+  const conditionNotMet = evaluateWorkflowDefinition(
+    fixture.definitions.entry_action_required,
+    fixture.states.not_ready,
+    { currentTaskActionId: "FI-1" },
+  );
   assert.equal(conditionNotMet.status, "stopped");
-  assert.equal(conditionNotMet.reason, "current_transition_condition_not_met");
-  assert.equal(conditionNotMet.transition_id, "start");
+  assert.equal(conditionNotMet.reason, "current_task_action_condition_not_met");
+  assert.equal(conditionNotMet.task_action_id, "FI-1");
 });
 
 test("rejects an unsatisfiable terminal completion predicate before action_required", async () => {
@@ -109,10 +111,11 @@ test("rejects an unsatisfiable terminal completion predicate before action_requi
   assert.equal(satisfiable.valid, true);
 
   const definition = structuredClone(fixture.definitions.terminal_completed);
+  definition.facts.done = [true, false];
   definition.transitions[0].completion_predicate = {
     all: [
       { fact_id: "done", operator: "equals", value: true },
-      { not: { fact_id: "done", operator: "equals", value: true } },
+      { fact_id: "done", operator: "equals", value: false },
     ],
   };
 
@@ -128,12 +131,12 @@ test("defends against zero and multiple matches caused by missing facts", async 
   const zeroMatch = evaluateWorkflowDefinition(fixture.definitions.missing_zero_match, fixture.states.missing);
   assert.equal(zeroMatch.status, "stopped");
   assert.equal(zeroMatch.reason, "no_transition_match");
-  assert.equal(zeroMatch.transition_id, "check");
+  assert.equal(zeroMatch.task_action_id, "FI-1");
 
   const multipleMatch = evaluateWorkflowDefinition(fixture.definitions.missing_multiple_match, fixture.states.missing);
   assert.equal(multipleMatch.status, "stopped");
   assert.equal(multipleMatch.reason, "multiple_transition_matches");
-  assert.equal(multipleMatch.transition_id, "check");
+  assert.equal(multipleMatch.task_action_id, "FI-1");
 });
 
 test("detects fixed-state cycles and returns structured definition and state errors", async () => {
@@ -141,7 +144,7 @@ test("detects fixed-state cycles and returns structured definition and state err
   const cycle = evaluateWorkflowDefinition(fixture.definitions.fixed_state_cycle, fixture.states.cycle);
   assert.equal(cycle.status, "stopped");
   assert.equal(cycle.reason, "evaluation_cycle");
-  assert.equal(cycle.transition_id, "loop");
+  assert.equal(cycle.task_action_id, "FI-2");
 
   const invalidDefinition = structuredClone(fixture.definitions.entry_action_required);
   invalidDefinition.transitions[0].task_action_id = "FI-0";
@@ -194,7 +197,7 @@ test("CLI returns JSON-serializable results and specified exit codes", async (t)
   const emptyValueArguments = [
     ["validate", "--definition", ""],
     ["evaluate", "--definition", definitionPath, "--state", ""],
-    ["evaluate", "--definition", definitionPath, "--state", statePath, "--current-transition-id", ""],
+    ["evaluate", "--definition", definitionPath, "--state", statePath, "--current-task-action-id", ""],
   ];
   for (const argumentsList of emptyValueArguments) {
     const response = await runWorkflowDefinitionCli(argumentsList);
@@ -217,7 +220,7 @@ test("CLI returns JSON-serializable results and specified exit codes", async (t)
     const evaluateProcess = runCliProcess(["evaluate", "--definition", definitionPath, "--state", statePath]);
     assert.equal(evaluateProcess.error, undefined, evaluateProcess.error?.message);
     assert.equal(evaluateProcess.status, 0);
-    assert.deepEqual(parseSingleJsonLine(evaluateProcess), { status: "completed", transition_id: "complete" });
+    assert.deepEqual(parseSingleJsonLine(evaluateProcess), { status: "completed", task_action_id: "FI-1" });
 
     await writeFile(statePath, JSON.stringify(fixture.states.cycle));
     const stoppedProcess = runCliProcess(["evaluate", "--definition", cyclePath, "--state", statePath]);

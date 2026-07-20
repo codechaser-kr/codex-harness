@@ -1,92 +1,1475 @@
 {
   "workflow_id": "implementation",
-  "version": "1.0.0",
-  "workflow_kind": "implementation",
-  "target_type": "repository",
-  "entry_transition_id": "propose-branch",
-  "terminal_transition_ids": ["complete-implementation"],
-  "normalized_fact_schema": [
-    { "fact_id": "implementation_requested", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "branch_proposal_usable", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "branch_proposal_confirmed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "implementation_branch_switched", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "implementation_plan_usable", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "implementation_plan_confirmed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "implementation_plan_reflected", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "implementation_work_unit_phase", "value_type": "string", "allowed_values": ["work_pending", "file_changes_verified", "commit_message_confirmed", "commit_created", "all_work_units_completed"], "evidence_required": true },
-    { "fact_id": "implementation_commit_message_proposal_usable", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "implementation_commit_message_confirmed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "implementation_commit_created", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "implementation_branch_pushed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "pull_request_draft_usable", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "pull_request_draft_confirmed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "pull_request_creation_requested", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "pull_request_created", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "review_mode", "value_type": "string", "allowed_values": ["claude_code_review", "claude_awesome_code_review", "codex_awesome_code_review"], "evidence_required": true },
-    { "fact_id": "review_mode_checked", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "claude_code_review_completed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "claude_awesome_code_review_completed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "codex_awesome_code_review_completed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "review_feedback_importance", "value_type": "string", "allowed_values": ["no_publishable_feedback", "publishable_feedback"], "evidence_required": true },
-    { "fact_id": "inline_review_thread_drafts_usable", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "review_comment_location_status", "value_type": "string", "allowed_values": ["location_deferred", "no_location_deferred"], "evidence_required": true },
-    { "fact_id": "review_comment_posting_direction", "value_type": "string", "allowed_values": ["reassign_review_thread_location", "reclassify_non_actionable_feedback"], "evidence_required": true },
-    { "fact_id": "review_comment_posting_direction_reflected", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "remaining_review_comment_location_status", "value_type": "string", "allowed_values": ["location_deferred", "no_location_deferred"], "evidence_required": true },
-    { "fact_id": "inline_review_threads_posted", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "github_review_threads_observed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "review_feedback_inventory", "value_type": "string", "allowed_values": ["actionable_feedback_present", "no_actionable_feedback"], "evidence_required": true },
-    { "fact_id": "review_feedback_direction", "value_type": "string", "allowed_values": ["accept_and_fix", "reject", "other_requires_file_change", "other_without_file_change"], "evidence_required": true },
-    { "fact_id": "review_feedback_fixed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "feedback_commit_message_proposal_usable", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "feedback_commit_message_confirmed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "feedback_commit_created", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "feedback_branch_pushed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "selected_review_thread_reply_posted", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "feedback_resolution", "value_type": "string", "allowed_values": ["resolved", "unresolved"], "evidence_required": true },
-    { "fact_id": "feedback_resolution_reflected", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "remaining_feedback_status", "value_type": "string", "allowed_values": ["unhandled_feedback_present", "unresolved_thread_present", "all_resolved"], "evidence_required": true },
-    { "fact_id": "pull_request_merge_decision", "value_type": "string", "allowed_values": ["merge_confirmed", "merge_deferred"], "evidence_required": true },
-    { "fact_id": "pull_request_merged", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "post_merge_reflection_completed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true },
-    { "fact_id": "implementation_completed", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true }
-  ],
+  "entry_task_action_id": "FI-1",
+  "facts": {
+    "implementation_requested": [
+      true,
+      false
+    ],
+    "branch_proposal_usable": [
+      true,
+      false
+    ],
+    "branch_proposal_confirmed": [
+      true,
+      false
+    ],
+    "implementation_branch_switched": [
+      true,
+      false
+    ],
+    "implementation_plan_usable": [
+      true,
+      false
+    ],
+    "implementation_plan_confirmed": [
+      true,
+      false
+    ],
+    "implementation_plan_reflected": [
+      true,
+      false
+    ],
+    "implementation_work_unit_phase": [
+      "work_pending",
+      "file_changes_verified",
+      "commit_message_confirmed",
+      "commit_created",
+      "all_work_units_completed"
+    ],
+    "implementation_commit_message_proposal_usable": [
+      true,
+      false
+    ],
+    "implementation_commit_message_confirmed": [
+      true,
+      false
+    ],
+    "implementation_commit_created": [
+      true,
+      false
+    ],
+    "implementation_branch_pushed": [
+      true,
+      false
+    ],
+    "pull_request_draft_usable": [
+      true,
+      false
+    ],
+    "pull_request_draft_confirmed": [
+      true,
+      false
+    ],
+    "pull_request_creation_requested": [
+      true,
+      false
+    ],
+    "pull_request_created": [
+      true,
+      false
+    ],
+    "review_mode": [
+      "claude_code_review",
+      "claude_awesome_code_review",
+      "codex_awesome_code_review"
+    ],
+    "review_mode_checked": [
+      true,
+      false
+    ],
+    "claude_code_review_completed": [
+      true,
+      false
+    ],
+    "claude_awesome_code_review_completed": [
+      true,
+      false
+    ],
+    "codex_awesome_code_review_completed": [
+      true,
+      false
+    ],
+    "review_feedback_importance": [
+      "no_publishable_feedback",
+      "publishable_feedback"
+    ],
+    "inline_review_thread_drafts_usable": [
+      true,
+      false
+    ],
+    "review_comment_location_status": [
+      "location_deferred",
+      "no_location_deferred"
+    ],
+    "review_comment_posting_direction": [
+      "reassign_review_thread_location",
+      "reclassify_non_actionable_feedback"
+    ],
+    "review_comment_posting_direction_reflected": [
+      true,
+      false
+    ],
+    "remaining_review_comment_location_status": [
+      "location_deferred",
+      "no_location_deferred"
+    ],
+    "inline_review_threads_posted": [
+      true,
+      false
+    ],
+    "github_review_threads_observed": [
+      true,
+      false
+    ],
+    "review_feedback_inventory": [
+      "actionable_feedback_present",
+      "no_actionable_feedback"
+    ],
+    "review_feedback_direction": [
+      "accept_and_fix",
+      "reject",
+      "other_requires_file_change",
+      "other_without_file_change"
+    ],
+    "review_feedback_fixed": [
+      true,
+      false
+    ],
+    "feedback_commit_message_proposal_usable": [
+      true,
+      false
+    ],
+    "feedback_commit_message_confirmed": [
+      true,
+      false
+    ],
+    "feedback_commit_created": [
+      true,
+      false
+    ],
+    "feedback_branch_pushed": [
+      true,
+      false
+    ],
+    "selected_review_thread_reply_posted": [
+      true,
+      false
+    ],
+    "feedback_resolution": [
+      "resolved",
+      "unresolved"
+    ],
+    "feedback_resolution_reflected": [
+      true,
+      false
+    ],
+    "remaining_feedback_status": [
+      "unhandled_feedback_present",
+      "unresolved_thread_present",
+      "all_resolved"
+    ],
+    "pull_request_merge_decision": [
+      "merge_confirmed",
+      "merge_deferred"
+    ],
+    "pull_request_merged": [
+      true,
+      false
+    ],
+    "post_merge_reflection_completed": [
+      true,
+      false
+    ],
+    "implementation_completed": [
+      true,
+      false
+    ]
+  },
   "transitions": [
-    { "transition_id": "propose-branch", "normalized_fact_conditions": { "fact_id": "implementation_requested", "operator": "equals", "value": true }, "task_action_id": "FI-1", "user_decision_specification": { "required": true, "options": [{ "decision_id": "confirm_branch_proposal", "label": "브랜치 제안 확정" }, { "decision_id": "revise_branch_proposal", "label": "브랜치 제안 수정" }], "allow_free_form": true, "block_execution_until_confirmed": true }, "completion_predicate": { "all": [{ "fact_id": "branch_proposal_usable", "operator": "equals", "value": true }, { "fact_id": "branch_proposal_confirmed", "operator": "equals", "value": true }] }, "executor_reference": "branch-proposal", "next_transition_rules": [{ "condition": null, "transition_id": "switch-branch" }] },
-    { "transition_id": "switch-branch", "normalized_fact_conditions": { "all": [{ "fact_id": "branch_proposal_usable", "operator": "equals", "value": true }, { "fact_id": "branch_proposal_confirmed", "operator": "equals", "value": true }] }, "task_action_id": "FI-2", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "implementation_branch_switched", "operator": "equals", "value": true }, "executor_reference": null, "next_transition_rules": [{ "condition": null, "transition_id": "plan-implementation" }] },
-    { "transition_id": "plan-implementation", "normalized_fact_conditions": { "fact_id": "implementation_branch_switched", "operator": "equals", "value": true }, "task_action_id": "FI-3", "user_decision_specification": { "required": true, "options": [{ "decision_id": "confirm_implementation_plan", "label": "세부 계획 확정" }, { "decision_id": "revise_implementation_plan", "label": "세부 계획 수정" }], "allow_free_form": true, "block_execution_until_confirmed": true }, "completion_predicate": { "all": [{ "fact_id": "implementation_plan_usable", "operator": "equals", "value": true }, { "fact_id": "implementation_plan_confirmed", "operator": "equals", "value": true }] }, "executor_reference": "commit-plan", "next_transition_rules": [{ "condition": null, "transition_id": "reflect-implementation-plan" }] },
-    { "transition_id": "reflect-implementation-plan", "normalized_fact_conditions": { "all": [{ "fact_id": "implementation_plan_usable", "operator": "equals", "value": true }, { "fact_id": "implementation_plan_confirmed", "operator": "equals", "value": true }] }, "task_action_id": "FI-4", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "implementation_plan_reflected", "operator": "equals", "value": true }, "executor_reference": "github-simple-executor", "next_transition_rules": [{ "condition": null, "transition_id": "implement-work-unit" }] },
-    { "transition_id": "implement-work-unit", "normalized_fact_conditions": { "all": [{ "fact_id": "implementation_plan_reflected", "operator": "equals", "value": true }, { "fact_id": "implementation_work_unit_phase", "operator": "in", "value": ["work_pending", "file_changes_verified", "commit_message_confirmed", "commit_created", "all_work_units_completed"] }] }, "task_action_id": "FI-5", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "implementation_work_unit_phase", "operator": "in", "value": ["file_changes_verified", "commit_message_confirmed", "commit_created", "all_work_units_completed"] }, "executor_reference": "target-harness-code-editor", "next_transition_rules": [{ "condition": null, "transition_id": "prepare-implementation-commit" }] },
-    { "transition_id": "prepare-implementation-commit", "normalized_fact_conditions": { "fact_id": "implementation_work_unit_phase", "operator": "in", "value": ["file_changes_verified", "commit_message_confirmed", "commit_created", "all_work_units_completed"] }, "task_action_id": "FI-6", "user_decision_specification": { "required": true, "options": [{ "decision_id": "confirm_implementation_commit_message", "label": "커밋 메시지 확정" }, { "decision_id": "revise_implementation_commit_message", "label": "커밋 메시지 수정" }], "allow_free_form": true, "block_execution_until_confirmed": true }, "completion_predicate": { "all": [{ "fact_id": "implementation_work_unit_phase", "operator": "in", "value": ["commit_message_confirmed", "commit_created", "all_work_units_completed"] }, { "fact_id": "implementation_commit_message_proposal_usable", "operator": "equals", "value": true }, { "fact_id": "implementation_commit_message_confirmed", "operator": "equals", "value": true }] }, "executor_reference": "commit", "next_transition_rules": [{ "condition": null, "transition_id": "commit-implementation" }] },
-    { "transition_id": "commit-implementation", "normalized_fact_conditions": { "all": [{ "fact_id": "implementation_work_unit_phase", "operator": "in", "value": ["commit_message_confirmed", "commit_created", "all_work_units_completed"] }, { "fact_id": "implementation_commit_message_proposal_usable", "operator": "equals", "value": true }, { "fact_id": "implementation_commit_message_confirmed", "operator": "equals", "value": true }] }, "task_action_id": "FI-7", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "all": [{ "fact_id": "implementation_work_unit_phase", "operator": "in", "value": ["commit_created", "all_work_units_completed"] }, { "fact_id": "implementation_commit_created", "operator": "equals", "value": true }] }, "executor_reference": null, "next_transition_rules": [{ "condition": null, "transition_id": "plan-next-commit-unit" }] },
-    { "transition_id": "plan-next-commit-unit", "normalized_fact_conditions": { "all": [{ "fact_id": "implementation_work_unit_phase", "operator": "in", "value": ["commit_created", "work_pending", "all_work_units_completed"] }, { "fact_id": "implementation_commit_created", "operator": "equals", "value": true }] }, "task_action_id": "FI-8", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "all": [{ "fact_id": "implementation_work_unit_phase", "operator": "in", "value": ["work_pending", "all_work_units_completed"] }, { "fact_id": "implementation_commit_created", "operator": "equals", "value": true }] }, "executor_reference": null, "next_transition_rules": [{ "condition": { "fact_id": "implementation_work_unit_phase", "operator": "in", "value": ["work_pending", "file_changes_verified", "commit_message_confirmed", "commit_created"] }, "transition_id": "implement-work-unit" }, { "condition": { "fact_id": "implementation_work_unit_phase", "operator": "equals", "value": "all_work_units_completed" }, "transition_id": "push-implementation-branch" }] },
-    { "transition_id": "push-implementation-branch", "normalized_fact_conditions": { "fact_id": "implementation_work_unit_phase", "operator": "equals", "value": "all_work_units_completed" }, "task_action_id": "FI-9", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "implementation_branch_pushed", "operator": "equals", "value": true }, "executor_reference": null, "next_transition_rules": [{ "condition": null, "transition_id": "draft-pull-request" }] },
-    { "transition_id": "draft-pull-request", "normalized_fact_conditions": { "fact_id": "implementation_branch_pushed", "operator": "equals", "value": true }, "task_action_id": "FI-10", "user_decision_specification": { "required": true, "options": [{ "decision_id": "confirm_pull_request_draft", "label": "PR 초안 확정" }, { "decision_id": "revise_pull_request_draft", "label": "PR 초안 수정" }], "allow_free_form": true, "block_execution_until_confirmed": true }, "completion_predicate": { "all": [{ "fact_id": "pull_request_draft_usable", "operator": "equals", "value": true }, { "fact_id": "pull_request_draft_confirmed", "operator": "equals", "value": true }] }, "executor_reference": "pr-proposal", "next_transition_rules": [{ "condition": null, "transition_id": "request-pull-request-creation" }] },
-    { "transition_id": "request-pull-request-creation", "normalized_fact_conditions": { "fact_id": "pull_request_draft_usable", "operator": "equals", "value": true }, "task_action_id": "FI-11", "user_decision_specification": { "required": true, "options": [{ "decision_id": "create_pull_request", "label": "PR 생성 요청" }, { "decision_id": "revise_pull_request", "label": "PR 초안 수정" }], "allow_free_form": true, "block_execution_until_confirmed": true }, "completion_predicate": { "any": [{ "fact_id": "pull_request_creation_requested", "operator": "equals", "value": true }, { "fact_id": "pull_request_draft_confirmed", "operator": "equals", "value": false }] }, "executor_reference": null, "next_transition_rules": [{ "condition": { "fact_id": "pull_request_draft_confirmed", "operator": "equals", "value": false }, "transition_id": "draft-pull-request" }, { "condition": { "fact_id": "pull_request_draft_confirmed", "operator": "equals", "value": true }, "transition_id": "create-pull-request" }] },
-    { "transition_id": "create-pull-request", "normalized_fact_conditions": { "fact_id": "pull_request_creation_requested", "operator": "equals", "value": true }, "task_action_id": "FI-12", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "pull_request_created", "operator": "equals", "value": true }, "executor_reference": "pr-creation", "next_transition_rules": [{ "condition": null, "transition_id": "select-review-mode" }] },
-    { "transition_id": "select-review-mode", "normalized_fact_conditions": { "fact_id": "pull_request_created", "operator": "equals", "value": true }, "task_action_id": "FI-13", "user_decision_specification": { "required": true, "options": [{ "decision_id": "claude_code_review", "label": "Claude 코드 리뷰" }, { "decision_id": "claude_awesome_code_review", "label": "Claude 고급 코드 리뷰" }, { "decision_id": "codex_awesome_code_review", "label": "Codex 고급 코드 리뷰" }], "allow_free_form": true, "block_execution_until_confirmed": true }, "completion_predicate": { "fact_id": "review_mode", "operator": "exists" }, "executor_reference": null, "next_transition_rules": [{ "condition": null, "transition_id": "inspect-review-mode" }] },
-    { "transition_id": "inspect-review-mode", "normalized_fact_conditions": { "fact_id": "review_mode", "operator": "exists" }, "task_action_id": "FI-14", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "review_mode_checked", "operator": "equals", "value": true }, "executor_reference": null, "next_transition_rules": [{ "condition": { "fact_id": "review_mode", "operator": "equals", "value": "claude_code_review" }, "transition_id": "run-claude-code-review" }, { "condition": { "fact_id": "review_mode", "operator": "equals", "value": "claude_awesome_code_review" }, "transition_id": "run-claude-awesome-code-review" }, { "condition": { "fact_id": "review_mode", "operator": "equals", "value": "codex_awesome_code_review" }, "transition_id": "run-codex-awesome-code-review" }] },
-    { "transition_id": "run-claude-code-review", "normalized_fact_conditions": { "all": [{ "fact_id": "review_mode", "operator": "equals", "value": "claude_code_review" }, { "fact_id": "review_mode_checked", "operator": "equals", "value": true }] }, "task_action_id": "FI-15", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "claude_code_review_completed", "operator": "equals", "value": true }, "executor_reference": "claude/code-review", "next_transition_rules": [{ "condition": null, "transition_id": "normalize-review-results" }] },
-    { "transition_id": "run-claude-awesome-code-review", "normalized_fact_conditions": { "all": [{ "fact_id": "review_mode", "operator": "equals", "value": "claude_awesome_code_review" }, { "fact_id": "review_mode_checked", "operator": "equals", "value": true }] }, "task_action_id": "FI-16", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "claude_awesome_code_review_completed", "operator": "equals", "value": true }, "executor_reference": "claude/awesome-code-review", "next_transition_rules": [{ "condition": null, "transition_id": "normalize-review-results" }] },
-    { "transition_id": "run-codex-awesome-code-review", "normalized_fact_conditions": { "all": [{ "fact_id": "review_mode", "operator": "equals", "value": "codex_awesome_code_review" }, { "fact_id": "review_mode_checked", "operator": "equals", "value": true }] }, "task_action_id": "FI-17", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "codex_awesome_code_review_completed", "operator": "equals", "value": true }, "executor_reference": "codex/awesome-code-review", "next_transition_rules": [{ "condition": null, "transition_id": "normalize-review-results" }] },
-    { "transition_id": "normalize-review-results", "normalized_fact_conditions": { "any": [{ "fact_id": "claude_code_review_completed", "operator": "equals", "value": true }, { "fact_id": "claude_awesome_code_review_completed", "operator": "equals", "value": true }, { "fact_id": "codex_awesome_code_review_completed", "operator": "equals", "value": true }] }, "task_action_id": "FI-18", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "review_feedback_importance", "operator": "exists" }, "executor_reference": null, "next_transition_rules": [{ "condition": { "fact_id": "review_feedback_importance", "operator": "equals", "value": "no_publishable_feedback" }, "transition_id": "check-review-feedback-targets" }, { "condition": { "fact_id": "review_feedback_importance", "operator": "equals", "value": "publishable_feedback" }, "transition_id": "draft-review-comments" }] },
-    { "transition_id": "draft-review-comments", "normalized_fact_conditions": { "fact_id": "review_feedback_importance", "operator": "equals", "value": "publishable_feedback" }, "task_action_id": "FI-19", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "all": [{ "fact_id": "inline_review_thread_drafts_usable", "operator": "equals", "value": true }, { "fact_id": "review_comment_location_status", "operator": "exists" }] }, "executor_reference": "review-comment", "next_transition_rules": [{ "condition": { "fact_id": "review_comment_location_status", "operator": "equals", "value": "location_deferred" }, "transition_id": "determine-comment-posting-direction" }, { "condition": { "fact_id": "review_comment_location_status", "operator": "equals", "value": "no_location_deferred" }, "transition_id": "post-review-comments" }] },
-    { "transition_id": "determine-comment-posting-direction", "normalized_fact_conditions": { "fact_id": "inline_review_thread_drafts_usable", "operator": "equals", "value": true }, "task_action_id": "FI-20", "user_decision_specification": { "required": true, "options": [{ "decision_id": "reassign_review_thread_location", "label": "review thread 게시 위치 재지정" }, { "decision_id": "reclassify_non_actionable_feedback", "label": "비실행 피드백 재분류" }], "allow_free_form": true, "block_execution_until_confirmed": true }, "completion_predicate": { "fact_id": "review_comment_posting_direction", "operator": "exists" }, "executor_reference": null, "next_transition_rules": [{ "condition": null, "transition_id": "reflect-comment-posting-direction" }] },
-    { "transition_id": "reflect-comment-posting-direction", "normalized_fact_conditions": { "fact_id": "review_comment_posting_direction", "operator": "exists" }, "task_action_id": "FI-21", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "review_comment_posting_direction_reflected", "operator": "equals", "value": true }, "executor_reference": null, "next_transition_rules": [{ "condition": null, "transition_id": "defer-remaining-comment-locations" }] },
-    { "transition_id": "defer-remaining-comment-locations", "normalized_fact_conditions": { "fact_id": "review_comment_posting_direction_reflected", "operator": "equals", "value": true }, "task_action_id": "FI-22", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "remaining_review_comment_location_status", "operator": "exists" }, "executor_reference": null, "next_transition_rules": [{ "condition": { "fact_id": "remaining_review_comment_location_status", "operator": "equals", "value": "location_deferred" }, "transition_id": "determine-comment-posting-direction" }, { "condition": { "fact_id": "remaining_review_comment_location_status", "operator": "equals", "value": "no_location_deferred" }, "transition_id": "post-review-comments" }] },
-    { "transition_id": "post-review-comments", "normalized_fact_conditions": { "any": [{ "fact_id": "review_comment_location_status", "operator": "equals", "value": "no_location_deferred" }, { "fact_id": "remaining_review_comment_location_status", "operator": "equals", "value": "no_location_deferred" }] }, "task_action_id": "FI-23", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "inline_review_threads_posted", "operator": "equals", "value": true }, "executor_reference": null, "next_transition_rules": [{ "condition": null, "transition_id": "check-review-feedback-targets" }] },
-    { "transition_id": "check-review-feedback-targets", "normalized_fact_conditions": { "any": [{ "fact_id": "review_feedback_importance", "operator": "equals", "value": "no_publishable_feedback" }, { "fact_id": "inline_review_threads_posted", "operator": "equals", "value": true }] }, "task_action_id": "FI-24", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "all": [{ "fact_id": "github_review_threads_observed", "operator": "equals", "value": true }, { "fact_id": "review_feedback_inventory", "operator": "exists" }] }, "executor_reference": "github-state-summary", "next_transition_rules": [{ "condition": { "fact_id": "review_feedback_inventory", "operator": "equals", "value": "actionable_feedback_present" }, "transition_id": "determine-feedback-direction" }, { "condition": { "fact_id": "review_feedback_inventory", "operator": "equals", "value": "no_actionable_feedback" }, "transition_id": "determine-pull-request-merge" }] },
-    { "transition_id": "determine-feedback-direction", "normalized_fact_conditions": { "fact_id": "review_feedback_inventory", "operator": "equals", "value": "actionable_feedback_present" }, "task_action_id": "FI-25", "user_decision_specification": { "required": true, "options": [{ "decision_id": "accept_and_fix", "label": "수용" }, { "decision_id": "reject", "label": "거절" }], "allow_free_form": true, "block_execution_until_confirmed": true }, "completion_predicate": { "fact_id": "review_feedback_direction", "operator": "exists" }, "executor_reference": null, "next_transition_rules": [{ "condition": { "fact_id": "review_feedback_direction", "operator": "equals", "value": "accept_and_fix" }, "transition_id": "apply-feedback-fix" }, { "condition": { "fact_id": "review_feedback_direction", "operator": "equals", "value": "other_requires_file_change" }, "transition_id": "apply-feedback-fix" }, { "condition": { "fact_id": "review_feedback_direction", "operator": "equals", "value": "reject" }, "transition_id": "post-feedback-result-comment" }, { "condition": { "fact_id": "review_feedback_direction", "operator": "equals", "value": "other_without_file_change" }, "transition_id": "post-feedback-result-comment" }] },
-    { "transition_id": "apply-feedback-fix", "normalized_fact_conditions": { "any": [{ "fact_id": "review_feedback_direction", "operator": "equals", "value": "accept_and_fix" }, { "fact_id": "review_feedback_direction", "operator": "equals", "value": "other_requires_file_change" }] }, "task_action_id": "FI-26", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "review_feedback_fixed", "operator": "equals", "value": true }, "executor_reference": "target-harness-code-editor", "next_transition_rules": [{ "condition": null, "transition_id": "prepare-feedback-commit" }] },
-    { "transition_id": "prepare-feedback-commit", "normalized_fact_conditions": { "fact_id": "review_feedback_fixed", "operator": "equals", "value": true }, "task_action_id": "FI-27", "user_decision_specification": { "required": true, "options": [{ "decision_id": "confirm_feedback_commit_message", "label": "수정 커밋 메시지 확정" }, { "decision_id": "revise_feedback_commit_message", "label": "수정 커밋 메시지 수정" }], "allow_free_form": true, "block_execution_until_confirmed": true }, "completion_predicate": { "all": [{ "fact_id": "feedback_commit_message_proposal_usable", "operator": "equals", "value": true }, { "fact_id": "feedback_commit_message_confirmed", "operator": "equals", "value": true }] }, "executor_reference": "commit", "next_transition_rules": [{ "condition": null, "transition_id": "commit-feedback-fix" }] },
-    { "transition_id": "commit-feedback-fix", "normalized_fact_conditions": { "all": [{ "fact_id": "feedback_commit_message_proposal_usable", "operator": "equals", "value": true }, { "fact_id": "feedback_commit_message_confirmed", "operator": "equals", "value": true }] }, "task_action_id": "FI-28", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "feedback_commit_created", "operator": "equals", "value": true }, "executor_reference": null, "next_transition_rules": [{ "condition": null, "transition_id": "push-feedback-branch" }] },
-    { "transition_id": "push-feedback-branch", "normalized_fact_conditions": { "fact_id": "feedback_commit_created", "operator": "equals", "value": true }, "task_action_id": "FI-29", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "feedback_branch_pushed", "operator": "equals", "value": true }, "executor_reference": null, "next_transition_rules": [{ "condition": null, "transition_id": "post-feedback-result-comment" }] },
-    { "transition_id": "post-feedback-result-comment", "normalized_fact_conditions": { "any": [{ "fact_id": "review_feedback_direction", "operator": "equals", "value": "reject" }, { "fact_id": "review_feedback_direction", "operator": "equals", "value": "other_without_file_change" }, { "fact_id": "feedback_branch_pushed", "operator": "equals", "value": true }] }, "task_action_id": "FI-30", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "selected_review_thread_reply_posted", "operator": "equals", "value": true }, "executor_reference": "github-simple-executor", "next_transition_rules": [{ "condition": null, "transition_id": "determine-feedback-resolution" }] },
-    { "transition_id": "determine-feedback-resolution", "normalized_fact_conditions": { "fact_id": "selected_review_thread_reply_posted", "operator": "equals", "value": true }, "task_action_id": "FI-31", "user_decision_specification": { "required": true, "options": [{ "decision_id": "resolved", "label": "해결" }, { "decision_id": "unresolved", "label": "미해결" }], "allow_free_form": true, "block_execution_until_confirmed": true }, "completion_predicate": { "fact_id": "feedback_resolution", "operator": "exists" }, "executor_reference": null, "next_transition_rules": [{ "condition": null, "transition_id": "reflect-feedback-resolution" }] },
-    { "transition_id": "reflect-feedback-resolution", "normalized_fact_conditions": { "fact_id": "feedback_resolution", "operator": "exists" }, "task_action_id": "FI-32", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "feedback_resolution_reflected", "operator": "equals", "value": true }, "executor_reference": null, "next_transition_rules": [{ "condition": null, "transition_id": "check-remaining-feedback" }] },
-    { "transition_id": "check-remaining-feedback", "normalized_fact_conditions": { "fact_id": "feedback_resolution_reflected", "operator": "equals", "value": true }, "task_action_id": "FI-33", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "remaining_feedback_status", "operator": "exists" }, "executor_reference": "github-state-summary", "next_transition_rules": [{ "condition": { "fact_id": "remaining_feedback_status", "operator": "equals", "value": "unhandled_feedback_present" }, "transition_id": "determine-feedback-direction" }, { "condition": { "fact_id": "remaining_feedback_status", "operator": "equals", "value": "unresolved_thread_present" }, "transition_id": "determine-feedback-resolution" }, { "condition": { "fact_id": "remaining_feedback_status", "operator": "equals", "value": "all_resolved" }, "transition_id": "determine-pull-request-merge" }] },
-    { "transition_id": "determine-pull-request-merge", "normalized_fact_conditions": { "any": [{ "fact_id": "review_feedback_inventory", "operator": "equals", "value": "no_actionable_feedback" }, { "fact_id": "remaining_feedback_status", "operator": "equals", "value": "all_resolved" }] }, "task_action_id": "FI-34", "user_decision_specification": { "required": true, "options": [{ "decision_id": "merge_confirmed", "label": "PR 병합 확정" }, { "decision_id": "merge_deferred", "label": "PR 병합 보류" }], "allow_free_form": true, "block_execution_until_confirmed": true }, "completion_predicate": { "fact_id": "pull_request_merge_decision", "operator": "equals", "value": "merge_confirmed" }, "executor_reference": null, "next_transition_rules": [{ "condition": null, "transition_id": "reflect-pull-request-merge" }] },
-    { "transition_id": "reflect-pull-request-merge", "normalized_fact_conditions": { "fact_id": "pull_request_merge_decision", "operator": "equals", "value": "merge_confirmed" }, "task_action_id": "FI-35", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "all": [{ "fact_id": "pull_request_merged", "operator": "equals", "value": true }, { "fact_id": "post_merge_reflection_completed", "operator": "equals", "value": true }] }, "executor_reference": null, "next_transition_rules": [{ "condition": null, "transition_id": "complete-implementation" }] },
-    { "transition_id": "complete-implementation", "normalized_fact_conditions": { "all": [{ "fact_id": "pull_request_merged", "operator": "equals", "value": true }, { "fact_id": "post_merge_reflection_completed", "operator": "equals", "value": true }] }, "task_action_id": "FI-36", "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false }, "completion_predicate": { "fact_id": "implementation_completed", "operator": "equals", "value": true }, "executor_reference": null, "next_transition_rules": [] }
+    {
+      "task_action_id": "FI-1",
+      "normalized_fact_conditions": {
+        "fact_id": "implementation_requested",
+        "operator": "equals",
+        "value": true
+      },
+      "user_decision_options": [
+        {
+          "decision_id": "confirm_branch_proposal",
+          "label": "브랜치 제안 확정"
+        },
+        {
+          "decision_id": "revise_branch_proposal",
+          "label": "브랜치 제안 수정"
+        }
+      ],
+      "completion_predicate": {
+        "all": [
+          {
+            "fact_id": "branch_proposal_usable",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "branch_proposal_confirmed",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "executor_reference": "branch-proposal",
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-2"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-2",
+      "normalized_fact_conditions": {
+        "all": [
+          {
+            "fact_id": "branch_proposal_usable",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "branch_proposal_confirmed",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "implementation_branch_switched",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-3"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-3",
+      "normalized_fact_conditions": {
+        "fact_id": "implementation_branch_switched",
+        "operator": "equals",
+        "value": true
+      },
+      "user_decision_options": [
+        {
+          "decision_id": "confirm_implementation_plan",
+          "label": "세부 계획 확정"
+        },
+        {
+          "decision_id": "revise_implementation_plan",
+          "label": "세부 계획 수정"
+        }
+      ],
+      "completion_predicate": {
+        "all": [
+          {
+            "fact_id": "implementation_plan_usable",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "implementation_plan_confirmed",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "executor_reference": "commit-plan",
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-4"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-4",
+      "normalized_fact_conditions": {
+        "all": [
+          {
+            "fact_id": "implementation_plan_usable",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "implementation_plan_confirmed",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "implementation_plan_reflected",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": "github-simple-executor",
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-5"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-5",
+      "normalized_fact_conditions": {
+        "all": [
+          {
+            "fact_id": "implementation_plan_reflected",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "implementation_work_unit_phase",
+            "operator": "in",
+            "value": [
+              "work_pending",
+              "file_changes_verified",
+              "commit_message_confirmed",
+              "commit_created",
+              "all_work_units_completed"
+            ]
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "implementation_work_unit_phase",
+        "operator": "in",
+        "value": [
+          "file_changes_verified",
+          "commit_message_confirmed",
+          "commit_created",
+          "all_work_units_completed"
+        ]
+      },
+      "executor_reference": "target-harness-code-editor",
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-6"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-6",
+      "normalized_fact_conditions": {
+        "fact_id": "implementation_work_unit_phase",
+        "operator": "in",
+        "value": [
+          "file_changes_verified",
+          "commit_message_confirmed",
+          "commit_created",
+          "all_work_units_completed"
+        ]
+      },
+      "user_decision_options": [
+        {
+          "decision_id": "confirm_implementation_commit_message",
+          "label": "커밋 메시지 확정"
+        },
+        {
+          "decision_id": "revise_implementation_commit_message",
+          "label": "커밋 메시지 수정"
+        }
+      ],
+      "completion_predicate": {
+        "all": [
+          {
+            "fact_id": "implementation_work_unit_phase",
+            "operator": "in",
+            "value": [
+              "commit_message_confirmed",
+              "commit_created",
+              "all_work_units_completed"
+            ]
+          },
+          {
+            "fact_id": "implementation_commit_message_proposal_usable",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "implementation_commit_message_confirmed",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "executor_reference": "commit",
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-7"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-7",
+      "normalized_fact_conditions": {
+        "all": [
+          {
+            "fact_id": "implementation_work_unit_phase",
+            "operator": "in",
+            "value": [
+              "commit_message_confirmed",
+              "commit_created",
+              "all_work_units_completed"
+            ]
+          },
+          {
+            "fact_id": "implementation_commit_message_proposal_usable",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "implementation_commit_message_confirmed",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "all": [
+          {
+            "fact_id": "implementation_work_unit_phase",
+            "operator": "in",
+            "value": [
+              "commit_created",
+              "all_work_units_completed"
+            ]
+          },
+          {
+            "fact_id": "implementation_commit_created",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-8"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-8",
+      "normalized_fact_conditions": {
+        "all": [
+          {
+            "fact_id": "implementation_work_unit_phase",
+            "operator": "in",
+            "value": [
+              "commit_created",
+              "work_pending",
+              "all_work_units_completed"
+            ]
+          },
+          {
+            "fact_id": "implementation_commit_created",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "all": [
+          {
+            "fact_id": "implementation_work_unit_phase",
+            "operator": "in",
+            "value": [
+              "work_pending",
+              "all_work_units_completed"
+            ]
+          },
+          {
+            "fact_id": "implementation_commit_created",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": {
+            "fact_id": "implementation_work_unit_phase",
+            "operator": "in",
+            "value": [
+              "work_pending",
+              "file_changes_verified",
+              "commit_message_confirmed",
+              "commit_created"
+            ]
+          },
+          "task_action_id": "FI-5"
+        },
+        {
+          "condition": {
+            "fact_id": "implementation_work_unit_phase",
+            "operator": "equals",
+            "value": "all_work_units_completed"
+          },
+          "task_action_id": "FI-9"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-9",
+      "normalized_fact_conditions": {
+        "fact_id": "implementation_work_unit_phase",
+        "operator": "equals",
+        "value": "all_work_units_completed"
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "implementation_branch_pushed",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-10"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-10",
+      "normalized_fact_conditions": {
+        "fact_id": "implementation_branch_pushed",
+        "operator": "equals",
+        "value": true
+      },
+      "user_decision_options": [
+        {
+          "decision_id": "confirm_pull_request_draft",
+          "label": "PR 초안 확정"
+        },
+        {
+          "decision_id": "revise_pull_request_draft",
+          "label": "PR 초안 수정"
+        }
+      ],
+      "completion_predicate": {
+        "all": [
+          {
+            "fact_id": "pull_request_draft_usable",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "pull_request_draft_confirmed",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "executor_reference": "pr-proposal",
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-11"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-11",
+      "normalized_fact_conditions": {
+        "fact_id": "pull_request_draft_usable",
+        "operator": "equals",
+        "value": true
+      },
+      "user_decision_options": [
+        {
+          "decision_id": "create_pull_request",
+          "label": "PR 생성 요청"
+        },
+        {
+          "decision_id": "revise_pull_request",
+          "label": "PR 초안 수정"
+        }
+      ],
+      "completion_predicate": {
+        "any": [
+          {
+            "fact_id": "pull_request_creation_requested",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "pull_request_draft_confirmed",
+            "operator": "equals",
+            "value": false
+          }
+        ]
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": {
+            "fact_id": "pull_request_draft_confirmed",
+            "operator": "equals",
+            "value": false
+          },
+          "task_action_id": "FI-10"
+        },
+        {
+          "condition": {
+            "fact_id": "pull_request_draft_confirmed",
+            "operator": "equals",
+            "value": true
+          },
+          "task_action_id": "FI-12"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-12",
+      "normalized_fact_conditions": {
+        "fact_id": "pull_request_creation_requested",
+        "operator": "equals",
+        "value": true
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "pull_request_created",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": "pr-creation",
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-13"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-13",
+      "normalized_fact_conditions": {
+        "fact_id": "pull_request_created",
+        "operator": "equals",
+        "value": true
+      },
+      "user_decision_options": [
+        {
+          "decision_id": "claude_code_review",
+          "label": "Claude 코드 리뷰"
+        },
+        {
+          "decision_id": "claude_awesome_code_review",
+          "label": "Claude 고급 코드 리뷰"
+        },
+        {
+          "decision_id": "codex_awesome_code_review",
+          "label": "Codex 고급 코드 리뷰"
+        }
+      ],
+      "completion_predicate": {
+        "fact_id": "review_mode",
+        "operator": "exists"
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-14"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-14",
+      "normalized_fact_conditions": {
+        "fact_id": "review_mode",
+        "operator": "exists"
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "review_mode_checked",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": {
+            "fact_id": "review_mode",
+            "operator": "equals",
+            "value": "claude_code_review"
+          },
+          "task_action_id": "FI-15"
+        },
+        {
+          "condition": {
+            "fact_id": "review_mode",
+            "operator": "equals",
+            "value": "claude_awesome_code_review"
+          },
+          "task_action_id": "FI-16"
+        },
+        {
+          "condition": {
+            "fact_id": "review_mode",
+            "operator": "equals",
+            "value": "codex_awesome_code_review"
+          },
+          "task_action_id": "FI-17"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-15",
+      "normalized_fact_conditions": {
+        "all": [
+          {
+            "fact_id": "review_mode",
+            "operator": "equals",
+            "value": "claude_code_review"
+          },
+          {
+            "fact_id": "review_mode_checked",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "claude_code_review_completed",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": "claude/code-review",
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-18"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-16",
+      "normalized_fact_conditions": {
+        "all": [
+          {
+            "fact_id": "review_mode",
+            "operator": "equals",
+            "value": "claude_awesome_code_review"
+          },
+          {
+            "fact_id": "review_mode_checked",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "claude_awesome_code_review_completed",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": "claude/awesome-code-review",
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-18"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-17",
+      "normalized_fact_conditions": {
+        "all": [
+          {
+            "fact_id": "review_mode",
+            "operator": "equals",
+            "value": "codex_awesome_code_review"
+          },
+          {
+            "fact_id": "review_mode_checked",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "codex_awesome_code_review_completed",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": "codex/awesome-code-review",
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-18"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-18",
+      "normalized_fact_conditions": {
+        "any": [
+          {
+            "fact_id": "claude_code_review_completed",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "claude_awesome_code_review_completed",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "codex_awesome_code_review_completed",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "review_feedback_importance",
+        "operator": "exists"
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": {
+            "fact_id": "review_feedback_importance",
+            "operator": "equals",
+            "value": "no_publishable_feedback"
+          },
+          "task_action_id": "FI-24"
+        },
+        {
+          "condition": {
+            "fact_id": "review_feedback_importance",
+            "operator": "equals",
+            "value": "publishable_feedback"
+          },
+          "task_action_id": "FI-19"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-19",
+      "normalized_fact_conditions": {
+        "fact_id": "review_feedback_importance",
+        "operator": "equals",
+        "value": "publishable_feedback"
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "all": [
+          {
+            "fact_id": "inline_review_thread_drafts_usable",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "review_comment_location_status",
+            "operator": "exists"
+          }
+        ]
+      },
+      "executor_reference": "review-comment",
+      "next_transition_rules": [
+        {
+          "condition": {
+            "fact_id": "review_comment_location_status",
+            "operator": "equals",
+            "value": "location_deferred"
+          },
+          "task_action_id": "FI-20"
+        },
+        {
+          "condition": {
+            "fact_id": "review_comment_location_status",
+            "operator": "equals",
+            "value": "no_location_deferred"
+          },
+          "task_action_id": "FI-23"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-20",
+      "normalized_fact_conditions": {
+        "fact_id": "inline_review_thread_drafts_usable",
+        "operator": "equals",
+        "value": true
+      },
+      "user_decision_options": [
+        {
+          "decision_id": "reassign_review_thread_location",
+          "label": "review thread 게시 위치 재지정"
+        },
+        {
+          "decision_id": "reclassify_non_actionable_feedback",
+          "label": "비실행 피드백 재분류"
+        }
+      ],
+      "completion_predicate": {
+        "fact_id": "review_comment_posting_direction",
+        "operator": "exists"
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-21"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-21",
+      "normalized_fact_conditions": {
+        "fact_id": "review_comment_posting_direction",
+        "operator": "exists"
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "review_comment_posting_direction_reflected",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-22"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-22",
+      "normalized_fact_conditions": {
+        "fact_id": "review_comment_posting_direction_reflected",
+        "operator": "equals",
+        "value": true
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "remaining_review_comment_location_status",
+        "operator": "exists"
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": {
+            "fact_id": "remaining_review_comment_location_status",
+            "operator": "equals",
+            "value": "location_deferred"
+          },
+          "task_action_id": "FI-20"
+        },
+        {
+          "condition": {
+            "fact_id": "remaining_review_comment_location_status",
+            "operator": "equals",
+            "value": "no_location_deferred"
+          },
+          "task_action_id": "FI-23"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-23",
+      "normalized_fact_conditions": {
+        "any": [
+          {
+            "fact_id": "review_comment_location_status",
+            "operator": "equals",
+            "value": "no_location_deferred"
+          },
+          {
+            "fact_id": "remaining_review_comment_location_status",
+            "operator": "equals",
+            "value": "no_location_deferred"
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "inline_review_threads_posted",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-24"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-24",
+      "normalized_fact_conditions": {
+        "any": [
+          {
+            "fact_id": "review_feedback_importance",
+            "operator": "equals",
+            "value": "no_publishable_feedback"
+          },
+          {
+            "fact_id": "inline_review_threads_posted",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "all": [
+          {
+            "fact_id": "github_review_threads_observed",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "review_feedback_inventory",
+            "operator": "exists"
+          }
+        ]
+      },
+      "executor_reference": "github-state-summary",
+      "next_transition_rules": [
+        {
+          "condition": {
+            "fact_id": "review_feedback_inventory",
+            "operator": "equals",
+            "value": "actionable_feedback_present"
+          },
+          "task_action_id": "FI-25"
+        },
+        {
+          "condition": {
+            "fact_id": "review_feedback_inventory",
+            "operator": "equals",
+            "value": "no_actionable_feedback"
+          },
+          "task_action_id": "FI-34"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-25",
+      "normalized_fact_conditions": {
+        "fact_id": "review_feedback_inventory",
+        "operator": "equals",
+        "value": "actionable_feedback_present"
+      },
+      "user_decision_options": [
+        {
+          "decision_id": "accept_and_fix",
+          "label": "수용"
+        },
+        {
+          "decision_id": "reject",
+          "label": "거절"
+        }
+      ],
+      "completion_predicate": {
+        "fact_id": "review_feedback_direction",
+        "operator": "exists"
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": {
+            "fact_id": "review_feedback_direction",
+            "operator": "equals",
+            "value": "accept_and_fix"
+          },
+          "task_action_id": "FI-26"
+        },
+        {
+          "condition": {
+            "fact_id": "review_feedback_direction",
+            "operator": "equals",
+            "value": "other_requires_file_change"
+          },
+          "task_action_id": "FI-26"
+        },
+        {
+          "condition": {
+            "fact_id": "review_feedback_direction",
+            "operator": "equals",
+            "value": "reject"
+          },
+          "task_action_id": "FI-30"
+        },
+        {
+          "condition": {
+            "fact_id": "review_feedback_direction",
+            "operator": "equals",
+            "value": "other_without_file_change"
+          },
+          "task_action_id": "FI-30"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-26",
+      "normalized_fact_conditions": {
+        "any": [
+          {
+            "fact_id": "review_feedback_direction",
+            "operator": "equals",
+            "value": "accept_and_fix"
+          },
+          {
+            "fact_id": "review_feedback_direction",
+            "operator": "equals",
+            "value": "other_requires_file_change"
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "review_feedback_fixed",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": "target-harness-code-editor",
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-27"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-27",
+      "normalized_fact_conditions": {
+        "fact_id": "review_feedback_fixed",
+        "operator": "equals",
+        "value": true
+      },
+      "user_decision_options": [
+        {
+          "decision_id": "confirm_feedback_commit_message",
+          "label": "수정 커밋 메시지 확정"
+        },
+        {
+          "decision_id": "revise_feedback_commit_message",
+          "label": "수정 커밋 메시지 수정"
+        }
+      ],
+      "completion_predicate": {
+        "all": [
+          {
+            "fact_id": "feedback_commit_message_proposal_usable",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "feedback_commit_message_confirmed",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "executor_reference": "commit",
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-28"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-28",
+      "normalized_fact_conditions": {
+        "all": [
+          {
+            "fact_id": "feedback_commit_message_proposal_usable",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "feedback_commit_message_confirmed",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "feedback_commit_created",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-29"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-29",
+      "normalized_fact_conditions": {
+        "fact_id": "feedback_commit_created",
+        "operator": "equals",
+        "value": true
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "feedback_branch_pushed",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-30"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-30",
+      "normalized_fact_conditions": {
+        "any": [
+          {
+            "fact_id": "review_feedback_direction",
+            "operator": "equals",
+            "value": "reject"
+          },
+          {
+            "fact_id": "review_feedback_direction",
+            "operator": "equals",
+            "value": "other_without_file_change"
+          },
+          {
+            "fact_id": "feedback_branch_pushed",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "selected_review_thread_reply_posted",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": "github-simple-executor",
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-31"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-31",
+      "normalized_fact_conditions": {
+        "fact_id": "selected_review_thread_reply_posted",
+        "operator": "equals",
+        "value": true
+      },
+      "user_decision_options": [
+        {
+          "decision_id": "resolved",
+          "label": "해결"
+        },
+        {
+          "decision_id": "unresolved",
+          "label": "미해결"
+        }
+      ],
+      "completion_predicate": {
+        "fact_id": "feedback_resolution",
+        "operator": "exists"
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-32"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-32",
+      "normalized_fact_conditions": {
+        "fact_id": "feedback_resolution",
+        "operator": "exists"
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "feedback_resolution_reflected",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-33"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-33",
+      "normalized_fact_conditions": {
+        "fact_id": "feedback_resolution_reflected",
+        "operator": "equals",
+        "value": true
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "remaining_feedback_status",
+        "operator": "exists"
+      },
+      "executor_reference": "github-state-summary",
+      "next_transition_rules": [
+        {
+          "condition": {
+            "fact_id": "remaining_feedback_status",
+            "operator": "equals",
+            "value": "unhandled_feedback_present"
+          },
+          "task_action_id": "FI-25"
+        },
+        {
+          "condition": {
+            "fact_id": "remaining_feedback_status",
+            "operator": "equals",
+            "value": "unresolved_thread_present"
+          },
+          "task_action_id": "FI-31"
+        },
+        {
+          "condition": {
+            "fact_id": "remaining_feedback_status",
+            "operator": "equals",
+            "value": "all_resolved"
+          },
+          "task_action_id": "FI-34"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-34",
+      "normalized_fact_conditions": {
+        "any": [
+          {
+            "fact_id": "review_feedback_inventory",
+            "operator": "equals",
+            "value": "no_actionable_feedback"
+          },
+          {
+            "fact_id": "remaining_feedback_status",
+            "operator": "equals",
+            "value": "all_resolved"
+          }
+        ]
+      },
+      "user_decision_options": [
+        {
+          "decision_id": "merge_confirmed",
+          "label": "PR 병합 확정"
+        },
+        {
+          "decision_id": "merge_deferred",
+          "label": "PR 병합 보류"
+        }
+      ],
+      "completion_predicate": {
+        "fact_id": "pull_request_merge_decision",
+        "operator": "equals",
+        "value": "merge_confirmed"
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-35"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-35",
+      "normalized_fact_conditions": {
+        "fact_id": "pull_request_merge_decision",
+        "operator": "equals",
+        "value": "merge_confirmed"
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "all": [
+          {
+            "fact_id": "pull_request_merged",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "post_merge_reflection_completed",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "executor_reference": null,
+      "next_transition_rules": [
+        {
+          "condition": null,
+          "task_action_id": "FI-36"
+        }
+      ]
+    },
+    {
+      "task_action_id": "FI-36",
+      "normalized_fact_conditions": {
+        "all": [
+          {
+            "fact_id": "pull_request_merged",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "post_merge_reflection_completed",
+            "operator": "equals",
+            "value": true
+          }
+        ]
+      },
+      "user_decision_options": [],
+      "completion_predicate": {
+        "fact_id": "implementation_completed",
+        "operator": "equals",
+        "value": true
+      },
+      "executor_reference": null,
+      "next_transition_rules": []
+    }
   ]
 }

@@ -13,14 +13,10 @@ function isPlainObject(value) {
   return prototype === Object.prototype || prototype === null;
 }
 
-function valueMatchesType(value, valueType) {
-  if (valueType === "boolean") {
-    return typeof value === "boolean";
-  }
-  if (valueType === "string") {
-    return typeof value === "string";
-  }
-  return valueType === "integer" && Number.isInteger(value);
+function factValueType(value) {
+  if (typeof value === "boolean") return "boolean";
+  if (typeof value === "string") return "string";
+  return Number.isInteger(value) ? "integer" : undefined;
 }
 
 function validateNormalizedFactState(definition, state) {
@@ -33,7 +29,7 @@ function validateNormalizedFactState(definition, state) {
     }];
   }
 
-  const facts = new Map(definition.normalized_fact_schema.map((fact) => [fact.fact_id, fact]));
+  const facts = new Map(Object.entries(definition.facts));
   for (const [factId, value] of Object.entries(state)) {
     const path = `/${escapePointerSegment(factId)}`;
     const fact = facts.get(factId);
@@ -45,15 +41,16 @@ function validateNormalizedFactState(definition, state) {
       });
       continue;
     }
-    if (!valueMatchesType(value, fact.value_type)) {
+    const valueType = factValueType(fact[0]);
+    if (factValueType(value) !== valueType) {
       errors.push({
         code: "state.value.type_mismatch",
         path,
-        message: `Value must match fact type ${fact.value_type}.`,
+        message: `Value must match fact type ${valueType}.`,
       });
       continue;
     }
-    if (!fact.allowed_values.some((allowedValue) => allowedValue === value)) {
+    if (!fact.some((allowedValue) => allowedValue === value)) {
       errors.push({
         code: "state.value.not_allowed",
         path,
@@ -64,11 +61,11 @@ function validateNormalizedFactState(definition, state) {
   return errors;
 }
 
-function stopped(reason, transitionId, extra = {}) {
+function stopped(reason, taskActionId, extra = {}) {
   return {
     status: "stopped",
     reason,
-    transition_id: transitionId ?? null,
+    task_action_id: taskActionId ?? null,
     ...extra,
   };
 }
@@ -76,7 +73,7 @@ function stopped(reason, transitionId, extra = {}) {
 /**
  * Evaluates one workflow definition against an immutable normalized fact state.
  */
-export function evaluateWorkflowDefinition(definition, normalizedFactState, { currentTransitionId } = {}) {
+export function evaluateWorkflowDefinition(definition, normalizedFactState, { currentTaskActionId } = {}) {
   const validation = validateWorkflowDefinition(definition);
   if (!validation.valid) {
     return stopped("invalid_definition", null, { errors: validation.errors });
@@ -87,38 +84,36 @@ export function evaluateWorkflowDefinition(definition, normalizedFactState, { cu
     return stopped("invalid_state", null, { errors: stateErrors });
   }
 
-  const transitions = new Map(definition.transitions.map((transition) => [transition.transition_id, transition]));
-  const terminalIds = new Set(definition.terminal_transition_ids);
-  let transitionId = currentTransitionId ?? definition.entry_transition_id;
+  const transitions = new Map(definition.transitions.map((transition) => [transition.task_action_id, transition]));
+  let taskActionId = currentTaskActionId ?? definition.entry_task_action_id;
   const visited = new Set();
 
   while (true) {
-    if (!transitions.has(transitionId)) {
-      return stopped("current_transition_not_found", transitionId);
+    if (!transitions.has(taskActionId)) {
+      return stopped("current_task_action_not_found", taskActionId);
     }
-    if (visited.has(transitionId)) {
-      return stopped("evaluation_cycle", transitionId);
+    if (visited.has(taskActionId)) {
+      return stopped("evaluation_cycle", taskActionId);
     }
-    visited.add(transitionId);
+    visited.add(taskActionId);
 
-    const transition = transitions.get(transitionId);
+    const transition = transitions.get(taskActionId);
     if (!matchesExpressionState(transition.normalized_fact_conditions, normalizedFactState)) {
-      return stopped("current_transition_condition_not_met", transitionId);
+      return stopped("current_task_action_condition_not_met", taskActionId);
     }
     if (!matchesExpressionState(transition.completion_predicate, normalizedFactState)) {
       return {
         status: "action_required",
-        transition_id: transition.transition_id,
         task_action_id: transition.task_action_id,
-        user_decision_specification: transition.user_decision_specification,
+        user_decision_options: transition.user_decision_options,
         executor_reference: transition.executor_reference,
         completion_predicate: transition.completion_predicate,
       };
     }
-    if (terminalIds.has(transitionId)) {
+    if (transition.next_transition_rules.length === 0) {
       return {
         status: "completed",
-        transition_id: transitionId,
+        task_action_id: taskActionId,
       };
     }
 
@@ -126,11 +121,11 @@ export function evaluateWorkflowDefinition(definition, normalizedFactState, { cu
       (rule) => rule.condition === null || matchesExpressionState(rule.condition, normalizedFactState),
     );
     if (matchedRules.length === 0) {
-      return stopped("no_transition_match", transitionId);
+      return stopped("no_transition_match", taskActionId);
     }
     if (matchedRules.length > 1) {
-      return stopped("multiple_transition_matches", transitionId);
+      return stopped("multiple_transition_matches", taskActionId);
     }
-    transitionId = matchedRules[0].transition_id;
+    taskActionId = matchedRules[0].task_action_id;
   }
 }

@@ -1,7 +1,7 @@
-const FACT_FIELDS = ["fact_id", "value_type", "allowed_values", "evidence_required"];
+import { validateWorkflowDefinition } from "./validator.mjs";
+
 const CANDIDATE_FIELDS = ["fact_id", "value", "evidence"];
 const EVIDENCE_FIELDS = ["source_kind", "source_reference", "field_reference"];
-const FACT_TYPES = new Set(["boolean", "string", "integer"]);
 const SOURCE_KINDS = new Set(["github_state", "local_state", "user_input", "skill_output"]);
 
 export function escapePointerSegment(segment) {
@@ -50,103 +50,22 @@ function isNonEmptyString(value) {
   return typeof value === "string" && value.length > 0;
 }
 
-function valueMatchesType(value, valueType) {
-  if (valueType === "boolean") {
-    return typeof value === "boolean";
-  }
-  if (valueType === "string") {
-    return typeof value === "string";
-  }
-  return valueType === "integer" && Number.isInteger(value);
-}
-
-function validateFactDefinition(value, path, errors) {
-  if (!validateClosedObject(value, path, FACT_FIELDS, errors, "fact")) {
-    return undefined;
-  }
-  validateRequired(value, path, FACT_FIELDS, errors, "fact");
-
-  const factIdValid = Object.hasOwn(value, "fact_id") && isNonEmptyString(value.fact_id);
-  if (Object.hasOwn(value, "fact_id") && !factIdValid) {
-    addError(errors, "fact_id.invalid", pointer(path, "fact_id"), "Expected a non-empty string.");
-  }
-
-  const valueTypeValid = Object.hasOwn(value, "value_type") && FACT_TYPES.has(value.value_type);
-  if (Object.hasOwn(value, "value_type") && !valueTypeValid) {
-    addError(errors, "fact.value_type.invalid", pointer(path, "value_type"), "value_type must be boolean, string, or integer.");
-  }
-
-  let allowedValuesValid = false;
-  if (Object.hasOwn(value, "allowed_values")) {
-    const valuesPath = pointer(path, "allowed_values");
-    if (!Array.isArray(value.allowed_values)) {
-      addError(errors, "fact.allowed_values.type", valuesPath, "allowed_values must be an array.");
-    } else {
-      allowedValuesValid = value.allowed_values.length > 0;
-      if (!allowedValuesValid) {
-        addError(errors, "fact.allowed_values.empty", valuesPath, "allowed_values must not be empty.");
-      }
-      if (valueTypeValid) {
-        for (let index = 0; index < value.allowed_values.length; index += 1) {
-          if (!valueMatchesType(value.allowed_values[index], value.value_type)) {
-            allowedValuesValid = false;
-            addError(errors, "fact.allowed_values.type_mismatch", pointer(valuesPath, index), "allowed_values must match value_type.");
-          }
-        }
-      }
-    }
-  }
-
-  const evidenceRequiredValid = Object.hasOwn(value, "evidence_required") && typeof value.evidence_required === "boolean";
-  if (Object.hasOwn(value, "evidence_required") && !evidenceRequiredValid) {
-    addError(errors, "fact.evidence_required.type", pointer(path, "evidence_required"), "evidence_required must be boolean.");
-  }
-
-  if (!factIdValid || !valueTypeValid || !allowedValuesValid || !evidenceRequiredValid) {
-    return undefined;
-  }
-  return value;
+function factValueType(value) {
+  if (typeof value === "boolean") return "boolean";
+  if (typeof value === "string") return "string";
+  return Number.isInteger(value) ? "integer" : undefined;
 }
 
 function validateDefinition(definition) {
-  const errors = [];
-  if (!isPlainObject(definition)) {
-    addError(errors, "workflow.type", "", "Expected a plain object.");
-    return { errors, facts: [] };
-  }
-
-  if (!Object.hasOwn(definition, "workflow_id")) {
-    addError(errors, "workflow.required", "/workflow_id", "Missing required property: workflow_id.");
-  } else if (!isNonEmptyString(definition.workflow_id)) {
-    addError(errors, "workflow_id.invalid", "/workflow_id", "Expected a non-empty string.");
-  }
-
-  const facts = [];
-  if (!Object.hasOwn(definition, "normalized_fact_schema")) {
-    addError(errors, "workflow.required", "/normalized_fact_schema", "Missing required property: normalized_fact_schema.");
-  } else if (!Array.isArray(definition.normalized_fact_schema)) {
-    addError(errors, "normalized_fact_schema.type", "/normalized_fact_schema", "normalized_fact_schema must be an array.");
-  } else {
-    if (definition.normalized_fact_schema.length === 0) {
-      addError(errors, "normalized_fact_schema.empty", "/normalized_fact_schema", "normalized_fact_schema must not be empty.");
-    }
-    const factIds = new Set();
-    for (let index = 0; index < definition.normalized_fact_schema.length; index += 1) {
-      const path = `/normalized_fact_schema/${index}`;
-      const fact = validateFactDefinition(definition.normalized_fact_schema[index], path, errors);
-      if (!fact) {
-        continue;
-      }
-      if (factIds.has(fact.fact_id)) {
-        addError(errors, "fact_id.duplicate", `${path}/fact_id`, `Duplicate fact_id: ${fact.fact_id}.`);
-      } else {
-        factIds.add(fact.fact_id);
-        facts.push(fact);
-      }
-    }
-  }
-
-  return { errors, facts };
+  const validation = validateWorkflowDefinition(definition);
+  const facts = validation.valid
+    ? Object.entries(definition.facts).map(([factId, allowedValues]) => ({
+      factId,
+      allowedValues,
+      valueType: factValueType(allowedValues[0]),
+    }))
+    : [];
+  return { errors: validation.errors, facts };
 }
 
 function validateEvidence(value, path, errors) {
@@ -173,7 +92,7 @@ function validateCandidates(candidates, facts) {
     return { errors, candidatesByFact };
   }
 
-  const factsById = new Map(facts.map((fact) => [fact.fact_id, fact]));
+  const factsById = new Map(facts.map((fact) => [fact.factId, fact]));
   const seenFactIds = new Set();
   for (let index = 0; index < candidates.length; index += 1) {
     const candidate = candidates[index];
@@ -204,9 +123,9 @@ function validateCandidates(candidates, facts) {
 
     if (fact && Object.hasOwn(candidate, "value")) {
       const valuePath = pointer(path, "value");
-      if (!valueMatchesType(candidate.value, fact.value_type)) {
-        addError(errors, "candidate.value.type_mismatch", valuePath, `Value must match fact type ${fact.value_type}.`);
-      } else if (!fact.allowed_values.some((allowedValue) => allowedValue === candidate.value)) {
+      if (factValueType(candidate.value) !== fact.valueType) {
+        addError(errors, "candidate.value.type_mismatch", valuePath, `Value must match fact type ${fact.valueType}.`);
+      } else if (!fact.allowedValues.some((allowedValue) => allowedValue === candidate.value)) {
         addError(errors, "candidate.value.not_allowed", valuePath, "Value is not in the fact allowed_values domain.");
       }
     }
@@ -219,8 +138,8 @@ function validateCandidates(candidates, facts) {
         for (let evidenceIndex = 0; evidenceIndex < candidate.evidence.length; evidenceIndex += 1) {
           validateEvidence(candidate.evidence[evidenceIndex], pointer(evidencePath, evidenceIndex), errors);
         }
-        if (fact?.evidence_required && candidate.evidence.length === 0) {
-          addError(errors, "candidate.evidence.required", evidencePath, "At least one evidence item is required for this fact.");
+        if (fact && candidate.evidence.length === 0) {
+          addError(errors, "candidate.evidence.required", evidencePath, "At least one evidence item is required for every normalized fact.");
         }
       }
     }
@@ -257,12 +176,12 @@ export function normalizeFactCandidates(definition, candidates) {
   const normalizedFactState = {};
   const evidenceByFact = {};
   for (const fact of definitionValidation.facts) {
-    const candidate = candidateValidation.candidatesByFact.get(fact.fact_id);
+    const candidate = candidateValidation.candidatesByFact.get(fact.factId);
     if (!candidate) {
       continue;
     }
-    normalizedFactState[fact.fact_id] = candidate.value;
-    evidenceByFact[fact.fact_id] = candidate.evidence.map((item) => ({
+    normalizedFactState[fact.factId] = candidate.value;
+    evidenceByFact[fact.factId] = candidate.evidence.map((item) => ({
       source_kind: item.source_kind,
       source_reference: item.source_reference,
       field_reference: item.field_reference,

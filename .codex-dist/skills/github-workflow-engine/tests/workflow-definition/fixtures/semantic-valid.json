@@ -3,31 +3,45 @@
     {
       "name": "unconditional linear path",
       "definition": {
-        "workflow_id": "linear-flow",
-        "version": "1.0.0",
-        "workflow_kind": "implementation",
-        "target_type": "issue",
-        "entry_transition_id": "start",
-        "terminal_transition_ids": ["complete"],
-        "normalized_fact_schema": [
-          { "fact_id": "ready", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": false }
-        ],
+        "workflow_id": "implementation",
+        "entry_task_action_id": "FI-1",
+        "facts": {
+          "ready": [
+            true,
+            false
+          ]
+        },
         "transitions": [
           {
-            "transition_id": "start",
-            "normalized_fact_conditions": { "fact_id": "ready", "operator": "exists" },
             "task_action_id": "FI-1",
-            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
-            "completion_predicate": { "fact_id": "ready", "operator": "exists" },
+            "normalized_fact_conditions": {
+              "fact_id": "ready",
+              "operator": "exists"
+            },
+            "user_decision_options": [],
+            "completion_predicate": {
+              "fact_id": "ready",
+              "operator": "exists"
+            },
             "executor_reference": null,
-            "next_transition_rules": [{ "condition": null, "transition_id": "complete" }]
+            "next_transition_rules": [
+              {
+                "condition": null,
+                "task_action_id": "FI-2"
+              }
+            ]
           },
           {
-            "transition_id": "complete",
-            "normalized_fact_conditions": { "fact_id": "ready", "operator": "exists" },
             "task_action_id": "FI-2",
-            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
-            "completion_predicate": { "fact_id": "ready", "operator": "exists" },
+            "normalized_fact_conditions": {
+              "fact_id": "ready",
+              "operator": "exists"
+            },
+            "user_decision_options": [],
+            "completion_predicate": {
+              "fact_id": "ready",
+              "operator": "exists"
+            },
             "executor_reference": null,
             "next_transition_rules": []
           }
@@ -37,43 +51,78 @@
     {
       "name": "check remaining feedback branches deterministically",
       "definition": {
-        "workflow_id": "feedback-flow",
-        "version": "1.0.0",
-        "workflow_kind": "implementation",
-        "target_type": "pull_request",
-        "entry_transition_id": "check-remaining-feedback",
-        "terminal_transition_ids": ["complete"],
-        "normalized_fact_schema": [
-          { "fact_id": "remaining_feedback", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true }
-        ],
+        "workflow_id": "implementation",
+        "entry_task_action_id": "FI-1",
+        "facts": {
+          "remaining_feedback": [
+            true,
+            false
+          ]
+        },
         "transitions": [
           {
-            "transition_id": "check-remaining-feedback",
-            "normalized_fact_conditions": { "fact_id": "remaining_feedback", "operator": "exists" },
             "task_action_id": "FI-1",
-            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
-            "completion_predicate": { "fact_id": "remaining_feedback", "operator": "exists" },
+            "normalized_fact_conditions": {
+              "fact_id": "remaining_feedback",
+              "operator": "exists"
+            },
+            "user_decision_options": [],
+            "completion_predicate": {
+              "fact_id": "remaining_feedback",
+              "operator": "exists"
+            },
             "executor_reference": null,
             "next_transition_rules": [
-              { "condition": { "fact_id": "remaining_feedback", "operator": "equals", "value": true }, "transition_id": "review" },
-              { "condition": { "fact_id": "remaining_feedback", "operator": "equals", "value": false }, "transition_id": "complete" }
+              {
+                "condition": {
+                  "fact_id": "remaining_feedback",
+                  "operator": "equals",
+                  "value": true
+                },
+                "task_action_id": "FI-2"
+              },
+              {
+                "condition": {
+                  "fact_id": "remaining_feedback",
+                  "operator": "equals",
+                  "value": false
+                },
+                "task_action_id": "FI-3"
+              }
             ]
           },
           {
-            "transition_id": "review",
-            "normalized_fact_conditions": { "fact_id": "remaining_feedback", "operator": "equals", "value": true },
             "task_action_id": "FI-2",
-            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
-            "completion_predicate": { "fact_id": "remaining_feedback", "operator": "exists" },
+            "normalized_fact_conditions": {
+              "fact_id": "remaining_feedback",
+              "operator": "equals",
+              "value": true
+            },
+            "user_decision_options": [],
+            "completion_predicate": {
+              "fact_id": "remaining_feedback",
+              "operator": "exists"
+            },
             "executor_reference": null,
-            "next_transition_rules": [{ "condition": null, "transition_id": "complete" }]
+            "next_transition_rules": [
+              {
+                "condition": null,
+                "task_action_id": "FI-3"
+              }
+            ]
           },
           {
-            "transition_id": "complete",
-            "normalized_fact_conditions": { "fact_id": "remaining_feedback", "operator": "equals", "value": false },
             "task_action_id": "FI-3",
-            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
-            "completion_predicate": { "fact_id": "remaining_feedback", "operator": "exists" },
+            "normalized_fact_conditions": {
+              "fact_id": "remaining_feedback",
+              "operator": "equals",
+              "value": false
+            },
+            "user_decision_options": [],
+            "completion_predicate": {
+              "fact_id": "remaining_feedback",
+              "operator": "exists"
+            },
             "executor_reference": null,
             "next_transition_rules": []
           }
@@ -83,52 +132,97 @@
     {
       "name": "feedback remediation SCC has a conditional terminal exit",
       "definition": {
-        "workflow_id": "feedback-remediation-flow",
-        "version": "1.0.0",
-        "workflow_kind": "implementation",
-        "target_type": "repository",
-        "entry_transition_id": "address-feedback",
-        "terminal_transition_ids": ["complete"],
-        "normalized_fact_schema": [
-          { "fact_id": "remaining_feedback", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": true }
-        ],
+        "workflow_id": "implementation",
+        "entry_task_action_id": "FI-1",
+        "facts": {
+          "remaining_feedback": [
+            true,
+            false
+          ]
+        },
         "transitions": [
           {
-            "transition_id": "address-feedback",
-            "normalized_fact_conditions": { "fact_id": "remaining_feedback", "operator": "exists" },
             "task_action_id": "FI-1",
-            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
-            "completion_predicate": { "fact_id": "remaining_feedback", "operator": "exists" },
-            "executor_reference": null,
-            "next_transition_rules": [{ "condition": null, "transition_id": "check-remaining-feedback" }]
-          },
-          {
-            "transition_id": "check-remaining-feedback",
-            "normalized_fact_conditions": { "fact_id": "remaining_feedback", "operator": "exists" },
-            "task_action_id": "FI-2",
-            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
-            "completion_predicate": { "fact_id": "remaining_feedback", "operator": "exists" },
+            "normalized_fact_conditions": {
+              "fact_id": "remaining_feedback",
+              "operator": "exists"
+            },
+            "user_decision_options": [],
+            "completion_predicate": {
+              "fact_id": "remaining_feedback",
+              "operator": "exists"
+            },
             "executor_reference": null,
             "next_transition_rules": [
-              { "condition": { "fact_id": "remaining_feedback", "operator": "equals", "value": true }, "transition_id": "review" },
-              { "condition": { "fact_id": "remaining_feedback", "operator": "equals", "value": false }, "transition_id": "complete" }
+              {
+                "condition": null,
+                "task_action_id": "FI-2"
+              }
             ]
           },
           {
-            "transition_id": "review",
-            "normalized_fact_conditions": { "fact_id": "remaining_feedback", "operator": "equals", "value": true },
-            "task_action_id": "FI-3",
-            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
-            "completion_predicate": { "fact_id": "remaining_feedback", "operator": "exists" },
+            "task_action_id": "FI-2",
+            "normalized_fact_conditions": {
+              "fact_id": "remaining_feedback",
+              "operator": "exists"
+            },
+            "user_decision_options": [],
+            "completion_predicate": {
+              "fact_id": "remaining_feedback",
+              "operator": "exists"
+            },
             "executor_reference": null,
-            "next_transition_rules": [{ "condition": null, "transition_id": "address-feedback" }]
+            "next_transition_rules": [
+              {
+                "condition": {
+                  "fact_id": "remaining_feedback",
+                  "operator": "equals",
+                  "value": true
+                },
+                "task_action_id": "FI-3"
+              },
+              {
+                "condition": {
+                  "fact_id": "remaining_feedback",
+                  "operator": "equals",
+                  "value": false
+                },
+                "task_action_id": "FI-4"
+              }
+            ]
           },
           {
-            "transition_id": "complete",
-            "normalized_fact_conditions": { "fact_id": "remaining_feedback", "operator": "equals", "value": false },
+            "task_action_id": "FI-3",
+            "normalized_fact_conditions": {
+              "fact_id": "remaining_feedback",
+              "operator": "equals",
+              "value": true
+            },
+            "user_decision_options": [],
+            "completion_predicate": {
+              "fact_id": "remaining_feedback",
+              "operator": "exists"
+            },
+            "executor_reference": null,
+            "next_transition_rules": [
+              {
+                "condition": null,
+                "task_action_id": "FI-1"
+              }
+            ]
+          },
+          {
             "task_action_id": "FI-4",
-            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
-            "completion_predicate": { "fact_id": "remaining_feedback", "operator": "exists" },
+            "normalized_fact_conditions": {
+              "fact_id": "remaining_feedback",
+              "operator": "equals",
+              "value": false
+            },
+            "user_decision_options": [],
+            "completion_predicate": {
+              "fact_id": "remaining_feedback",
+              "operator": "exists"
+            },
             "executor_reference": null,
             "next_transition_rules": []
           }
@@ -137,46 +231,102 @@
     },
     {
       "name": "conditional rules ignore large unrelated fact domains",
-      "options": { "maxConditionStates": 3 },
+      "options": {
+        "maxConditionStates": 3
+      },
       "definition": {
-        "workflow_id": "projected-condition-flow",
-        "version": "1.0.0",
-        "workflow_kind": "implementation",
-        "target_type": "issue",
-        "entry_transition_id": "check",
-        "terminal_transition_ids": ["complete"],
-        "normalized_fact_schema": [
-          { "fact_id": "flag", "value_type": "boolean", "allowed_values": [true, false], "evidence_required": false },
-          { "fact_id": "unrelated", "value_type": "integer", "allowed_values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19], "evidence_required": false }
-        ],
+        "workflow_id": "implementation",
+        "entry_task_action_id": "FI-1",
+        "facts": {
+          "flag": [
+            true,
+            false
+          ],
+          "unrelated": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ]
+        },
         "transitions": [
           {
-            "transition_id": "check",
-            "normalized_fact_conditions": { "fact_id": "flag", "operator": "exists" },
             "task_action_id": "FI-1",
-            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
-            "completion_predicate": { "fact_id": "flag", "operator": "exists" },
+            "normalized_fact_conditions": {
+              "fact_id": "flag",
+              "operator": "exists"
+            },
+            "user_decision_options": [],
+            "completion_predicate": {
+              "fact_id": "flag",
+              "operator": "exists"
+            },
             "executor_reference": null,
             "next_transition_rules": [
-              { "condition": { "fact_id": "flag", "operator": "equals", "value": true }, "transition_id": "review" },
-              { "condition": { "fact_id": "flag", "operator": "equals", "value": false }, "transition_id": "complete" }
+              {
+                "condition": {
+                  "fact_id": "flag",
+                  "operator": "equals",
+                  "value": true
+                },
+                "task_action_id": "FI-2"
+              },
+              {
+                "condition": {
+                  "fact_id": "flag",
+                  "operator": "equals",
+                  "value": false
+                },
+                "task_action_id": "FI-3"
+              }
             ]
           },
           {
-            "transition_id": "review",
-            "normalized_fact_conditions": { "fact_id": "flag", "operator": "exists" },
             "task_action_id": "FI-2",
-            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
-            "completion_predicate": { "fact_id": "flag", "operator": "exists" },
+            "normalized_fact_conditions": {
+              "fact_id": "flag",
+              "operator": "exists"
+            },
+            "user_decision_options": [],
+            "completion_predicate": {
+              "fact_id": "flag",
+              "operator": "exists"
+            },
             "executor_reference": null,
-            "next_transition_rules": [{ "condition": null, "transition_id": "complete" }]
+            "next_transition_rules": [
+              {
+                "condition": null,
+                "task_action_id": "FI-3"
+              }
+            ]
           },
           {
-            "transition_id": "complete",
-            "normalized_fact_conditions": { "fact_id": "flag", "operator": "exists" },
             "task_action_id": "FI-3",
-            "user_decision_specification": { "required": false, "options": [], "allow_free_form": false, "block_execution_until_confirmed": false },
-            "completion_predicate": { "fact_id": "flag", "operator": "exists" },
+            "normalized_fact_conditions": {
+              "fact_id": "flag",
+              "operator": "exists"
+            },
+            "user_decision_options": [],
+            "completion_predicate": {
+              "fact_id": "flag",
+              "operator": "exists"
+            },
             "executor_reference": null,
             "next_transition_rules": []
           }

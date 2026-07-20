@@ -23,7 +23,6 @@ const installScript = join(repositoryRoot, "install.sh");
 const sourceTargetEditor = join(repositoryRoot, ".codex-dist/skills/target-harness-code-editor/SKILL.md");
 
 const jsonArtifacts = [
-  "schemas/workflow-definition.schema.json",
   "definitions/feature-proposal.json",
   "definitions/policy-review.json",
   "definitions/feature-change.json",
@@ -45,7 +44,6 @@ const requiredArtifacts = [
   "references/workflow-definition-contract.md",
   "references/validation-mode-contract.md",
   "references/normalized-fact-adapter-contract.md",
-  "schemas/workflow-definition.schema.json",
   "definitions/feature-proposal.json",
   "definitions/policy-review.json",
   "definitions/feature-change.json",
@@ -166,6 +164,7 @@ test("workflow definition foundation inventory and JSON artifacts are complete",
   for (const relativePath of requiredArtifacts) {
     assert.equal(files.includes(relativePath), true, `Missing required artifact: ${relativePath}`);
   }
+  assert.equal(files.includes("schemas/workflow-definition.schema.json"), false);
   await parseJsonArtifacts(sourceSkillDirectory);
 });
 
@@ -201,6 +200,7 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
 
   const installedSkillDirectory = join(destinationRoot, "github-workflow-engine");
   await assertTreesMatch(sourceSkillDirectory, installedSkillDirectory);
+  assert.equal((await listRegularFiles(installedSkillDirectory)).includes("schemas/workflow-definition.schema.json"), false);
   await parseJsonArtifacts(installedSkillDirectory);
   assert.deepEqual(
     await readFile(join(destinationRoot, "target-harness-code-editor/SKILL.md")),

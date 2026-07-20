@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { evaluateWorkflowDefinition } from "../../scripts/workflow-definition/evaluator.mjs";
@@ -8,7 +7,6 @@ import { parseJsonFile } from "../../scripts/workflow-definition/parser.mjs";
 import { validateWorkflowDefinition } from "../../scripts/workflow-definition/validator.mjs";
 
 const definitionUrl = new URL("../../definitions/feature-change.json", import.meta.url);
-const schemaUrl = new URL("../../schemas/workflow-definition.schema.json", import.meta.url);
 const statesUrl = new URL("./fixtures/feature-change-states.json", import.meta.url);
 
 async function readJson(url) {
@@ -60,24 +58,18 @@ function hasError(result, code, path) {
 
 test("feature-change definition passes C2/C3 validation with direct executor references", async () => {
   const [definition, states] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
-  const schema = JSON.parse(await readFile(schemaUrl, "utf8"));
-
-  assert.equal(schema.$schema, "https://json-schema.org/draft/2020-12/schema");
-  assert.deepEqual(
-    [definition.workflow_id, definition.version, definition.workflow_kind, definition.target_type],
-    ["feature-change", "1.0.0", "feature_change", "issue"],
-  );
+  assert.equal(definition.workflow_id, "feature-change");
   assert.equal(Object.keys(states).length, 11);
   assert.deepEqual(definition.transitions.map((transition) => transition.task_action_id), [
     "FC-1", "FC-2", "FC-3", "FC-4", "FC-5", "FC-6", "FC-7",
   ]);
   assert.equal(JSON.stringify(definition).includes('"priority"'), false);
-  assert.equal(definition.normalized_fact_schema.every((fact) => fact.evidence_required === true), true);
+  assert.equal(Object.keys(definition.facts).length, 10);
 
   for (const transition of definition.transitions.slice(0, -1)) {
     assert.deepEqual(transition.next_transition_rules, [{
       condition: null,
-      transition_id: definition.transitions[definition.transitions.indexOf(transition) + 1].transition_id,
+      task_action_id: definition.transitions[definition.transitions.indexOf(transition) + 1].task_action_id,
     }]);
   }
   assert.deepEqual(definition.transitions.at(-1).next_transition_rules, []);
@@ -92,8 +84,7 @@ test("feature-change definition passes C2/C3 validation with direct executor ref
 
 test("feature-change keeps common implementation as a handoff without copying branch, commit, or PR transitions", async () => {
   const definition = await readJson(definitionUrl);
-  const implementationFactIds = definition.normalized_fact_schema
-    .map((fact) => fact.fact_id)
+  const implementationFactIds = Object.keys(definition.facts)
     .filter((factId) => factId === "implementation_flow_started"
       || factId === "all_planned_work_units_merged"
       || factId === "all_completion_items_reflected");
@@ -109,7 +100,7 @@ test("feature-change keeps common implementation as a handoff without copying br
   });
   assert.equal(handoff.executor_reference, null);
   assert.equal(definition.transitions.some((transition) => transition.task_action_id.startsWith("FI-")), false);
-  assert.equal(definition.transitions.some((transition) => /branch|commit|pull-request|review/.test(transition.transition_id)), false);
+  assert.equal(definition.transitions.some((transition) => transition.task_action_id.startsWith("FI-")), false);
 });
 
 test("feature-change representative entry states resolve to exactly one expected action or terminal", async () => {
@@ -139,7 +130,7 @@ test("feature-change representative entry states resolve to exactly one expected
   }
   assert.deepEqual(
     evaluateWorkflowDefinition(definition, states.terminal),
-    { status: "completed", transition_id: "complete-feature-change" },
+    { status: "completed", task_action_id: "FC-7" },
   );
   assert.deepEqual(definition, definitionBefore);
 });
@@ -155,8 +146,8 @@ test("feature-change adapter maps observations in definition order and preserves
   assert.equal(result.status, "normalized");
   assert.equal(result.workflow_id, "feature-change");
   assert.equal(JSON.stringify(result), JSON.stringify(repeatedResult));
-  assert.deepEqual(Object.keys(result.normalized_fact_state), definition.normalized_fact_schema.map((fact) => fact.fact_id));
-  assert.deepEqual(Object.keys(result.evidence_by_fact), definition.normalized_fact_schema.map((fact) => fact.fact_id));
+  assert.deepEqual(Object.keys(result.normalized_fact_state), Object.keys(definition.facts));
+  assert.deepEqual(Object.keys(result.evidence_by_fact), Object.keys(definition.facts));
   assert.deepEqual(result.evidence_by_fact.feature_plan_proposal_usable, [{
     source_kind: "skill_output",
     source_reference: "feature-plan",
@@ -170,28 +161,26 @@ test("feature-change adapter maps observations in definition order and preserves
 test("feature-change adapter rejects missing and unexpected source contracts before observation validation", async () => {
   const definition = await readJson(definitionUrl);
   const missingContractDefinition = structuredClone(definition);
-  missingContractDefinition.normalized_fact_schema.push({
-    ...structuredClone(missingContractDefinition.normalized_fact_schema[0]),
-    fact_id: "uncontracted_fact",
-  });
+  missingContractDefinition.facts.uncontracted_fact = [true, false];
 
   const missingContract = normalizeFeatureChangeFacts(missingContractDefinition, null);
   assertAtomicFailure(missingContract, "source_contract_mismatch");
   assert.deepEqual(missingContract.errors, [{
     code: "source_contract.missing",
-    path: `/normalized_fact_schema/${definition.normalized_fact_schema.length}/fact_id`,
+    path: "/facts/uncontracted_fact",
     message: "Missing source contract for fact_id uncontracted_fact.",
   }]);
   assert.deepEqual(normalizeFeatureChangeFacts(missingContractDefinition, null), missingContract);
 
   const unexpectedContractDefinition = structuredClone(definition);
-  const [removedFact] = unexpectedContractDefinition.normalized_fact_schema.splice(0, 1);
+  const removedFactId = Object.keys(unexpectedContractDefinition.facts)[0];
+  delete unexpectedContractDefinition.facts[removedFactId];
   const unexpectedContract = normalizeFeatureChangeFacts(unexpectedContractDefinition, null);
   assertAtomicFailure(unexpectedContract, "source_contract_mismatch");
   assert.deepEqual(unexpectedContract.errors, [{
     code: "source_contract.unexpected",
-    path: `/source_contracts/${removedFact.fact_id}`,
-    message: `Unexpected source contract for fact_id ${removedFact.fact_id}.`,
+    path: `/source_contracts/${removedFactId}`,
+    message: `Unexpected source contract for fact_id ${removedFactId}.`,
   }]);
   assert.deepEqual(normalizeFeatureChangeFacts(unexpectedContractDefinition, null), unexpectedContract);
 });

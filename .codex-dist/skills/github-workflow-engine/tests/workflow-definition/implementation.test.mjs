@@ -39,20 +39,16 @@ function hasError(result, code, path) {
 test("implementation definition preserves FI mapping, direct executor references, and valid branching graph", async () => {
   const [definition, fixture] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
 
-  assert.deepEqual(
-    [definition.workflow_id, definition.version, definition.workflow_kind, definition.target_type],
-    ["implementation", "1.0.0", "implementation", "repository"],
-  );
+  assert.equal(definition.workflow_id, "implementation");
   assert.deepEqual(definition.transitions.map((transition) => transition.task_action_id), fixture.task_action_ids);
   assert.equal(new Set(fixture.task_action_ids).size, 36);
   assert.equal(JSON.stringify(definition).includes('"priority"'), false);
-  assert.equal(definition.normalized_fact_schema.every((fact) => fact.evidence_required === true), true);
-  assert.deepEqual(Object.keys(fixture.observation_sources), definition.normalized_fact_schema.map((fact) => fact.fact_id));
+  assert.deepEqual(Object.keys(fixture.observation_sources), Object.keys(definition.facts));
   assert.deepEqual(
-    definition.normalized_fact_schema.find((fact) => fact.fact_id === "implementation_work_unit_phase")?.allowed_values,
+    definition.facts.implementation_work_unit_phase,
     ["work_pending", "file_changes_verified", "commit_message_confirmed", "commit_created", "all_work_units_completed"],
   );
-  assert.equal(definition.normalized_fact_schema.some((fact) => fact.fact_id === "implementation_work_unit_state"), false);
+  assert.equal(Object.hasOwn(definition.facts, "implementation_work_unit_state"), false);
   for (const taskActionId of ["FI-5", "FI-6", "FI-7", "FI-8"]) {
     const transition = definition.transitions.find((item) => item.task_action_id === taskActionId);
     assert.equal(JSON.stringify(transition.normalized_fact_conditions).includes("implementation_work_unit_phase"), true, taskActionId);
@@ -65,42 +61,42 @@ test("implementation definition preserves FI mapping, direct executor references
   for (const taskActionId of fixture.null_executor_actions) {
     assert.equal(definition.transitions.find((transition) => transition.task_action_id === taskActionId)?.executor_reference, null);
   }
-  assert.equal(definition.transitions.find((transition) => transition.task_action_id === "FI-6").user_decision_specification.required, true);
-  assert.equal(definition.transitions.find((transition) => transition.task_action_id === "FI-27").user_decision_specification.required, true);
+  assert.notEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-6").user_decision_options.length, 0);
+  assert.notEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-27").user_decision_options.length, 0);
   for (const [taskActionId, executorReference] of [["FI-6", "commit"], ["FI-27", "commit"], ["FI-7", null], ["FI-28", null]]) {
     assert.equal(definition.transitions.find((transition) => transition.task_action_id === taskActionId)?.executor_reference, executorReference);
   }
-  for (const transition of definition.transitions.filter((item) => item.user_decision_specification.required)) {
-    assert.equal(transition.user_decision_specification.allow_free_form, true, transition.task_action_id);
+  for (const transition of definition.transitions) {
+    assert.equal(Array.isArray(transition.user_decision_options), true, transition.task_action_id);
   }
 
   const commentPosting = definition.transitions.find((transition) => transition.task_action_id === "FI-20");
-  assert.deepEqual(commentPosting.user_decision_specification.options.map((option) => option.decision_id), [
+  assert.deepEqual(commentPosting.user_decision_options.map((option) => option.decision_id), [
     "reassign_review_thread_location",
     "reclassify_non_actionable_feedback",
   ]);
-  assert.equal(commentPosting.user_decision_specification.options.some((option) => option.decision_id === "post_as_drafted"), false);
+  assert.equal(commentPosting.user_decision_options.some((option) => option.decision_id === "post_as_drafted"), false);
   assert.deepEqual(
-    definition.normalized_fact_schema.find((fact) => fact.fact_id === "review_comment_posting_direction").allowed_values,
+    definition.facts.review_comment_posting_direction,
     ["reassign_review_thread_location", "reclassify_non_actionable_feedback"],
   );
 
   const feedbackDirection = definition.transitions.find((transition) => transition.task_action_id === "FI-25");
-  assert.deepEqual(feedbackDirection.user_decision_specification.options.map((option) => option.decision_id), ["accept_and_fix", "reject"]);
+  assert.deepEqual(feedbackDirection.user_decision_options.map((option) => option.decision_id), ["accept_and_fix", "reject"]);
   assert.deepEqual(
-    definition.normalized_fact_schema.find((fact) => fact.fact_id === "review_feedback_direction").allowed_values,
+    definition.facts.review_feedback_direction,
     ["accept_and_fix", "reject", "other_requires_file_change", "other_without_file_change"],
   );
-  assert.deepEqual(feedbackDirection.next_transition_rules.map((rule) => rule.transition_id), [
-    "apply-feedback-fix", "apply-feedback-fix", "post-feedback-result-comment", "post-feedback-result-comment",
+  assert.deepEqual(feedbackDirection.next_transition_rules.map((rule) => rule.task_action_id), [
+    "FI-26", "FI-26", "FI-30", "FI-30",
   ]);
-  assert.equal(definition.normalized_fact_schema.some((fact) => /reject.*(reason|rationale)/i.test(fact.fact_id)), false);
+  assert.equal(Object.keys(definition.facts).some((factId) => /reject.*(reason|rationale)/i.test(factId)), false);
 
   const reviewInspection = definition.transitions.find((transition) => transition.task_action_id === "FI-14");
   assert.deepEqual(reviewInspection.next_transition_rules, [
-    { condition: { fact_id: "review_mode", operator: "equals", value: "claude_code_review" }, transition_id: "run-claude-code-review" },
-    { condition: { fact_id: "review_mode", operator: "equals", value: "claude_awesome_code_review" }, transition_id: "run-claude-awesome-code-review" },
-    { condition: { fact_id: "review_mode", operator: "equals", value: "codex_awesome_code_review" }, transition_id: "run-codex-awesome-code-review" },
+    { condition: { fact_id: "review_mode", operator: "equals", value: "claude_code_review" }, task_action_id: "FI-15" },
+    { condition: { fact_id: "review_mode", operator: "equals", value: "claude_awesome_code_review" }, task_action_id: "FI-16" },
+    { condition: { fact_id: "review_mode", operator: "equals", value: "codex_awesome_code_review" }, task_action_id: "FI-17" },
   ]);
   for (const [taskActionId, executorId] of [
     ["FI-15", "claude/code-review"],
@@ -109,16 +105,16 @@ test("implementation definition preserves FI mapping, direct executor references
   ]) {
     const transition = definition.transitions.find((item) => item.task_action_id === taskActionId);
     assert.equal(transition.executor_reference, executorId);
-    assert.deepEqual(transition.next_transition_rules, [{ condition: null, transition_id: "normalize-review-results" }]);
+    assert.deepEqual(transition.next_transition_rules, [{ condition: null, task_action_id: "FI-18" }]);
   }
 
   assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-18").next_transition_rules, [
-    { condition: { fact_id: "review_feedback_importance", operator: "equals", value: "no_publishable_feedback" }, transition_id: "check-review-feedback-targets" },
-    { condition: { fact_id: "review_feedback_importance", operator: "equals", value: "publishable_feedback" }, transition_id: "draft-review-comments" },
+    { condition: { fact_id: "review_feedback_importance", operator: "equals", value: "no_publishable_feedback" }, task_action_id: "FI-24" },
+    { condition: { fact_id: "review_feedback_importance", operator: "equals", value: "publishable_feedback" }, task_action_id: "FI-19" },
   ]);
   assert.equal(
     /marker|fallback|summary/i.test(JSON.stringify({
-      fact_ids: definition.normalized_fact_schema.map((fact) => fact.fact_id),
+      fact_ids: Object.keys(definition.facts),
       review_states: fixture.review_feedback_cases.map((scenario) => scenario.state),
     })),
     false,
@@ -134,13 +130,13 @@ test("implementation definition preserves FI mapping, direct executor references
 
   assert.equal(definition.transitions.find((transition) => transition.task_action_id === "FI-32").executor_reference, null);
   assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-33").next_transition_rules, [
-    { condition: { fact_id: "remaining_feedback_status", operator: "equals", value: "unhandled_feedback_present" }, transition_id: "determine-feedback-direction" },
-    { condition: { fact_id: "remaining_feedback_status", operator: "equals", value: "unresolved_thread_present" }, transition_id: "determine-feedback-resolution" },
-    { condition: { fact_id: "remaining_feedback_status", operator: "equals", value: "all_resolved" }, transition_id: "determine-pull-request-merge" },
+    { condition: { fact_id: "remaining_feedback_status", operator: "equals", value: "unhandled_feedback_present" }, task_action_id: "FI-25" },
+    { condition: { fact_id: "remaining_feedback_status", operator: "equals", value: "unresolved_thread_present" }, task_action_id: "FI-31" },
+    { condition: { fact_id: "remaining_feedback_status", operator: "equals", value: "all_resolved" }, task_action_id: "FI-34" },
   ]);
 
   const mergeDecision = definition.transitions.find((transition) => transition.task_action_id === "FI-34");
-  assert.deepEqual(mergeDecision.user_decision_specification.options.map((option) => option.decision_id), ["merge_confirmed", "merge_deferred"]);
+  assert.deepEqual(mergeDecision.user_decision_options.map((option) => option.decision_id), ["merge_confirmed", "merge_deferred"]);
   assert.deepEqual(mergeDecision.completion_predicate, {
     fact_id: "pull_request_merge_decision", operator: "equals", value: "merge_confirmed",
   });
@@ -153,10 +149,10 @@ test("implementation definition preserves FI mapping, direct executor references
 
   const nextCommit = definition.transitions.find((transition) => transition.task_action_id === "FI-8");
   assert.deepEqual(nextCommit.next_transition_rules, [
-    { condition: { fact_id: "implementation_work_unit_phase", operator: "in", value: ["work_pending", "file_changes_verified", "commit_message_confirmed", "commit_created"] }, transition_id: "implement-work-unit" },
-    { condition: { fact_id: "implementation_work_unit_phase", operator: "equals", value: "all_work_units_completed" }, transition_id: "push-implementation-branch" },
+    { condition: { fact_id: "implementation_work_unit_phase", operator: "in", value: ["work_pending", "file_changes_verified", "commit_message_confirmed", "commit_created"] }, task_action_id: "FI-5" },
+    { condition: { fact_id: "implementation_work_unit_phase", operator: "equals", value: "all_work_units_completed" }, task_action_id: "FI-9" },
   ]);
-  assert.equal(definition.normalized_fact_schema.some((fact) => fact.fact_id === "implementation_progress"), false);
+  assert.equal(Object.hasOwn(definition.facts, "implementation_progress"), false);
   assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-9").normalized_fact_conditions, {
     fact_id: "implementation_work_unit_phase", operator: "equals", value: "all_work_units_completed",
   });
@@ -180,8 +176,8 @@ test("implementation definition preserves FI mapping, direct executor references
     ],
   });
   assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-11").next_transition_rules, [
-    { condition: { fact_id: "pull_request_draft_confirmed", operator: "equals", value: false }, transition_id: "draft-pull-request" },
-    { condition: { fact_id: "pull_request_draft_confirmed", operator: "equals", value: true }, transition_id: "create-pull-request" },
+    { condition: { fact_id: "pull_request_draft_confirmed", operator: "equals", value: false }, task_action_id: "FI-10" },
+    { condition: { fact_id: "pull_request_draft_confirmed", operator: "equals", value: true }, task_action_id: "FI-12" },
   ]);
   assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-12").completion_predicate, {
     fact_id: "pull_request_created", operator: "equals", value: true,
@@ -211,12 +207,12 @@ test("implementation pre-PR condition mismatch stops without mutating state", as
   const definition = await readJson(definitionUrl);
   const state = { branch_proposal_usable: true, branch_proposal_confirmed: false };
   const stateBefore = structuredClone(state);
-  const result = evaluateWorkflowDefinition(definition, state, { currentTransitionId: "switch-branch" });
+  const result = evaluateWorkflowDefinition(definition, state, { currentTaskActionId: "FI-2" });
 
   assert.deepEqual(result, {
     status: "stopped",
-    reason: "current_transition_condition_not_met",
-    transition_id: "switch-branch",
+    reason: "current_task_action_condition_not_met",
+    task_action_id: "FI-2",
   });
   assert.deepEqual(state, stateBefore);
 });
@@ -227,7 +223,7 @@ test("FI-11 revise and create decisions resolve to exactly one next action witho
   for (const scenario of fixture.pull_request_creation_cases) {
     const stateBefore = structuredClone(scenario.state);
     const result = evaluateWorkflowDefinition(definition, scenario.state, {
-      currentTransitionId: "request-pull-request-creation",
+      currentTaskActionId: "FI-11",
     });
     assert.equal(result.status, "action_required", scenario.name);
     assert.equal(result.task_action_id, scenario.task_action_id, scenario.name);
@@ -240,7 +236,7 @@ test("implementation work-unit phase isolates stale prior-unit facts without mut
   for (const scenario of fixture.branch_cases) {
     const stateBefore = structuredClone(scenario.state);
     const result = evaluateWorkflowDefinition(definition, scenario.state, {
-      currentTransitionId: scenario.current_transition_id,
+      currentTaskActionId: scenario.current_task_action_id,
     });
     assert.equal(result.status, "action_required", scenario.name);
     assert.equal(result.task_action_id, scenario.task_action_id, scenario.name);
@@ -253,13 +249,13 @@ test("implementation review and feedback states resolve to one action or complet
   for (const scenario of fixture.review_feedback_cases) {
     const stateBefore = structuredClone(scenario.state);
     const result = evaluateWorkflowDefinition(definition, scenario.state, {
-      currentTransitionId: scenario.current_transition_id,
+      currentTaskActionId: scenario.current_task_action_id,
     });
     assert.equal(result.status, scenario.status, scenario.name);
     if (scenario.status === "action_required") {
       assert.equal(result.task_action_id, scenario.task_action_id, scenario.name);
     } else {
-      assert.equal(result.transition_id, "complete-implementation", scenario.name);
+      assert.equal(result.task_action_id, "FI-36", scenario.name);
     }
     assert.deepEqual(scenario.state, stateBefore, scenario.name);
   }
@@ -274,8 +270,8 @@ test("implementation adapter normalizes exact source contracts in definition ord
   const result = normalizeImplementationFacts(definition, observations);
   assert.equal(result.status, "normalized");
   assert.equal(result.workflow_id, "implementation");
-  assert.deepEqual(Object.keys(result.normalized_fact_state), definition.normalized_fact_schema.map((fact) => fact.fact_id));
-  assert.deepEqual(Object.keys(result.evidence_by_fact), definition.normalized_fact_schema.map((fact) => fact.fact_id));
+  assert.deepEqual(Object.keys(result.normalized_fact_state), Object.keys(definition.facts));
+  assert.deepEqual(Object.keys(result.evidence_by_fact), Object.keys(definition.facts));
   assert.deepEqual(result.evidence_by_fact.review_mode, [{
     source_kind: "user_input",
     source_reference: "review mode decision",
@@ -328,19 +324,17 @@ test("implementation adapter fail-closes contract, source, duplicate, conflictin
   const observations = observationsFromFixture(fixture);
 
   const missingContractDefinition = structuredClone(definition);
-  missingContractDefinition.normalized_fact_schema.push({
-    ...structuredClone(definition.normalized_fact_schema[0]),
-    fact_id: "uncontracted_fact",
-  });
+  missingContractDefinition.facts.uncontracted_fact = [true, false];
   const missingContract = normalizeImplementationFacts(missingContractDefinition, observations);
   assertAtomicFailure(missingContract, "source_contract_mismatch");
-  assert.equal(hasError(missingContract, "source_contract.missing", `/normalized_fact_schema/${definition.normalized_fact_schema.length}/fact_id`), true);
+  assert.equal(hasError(missingContract, "source_contract.missing", "/facts/uncontracted_fact"), true);
 
   const missingFactDefinition = structuredClone(definition);
-  const [removedFact] = missingFactDefinition.normalized_fact_schema.splice(0, 1);
+  const removedFactId = Object.keys(missingFactDefinition.facts)[0];
+  delete missingFactDefinition.facts[removedFactId];
   const unexpectedContract = normalizeImplementationFacts(missingFactDefinition, observations);
   assertAtomicFailure(unexpectedContract, "source_contract_mismatch");
-  assert.equal(hasError(unexpectedContract, "source_contract.unexpected", `/source_contracts/${removedFact.fact_id}`), true);
+  assert.equal(hasError(unexpectedContract, "source_contract.unexpected", `/source_contracts/${removedFactId}`), true);
 
   const reviewMode = observations.find((observation) => observation.fact_id === "review_mode");
   const wrongSource = normalizeImplementationFacts(definition, [{ ...reviewMode, source_kind: "github_state" }]);

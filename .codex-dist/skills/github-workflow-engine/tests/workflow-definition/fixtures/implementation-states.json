@@ -1,132 +1,968 @@
 {
-  "task_action_ids": ["FI-1", "FI-2", "FI-3", "FI-4", "FI-5", "FI-6", "FI-7", "FI-8", "FI-9", "FI-10", "FI-11", "FI-12", "FI-13", "FI-14", "FI-15", "FI-16", "FI-17", "FI-18", "FI-19", "FI-20", "FI-21", "FI-22", "FI-23", "FI-24", "FI-25", "FI-26", "FI-27", "FI-28", "FI-29", "FI-30", "FI-31", "FI-32", "FI-33", "FI-34", "FI-35", "FI-36"],
+  "task_action_ids": [
+    "FI-1",
+    "FI-2",
+    "FI-3",
+    "FI-4",
+    "FI-5",
+    "FI-6",
+    "FI-7",
+    "FI-8",
+    "FI-9",
+    "FI-10",
+    "FI-11",
+    "FI-12",
+    "FI-13",
+    "FI-14",
+    "FI-15",
+    "FI-16",
+    "FI-17",
+    "FI-18",
+    "FI-19",
+    "FI-20",
+    "FI-21",
+    "FI-22",
+    "FI-23",
+    "FI-24",
+    "FI-25",
+    "FI-26",
+    "FI-27",
+    "FI-28",
+    "FI-29",
+    "FI-30",
+    "FI-31",
+    "FI-32",
+    "FI-33",
+    "FI-34",
+    "FI-35",
+    "FI-36"
+  ],
   "executor_references": {
-    "FI-1": "branch-proposal", "FI-3": "commit-plan", "FI-5": "target-harness-code-editor", "FI-6": "commit", "FI-10": "pr-proposal", "FI-12": "pr-creation", "FI-15": "claude/code-review", "FI-16": "claude/awesome-code-review", "FI-17": "codex/awesome-code-review", "FI-19": "review-comment", "FI-24": "github-state-summary", "FI-26": "target-harness-code-editor", "FI-27": "commit", "FI-30": "github-simple-executor", "FI-33": "github-state-summary"
+    "FI-1": "branch-proposal",
+    "FI-3": "commit-plan",
+    "FI-5": "target-harness-code-editor",
+    "FI-6": "commit",
+    "FI-10": "pr-proposal",
+    "FI-12": "pr-creation",
+    "FI-15": "claude/code-review",
+    "FI-16": "claude/awesome-code-review",
+    "FI-17": "codex/awesome-code-review",
+    "FI-19": "review-comment",
+    "FI-24": "github-state-summary",
+    "FI-26": "target-harness-code-editor",
+    "FI-27": "commit",
+    "FI-30": "github-simple-executor",
+    "FI-33": "github-state-summary"
   },
-  "null_executor_actions": ["FI-2", "FI-7", "FI-8", "FI-9", "FI-11", "FI-13", "FI-14", "FI-18", "FI-20", "FI-21", "FI-22", "FI-23", "FI-25", "FI-28", "FI-29", "FI-31", "FI-32", "FI-34", "FI-35", "FI-36"],
+  "null_executor_actions": [
+    "FI-2",
+    "FI-7",
+    "FI-8",
+    "FI-9",
+    "FI-11",
+    "FI-13",
+    "FI-14",
+    "FI-18",
+    "FI-20",
+    "FI-21",
+    "FI-22",
+    "FI-23",
+    "FI-25",
+    "FI-28",
+    "FI-29",
+    "FI-31",
+    "FI-32",
+    "FI-34",
+    "FI-35",
+    "FI-36"
+  ],
   "observation_sources": {
-    "implementation_requested": [true, "user_input", "request issue #95"],
-    "branch_proposal_usable": [true, "skill_output", "branch-proposal"],
-    "branch_proposal_confirmed": [true, "user_input", "branch proposal decision"],
-    "implementation_branch_switched": [true, "local_state", "workspace branch"],
-    "implementation_plan_usable": [true, "skill_output", "commit-plan"],
-    "implementation_plan_confirmed": [true, "user_input", "implementation plan decision"],
-    "implementation_plan_reflected": [true, "github_state", "issue #95"],
-    "implementation_work_unit_phase": ["all_work_units_completed", "local_state", "current work unit phase"],
-    "implementation_commit_message_proposal_usable": [true, "skill_output", "commit"],
-    "implementation_commit_message_confirmed": [true, "user_input", "implementation commit decision"],
-    "implementation_commit_created": [true, "local_state", "git commit"],
-    "implementation_branch_pushed": [true, "local_state", "git push"],
-    "pull_request_draft_usable": [true, "skill_output", "pr-proposal"],
-    "pull_request_draft_confirmed": [true, "user_input", "PR draft decision"],
-    "pull_request_creation_requested": [true, "user_input", "PR creation decision"],
-    "pull_request_created": [true, "github_state", "PR #99"],
-    "review_mode": ["claude_code_review", "user_input", "review mode decision"],
-    "review_mode_checked": [true, "local_state", "workflow-engine configuration"],
-    "claude_code_review_completed": [true, "skill_output", "claude/code-review"],
-    "claude_awesome_code_review_completed": [true, "skill_output", "claude/awesome-code-review"],
-    "codex_awesome_code_review_completed": [true, "skill_output", "codex/awesome-code-review"],
-    "review_feedback_importance": ["publishable_feedback", "local_state", "normalized review results"],
-    "inline_review_thread_drafts_usable": [true, "skill_output", "review-comment"],
-    "review_comment_location_status": ["no_location_deferred", "local_state", "initial comment location check"],
-    "review_comment_posting_direction": ["reassign_review_thread_location", "user_input", "comment posting decision"],
-    "review_comment_posting_direction_reflected": [true, "local_state", "comment posting placement"],
-    "remaining_review_comment_location_status": ["no_location_deferred", "local_state", "remaining comment location check"],
-    "inline_review_threads_posted": [true, "github_state", "PR #99 inline review threads"],
-    "github_review_threads_observed": [true, "github_state", "PR #99 unresolved review threads"],
-    "review_feedback_inventory": ["actionable_feedback_present", "local_state", "unresolved threads and processed feedback comparison"],
-    "review_feedback_direction": ["accept_and_fix", "user_input", "feedback direction decision"],
-    "review_feedback_fixed": [true, "local_state", "workspace feedback fix"],
-    "feedback_commit_message_proposal_usable": [true, "skill_output", "commit"],
-    "feedback_commit_message_confirmed": [true, "user_input", "feedback commit decision"],
-    "feedback_commit_created": [true, "local_state", "git feedback commit"],
-    "feedback_branch_pushed": [true, "local_state", "git feedback push"],
-    "selected_review_thread_reply_posted": [true, "github_state", "PR #99 selected review thread reply"],
-    "feedback_resolution": ["resolved", "user_input", "feedback resolution decision"],
-    "feedback_resolution_reflected": [true, "local_state", "feedback resolution application"],
-    "remaining_feedback_status": ["all_resolved", "local_state", "processed feedback comparison"],
-    "pull_request_merge_decision": ["merge_confirmed", "user_input", "merge decision"],
-    "pull_request_merged": [true, "github_state", "PR #99 merged"],
-    "post_merge_reflection_completed": [true, "local_state", "base branch and follow-up reflection"],
-    "implementation_completed": [true, "local_state", "implementation workflow complete"]
+    "implementation_requested": [
+      true,
+      "user_input",
+      "request issue #95"
+    ],
+    "branch_proposal_usable": [
+      true,
+      "skill_output",
+      "branch-proposal"
+    ],
+    "branch_proposal_confirmed": [
+      true,
+      "user_input",
+      "branch proposal decision"
+    ],
+    "implementation_branch_switched": [
+      true,
+      "local_state",
+      "workspace branch"
+    ],
+    "implementation_plan_usable": [
+      true,
+      "skill_output",
+      "commit-plan"
+    ],
+    "implementation_plan_confirmed": [
+      true,
+      "user_input",
+      "implementation plan decision"
+    ],
+    "implementation_plan_reflected": [
+      true,
+      "github_state",
+      "issue #95"
+    ],
+    "implementation_work_unit_phase": [
+      "all_work_units_completed",
+      "local_state",
+      "current work unit phase"
+    ],
+    "implementation_commit_message_proposal_usable": [
+      true,
+      "skill_output",
+      "commit"
+    ],
+    "implementation_commit_message_confirmed": [
+      true,
+      "user_input",
+      "implementation commit decision"
+    ],
+    "implementation_commit_created": [
+      true,
+      "local_state",
+      "git commit"
+    ],
+    "implementation_branch_pushed": [
+      true,
+      "local_state",
+      "git push"
+    ],
+    "pull_request_draft_usable": [
+      true,
+      "skill_output",
+      "pr-proposal"
+    ],
+    "pull_request_draft_confirmed": [
+      true,
+      "user_input",
+      "PR draft decision"
+    ],
+    "pull_request_creation_requested": [
+      true,
+      "user_input",
+      "PR creation decision"
+    ],
+    "pull_request_created": [
+      true,
+      "github_state",
+      "PR #99"
+    ],
+    "review_mode": [
+      "claude_code_review",
+      "user_input",
+      "review mode decision"
+    ],
+    "review_mode_checked": [
+      true,
+      "local_state",
+      "workflow-engine configuration"
+    ],
+    "claude_code_review_completed": [
+      true,
+      "skill_output",
+      "claude/code-review"
+    ],
+    "claude_awesome_code_review_completed": [
+      true,
+      "skill_output",
+      "claude/awesome-code-review"
+    ],
+    "codex_awesome_code_review_completed": [
+      true,
+      "skill_output",
+      "codex/awesome-code-review"
+    ],
+    "review_feedback_importance": [
+      "publishable_feedback",
+      "local_state",
+      "normalized review results"
+    ],
+    "inline_review_thread_drafts_usable": [
+      true,
+      "skill_output",
+      "review-comment"
+    ],
+    "review_comment_location_status": [
+      "no_location_deferred",
+      "local_state",
+      "initial comment location check"
+    ],
+    "review_comment_posting_direction": [
+      "reassign_review_thread_location",
+      "user_input",
+      "comment posting decision"
+    ],
+    "review_comment_posting_direction_reflected": [
+      true,
+      "local_state",
+      "comment posting placement"
+    ],
+    "remaining_review_comment_location_status": [
+      "no_location_deferred",
+      "local_state",
+      "remaining comment location check"
+    ],
+    "inline_review_threads_posted": [
+      true,
+      "github_state",
+      "PR #99 inline review threads"
+    ],
+    "github_review_threads_observed": [
+      true,
+      "github_state",
+      "PR #99 unresolved review threads"
+    ],
+    "review_feedback_inventory": [
+      "actionable_feedback_present",
+      "local_state",
+      "unresolved threads and processed feedback comparison"
+    ],
+    "review_feedback_direction": [
+      "accept_and_fix",
+      "user_input",
+      "feedback direction decision"
+    ],
+    "review_feedback_fixed": [
+      true,
+      "local_state",
+      "workspace feedback fix"
+    ],
+    "feedback_commit_message_proposal_usable": [
+      true,
+      "skill_output",
+      "commit"
+    ],
+    "feedback_commit_message_confirmed": [
+      true,
+      "user_input",
+      "feedback commit decision"
+    ],
+    "feedback_commit_created": [
+      true,
+      "local_state",
+      "git feedback commit"
+    ],
+    "feedback_branch_pushed": [
+      true,
+      "local_state",
+      "git feedback push"
+    ],
+    "selected_review_thread_reply_posted": [
+      true,
+      "github_state",
+      "PR #99 selected review thread reply"
+    ],
+    "feedback_resolution": [
+      "resolved",
+      "user_input",
+      "feedback resolution decision"
+    ],
+    "feedback_resolution_reflected": [
+      true,
+      "local_state",
+      "feedback resolution application"
+    ],
+    "remaining_feedback_status": [
+      "all_resolved",
+      "local_state",
+      "processed feedback comparison"
+    ],
+    "pull_request_merge_decision": [
+      "merge_confirmed",
+      "user_input",
+      "merge decision"
+    ],
+    "pull_request_merged": [
+      true,
+      "github_state",
+      "PR #99 merged"
+    ],
+    "post_merge_reflection_completed": [
+      true,
+      "local_state",
+      "base branch and follow-up reflection"
+    ],
+    "implementation_completed": [
+      true,
+      "local_state",
+      "implementation workflow complete"
+    ]
   },
   "pre_pr_cases": [
-    { "name": "entry request", "updates": { "implementation_requested": true }, "task_action_id": "FI-1" },
-    { "name": "branch proposal waiting for confirmation", "updates": { "branch_proposal_usable": true, "branch_proposal_confirmed": false }, "task_action_id": "FI-1" },
-    { "name": "branch proposal confirmed", "updates": { "branch_proposal_confirmed": true }, "task_action_id": "FI-2" },
-    { "name": "implementation branch switched", "updates": { "implementation_branch_switched": true }, "task_action_id": "FI-3" },
-    { "name": "implementation plan waiting for confirmation", "updates": { "implementation_plan_usable": true, "implementation_plan_confirmed": false }, "task_action_id": "FI-3" },
-    { "name": "implementation plan confirmed", "updates": { "implementation_plan_confirmed": true }, "task_action_id": "FI-4" },
-    { "name": "implementation plan reflected", "updates": { "implementation_plan_reflected": true, "implementation_work_unit_phase": "work_pending" }, "task_action_id": "FI-5" },
-    { "name": "implementation work in progress", "updates": { "implementation_work_unit_phase": "work_pending" }, "task_action_id": "FI-5" },
-    { "name": "implementation work completed", "updates": { "implementation_work_unit_phase": "file_changes_verified" }, "task_action_id": "FI-6" },
-    { "name": "commit message waiting for confirmation", "updates": { "implementation_commit_message_proposal_usable": true, "implementation_commit_message_confirmed": false }, "task_action_id": "FI-6" },
-    { "name": "commit message confirmed", "updates": { "implementation_commit_message_confirmed": true, "implementation_work_unit_phase": "commit_message_confirmed" }, "task_action_id": "FI-7" },
-    { "name": "commit completed waiting for next unit decision", "updates": { "implementation_commit_created": true, "implementation_work_unit_phase": "commit_created" }, "task_action_id": "FI-8" },
-    { "name": "next commit unit repeats implementation", "updates": { "implementation_work_unit_phase": "work_pending" }, "task_action_id": "FI-5" },
-    { "name": "second unit file changes ignore stale commit facts", "updates": { "implementation_work_unit_phase": "file_changes_verified" }, "task_action_id": "FI-6" },
-    { "name": "second unit commit message confirmed", "updates": { "implementation_work_unit_phase": "commit_message_confirmed" }, "task_action_id": "FI-7" },
-    { "name": "second unit commit requires a new progress assessment", "updates": { "implementation_work_unit_phase": "commit_created" }, "task_action_id": "FI-8" },
-    { "name": "all work units completed", "updates": { "implementation_work_unit_phase": "all_work_units_completed" }, "task_action_id": "FI-9" },
-    { "name": "implementation branch pushed", "updates": { "implementation_branch_pushed": true }, "task_action_id": "FI-10" },
-    { "name": "pull request draft waiting for confirmation", "updates": { "pull_request_draft_usable": true, "pull_request_draft_confirmed": false }, "task_action_id": "FI-10" },
-    { "name": "pull request draft confirmed", "updates": { "pull_request_draft_confirmed": true }, "task_action_id": "FI-11" },
-    { "name": "pull request creation requested", "updates": { "pull_request_creation_requested": true }, "task_action_id": "FI-12" },
-    { "name": "pull request created", "updates": { "pull_request_created": true }, "task_action_id": "FI-13" }
+    {
+      "name": "entry request",
+      "updates": {
+        "implementation_requested": true
+      },
+      "task_action_id": "FI-1"
+    },
+    {
+      "name": "branch proposal waiting for confirmation",
+      "updates": {
+        "branch_proposal_usable": true,
+        "branch_proposal_confirmed": false
+      },
+      "task_action_id": "FI-1"
+    },
+    {
+      "name": "branch proposal confirmed",
+      "updates": {
+        "branch_proposal_confirmed": true
+      },
+      "task_action_id": "FI-2"
+    },
+    {
+      "name": "implementation branch switched",
+      "updates": {
+        "implementation_branch_switched": true
+      },
+      "task_action_id": "FI-3"
+    },
+    {
+      "name": "implementation plan waiting for confirmation",
+      "updates": {
+        "implementation_plan_usable": true,
+        "implementation_plan_confirmed": false
+      },
+      "task_action_id": "FI-3"
+    },
+    {
+      "name": "implementation plan confirmed",
+      "updates": {
+        "implementation_plan_confirmed": true
+      },
+      "task_action_id": "FI-4"
+    },
+    {
+      "name": "implementation plan reflected",
+      "updates": {
+        "implementation_plan_reflected": true,
+        "implementation_work_unit_phase": "work_pending"
+      },
+      "task_action_id": "FI-5"
+    },
+    {
+      "name": "implementation work in progress",
+      "updates": {
+        "implementation_work_unit_phase": "work_pending"
+      },
+      "task_action_id": "FI-5"
+    },
+    {
+      "name": "implementation work completed",
+      "updates": {
+        "implementation_work_unit_phase": "file_changes_verified"
+      },
+      "task_action_id": "FI-6"
+    },
+    {
+      "name": "commit message waiting for confirmation",
+      "updates": {
+        "implementation_commit_message_proposal_usable": true,
+        "implementation_commit_message_confirmed": false
+      },
+      "task_action_id": "FI-6"
+    },
+    {
+      "name": "commit message confirmed",
+      "updates": {
+        "implementation_commit_message_confirmed": true,
+        "implementation_work_unit_phase": "commit_message_confirmed"
+      },
+      "task_action_id": "FI-7"
+    },
+    {
+      "name": "commit completed waiting for next unit decision",
+      "updates": {
+        "implementation_commit_created": true,
+        "implementation_work_unit_phase": "commit_created"
+      },
+      "task_action_id": "FI-8"
+    },
+    {
+      "name": "next commit unit repeats implementation",
+      "updates": {
+        "implementation_work_unit_phase": "work_pending"
+      },
+      "task_action_id": "FI-5"
+    },
+    {
+      "name": "second unit file changes ignore stale commit facts",
+      "updates": {
+        "implementation_work_unit_phase": "file_changes_verified"
+      },
+      "task_action_id": "FI-6"
+    },
+    {
+      "name": "second unit commit message confirmed",
+      "updates": {
+        "implementation_work_unit_phase": "commit_message_confirmed"
+      },
+      "task_action_id": "FI-7"
+    },
+    {
+      "name": "second unit commit requires a new progress assessment",
+      "updates": {
+        "implementation_work_unit_phase": "commit_created"
+      },
+      "task_action_id": "FI-8"
+    },
+    {
+      "name": "all work units completed",
+      "updates": {
+        "implementation_work_unit_phase": "all_work_units_completed"
+      },
+      "task_action_id": "FI-9"
+    },
+    {
+      "name": "implementation branch pushed",
+      "updates": {
+        "implementation_branch_pushed": true
+      },
+      "task_action_id": "FI-10"
+    },
+    {
+      "name": "pull request draft waiting for confirmation",
+      "updates": {
+        "pull_request_draft_usable": true,
+        "pull_request_draft_confirmed": false
+      },
+      "task_action_id": "FI-10"
+    },
+    {
+      "name": "pull request draft confirmed",
+      "updates": {
+        "pull_request_draft_confirmed": true
+      },
+      "task_action_id": "FI-11"
+    },
+    {
+      "name": "pull request creation requested",
+      "updates": {
+        "pull_request_creation_requested": true
+      },
+      "task_action_id": "FI-12"
+    },
+    {
+      "name": "pull request created",
+      "updates": {
+        "pull_request_created": true
+      },
+      "task_action_id": "FI-13"
+    }
   ],
   "branch_cases": [
-    { "name": "next work unit repeats implementation despite stale prior unit facts", "current_transition_id": "plan-next-commit-unit", "state": { "implementation_commit_created": true, "implementation_commit_message_proposal_usable": true, "implementation_commit_message_confirmed": true, "implementation_plan_reflected": true, "implementation_work_unit_phase": "work_pending" }, "task_action_id": "FI-5" },
-    { "name": "second unit file changes proceed to commit preparation despite stale prior unit facts", "current_transition_id": "implement-work-unit", "state": { "implementation_commit_created": true, "implementation_commit_message_proposal_usable": true, "implementation_commit_message_confirmed": true, "implementation_plan_reflected": true, "implementation_work_unit_phase": "file_changes_verified" }, "task_action_id": "FI-6" },
-    { "name": "all work units proceed to push", "current_transition_id": "plan-next-commit-unit", "state": { "implementation_commit_created": true, "implementation_work_unit_phase": "all_work_units_completed" }, "task_action_id": "FI-9" }
+    {
+      "name": "next work unit repeats implementation despite stale prior unit facts",
+      "state": {
+        "implementation_commit_created": true,
+        "implementation_commit_message_proposal_usable": true,
+        "implementation_commit_message_confirmed": true,
+        "implementation_plan_reflected": true,
+        "implementation_work_unit_phase": "work_pending"
+      },
+      "task_action_id": "FI-5",
+      "current_task_action_id": "FI-8"
+    },
+    {
+      "name": "second unit file changes proceed to commit preparation despite stale prior unit facts",
+      "state": {
+        "implementation_commit_created": true,
+        "implementation_commit_message_proposal_usable": true,
+        "implementation_commit_message_confirmed": true,
+        "implementation_plan_reflected": true,
+        "implementation_work_unit_phase": "file_changes_verified"
+      },
+      "task_action_id": "FI-6",
+      "current_task_action_id": "FI-5"
+    },
+    {
+      "name": "all work units proceed to push",
+      "state": {
+        "implementation_commit_created": true,
+        "implementation_work_unit_phase": "all_work_units_completed"
+      },
+      "task_action_id": "FI-9",
+      "current_task_action_id": "FI-8"
+    }
   ],
   "pull_request_creation_cases": [
-    { "name": "revised pull request draft returns to draft action", "state": { "implementation_branch_pushed": true, "pull_request_draft_usable": true, "pull_request_draft_confirmed": false, "pull_request_creation_requested": false }, "task_action_id": "FI-10" },
-    { "name": "revised decision overrides stale creation request", "state": { "implementation_branch_pushed": true, "pull_request_draft_usable": true, "pull_request_draft_confirmed": false, "pull_request_creation_requested": true }, "task_action_id": "FI-10" },
-    { "name": "create decision waits for creation request completion", "state": { "implementation_branch_pushed": true, "pull_request_draft_usable": true, "pull_request_draft_confirmed": true, "pull_request_creation_requested": false }, "task_action_id": "FI-11" },
-    { "name": "pull request creation proceeds to create action", "state": { "implementation_branch_pushed": true, "pull_request_draft_usable": true, "pull_request_draft_confirmed": true, "pull_request_creation_requested": true }, "task_action_id": "FI-12" }
+    {
+      "name": "revised pull request draft returns to draft action",
+      "state": {
+        "implementation_branch_pushed": true,
+        "pull_request_draft_usable": true,
+        "pull_request_draft_confirmed": false,
+        "pull_request_creation_requested": false
+      },
+      "task_action_id": "FI-10"
+    },
+    {
+      "name": "revised decision overrides stale creation request",
+      "state": {
+        "implementation_branch_pushed": true,
+        "pull_request_draft_usable": true,
+        "pull_request_draft_confirmed": false,
+        "pull_request_creation_requested": true
+      },
+      "task_action_id": "FI-10"
+    },
+    {
+      "name": "create decision waits for creation request completion",
+      "state": {
+        "implementation_branch_pushed": true,
+        "pull_request_draft_usable": true,
+        "pull_request_draft_confirmed": true,
+        "pull_request_creation_requested": false
+      },
+      "task_action_id": "FI-11"
+    },
+    {
+      "name": "pull request creation proceeds to create action",
+      "state": {
+        "implementation_branch_pushed": true,
+        "pull_request_draft_usable": true,
+        "pull_request_draft_confirmed": true,
+        "pull_request_creation_requested": true
+      },
+      "task_action_id": "FI-12"
+    }
   ],
   "review_feedback_cases": [
-    { "name": "review mode decision is pending", "current_transition_id": "select-review-mode", "state": { "pull_request_created": true }, "status": "action_required", "task_action_id": "FI-13" },
-    { "name": "review dependency inspection is pending", "current_transition_id": "inspect-review-mode", "state": { "review_mode": "claude_code_review", "review_mode_checked": false }, "status": "action_required", "task_action_id": "FI-14" },
-    { "name": "claude code review mode selects one executor", "current_transition_id": "inspect-review-mode", "state": { "review_mode": "claude_code_review", "review_mode_checked": true }, "status": "action_required", "task_action_id": "FI-15" },
-    { "name": "claude awesome review mode selects one executor", "current_transition_id": "inspect-review-mode", "state": { "review_mode": "claude_awesome_code_review", "review_mode_checked": true }, "status": "action_required", "task_action_id": "FI-16" },
-    { "name": "codex awesome review mode selects one executor", "current_transition_id": "inspect-review-mode", "state": { "review_mode": "codex_awesome_code_review", "review_mode_checked": true }, "status": "action_required", "task_action_id": "FI-17" },
-    { "name": "review result normalization is pending", "current_transition_id": "normalize-review-results", "state": { "claude_code_review_completed": true }, "status": "action_required", "task_action_id": "FI-18" },
-    { "name": "no publishable feedback proceeds to target comparison", "current_transition_id": "normalize-review-results", "state": { "claude_code_review_completed": true, "review_feedback_importance": "no_publishable_feedback" }, "status": "action_required", "task_action_id": "FI-24" },
-    { "name": "publishable feedback proceeds to inline thread drafting", "current_transition_id": "normalize-review-results", "state": { "claude_code_review_completed": true, "review_feedback_importance": "publishable_feedback" }, "status": "action_required", "task_action_id": "FI-19" },
-    { "name": "initial location deferral requests user direction", "current_transition_id": "draft-review-comments", "state": { "review_feedback_importance": "publishable_feedback", "inline_review_thread_drafts_usable": true, "review_comment_location_status": "location_deferred" }, "status": "action_required", "task_action_id": "FI-20" },
-    { "name": "posting direction is pending", "current_transition_id": "determine-comment-posting-direction", "state": { "inline_review_thread_drafts_usable": true }, "status": "action_required", "task_action_id": "FI-20" },
-    { "name": "posting direction awaits local reflection", "current_transition_id": "determine-comment-posting-direction", "state": { "inline_review_thread_drafts_usable": true, "review_comment_posting_direction": "reassign_review_thread_location" }, "status": "action_required", "task_action_id": "FI-21" },
-    { "name": "reflected posting direction checks remaining locations", "current_transition_id": "reflect-comment-posting-direction", "state": { "review_comment_posting_direction": "reclassify_non_actionable_feedback", "review_comment_posting_direction_reflected": true }, "status": "action_required", "task_action_id": "FI-22" },
-    { "name": "remaining location deferral repeats user direction", "current_transition_id": "defer-remaining-comment-locations", "state": { "review_comment_posting_direction_reflected": true, "inline_review_thread_drafts_usable": true, "remaining_review_comment_location_status": "location_deferred" }, "status": "action_required", "task_action_id": "FI-20" },
-    { "name": "all locations assigned proceed to inline posting", "current_transition_id": "defer-remaining-comment-locations", "state": { "review_comment_posting_direction_reflected": true, "remaining_review_comment_location_status": "no_location_deferred" }, "status": "action_required", "task_action_id": "FI-23" },
-    { "name": "posted inline threads proceed to target comparison", "current_transition_id": "post-review-comments", "state": { "review_comment_location_status": "no_location_deferred", "inline_review_threads_posted": true }, "status": "action_required", "task_action_id": "FI-24" },
-    { "name": "target comparison waits for GitHub observation", "current_transition_id": "check-review-feedback-targets", "state": { "inline_review_threads_posted": true, "review_feedback_inventory": "actionable_feedback_present" }, "status": "action_required", "task_action_id": "FI-24" },
-    { "name": "no actionable feedback proceeds to merge decision", "current_transition_id": "check-review-feedback-targets", "state": { "inline_review_threads_posted": true, "github_review_threads_observed": true, "review_feedback_inventory": "no_actionable_feedback" }, "status": "action_required", "task_action_id": "FI-34" },
-    { "name": "actionable feedback requests user direction", "current_transition_id": "check-review-feedback-targets", "state": { "inline_review_threads_posted": true, "github_review_threads_observed": true, "review_feedback_inventory": "actionable_feedback_present" }, "status": "action_required", "task_action_id": "FI-25" },
-    { "name": "feedback direction is pending", "current_transition_id": "determine-feedback-direction", "state": { "review_feedback_inventory": "actionable_feedback_present" }, "status": "action_required", "task_action_id": "FI-25" },
-    { "name": "accepted feedback edits files", "current_transition_id": "determine-feedback-direction", "state": { "review_feedback_inventory": "actionable_feedback_present", "review_feedback_direction": "accept_and_fix" }, "status": "action_required", "task_action_id": "FI-26" },
-    { "name": "free form feedback requiring file changes edits files", "current_transition_id": "determine-feedback-direction", "state": { "review_feedback_inventory": "actionable_feedback_present", "review_feedback_direction": "other_requires_file_change" }, "status": "action_required", "task_action_id": "FI-26" },
-    { "name": "rejected feedback replies without file changes", "current_transition_id": "determine-feedback-direction", "state": { "review_feedback_inventory": "actionable_feedback_present", "review_feedback_direction": "reject" }, "status": "action_required", "task_action_id": "FI-30" },
-    { "name": "free form feedback without file changes replies directly", "current_transition_id": "determine-feedback-direction", "state": { "review_feedback_inventory": "actionable_feedback_present", "review_feedback_direction": "other_without_file_change" }, "status": "action_required", "task_action_id": "FI-30" },
-    { "name": "feedback fix proceeds to commit proposal", "current_transition_id": "apply-feedback-fix", "state": { "review_feedback_direction": "accept_and_fix", "review_feedback_fixed": true }, "status": "action_required", "task_action_id": "FI-27" },
-    { "name": "feedback commit proposal waits for confirmation", "current_transition_id": "prepare-feedback-commit", "state": { "review_feedback_fixed": true, "feedback_commit_message_proposal_usable": true, "feedback_commit_message_confirmed": false }, "status": "action_required", "task_action_id": "FI-27" },
-    { "name": "confirmed feedback commit message proceeds to commit", "current_transition_id": "prepare-feedback-commit", "state": { "review_feedback_fixed": true, "feedback_commit_message_proposal_usable": true, "feedback_commit_message_confirmed": true }, "status": "action_required", "task_action_id": "FI-28" },
-    { "name": "feedback commit proceeds to push", "current_transition_id": "commit-feedback-fix", "state": { "feedback_commit_message_proposal_usable": true, "feedback_commit_message_confirmed": true, "feedback_commit_created": true }, "status": "action_required", "task_action_id": "FI-29" },
-    { "name": "feedback push proceeds to selected thread reply", "current_transition_id": "push-feedback-branch", "state": { "feedback_commit_created": true, "feedback_branch_pushed": true }, "status": "action_required", "task_action_id": "FI-30" },
-    { "name": "selected thread reply requests resolution decision", "current_transition_id": "post-feedback-result-comment", "state": { "review_feedback_direction": "reject", "selected_review_thread_reply_posted": true }, "status": "action_required", "task_action_id": "FI-31" },
-    { "name": "resolution decision is pending", "current_transition_id": "determine-feedback-resolution", "state": { "selected_review_thread_reply_posted": true }, "status": "action_required", "task_action_id": "FI-31" },
-    { "name": "resolved decision awaits deterministic reflection", "current_transition_id": "determine-feedback-resolution", "state": { "selected_review_thread_reply_posted": true, "feedback_resolution": "resolved" }, "status": "action_required", "task_action_id": "FI-32" },
-    { "name": "unresolved decision preserves thread state", "current_transition_id": "determine-feedback-resolution", "state": { "selected_review_thread_reply_posted": true, "feedback_resolution": "unresolved" }, "status": "action_required", "task_action_id": "FI-32" },
-    { "name": "reflected resolution checks remaining feedback", "current_transition_id": "reflect-feedback-resolution", "state": { "feedback_resolution": "resolved", "feedback_resolution_reflected": true }, "status": "action_required", "task_action_id": "FI-33" },
-    { "name": "unresolved choice advances to next unhandled feedback", "current_transition_id": "check-remaining-feedback", "state": { "feedback_resolution_reflected": true, "remaining_feedback_status": "unhandled_feedback_present", "review_feedback_inventory": "actionable_feedback_present" }, "status": "action_required", "task_action_id": "FI-25" },
-    { "name": "processed unresolved thread returns to resolution check", "current_transition_id": "check-remaining-feedback", "state": { "feedback_resolution_reflected": true, "remaining_feedback_status": "unresolved_thread_present", "selected_review_thread_reply_posted": true }, "status": "action_required", "task_action_id": "FI-31" },
-    { "name": "all resolved feedback proceeds to merge decision", "current_transition_id": "check-remaining-feedback", "state": { "feedback_resolution_reflected": true, "remaining_feedback_status": "all_resolved" }, "status": "action_required", "task_action_id": "FI-34" },
-    { "name": "merge decision is pending", "current_transition_id": "determine-pull-request-merge", "state": { "remaining_feedback_status": "all_resolved" }, "status": "action_required", "task_action_id": "FI-34" },
-    { "name": "deferred merge remains a user decision", "current_transition_id": "determine-pull-request-merge", "state": { "remaining_feedback_status": "all_resolved", "pull_request_merge_decision": "merge_deferred" }, "status": "action_required", "task_action_id": "FI-34" },
-    { "name": "confirmed merge waits for human merge and reflection", "current_transition_id": "determine-pull-request-merge", "state": { "remaining_feedback_status": "all_resolved", "pull_request_merge_decision": "merge_confirmed" }, "status": "action_required", "task_action_id": "FI-35" },
-    { "name": "merged pull request waits for local reflection", "current_transition_id": "reflect-pull-request-merge", "state": { "pull_request_merge_decision": "merge_confirmed", "pull_request_merged": true }, "status": "action_required", "task_action_id": "FI-35" },
-    { "name": "post merge reflection proceeds to completion", "current_transition_id": "reflect-pull-request-merge", "state": { "pull_request_merge_decision": "merge_confirmed", "pull_request_merged": true, "post_merge_reflection_completed": true }, "status": "action_required", "task_action_id": "FI-36" },
-    { "name": "implementation completion is terminal", "current_transition_id": "complete-implementation", "state": { "pull_request_merged": true, "post_merge_reflection_completed": true, "implementation_completed": true }, "status": "completed", "task_action_id": null }
+    {
+      "name": "review mode decision is pending",
+      "state": {
+        "pull_request_created": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-13",
+      "current_task_action_id": "FI-13"
+    },
+    {
+      "name": "review dependency inspection is pending",
+      "state": {
+        "review_mode": "claude_code_review",
+        "review_mode_checked": false
+      },
+      "status": "action_required",
+      "task_action_id": "FI-14",
+      "current_task_action_id": "FI-14"
+    },
+    {
+      "name": "claude code review mode selects one executor",
+      "state": {
+        "review_mode": "claude_code_review",
+        "review_mode_checked": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-15",
+      "current_task_action_id": "FI-14"
+    },
+    {
+      "name": "claude awesome review mode selects one executor",
+      "state": {
+        "review_mode": "claude_awesome_code_review",
+        "review_mode_checked": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-16",
+      "current_task_action_id": "FI-14"
+    },
+    {
+      "name": "codex awesome review mode selects one executor",
+      "state": {
+        "review_mode": "codex_awesome_code_review",
+        "review_mode_checked": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-17",
+      "current_task_action_id": "FI-14"
+    },
+    {
+      "name": "review result normalization is pending",
+      "state": {
+        "claude_code_review_completed": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-18",
+      "current_task_action_id": "FI-18"
+    },
+    {
+      "name": "no publishable feedback proceeds to target comparison",
+      "state": {
+        "claude_code_review_completed": true,
+        "review_feedback_importance": "no_publishable_feedback"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-24",
+      "current_task_action_id": "FI-18"
+    },
+    {
+      "name": "publishable feedback proceeds to inline thread drafting",
+      "state": {
+        "claude_code_review_completed": true,
+        "review_feedback_importance": "publishable_feedback"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-19",
+      "current_task_action_id": "FI-18"
+    },
+    {
+      "name": "initial location deferral requests user direction",
+      "state": {
+        "review_feedback_importance": "publishable_feedback",
+        "inline_review_thread_drafts_usable": true,
+        "review_comment_location_status": "location_deferred"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-20",
+      "current_task_action_id": "FI-19"
+    },
+    {
+      "name": "posting direction is pending",
+      "state": {
+        "inline_review_thread_drafts_usable": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-20",
+      "current_task_action_id": "FI-20"
+    },
+    {
+      "name": "posting direction awaits local reflection",
+      "state": {
+        "inline_review_thread_drafts_usable": true,
+        "review_comment_posting_direction": "reassign_review_thread_location"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-21",
+      "current_task_action_id": "FI-20"
+    },
+    {
+      "name": "reflected posting direction checks remaining locations",
+      "state": {
+        "review_comment_posting_direction": "reclassify_non_actionable_feedback",
+        "review_comment_posting_direction_reflected": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-22",
+      "current_task_action_id": "FI-21"
+    },
+    {
+      "name": "remaining location deferral repeats user direction",
+      "state": {
+        "review_comment_posting_direction_reflected": true,
+        "inline_review_thread_drafts_usable": true,
+        "remaining_review_comment_location_status": "location_deferred"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-20",
+      "current_task_action_id": "FI-22"
+    },
+    {
+      "name": "all locations assigned proceed to inline posting",
+      "state": {
+        "review_comment_posting_direction_reflected": true,
+        "remaining_review_comment_location_status": "no_location_deferred"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-23",
+      "current_task_action_id": "FI-22"
+    },
+    {
+      "name": "posted inline threads proceed to target comparison",
+      "state": {
+        "review_comment_location_status": "no_location_deferred",
+        "inline_review_threads_posted": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-24",
+      "current_task_action_id": "FI-23"
+    },
+    {
+      "name": "target comparison waits for GitHub observation",
+      "state": {
+        "inline_review_threads_posted": true,
+        "review_feedback_inventory": "actionable_feedback_present"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-24",
+      "current_task_action_id": "FI-24"
+    },
+    {
+      "name": "no actionable feedback proceeds to merge decision",
+      "state": {
+        "inline_review_threads_posted": true,
+        "github_review_threads_observed": true,
+        "review_feedback_inventory": "no_actionable_feedback"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-34",
+      "current_task_action_id": "FI-24"
+    },
+    {
+      "name": "actionable feedback requests user direction",
+      "state": {
+        "inline_review_threads_posted": true,
+        "github_review_threads_observed": true,
+        "review_feedback_inventory": "actionable_feedback_present"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-25",
+      "current_task_action_id": "FI-24"
+    },
+    {
+      "name": "feedback direction is pending",
+      "state": {
+        "review_feedback_inventory": "actionable_feedback_present"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-25",
+      "current_task_action_id": "FI-25"
+    },
+    {
+      "name": "accepted feedback edits files",
+      "state": {
+        "review_feedback_inventory": "actionable_feedback_present",
+        "review_feedback_direction": "accept_and_fix"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-26",
+      "current_task_action_id": "FI-25"
+    },
+    {
+      "name": "free form feedback requiring file changes edits files",
+      "state": {
+        "review_feedback_inventory": "actionable_feedback_present",
+        "review_feedback_direction": "other_requires_file_change"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-26",
+      "current_task_action_id": "FI-25"
+    },
+    {
+      "name": "rejected feedback replies without file changes",
+      "state": {
+        "review_feedback_inventory": "actionable_feedback_present",
+        "review_feedback_direction": "reject"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-30",
+      "current_task_action_id": "FI-25"
+    },
+    {
+      "name": "free form feedback without file changes replies directly",
+      "state": {
+        "review_feedback_inventory": "actionable_feedback_present",
+        "review_feedback_direction": "other_without_file_change"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-30",
+      "current_task_action_id": "FI-25"
+    },
+    {
+      "name": "feedback fix proceeds to commit proposal",
+      "state": {
+        "review_feedback_direction": "accept_and_fix",
+        "review_feedback_fixed": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-27",
+      "current_task_action_id": "FI-26"
+    },
+    {
+      "name": "feedback commit proposal waits for confirmation",
+      "state": {
+        "review_feedback_fixed": true,
+        "feedback_commit_message_proposal_usable": true,
+        "feedback_commit_message_confirmed": false
+      },
+      "status": "action_required",
+      "task_action_id": "FI-27",
+      "current_task_action_id": "FI-27"
+    },
+    {
+      "name": "confirmed feedback commit message proceeds to commit",
+      "state": {
+        "review_feedback_fixed": true,
+        "feedback_commit_message_proposal_usable": true,
+        "feedback_commit_message_confirmed": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-28",
+      "current_task_action_id": "FI-27"
+    },
+    {
+      "name": "feedback commit proceeds to push",
+      "state": {
+        "feedback_commit_message_proposal_usable": true,
+        "feedback_commit_message_confirmed": true,
+        "feedback_commit_created": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-29",
+      "current_task_action_id": "FI-28"
+    },
+    {
+      "name": "feedback push proceeds to selected thread reply",
+      "state": {
+        "feedback_commit_created": true,
+        "feedback_branch_pushed": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-30",
+      "current_task_action_id": "FI-29"
+    },
+    {
+      "name": "selected thread reply requests resolution decision",
+      "state": {
+        "review_feedback_direction": "reject",
+        "selected_review_thread_reply_posted": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-31",
+      "current_task_action_id": "FI-30"
+    },
+    {
+      "name": "resolution decision is pending",
+      "state": {
+        "selected_review_thread_reply_posted": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-31",
+      "current_task_action_id": "FI-31"
+    },
+    {
+      "name": "resolved decision awaits deterministic reflection",
+      "state": {
+        "selected_review_thread_reply_posted": true,
+        "feedback_resolution": "resolved"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-32",
+      "current_task_action_id": "FI-31"
+    },
+    {
+      "name": "unresolved decision preserves thread state",
+      "state": {
+        "selected_review_thread_reply_posted": true,
+        "feedback_resolution": "unresolved"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-32",
+      "current_task_action_id": "FI-31"
+    },
+    {
+      "name": "reflected resolution checks remaining feedback",
+      "state": {
+        "feedback_resolution": "resolved",
+        "feedback_resolution_reflected": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-33",
+      "current_task_action_id": "FI-32"
+    },
+    {
+      "name": "unresolved choice advances to next unhandled feedback",
+      "state": {
+        "feedback_resolution_reflected": true,
+        "remaining_feedback_status": "unhandled_feedback_present",
+        "review_feedback_inventory": "actionable_feedback_present"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-25",
+      "current_task_action_id": "FI-33"
+    },
+    {
+      "name": "processed unresolved thread returns to resolution check",
+      "state": {
+        "feedback_resolution_reflected": true,
+        "remaining_feedback_status": "unresolved_thread_present",
+        "selected_review_thread_reply_posted": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-31",
+      "current_task_action_id": "FI-33"
+    },
+    {
+      "name": "all resolved feedback proceeds to merge decision",
+      "state": {
+        "feedback_resolution_reflected": true,
+        "remaining_feedback_status": "all_resolved"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-34",
+      "current_task_action_id": "FI-33"
+    },
+    {
+      "name": "merge decision is pending",
+      "state": {
+        "remaining_feedback_status": "all_resolved"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-34",
+      "current_task_action_id": "FI-34"
+    },
+    {
+      "name": "deferred merge remains a user decision",
+      "state": {
+        "remaining_feedback_status": "all_resolved",
+        "pull_request_merge_decision": "merge_deferred"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-34",
+      "current_task_action_id": "FI-34"
+    },
+    {
+      "name": "confirmed merge waits for human merge and reflection",
+      "state": {
+        "remaining_feedback_status": "all_resolved",
+        "pull_request_merge_decision": "merge_confirmed"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-35",
+      "current_task_action_id": "FI-34"
+    },
+    {
+      "name": "merged pull request waits for local reflection",
+      "state": {
+        "pull_request_merge_decision": "merge_confirmed",
+        "pull_request_merged": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-35",
+      "current_task_action_id": "FI-35"
+    },
+    {
+      "name": "post merge reflection proceeds to completion",
+      "state": {
+        "pull_request_merge_decision": "merge_confirmed",
+        "pull_request_merged": true,
+        "post_merge_reflection_completed": true
+      },
+      "status": "action_required",
+      "task_action_id": "FI-36",
+      "current_task_action_id": "FI-35"
+    },
+    {
+      "name": "implementation completion is terminal",
+      "state": {
+        "pull_request_merged": true,
+        "post_merge_reflection_completed": true,
+        "implementation_completed": true
+      },
+      "status": "completed",
+      "task_action_id": null,
+      "current_task_action_id": "FI-36"
+    }
   ]
 }

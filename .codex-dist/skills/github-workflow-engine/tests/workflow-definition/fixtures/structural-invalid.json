@@ -1,132 +1,28 @@
 {
   "cases": [
     {
-      "name": "semantic C2 failures",
-      "definition": {
-        "workflow_id": "invalid-feature-change",
-        "version": "1.0.0",
-        "workflow_kind": "feature_change",
-        "target_type": "issue",
-        "entry_transition_id": "unverified-entry",
-        "terminal_transition_ids": [
-          "same-id"
-        ],
-        "priority": "high",
-        "normalized_fact_schema": [
-          {
-            "fact_id": "state",
-            "value_type": "string",
-            "allowed_values": [
-              "open"
-            ],
-            "evidence_required": false
-          },
-          {
-            "fact_id": "state",
-            "value_type": "string",
-            "allowed_values": [
-              "closed"
-            ],
-            "evidence_required": false
-          }
-        ],
-        "transitions": [
-          {
-            "transition_id": "same-id",
-            "normalized_fact_conditions": {
-              "fact_id": "missing",
-              "operator": "equals",
-              "value": "open"
-            },
-            "task_action_id": "FC-1",
-            "user_decision_specification": {
-              "required": true,
-              "options": [
-                {
-                  "decision_id": "go",
-                  "label": "Go"
-                },
-                {
-                  "decision_id": "go",
-                  "label": "Go again"
-                }
-              ],
-              "allow_free_form": false,
-              "block_execution_until_confirmed": true
-            },
-            "completion_predicate": {
-              "fact_id": "state",
-              "operator": "equals",
-              "value": "closed"
-            },
-            "executor_reference": "missing-executor",
-            "next_transition_rules": [
-              {
-                "condition": null,
-                "transition_id": "missing-next"
-              }
-            ]
-          },
-          {
-            "transition_id": "same-id",
-            "normalized_fact_conditions": {
-              "fact_id": "state",
-              "operator": "in",
-              "value": [
-                "open",
-                2
-              ]
-            },
-            "task_action_id": "FC-1",
-            "user_decision_specification": {
-              "required": false,
-              "options": [],
-              "allow_free_form": false,
-              "block_execution_until_confirmed": false
-            },
-            "completion_predicate": {
-              "fact_id": "state",
-              "operator": "exists",
-              "value": "open"
-            },
-            "executor_reference": null,
-            "next_transition_rules": []
-          }
-        ]
-      }
-    },
-    {
-      "name": "structural C1 failures",
+      "name": "malformed workflow definition",
       "definition": {
         "workflow_id": 1,
-        "version": "",
-        "workflow_kind": "unsupported",
-        "target_type": "branch",
-        "entry_transition_id": "entry",
-        "terminal_transition_ids": [],
-        "normalized_fact_schema": [],
+        "entry_task_action_id": "FI-0",
+        "facts": {
+          "state": [true, "open"]
+        },
         "transitions": [
           {
-            "transition_id": "",
-            "normalized_fact_conditions": {
-              "all": []
-            },
-            "task_action_id": "FC-01",
-            "user_decision_specification": {
-              "required": true,
-              "options": [],
-              "allow_free_form": "false",
-              "block_execution_until_confirmed": false
-            },
-            "completion_predicate": {
-              "fact_id": "state",
-              "operator": "unknown"
-            },
+            "task_action_id": "FI-01",
+            "normalized_fact_conditions": { "all": [] },
+            "user_decision_options": [
+              { "decision_id": "go", "label": "Go" },
+              { "decision_id": "go", "label": "Go again" }
+            ],
+            "completion_predicate": { "fact_id": "state", "operator": "unknown" },
             "executor_reference": "",
             "next_transition_rules": [],
             "priority": 1
           }
-        ]
+        ],
+        "priority": "high"
       }
     }
   ]

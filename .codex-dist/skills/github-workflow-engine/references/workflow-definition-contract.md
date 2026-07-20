@@ -54,8 +54,8 @@ Leaf는 `fact_id`, `operator`와 operator별 `value`로 구성한다.
 |---|---|
 | `equals` | 선언된 fact 도메인 값 하나 |
 | `in` | 선언된 fact 도메인 값의 비어 있지 않은 배열 |
-| `exists` | 금지 |
-| `not_exists` | 금지 |
+| `exists` | `value` 필드 없음 |
+| `not_exists` | `value` 필드 없음 |
 
 Compound 형식은 `all` 또는 `any` 하나만 가지며 값은 비어 있지 않은 표현식 배열이다.
 `not`, `not_equals`, `not_in`은 지원하지 않는다.

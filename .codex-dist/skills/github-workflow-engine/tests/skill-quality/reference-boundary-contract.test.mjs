@@ -21,6 +21,10 @@ const urls = {
     "../../../harness/references/workflow-engine-template-compatibility-contract.md",
     import.meta.url,
   ),
+  workflowDefinitionContract: new URL(
+    "../../references/workflow-definition-contract.md",
+    import.meta.url,
+  ),
 };
 
 const artifactOutputConsumers = [
@@ -114,6 +118,15 @@ test("template compatibility belongs to the harness", async () => {
   assert.match(templateCompatibility, /^# Workflow Engine 템플릿 정합성 계약$/m);
   assert.match(templateCompatibility, /github-workflow-engine\/references\/github-templates\.md/);
   assert.match(harness, /workflow-engine-template-compatibility-contract\.md/);
+});
+
+test("existence operators are documented without a value field", async () => {
+  const contract = await read("workflowDefinitionContract");
+  const valuelessOperators = [...contract.matchAll(/^\| `(exists|not_exists)` \| `value` 필드 없음 \|$/gm)]
+    .map((match) => match[1])
+    .sort();
+
+  assert.deepEqual(valuelessOperators, ["exists", "not_exists"]);
 });
 
 test("every review feedback requires a diff location and provider failures stay conditional", async () => {

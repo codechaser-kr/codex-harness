@@ -93,7 +93,7 @@ test("resume activation is covered by the structured execution contract", async 
   ]);
 
   assert.match(structured, /^## 중단과 재개 판정 규칙$/m);
-  assert.match(skill, /중단·재개를 판정하거나/);
+  assert.match(skill, /중단·재개를 판정할 때 `references\/structured-execution-contract\.md`/);
   assert.match(
     skill,
     /확정된 작업을 자동 실행할 때 `references\/structured-execution-contract\.md`/,

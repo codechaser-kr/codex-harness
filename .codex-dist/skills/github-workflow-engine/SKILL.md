@@ -46,6 +46,7 @@ description: GitHub 이슈와 PR의 관측 상태를 선언형 워크플로 정�
 - 현재 작업에 사용자 선택지가 있거나 재개 요청의 사용자 입력을 해석할 때 `references/user-decision-contract.md`
 - 리뷰를 실행·정규화·게시·대응할 때 `references/review-runtime-contract.md`
 - 선택한 리뷰 실행 모드가 `claude/*`일 때 `references/claude-review-executor-contract.md`
+- 중단·재개를 판정할 때 `references/structured-execution-contract.md`
 - 확정된 작업을 자동 실행할 때 `references/structured-execution-contract.md`
 - 실제 명령의 권한 경로를 판정하거나 실행 직전에 재판정할 때 `references/command-execution-path-contract.md`
 - 확정된 파일 수정 작업을 대상 하네스에 전달할 때 `references/target-harness-execution-contract.md`

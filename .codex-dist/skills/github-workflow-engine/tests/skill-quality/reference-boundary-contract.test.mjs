@@ -86,6 +86,20 @@ test("user decisions are interpreted before automatic execution by one detailed 
   assert.doesNotMatch(skill, /기타 의견 입력 항목 번호: 의견/);
 });
 
+test("resume activation is covered by the structured execution contract", async () => {
+  const [skill, structured] = await Promise.all([
+    read("skill"),
+    read("structured"),
+  ]);
+
+  assert.match(structured, /^## 중단과 재개 판정 규칙$/m);
+  assert.match(skill, /중단·재개를 판정할 때 `references\/structured-execution-contract\.md`/);
+  assert.match(
+    skill,
+    /확정된 작업을 자동 실행할 때 `references\/structured-execution-contract\.md`/,
+  );
+});
+
 test("structured execution loads command and target details only for matching work", async () => {
   const [skill, structured, commandPath, targetHarness, simpleExecutor, targetEditor] = await Promise.all([
     read("skill"),

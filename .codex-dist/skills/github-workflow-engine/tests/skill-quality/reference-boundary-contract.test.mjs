@@ -86,7 +86,7 @@ test("user decisions are interpreted before automatic execution by one detailed 
   assert.doesNotMatch(skill, /기타 의견 입력 항목 번호: 의견/);
 });
 
-test("resume activates the structured execution contract before automatic execution", async () => {
+test("resume activation is covered by the structured execution contract", async () => {
   const [skill, structured] = await Promise.all([
     read("skill"),
     read("structured"),

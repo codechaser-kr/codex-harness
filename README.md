@@ -355,7 +355,7 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 
 ## 제거
 
-전역 스킬 제거는 `$HOME/.codex/skills/harness`를 대상으로 합니다. 각 프로젝트 내부에 생성된 `.agents/skills/*`, `.harness/*`는 프로젝트별 자산으로 따로 관리합니다.
+제거 스크립트는 이 저장소가 관리하는 전역 스킬 전체를 active 스킬 경로에서 제거합니다. 각 스킬 디렉터리는 영구 삭제하지 않고 `<기존 경로>.removed.<timestamp>.<pid>` 형식의 경로로 이동하며, 출력된 백업 위치를 원래 경로로 되돌리는 방식으로 필요할 때 수동 복구할 수 있습니다. 각 프로젝트 내부에 생성된 `.agents/skills/*`, `.harness/*` 등은 제거하지 않으며 프로젝트별 자산으로 따로 관리합니다.
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/uninstall.sh | sh

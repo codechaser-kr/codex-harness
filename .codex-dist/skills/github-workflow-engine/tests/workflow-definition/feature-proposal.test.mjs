@@ -220,6 +220,29 @@ test("feature-proposal adapter maps observations in definition order and preserv
   assert.deepEqual(observations, observationsBefore);
 });
 
+test("feature-proposal adapter upgrades legacy next_workflow observations without mutation", async () => {
+  const definition = await readJson(definitionUrl);
+  for (const [legacyValue, factId] of [
+    ["policy_review", "feature_proposal_policy_review_transition_completed"],
+    ["feature_change", "feature_proposal_feature_change_transition_completed"],
+  ]) {
+    const observations = [
+      observation("next_workflow", legacyValue, "github_state", `${legacyValue} transition`),
+    ];
+    const observationsBefore = structuredClone(observations);
+    const result = normalizeFeatureProposalFacts(definition, observations);
+
+    assert.equal(result.status, "normalized", legacyValue);
+    assert.deepEqual(result.normalized_fact_state, { [factId]: true }, legacyValue);
+    assert.deepEqual(result.evidence_by_fact[factId], [{
+      source_kind: "github_state",
+      source_reference: `${legacyValue} transition`,
+      field_reference: "facts.next_workflow",
+    }], legacyValue);
+    assert.deepEqual(observations, observationsBefore, legacyValue);
+  }
+});
+
 test("feature-proposal adapter rejects wrong observation sources atomically", async () => {
   const definition = await readJson(definitionUrl);
   const wrongDirectionSource = normalizeFeatureProposalFacts(definition, [
@@ -253,6 +276,16 @@ test("feature-proposal adapter rejects wrong observation sources atomically", as
   assertAtomicFailure(wrongTransitionSource, "invalid_observations");
   assert.equal(hasError(
     wrongTransitionSource,
+    "observation.source_kind.mismatch",
+    "/observations/0/source_kind",
+  ), true);
+
+  const wrongLegacyTransitionSource = normalizeFeatureProposalFacts(definition, [
+    observation("next_workflow", "feature_change", "local_state", "local handoff"),
+  ]);
+  assertAtomicFailure(wrongLegacyTransitionSource, "invalid_observations");
+  assert.equal(hasError(
+    wrongLegacyTransitionSource,
     "observation.source_kind.mismatch",
     "/observations/0/source_kind",
   ), true);

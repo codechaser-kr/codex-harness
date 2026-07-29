@@ -320,12 +320,12 @@
       "next_transition_rules": [
         {
           "condition": null,
-          "task_action_id": "PR-9"
+          "task_action_id": "PR-10"
         }
       ]
     },
     {
-      "task_action_id": "PR-9",
+      "task_action_id": "PR-10",
       "normalized_fact_conditions": {
         "all": [
           {
@@ -353,7 +353,7 @@
             "operator": "equals",
             "value": "existing_feature_issue"
           },
-          "task_action_id": "PR-10"
+          "task_action_id": "PR-11"
         },
         {
           "condition": {
@@ -361,12 +361,12 @@
             "operator": "equals",
             "value": "new_feature_issue"
           },
-          "task_action_id": "PR-11"
+          "task_action_id": "PR-12"
         }
       ]
     },
     {
-      "task_action_id": "PR-10",
+      "task_action_id": "PR-11",
       "normalized_fact_conditions": {
         "all": [
           {
@@ -405,12 +405,12 @@
       "next_transition_rules": [
         {
           "condition": null,
-          "task_action_id": "PR-12"
+          "task_action_id": "PR-9"
         }
       ]
     },
     {
-      "task_action_id": "PR-11",
+      "task_action_id": "PR-12",
       "normalized_fact_conditions": {
         "all": [
           {
@@ -449,12 +449,12 @@
       "next_transition_rules": [
         {
           "condition": null,
-          "task_action_id": "PR-12"
+          "task_action_id": "PR-9"
         }
       ]
     },
     {
-      "task_action_id": "PR-12",
+      "task_action_id": "PR-9",
       "normalized_fact_conditions": {
         "all": [
           {
@@ -464,11 +464,6 @@
           },
           {
             "fact_id": "policy_review_issue_closed",
-            "operator": "equals",
-            "value": true
-          },
-          {
-            "fact_id": "policy_review_feature_change_transition_completed",
             "operator": "equals",
             "value": true
           },
@@ -516,11 +511,6 @@
           },
           {
             "fact_id": "policy_review_issue_closed",
-            "operator": "equals",
-            "value": true
-          },
-          {
-            "fact_id": "policy_review_feature_change_transition_completed",
             "operator": "equals",
             "value": true
           },

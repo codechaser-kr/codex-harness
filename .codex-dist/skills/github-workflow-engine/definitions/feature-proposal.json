@@ -196,7 +196,7 @@
       "next_transition_rules": [
         {
           "condition": null,
-          "task_action_id": "FP-10"
+          "task_action_id": "FP-8"
         }
       ]
     },
@@ -226,7 +226,7 @@
       "next_transition_rules": [
         {
           "condition": null,
-          "task_action_id": "FP-8"
+          "task_action_id": "FP-9"
         }
       ]
     },
@@ -256,12 +256,12 @@
       "next_transition_rules": [
         {
           "condition": null,
-          "task_action_id": "FP-9"
+          "task_action_id": "FP-10"
         }
       ]
     },
     {
-      "task_action_id": "FP-8",
+      "task_action_id": "FP-9",
       "normalized_fact_conditions": {
         "all": [
           {
@@ -291,12 +291,12 @@
       "next_transition_rules": [
         {
           "condition": null,
-          "task_action_id": "FP-10"
+          "task_action_id": "FP-8"
         }
       ]
     },
     {
-      "task_action_id": "FP-9",
+      "task_action_id": "FP-10",
       "normalized_fact_conditions": {
         "all": [
           {
@@ -326,12 +326,12 @@
       "next_transition_rules": [
         {
           "condition": null,
-          "task_action_id": "FP-10"
+          "task_action_id": "FP-8"
         }
       ]
     },
     {
-      "task_action_id": "FP-10",
+      "task_action_id": "FP-8",
       "normalized_fact_conditions": {
         "any": [
           {

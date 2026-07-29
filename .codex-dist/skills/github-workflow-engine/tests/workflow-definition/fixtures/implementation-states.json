@@ -10,7 +10,6 @@
     "FI-8",
     "FI-9",
     "FI-10",
-    "FI-11",
     "FI-12",
     "FI-13",
     "FI-14",
@@ -59,7 +58,6 @@
     "FI-7",
     "FI-8",
     "FI-9",
-    "FI-11",
     "FI-13",
     "FI-14",
     "FI-18",
@@ -145,12 +143,12 @@
     "pull_request_draft_confirmed": [
       true,
       "user_input",
-      "PR draft decision"
+      "PR draft confirmation and creation request decision"
     ],
     "pull_request_creation_requested": [
       true,
       "user_input",
-      "PR creation decision"
+      "PR draft confirmation and creation request decision"
     ],
     "pull_request_created": [
       true,
@@ -440,15 +438,9 @@
       "task_action_id": "FI-10"
     },
     {
-      "name": "pull request draft confirmed",
+      "name": "pull request draft confirmed and creation requested",
       "updates": {
-        "pull_request_draft_confirmed": true
-      },
-      "task_action_id": "FI-11"
-    },
-    {
-      "name": "pull request creation requested",
-      "updates": {
+        "pull_request_draft_confirmed": true,
         "pull_request_creation_requested": true
       },
       "task_action_id": "FI-12"
@@ -496,7 +488,7 @@
       "current_task_action_id": "FI-8"
     }
   ],
-  "pull_request_creation_cases": [
+  "pull_request_draft_decision_cases": [
     {
       "name": "revised pull request draft returns to draft action",
       "state": {
@@ -518,14 +510,14 @@
       "task_action_id": "FI-10"
     },
     {
-      "name": "create decision waits for creation request completion",
+      "name": "incomplete combined decision stays at draft action",
       "state": {
         "implementation_branch_pushed": true,
         "pull_request_draft_usable": true,
         "pull_request_draft_confirmed": true,
         "pull_request_creation_requested": false
       },
-      "task_action_id": "FI-11"
+      "task_action_id": "FI-10"
     },
     {
       "name": "pull request creation proceeds to create action",

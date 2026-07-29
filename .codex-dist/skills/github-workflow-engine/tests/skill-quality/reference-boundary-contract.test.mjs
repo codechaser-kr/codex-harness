@@ -101,17 +101,19 @@ test("resume activation is covered by the structured execution contract", async 
   );
 });
 
-test("feature-change standalone routing facts have owned and traceable observation rules", async () => {
+test("feature-change entry routing facts have owned and traceable observation rules", async () => {
   const stateObservation = await read("stateObservation");
   const routingSection = stateObservation.match(
-    /## 기능변경 단독 진입 local_state 관측 규칙\n[\s\S]*?(?=\n## |\n?$)/,
+    /## 기능변경 진입 local_state 관측 규칙\n[\s\S]*?(?=\n## |\n?$)/,
   )?.[0] ?? "";
 
   assert.match(routingSection, /Workflow Engine[\s\S]*최초 상태 묶음[\s\S]*직접 산출/);
+  assert.match(routingSection, /완료된 전환 fact가 둘 다 `true`[\s\S]*현재 요청을 시작한 전환 하나/);
   assert.match(routingSection, /`request_id`[\s\S]*`source_reference`/);
   assert.match(routingSection, /`field_reference`[\s\S]*routing check/);
   assert.match(routingSection, /근거가 누락되거나 충돌하면[\s\S]*중단/);
   for (const factId of [
+    "feature_change_entry_source",
     "feature_change_scope_identified",
     "feature_change_completion_criteria_ready",
     "additional_policy_decision_required",

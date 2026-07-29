@@ -22,6 +22,11 @@
       true,
       false
     ],
+    "feature_change_entry_source": [
+      "direct_request",
+      "feature_proposal",
+      "policy_review"
+    ],
     "feature_proposal_feature_change_transition_completed": [
       true,
       false
@@ -98,18 +103,41 @@
                 "fact_id": "defect_investigation_required",
                 "operator": "equals",
                 "value": false
+              },
+              {
+                "fact_id": "feature_change_entry_source",
+                "operator": "equals",
+                "value": "direct_request"
               }
             ]
           },
           {
-            "fact_id": "feature_proposal_feature_change_transition_completed",
-            "operator": "equals",
-            "value": true
+            "all": [
+              {
+                "fact_id": "feature_change_entry_source",
+                "operator": "equals",
+                "value": "feature_proposal"
+              },
+              {
+                "fact_id": "feature_proposal_feature_change_transition_completed",
+                "operator": "equals",
+                "value": true
+              }
+            ]
           },
           {
-            "fact_id": "policy_review_feature_change_transition_completed",
-            "operator": "equals",
-            "value": true
+            "all": [
+              {
+                "fact_id": "feature_change_entry_source",
+                "operator": "equals",
+                "value": "policy_review"
+              },
+              {
+                "fact_id": "policy_review_feature_change_transition_completed",
+                "operator": "equals",
+                "value": true
+              }
+            ]
           }
         ]
       },

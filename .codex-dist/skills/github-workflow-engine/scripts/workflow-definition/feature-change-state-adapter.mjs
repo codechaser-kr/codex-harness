@@ -6,6 +6,7 @@ const SOURCE_CONTRACTS = new Map([
   ["feature_change_completion_criteria_ready", { sourceKind: "local_state" }],
   ["additional_policy_decision_required", { sourceKind: "local_state" }],
   ["defect_investigation_required", { sourceKind: "local_state" }],
+  ["feature_change_entry_source", { sourceKind: "local_state" }],
   ["feature_proposal_feature_change_transition_completed", { sourceKind: "github_state" }],
   ["policy_review_feature_change_transition_completed", { sourceKind: "github_state" }],
   ["feature_change_draft_confirmed", { sourceKind: "user_input" }],

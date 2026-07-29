@@ -15,6 +15,7 @@ const SOURCE_CONTRACTS = new Map([
   ["feature_change_transition_direction", { sourceKind: "user_input" }],
   ["feature_change_transition_reflected", { sourceKind: "github_state" }],
   ["policy_review_issue_closed", { sourceKind: "github_state" }],
+  ["policy_review_feature_change_transition_completed", { sourceKind: "github_state" }],
   ["feature_change_transition_result", { sourceKind: "github_state" }],
 ]);
 

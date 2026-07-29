@@ -41,7 +41,7 @@ test("implementation definition preserves FI mapping, direct executor references
 
   assert.equal(definition.workflow_id, "implementation");
   assert.deepEqual(definition.transitions.map((transition) => transition.task_action_id), fixture.task_action_ids);
-  assert.equal(new Set(fixture.task_action_ids).size, 36);
+  assert.equal(new Set(fixture.task_action_ids).size, 35);
   assert.equal(JSON.stringify(definition).includes('"priority"'), false);
   assert.deepEqual(Object.keys(fixture.observation_sources), Object.keys(definition.facts));
   assert.deepEqual(
@@ -162,7 +162,6 @@ test("implementation definition preserves FI mapping, direct executor references
   for (const [taskActionId, proposalFactId, confirmationFactId] of [
     ["FI-1", "branch_proposal_usable", "branch_proposal_confirmed"],
     ["FI-3", "implementation_plan_usable", "implementation_plan_confirmed"],
-    ["FI-10", "pull_request_draft_usable", "pull_request_draft_confirmed"],
   ]) {
     assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === taskActionId).completion_predicate, {
       all: [
@@ -171,16 +170,20 @@ test("implementation definition preserves FI mapping, direct executor references
       ],
     });
   }
-  assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-11").completion_predicate, {
-    any: [
+  const pullRequestDraftDecision = definition.transitions.find((transition) => transition.task_action_id === "FI-10");
+  assert.deepEqual(pullRequestDraftDecision.user_decision_options, [
+    { decision_id: "confirm_pull_request_draft_and_create", label: "PR 초안 확정 및 생성 요청" },
+    { decision_id: "revise_pull_request_draft", label: "PR 초안 수정" },
+  ]);
+  assert.deepEqual(pullRequestDraftDecision.completion_predicate, {
+    all: [
+      { fact_id: "pull_request_draft_usable", operator: "equals", value: true },
+      { fact_id: "pull_request_draft_confirmed", operator: "equals", value: true },
       { fact_id: "pull_request_creation_requested", operator: "equals", value: true },
-      { fact_id: "pull_request_draft_confirmed", operator: "equals", value: false },
     ],
   });
-  assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-11").next_transition_rules, [
-    { condition: { fact_id: "pull_request_draft_confirmed", operator: "equals", value: false }, task_action_id: "FI-10" },
-    { condition: { fact_id: "pull_request_draft_confirmed", operator: "equals", value: true }, task_action_id: "FI-12" },
-  ]);
+  assert.deepEqual(pullRequestDraftDecision.next_transition_rules, [{ condition: null, task_action_id: "FI-12" }]);
+  assert.equal(definition.transitions.some((transition) => transition.task_action_id === "FI-11"), false);
   assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-12").completion_predicate, {
     fact_id: "pull_request_created", operator: "equals", value: true,
   });
@@ -219,13 +222,13 @@ test("implementation pre-PR condition mismatch stops without mutating state", as
   assert.deepEqual(state, stateBefore);
 });
 
-test("FI-11 revise and create decisions resolve to exactly one next action without cycling", async () => {
+test("FI-10 combines draft confirmation and creation request without cycling", async () => {
   const [definition, fixture] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
 
-  for (const scenario of fixture.pull_request_creation_cases) {
+  for (const scenario of fixture.pull_request_draft_decision_cases) {
     const stateBefore = structuredClone(scenario.state);
     const result = evaluateWorkflowDefinition(definition, scenario.state, {
-      currentTaskActionId: "FI-11",
+      currentTaskActionId: "FI-10",
     });
     assert.equal(result.status, "action_required", scenario.name);
     assert.equal(result.task_action_id, scenario.task_action_id, scenario.name);
@@ -297,8 +300,8 @@ test("implementation adapter normalizes exact source contracts in definition ord
   for (const [factId, sourceReference] of [
     ["branch_proposal_confirmed", "branch proposal decision"],
     ["implementation_plan_confirmed", "implementation plan decision"],
-    ["pull_request_draft_confirmed", "PR draft decision"],
-    ["pull_request_creation_requested", "PR creation decision"],
+    ["pull_request_draft_confirmed", "PR draft confirmation and creation request decision"],
+    ["pull_request_creation_requested", "PR draft confirmation and creation request decision"],
   ]) {
     assert.deepEqual(result.evidence_by_fact[factId], [{
       source_kind: "user_input",
@@ -347,6 +350,7 @@ test("implementation adapter fail-closes contract, source, duplicate, conflictin
     ["branch_proposal_confirmed", "skill_output"],
     ["implementation_plan_confirmed", "github_state"],
     ["pull_request_draft_confirmed", "skill_output"],
+    ["pull_request_creation_requested", "github_state"],
   ]) {
     const confirmation = observations.find((observation) => observation.fact_id === factId);
     const invalidConfirmation = normalizeImplementationFacts(definition, [{ ...confirmation, source_kind: sourceKind }]);

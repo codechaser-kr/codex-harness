@@ -563,8 +563,8 @@
       },
       "user_decision_options": [
         {
-          "decision_id": "confirm_pull_request_draft",
-          "label": "PR 초안 확정"
+          "decision_id": "confirm_pull_request_draft_and_create",
+          "label": "PR 초안 확정 및 생성 요청"
         },
         {
           "decision_id": "revise_pull_request_draft",
@@ -582,6 +582,11 @@
             "fact_id": "pull_request_draft_confirmed",
             "operator": "equals",
             "value": true
+          },
+          {
+            "fact_id": "pull_request_creation_requested",
+            "operator": "equals",
+            "value": true
           }
         ]
       },
@@ -589,57 +594,6 @@
       "next_transition_rules": [
         {
           "condition": null,
-          "task_action_id": "FI-11"
-        }
-      ]
-    },
-    {
-      "task_action_id": "FI-11",
-      "normalized_fact_conditions": {
-        "fact_id": "pull_request_draft_usable",
-        "operator": "equals",
-        "value": true
-      },
-      "user_decision_options": [
-        {
-          "decision_id": "create_pull_request",
-          "label": "PR 생성 요청"
-        },
-        {
-          "decision_id": "revise_pull_request",
-          "label": "PR 초안 수정"
-        }
-      ],
-      "completion_predicate": {
-        "any": [
-          {
-            "fact_id": "pull_request_creation_requested",
-            "operator": "equals",
-            "value": true
-          },
-          {
-            "fact_id": "pull_request_draft_confirmed",
-            "operator": "equals",
-            "value": false
-          }
-        ]
-      },
-      "executor_reference": null,
-      "next_transition_rules": [
-        {
-          "condition": {
-            "fact_id": "pull_request_draft_confirmed",
-            "operator": "equals",
-            "value": false
-          },
-          "task_action_id": "FI-10"
-        },
-        {
-          "condition": {
-            "fact_id": "pull_request_draft_confirmed",
-            "operator": "equals",
-            "value": true
-          },
           "task_action_id": "FI-12"
         }
       ]

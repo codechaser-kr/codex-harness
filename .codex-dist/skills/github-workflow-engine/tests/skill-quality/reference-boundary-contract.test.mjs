@@ -15,6 +15,7 @@ const urls = {
   githubTemplates: new URL("../../references/github-templates.md", import.meta.url),
   implementation: new URL("../../definitions/implementation.json", import.meta.url),
   workflowDoc: new URL("../../../../../docs/github-workflow-engine.md", import.meta.url),
+  readme: new URL("../../../../../README.md", import.meta.url),
   simpleExecutor: new URL("../../../github-simple-executor/SKILL.md", import.meta.url),
   targetEditor: new URL("../../../target-harness-code-editor/SKILL.md", import.meta.url),
   reviewComment: new URL("../../../review-comment/SKILL.md", import.meta.url),
@@ -210,6 +211,28 @@ test("every review feedback requires a diff location and provider failures stay 
   }
   assert.doesNotMatch(workflowDoc, /비실행 피드백 재분류|reclassify_non_actionable_feedback/);
   assert.match(workflowDoc, /review thread 게시 위치 재지정[\s\S]*피드백 철회[\s\S]*기타 의견 입력/);
+});
+
+test("workflow-owned Claude review modes pin foreground wait without changing other call sites", async () => {
+  const [skill, structured, claudeReview, workflowDoc, readme] = await Promise.all([
+    read("skill"),
+    read("structured"),
+    read("claudeReview"),
+    read("workflowDoc"),
+    read("readme"),
+  ]);
+
+  for (const source of [skill, structured, claudeReview, workflowDoc, readme]) {
+    assert.match(source, /\$cc:review --wait/);
+    assert.match(source, /\$cc:adversarial-review --wait/);
+    assert.doesNotMatch(source, /\$cc:review --background/);
+    assert.doesNotMatch(source, /\$cc:adversarial-review --background/);
+  }
+  assert.match(structured, /execution_mode=foreground[\s\S]*execution_control_flag=--wait[\s\S]*planned_session_relation=same_session/);
+  assert.match(claudeReview, /같은 세션의 foreground 실행[\s\S]*결과가 반환될 때까지/);
+  assert.match(claudeReview, /Workflow Engine 밖의[\s\S]*일반 호출 정책[\s\S]*`FI-17`/);
+  assert.match(workflowDoc, /foreground\/background 선택 질문을 추가하지 않고[\s\S]*`--background`를 전달하지 않는다/);
+  assert.match(readme, /Workflow Engine 호출에만 적용[\s\S]*일반 실행 정책[\s\S]*`codex\/awesome-code-review`/);
 });
 
 test("artifact output rules use grouped sections", async () => {

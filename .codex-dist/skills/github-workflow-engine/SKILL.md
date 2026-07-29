@@ -143,7 +143,10 @@ ID, 현재 정규화 상태와 불일치하는 ID, 누락된 재개 ID가 발견
   `target-harness-execution-contract.md`로 검증한 뒤 `target-harness-code-editor`에 전달한다. 이 경로의
   준비도나 검증에 실패하면 계약이 제시한 사유와 재개 조건으로 중단한다.
 - 리뷰 내용은 사용자가 확정한 리뷰 실행 모드의 실행 주체만 생성한다. `claude/*` 모드는
-  `claude-review-executor-contract.md`로 실행 실패와 재개 조건을 판정한다.
+  `claude-review-executor-contract.md`로 실행 요청과 실패·재개 조건을 판정한다. `FI-15`의
+  `claude/code-review`는 `$cc:review --wait`, `FI-16`의 `claude/awesome-code-review`는
+  `$cc:adversarial-review --wait`로 같은 오케스트레이션 세션에서 foreground 실행한다. 두 작업은
+  `--background`를 전달하거나 foreground/background 선택을 추가하지 않는다.
 
 구조화 실행 성공일 때만 상태를 다시 관측해 선언형 작업 계산 절차를 반복한다.
 요청·결과·범위·실행 후 조건을 검증하고, 검증에 실패하면 계약이 산출한 사유와 재개 조건으로

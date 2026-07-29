@@ -8,6 +8,25 @@
 - 실행 범위에는 변경할 수 있는 GitHub 상태, 파일 또는 디렉터리, 댓글 또는 review thread, 브랜치, 커밋, PR 생성 여부를 포함한다.
 - 사용자 결정 필요 여부는 현재 task의 `user_decision_options`가 비어 있는지로 판정한다. 값이 있으면 사용자 결정을 기다리고, 빈 배열이면 사용자 결정 없이 실행을 계속한다.
 
+### Claude 리뷰 실행 요청 고정값
+
+`FI-15`와 `FI-16`의 Claude 리뷰 실행 요청은 다음 값을 Workflow Engine 소유의
+`confirmed_request_values`로 기록한다.
+
+| `task_action_id` | `executor_reference` | 호출할 스킬과 인자 |
+| --- | --- | --- |
+| `FI-15` | `claude/code-review` | `$cc:review --wait --base <pr-base-branch> --scope branch` |
+| `FI-16` | `claude/awesome-code-review` | `$cc:adversarial-review --wait --base <pr-base-branch> --scope branch` |
+
+- `execution_mode=foreground`, `execution_control_flag=--wait`,
+  `planned_session_relation=same_session`은 실행 중 변경할 수 없는 요청값이다.
+- `--wait`가 있으므로 foreground/background 선택 질문을 추가하지 않고, `--background`를 전달하지
+  않는다.
+- `<pr-base-branch>`는 현재 PR에서 관측한 base branch와 같아야 한다.
+- 이 고정값은 Workflow Engine의 `FI-15`와 `FI-16` 호출에만 적용한다. Workflow Engine 밖에서
+  직접 사용하는 `$cc:review`, `$cc:adversarial-review`의 일반 실행 방식과
+  `FI-17`의 `codex/awesome-code-review` 실행 방식은 변경하지 않는다.
+
 ## 중단과 재개 판정 규칙
 
 자동 실행 루프는 진행 판단이 `사용자 결정`, `중단`, `완료` 중 하나로 산출될 때 멈춘다.

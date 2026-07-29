@@ -109,6 +109,17 @@ test("implementation definition preserves FI mapping, direct executor references
     assert.equal(transition.executor_reference, executorId);
     assert.deepEqual(transition.next_transition_rules, [{ condition: null, task_action_id: "FI-18" }]);
   }
+  for (const taskActionId of ["FI-15", "FI-16"]) {
+    assert.deepEqual(
+      definition.transitions.find((transition) => transition.task_action_id === taskActionId).user_decision_options,
+      [],
+      `${taskActionId} must not add an execution-mode decision`,
+    );
+  }
+  assert.equal(
+    definition.transitions.find((transition) => transition.task_action_id === "FI-17").executor_reference,
+    "codex/awesome-code-review",
+  );
 
   assert.deepEqual(definition.transitions.find((transition) => transition.task_action_id === "FI-18").next_transition_rules, [
     { condition: { fact_id: "review_feedback_importance", operator: "equals", value: "no_publishable_feedback" }, task_action_id: "FI-24" },

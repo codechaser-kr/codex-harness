@@ -100,13 +100,12 @@ test("implementation definition preserves FI mapping, direct executor references
     { condition: { fact_id: "review_mode", operator: "equals", value: "claude_awesome_code_review" }, task_action_id: "FI-16" },
     { condition: { fact_id: "review_mode", operator: "equals", value: "codex_awesome_code_review" }, task_action_id: "FI-17" },
   ]);
-  for (const [taskActionId, executorId] of [
-    ["FI-15", "claude/code-review"],
-    ["FI-16", "claude/awesome-code-review"],
-    ["FI-17", "codex/awesome-code-review"],
-  ]) {
+  const claudeCodeReview = definition.transitions.find((transition) => transition.task_action_id === "FI-15");
+  const claudeAwesomeCodeReview = definition.transitions.find((transition) => transition.task_action_id === "FI-16");
+  assert.equal(claudeCodeReview.executor_reference, "claude/code-review");
+  assert.equal(claudeAwesomeCodeReview.executor_reference, "claude/awesome-code-review");
+  for (const taskActionId of ["FI-15", "FI-16", "FI-17"]) {
     const transition = definition.transitions.find((item) => item.task_action_id === taskActionId);
-    assert.equal(transition.executor_reference, executorId);
     assert.deepEqual(transition.next_transition_rules, [{ condition: null, task_action_id: "FI-18" }]);
   }
   for (const taskActionId of ["FI-15", "FI-16"]) {

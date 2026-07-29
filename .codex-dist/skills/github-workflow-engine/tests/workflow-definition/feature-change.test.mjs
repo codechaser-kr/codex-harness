@@ -29,6 +29,22 @@ function validObservations() {
   return [
     observation("feature_change_issue_closed", true, "github_state", "issue #95"),
     observation("feature_change_requested", true, "user_input", "request issue #95"),
+    observation("feature_change_scope_identified", true, "local_state", "request routing"),
+    observation("feature_change_completion_criteria_ready", true, "local_state", "request routing"),
+    observation("additional_policy_decision_required", false, "local_state", "request routing"),
+    observation("defect_investigation_required", false, "local_state", "request routing"),
+    observation(
+      "feature_proposal_feature_change_transition_completed",
+      false,
+      "github_state",
+      "feature proposal transition",
+    ),
+    observation(
+      "policy_review_feature_change_transition_completed",
+      false,
+      "github_state",
+      "policy review transition",
+    ),
     observation("feature_plan_proposal_usable", true, "skill_output", "feature-plan"),
     observation("implementation_flow_started", true, "local_state", "workspace"),
     observation("feature_change_draft_confirmed", true, "user_input", "draft decision"),
@@ -59,12 +75,12 @@ function hasError(result, code, path) {
 test("feature-change definition passes C2/C3 validation with direct executor references", async () => {
   const [definition, states] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
   assert.equal(definition.workflow_id, "feature-change");
-  assert.equal(Object.keys(states).length, 11);
+  assert.equal(Object.keys(states).length, 12);
   assert.deepEqual(definition.transitions.map((transition) => transition.task_action_id), [
     "FC-1", "FC-2", "FC-3", "FC-4", "FC-5", "FC-6", "FC-7",
   ]);
   assert.equal(JSON.stringify(definition).includes('"priority"'), false);
-  assert.equal(Object.keys(definition.facts).length, 10);
+  assert.equal(Object.keys(definition.facts).length, 16);
 
   for (const transition of definition.transitions.slice(0, -1)) {
     assert.deepEqual(transition.next_transition_rules, [{
@@ -108,6 +124,7 @@ test("feature-change representative entry states resolve to exactly one expected
   const definitionBefore = structuredClone(definition);
   const cases = [
     ["new_request", "FC-1", "issue-creation"],
+    ["new_issue_from_feature_proposal", "FC-1", "issue-creation"],
     ["confirmed_draft", "FC-2", "github-simple-executor"],
     ["created_issue", "FC-3", "feature-plan"],
     ["updated_open_issue_from_policy_review", "FC-3", "feature-plan"],
@@ -135,6 +152,34 @@ test("feature-change representative entry states resolve to exactly one expected
   assert.deepEqual(definition, definitionBefore);
 });
 
+test("feature-change gates standalone entry while accepting distinct transition evidence", async () => {
+  const [definition, states] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
+  const insufficientStandalone = evaluateWorkflowDefinition(definition, {
+    feature_change_requested: true,
+  });
+  const policyReviewTransition = evaluateWorkflowDefinition(
+    definition,
+    states.updated_open_issue_from_policy_review,
+  );
+
+  assert.deepEqual(insufficientStandalone, {
+    status: "stopped",
+    reason: "current_task_action_condition_not_met",
+    task_action_id: "FC-1",
+  });
+  assert.equal(states.new_request.feature_change_requested, true);
+  assert.equal(states.new_request.feature_change_scope_identified, true);
+  assert.equal(states.new_request.feature_change_completion_criteria_ready, true);
+  assert.equal(states.new_request.additional_policy_decision_required, false);
+  assert.equal(states.new_request.defect_investigation_required, false);
+  assert.equal(states.new_issue_from_feature_proposal.feature_change_requested, false);
+  assert.equal(states.new_issue_from_feature_proposal.feature_proposal_feature_change_transition_completed, true);
+  assert.equal(states.updated_open_issue_from_policy_review.feature_change_requested, false);
+  assert.equal(states.updated_open_issue_from_policy_review.policy_review_feature_change_transition_completed, true);
+  assert.equal(policyReviewTransition.status, "action_required");
+  assert.equal(policyReviewTransition.task_action_id, "FC-3");
+});
+
 test("feature-change adapter maps observations in definition order and preserves copied evidence", async () => {
   const definition = await readJson(definitionUrl);
   const observations = validObservations();
@@ -152,6 +197,16 @@ test("feature-change adapter maps observations in definition order and preserves
     source_kind: "skill_output",
     source_reference: "feature-plan",
     field_reference: "facts.feature_plan_proposal_usable",
+  }]);
+  assert.deepEqual(result.evidence_by_fact.feature_change_requested, [{
+    source_kind: "user_input",
+    source_reference: "request issue #95",
+    field_reference: "facts.feature_change_requested",
+  }]);
+  assert.deepEqual(result.evidence_by_fact.feature_proposal_feature_change_transition_completed, [{
+    source_kind: "github_state",
+    source_reference: "feature proposal transition",
+    field_reference: "facts.feature_proposal_feature_change_transition_completed",
   }]);
   assert.notEqual(result.evidence_by_fact.feature_change_requested[0], observations[1]);
   assert.deepEqual(definition, definitionBefore);
@@ -195,9 +250,16 @@ test("feature-change adapter rejects workflow mismatch, wrong sources, and wrong
 
   const wrongSource = normalizeFeatureChangeFacts(definition, [
     observation("feature_plan_confirmed", true, "github_state", "issue #95"),
+    observation(
+      "feature_proposal_feature_change_transition_completed",
+      true,
+      "user_input",
+      "feature proposal transition",
+    ),
   ]);
   assertAtomicFailure(wrongSource, "invalid_observations");
   assert.equal(hasError(wrongSource, "observation.source_kind.mismatch", "/observations/0/source_kind"), true);
+  assert.equal(hasError(wrongSource, "observation.source_kind.mismatch", "/observations/1/source_kind"), true);
 
   const wrongFeaturePlan = normalizeFeatureChangeFacts(definition, [
     observation("feature_plan_proposal_usable", true, "skill_output", "policy-plan"),

@@ -6,6 +6,30 @@
       true,
       false
     ],
+    "feature_change_scope_identified": [
+      true,
+      false
+    ],
+    "feature_change_completion_criteria_ready": [
+      true,
+      false
+    ],
+    "additional_policy_decision_required": [
+      true,
+      false
+    ],
+    "defect_investigation_required": [
+      true,
+      false
+    ],
+    "feature_proposal_feature_change_transition_completed": [
+      true,
+      false
+    ],
+    "policy_review_feature_change_transition_completed": [
+      true,
+      false
+    ],
     "feature_change_draft_confirmed": [
       true,
       false
@@ -47,9 +71,47 @@
     {
       "task_action_id": "FC-1",
       "normalized_fact_conditions": {
-        "fact_id": "feature_change_requested",
-        "operator": "equals",
-        "value": true
+        "any": [
+          {
+            "all": [
+              {
+                "fact_id": "feature_change_requested",
+                "operator": "equals",
+                "value": true
+              },
+              {
+                "fact_id": "feature_change_scope_identified",
+                "operator": "equals",
+                "value": true
+              },
+              {
+                "fact_id": "feature_change_completion_criteria_ready",
+                "operator": "equals",
+                "value": true
+              },
+              {
+                "fact_id": "additional_policy_decision_required",
+                "operator": "equals",
+                "value": false
+              },
+              {
+                "fact_id": "defect_investigation_required",
+                "operator": "equals",
+                "value": false
+              }
+            ]
+          },
+          {
+            "fact_id": "feature_proposal_feature_change_transition_completed",
+            "operator": "equals",
+            "value": true
+          },
+          {
+            "fact_id": "policy_review_feature_change_transition_completed",
+            "operator": "equals",
+            "value": true
+          }
+        ]
       },
       "user_decision_options": [
         {

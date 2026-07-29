@@ -23,6 +23,9 @@
 - `--wait`가 있으므로 foreground/background 선택 질문을 추가하지 않고, `--background`를 전달하지
   않는다.
 - `<pr-base-branch>`는 현재 PR에서 관측한 base branch와 같아야 한다.
+- `--base <pr-base-branch>`와 `--scope branch`는 현재 PR의 head branch에 포함된 전체 변경을
+  base branch와 비교해 검토하기 위해 함께 고정한다. 따라서 마지막 commit만 보는 commit 단위
+  범위가 아니라 PR에 누적된 branch diff 전체가 리뷰 대상이다.
 - 이 고정값은 Workflow Engine의 `FI-15`와 `FI-16` 호출에만 적용한다. Workflow Engine 밖에서
   직접 사용하는 `$cc:review`, `$cc:adversarial-review`의 일반 실행 방식과
   `FI-17`의 `codex/awesome-code-review` 실행 방식은 변경하지 않는다.

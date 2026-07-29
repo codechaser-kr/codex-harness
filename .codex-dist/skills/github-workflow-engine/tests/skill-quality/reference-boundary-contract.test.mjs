@@ -229,6 +229,10 @@ test("workflow-owned Claude review modes pin foreground wait without changing ot
     assert.doesNotMatch(source, /\$cc:adversarial-review --background/);
   }
   assert.match(structured, /execution_mode=foreground[\s\S]*execution_control_flag=--wait[\s\S]*planned_session_relation=same_session/);
+  assert.match(
+    structured,
+    /`--base <pr-base-branch>`와 `--scope branch`[\s\S]*PR의 head branch에 포함된 전체 변경[\s\S]*base branch와 비교[\s\S]*branch diff 전체/,
+  );
   assert.match(claudeReview, /같은 세션의 foreground 실행[\s\S]*결과가 반환될 때까지/);
   assert.match(claudeReview, /Workflow Engine 밖의[\s\S]*일반 호출 정책[\s\S]*`FI-17`/);
   assert.match(workflowDoc, /foreground\/background 선택 질문을 추가하지 않고[\s\S]*`--background`를 전달하지 않는다/);

@@ -101,6 +101,25 @@ test("resume activation is covered by the structured execution contract", async 
   );
 });
 
+test("close-first issue transitions are explicit and guarded on direct resume", async () => {
+  const structured = await read("structured");
+  const transitionSection = structured.match(
+    /## 종료 후 이슈 유형 전환 순서\n[\s\S]*?(?=\n## |\n?$)/,
+  )?.[0] ?? "";
+
+  for (const route of [
+    "기능제안 → 정책검토",
+    "기능제안 → 기능변경",
+    "정책검토 → 기능변경",
+  ]) {
+    assert.match(transitionSection, new RegExp(route));
+  }
+  assert.match(transitionSection, /`reflect → close → transition`/);
+  assert.match(transitionSection, /원본 이슈가 종료됐다는 GitHub fact[\s\S]*후속 이슈/);
+  assert.match(transitionSection, /`currentTaskActionId`[\s\S]*close-first 선행조건을 다시 검증/);
+  assert.match(transitionSection, /사후 기록[\s\S]*종료의 선행조건이 아니다/);
+});
+
 test("feature-change entry routing facts have owned and traceable observation rules", async () => {
   const stateObservation = await read("stateObservation");
   const routingSection = stateObservation.match(

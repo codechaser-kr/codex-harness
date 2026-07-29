@@ -64,6 +64,9 @@ function hasError(result, code, path) {
 
 test("feature-proposal definition parses and passes structural and semantic validation", async () => {
   const [definition, states] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
+  const transitionsById = Object.fromEntries(
+    definition.transitions.map((transition) => [transition.task_action_id, transition]),
+  );
   assert.equal(Object.keys(states).length, 12);
   assert.deepEqual(
     definition.transitions.map((transition) => transition.task_action_id),
@@ -73,15 +76,15 @@ test("feature-proposal definition parses and passes structural and semantic vali
   assert.deepEqual(definition.facts.feature_proposal_policy_review_transition_completed, [true, false]);
   assert.deepEqual(definition.facts.feature_proposal_feature_change_transition_completed, [true, false]);
   assert.deepEqual(
-    definition.transitions.find((transition) => transition.task_action_id === "FP-6").completion_predicate,
+    transitionsById["FP-6"].completion_predicate,
     { fact_id: "feature_proposal_issue_closed", operator: "equals", value: true },
   );
   assert.deepEqual(
-    definition.transitions.find((transition) => transition.task_action_id === "FP-7").completion_predicate,
+    transitionsById["FP-7"].completion_predicate,
     { fact_id: "feature_proposal_issue_closed", operator: "equals", value: true },
   );
   assert.deepEqual(
-    definition.transitions.find((transition) => transition.task_action_id === "FP-9").completion_predicate,
+    transitionsById["FP-9"].completion_predicate,
     {
       fact_id: "feature_proposal_policy_review_transition_completed",
       operator: "equals",
@@ -89,7 +92,7 @@ test("feature-proposal definition parses and passes structural and semantic vali
     },
   );
   assert.deepEqual(
-    definition.transitions.find((transition) => transition.task_action_id === "FP-10").completion_predicate,
+    transitionsById["FP-10"].completion_predicate,
     {
       fact_id: "feature_proposal_feature_change_transition_completed",
       operator: "equals",

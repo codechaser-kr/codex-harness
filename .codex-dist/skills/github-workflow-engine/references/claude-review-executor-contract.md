@@ -20,6 +20,18 @@ foreground 호출값, 실행 결과의 실패 판정과 재개 조건을 정의�
   `$cc:review`, `$cc:adversarial-review` 일반 호출 정책과 `FI-17`의
   `codex/awesome-code-review` 실행 방식은 변경하지 않는다.
 
+## FI-16 의존성과 출력 계약
+
+- `FI-16`의 `claude/awesome-code-review`는 논리 모드 이름이며 실제 실행기는 활성
+  `sendbird/cc-plugin-codex`의 `$cc:adversarial-review`다.
+- 실행 전 의존성은 Claude CLI 인증과 `$cc:setup`이 확인한 plugin·hook·companion 준비 상태다.
+  Claude 환경 또는 Codex 전역의 외부 `awesome-code-review` 스킬에는 의존하지 않는다.
+- `$cc:adversarial-review` companion stdout은 PR Review Template을 직접 보장하는 출력으로
+  간주하지 않는다. Workflow Engine은 `review-runtime-contract.md`의 필수 섹션·필드에 맞게
+  결과를 정규화하고 PR 번호와 head commit SHA에 연결한 뒤 Review Comment 입력으로 전달한다.
+- 중요도, diff 위치, 문제, 영향, 권장 조치 또는 테스트 판단을 채울 수 없으면 Review Comment로
+  전이하지 않고 누락 필드와 재개 조건을 산출한다.
+
 ## Claude 리뷰 실행 실패 판정 규칙
 
 | 판정 상태                       | 판정 기준                                                                                                                                                                   | 재개 조건                                                                    |

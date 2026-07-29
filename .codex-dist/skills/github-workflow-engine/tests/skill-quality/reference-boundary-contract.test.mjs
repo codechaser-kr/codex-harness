@@ -235,6 +235,43 @@ test("workflow-owned Claude review modes pin foreground wait without changing ot
   assert.match(readme, /Workflow Engine 호출에만 적용[\s\S]*일반 실행 정책[\s\S]*`codex\/awesome-code-review`/);
 });
 
+test("FI-16 uses the adversarial companion dependency and normalizes its output", async () => {
+  const [claudeReview, workflowDoc, readme] = await Promise.all([
+    read("claudeReview"),
+    read("workflowDoc"),
+    read("readme"),
+  ]);
+
+  assert.match(
+    claudeReview,
+    /`FI-16`의 `claude\/awesome-code-review`[\s\S]*실제 실행기는[\s\S]*`\$cc:adversarial-review`/,
+  );
+  assert.match(
+    claudeReview,
+    /외부 `awesome-code-review` 스킬에는 의존하지 않는다[\s\S]*companion stdout은 PR Review Template을 직접 보장하는 출력으로[\s\S]*간주하지 않는다/,
+  );
+  assert.match(
+    workflowDoc,
+    /\| `claude\/awesome-code-review` \| Claude[\s\S]*`\$cc:setup` 및 `\$cc:adversarial-review` 준비 상태/,
+  );
+  assert.doesNotMatch(
+    workflowDoc,
+    /\| `claude\/awesome-code-review` \| Claude\s+\| Claude CLI 인증, Claude 환경의 `awesome-code-review`/,
+  );
+  assert.match(
+    workflowDoc,
+    /`claude\/awesome-code-review`의 `\$cc:adversarial-review` companion stdout은 해당 Template을 직접 보장하는 것으로 간주하지 않는다/,
+  );
+  assert.match(
+    readme,
+    /`claude\/awesome-code-review`의 실행기와 의존성은 이 플러그인의 `\$cc:adversarial-review`[\s\S]*`awesome-code-review`가 아닙니다/,
+  );
+  assert.match(
+    readme,
+    /`\$cc:adversarial-review`의 companion stdout은 PR Review Template을 직접 보장하는 것으로 간주하지 않습니다/,
+  );
+});
+
 test("artifact output rules use grouped sections", async () => {
   const artifactOutput = await read("artifactOutput");
   for (const heading of [

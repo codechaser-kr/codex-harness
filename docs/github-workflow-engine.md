@@ -535,7 +535,7 @@ Workflow Engine을 타겟 레포에 설치할 때는 기본 리뷰 실행 모드
 | 리뷰 실행 모드               | 실행 주체 | 실행 전에 확인할 의존성                                                                                 |
 | ---------------------------- | --------- | ------------------------------------------------------------------------------------------------------ |
 | `claude/code-review`         | Claude    | Claude CLI 인증, Codex에서 호출할 경우 `sendbird/cc-plugin-codex`의 `$cc:setup` 준비 상태 확인         |
-| `claude/awesome-code-review` | Claude    | Claude CLI 인증, Claude 환경의 `awesome-code-review`, Codex에서 호출할 경우 `sendbird/cc-plugin-codex` |
+| `claude/awesome-code-review` | Claude    | Claude CLI 인증, `sendbird/cc-plugin-codex`의 `$cc:setup` 및 `$cc:adversarial-review` 준비 상태          |
 | `codex/awesome-code-review`  | Codex     | Codex 전역 `awesome-code-review`                                                                       |
 
 설치 기본 리뷰 실행 모드 저장 형식:
@@ -555,14 +555,14 @@ Workflow Engine을 타겟 레포에 설치할 때는 기본 리뷰 실행 모드
 
 선택된 리뷰 실행 모드의 의존성이 설치되어 있지 않으면 Workflow Engine은 필요한 설치 경로, 설치 주체, 설치 후 확인할 파일 또는 명령, 재개 조건을 안내하고 리뷰 실행 작업을 중단한다. 다른 리뷰 실행 모드로 자동 전환하지 않는다.
 
-Codex 전역 `awesome-code-review` 설치 확인 경로:
+`codex/awesome-code-review`에서 사용하는 Codex 전역 `awesome-code-review` 설치 확인 경로:
 
 - `$CODEX_HOME/skills/awesome-code-review/SKILL.md`
 - `$HOME/.codex/skills/awesome-code-review/SKILL.md`
 
-`awesome-code-review` 누락 안내에는 이 저장소가 해당 스킬을 배포하거나 관리하지 않는다는 점, 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다는 점, 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만 Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다는 점을 포함한다. 설치 후에는 위 경로 중 하나에 `SKILL.md`가 있고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다.
+`codex/awesome-code-review`의 `awesome-code-review` 누락 안내에는 이 저장소가 해당 스킬을 배포하거나 관리하지 않는다는 점, 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다는 점, 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만 Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다는 점을 포함한다. 설치 후에는 위 경로 중 하나에 `SKILL.md`가 있고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다. 이 검사는 `claude/awesome-code-review`에는 적용하지 않는다.
 
-Claude 기반 리뷰 실행 모드를 Codex에서 호출하려면 `sendbird/cc-plugin-codex`가 필요하다. 이 의존성은 `commit`, `awesome-code-review`처럼 외부 전역 의존성으로만 다루며, `codex-harness` 관리 기본형에 포함하지 않는다. 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다.
+Claude 기반 리뷰 실행 모드를 Codex에서 호출하려면 `sendbird/cc-plugin-codex`가 필요하다. `claude/awesome-code-review`는 이 플러그인의 `$cc:adversarial-review`를 실행하며 Claude 환경 또는 Codex 전역의 `awesome-code-review` 스킬에 의존하지 않는다. 이 플러그인은 `commit`, `awesome-code-review`처럼 외부 전역 의존성으로만 다루며, `codex-harness` 관리 기본형에 포함하지 않는다. 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다.
 
 `sendbird/cc-plugin-codex` 설치 확인 기준:
 
@@ -584,7 +584,7 @@ Claude 리뷰 실행 실패 판정 기준:
 2. 출력에 `Failed to authenticate`, `401 Invalid authentication credentials`, `Invalid authentication credentials` 중 하나가 포함되면 Claude 로그인이 오래되어 토큰이 만료됐을 수 있음을 안내한다.
 3. 재개 조건은 사용자가 Claude CLI 인증을 직접 복구한 뒤 재개를 요청한 상태다.
 
-`claude/awesome-code-review`와 `codex/awesome-code-review`는 PR Review Template 필수 필드를 포함한 결과를 출력해야 한다. 리뷰 결과가 필수 필드를 모두 포함하면 Workflow Engine은 정규화 없이 그 결과를 Review Comment Skill 입력으로 사용한다.
+`codex/awesome-code-review`는 PR Review Template 필수 필드를 포함한 결과를 직접 출력해야 한다. `claude/awesome-code-review`의 `$cc:adversarial-review` companion stdout은 해당 Template을 직접 보장하는 것으로 간주하지 않는다. Workflow Engine은 companion 결과를 PR Review Template 필수 섹션과 필드에 맞게 정규화하고 PR 번호와 head commit SHA에 연결한 뒤 Review Comment Skill 입력으로 사용한다. 필수 필드를 채울 수 없으면 누락 필드와 재개 조건을 제시하고 게시로 전이하지 않는다.
 
 Workflow Engine의 Claude 리뷰 실행 경로:
 

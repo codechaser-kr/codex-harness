@@ -28,6 +28,12 @@ function observation(factId, value, sourceKind, sourceReference, fieldReference 
 function validObservations() {
   return [
     observation("feature_change_transition_result", "existing_issue_updated", "github_state", "issue #95"),
+    observation(
+      "policy_review_feature_change_transition_completed",
+      true,
+      "github_state",
+      "feature change issue #110",
+    ),
     observation("policy_review_requested", true, "user_input", "request issue #95"),
     observation("feature_proposal_policy_review_transition_completed", true, "github_state", "feature proposal issue #93"),
     observation("policy_design_proposal_usable", true, "skill_output", "policy-plan"),
@@ -63,27 +69,73 @@ function hasError(result, code, path) {
 
 test("policy-review definition passes C2/C3 validation with direct executor references", async () => {
   const [definition, states] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
-  assert.equal(Object.keys(states).length, 13);
+  assert.equal(Object.keys(states).length, 16);
   assert.deepEqual(definition.transitions.map((transition) => transition.task_action_id), [
-    "PR-1", "PR-2", "PR-3", "PR-4", "PR-5", "PR-6", "PR-7", "PR-8", "PR-9",
+    "PR-1", "PR-2", "PR-3", "PR-4", "PR-5", "PR-6",
+    "PR-7", "PR-8", "PR-10", "PR-11", "PR-12", "PR-9",
   ]);
   assert.equal(JSON.stringify(definition).includes('"priority"'), false);
 
-  for (const transition of definition.transitions.slice(0, -1)) {
+  for (const transition of definition.transitions.slice(0, 8)) {
     assert.deepEqual(transition.next_transition_rules, [{
       condition: null,
       task_action_id: definition.transitions[definition.transitions.indexOf(transition) + 1].task_action_id,
     }]);
   }
-  assert.deepEqual(definition.transitions.at(-1).next_transition_rules, []);
+  assert.deepEqual(definition.transitions.find((item) => item.task_action_id === "PR-10").next_transition_rules, [
+    {
+      condition: {
+        fact_id: "feature_change_transition_direction",
+        operator: "equals",
+        value: "existing_feature_issue",
+      },
+      task_action_id: "PR-11",
+    },
+    {
+      condition: {
+        fact_id: "feature_change_transition_direction",
+        operator: "equals",
+        value: "new_feature_issue",
+      },
+      task_action_id: "PR-12",
+    },
+  ]);
+  for (const taskActionId of ["PR-11", "PR-12"]) {
+    assert.deepEqual(definition.transitions.find((item) => item.task_action_id === taskActionId).next_transition_rules, [{
+      condition: null,
+      task_action_id: "PR-9",
+    }]);
+  }
+  assert.deepEqual(definition.transitions.find((item) => item.task_action_id === "PR-9").next_transition_rules, []);
 
   assert.equal(definition.transitions.find((item) => item.task_action_id === "PR-5").executor_reference, null);
   assert.equal(definition.transitions.find((item) => item.task_action_id === "PR-9").executor_reference, null);
-  const reflectTransitionPredicate = definition.transitions
-    .find((item) => item.task_action_id === "PR-8").completion_predicate;
-  const completeTransition = definition.transitions.find((item) => item.task_action_id === "PR-9");
-  assert.deepEqual(reflectTransitionPredicate, completeTransition.normalized_fact_conditions);
-  assert.deepEqual(reflectTransitionPredicate, completeTransition.completion_predicate);
+  assert.deepEqual(
+    definition.transitions.find((item) => item.task_action_id === "PR-8").completion_predicate,
+    { fact_id: "feature_change_transition_reflected", operator: "equals", value: true },
+  );
+  assert.deepEqual(
+    definition.transitions.find((item) => item.task_action_id === "PR-10").completion_predicate,
+    { fact_id: "policy_review_issue_closed", operator: "equals", value: true },
+  );
+  for (const [taskActionId, result] of [
+    ["PR-11", "existing_issue_updated"],
+    ["PR-12", "new_issue_flow_started"],
+  ]) {
+    assert.deepEqual(
+      definition.transitions.find((item) => item.task_action_id === taskActionId).completion_predicate,
+      {
+        all: [
+          { fact_id: "feature_change_transition_result", operator: "equals", value: result },
+          {
+            fact_id: "policy_review_feature_change_transition_completed",
+            operator: "equals",
+            value: true,
+          },
+        ],
+      },
+    );
+  }
 
   const validation = validateWorkflowDefinition(definition);
   assert.equal(validation.valid, true, JSON.stringify(validation.errors));
@@ -105,6 +157,9 @@ test("policy-review representative states resolve to exactly one expected action
     ["design_document_result_reflected", "PR-7", "policy-review-next-triage"],
     ["transition_candidates_waiting_for_direction", "PR-7", "policy-review-next-triage"],
     ["existing_direction_not_reflected", "PR-8", "github-simple-executor"],
+    ["existing_direction_reflected_open", "PR-10", "github-simple-executor"],
+    ["closed_existing_update_pending", "PR-11", "github-simple-executor"],
+    ["closed_new_flow_missing", "PR-12", "github-simple-executor"],
   ];
 
   for (const [name, taskActionId, executorReference] of cases) {
@@ -131,10 +186,74 @@ test("policy-review representative states resolve to exactly one expected action
     state.feature_change_transition_result = resultValue;
     const result = evaluateWorkflowDefinition(definition, state);
     assert.equal(result.status, "action_required", `${name} with ${resultValue}`);
-    assert.equal(result.task_action_id, "PR-8", `${name} with ${resultValue}`);
+    assert.equal(
+      result.task_action_id,
+      name === "completed_existing_issue" ? "PR-11" : "PR-12",
+      `${name} with ${resultValue}`,
+    );
     assert.equal(result.executor_reference, "github-simple-executor", `${name} with ${resultValue}`);
   }
   assert.deepEqual(definition, definitionBefore);
+});
+
+test("policy-review blocks both feature-change handoffs until the original issue is closed", async () => {
+  const [definition, states] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
+  for (const [direction, resultValue, startTaskActionId] of [
+    ["existing_feature_issue", "existing_issue_updated", "PR-11"],
+    ["new_feature_issue", "new_issue_flow_started", "PR-12"],
+  ]) {
+    const state = {
+      ...structuredClone(states.existing_direction_reflected_open),
+      feature_change_transition_direction: direction,
+      feature_change_transition_result: resultValue,
+      policy_review_feature_change_transition_completed: true,
+    };
+    const stateBefore = structuredClone(state);
+    const result = evaluateWorkflowDefinition(definition, state);
+    const directStart = evaluateWorkflowDefinition(definition, state, {
+      currentTaskActionId: startTaskActionId,
+    });
+
+    assert.equal(result.status, "action_required", direction);
+    assert.equal(result.task_action_id, "PR-10", direction);
+    assert.deepEqual(directStart, {
+      status: "stopped",
+      reason: "current_task_action_condition_not_met",
+      task_action_id: startTaskActionId,
+    }, direction);
+    assert.deepEqual(state, stateBefore, direction);
+  }
+});
+
+test("policy-review resumes the selected handoff from a closed original issue", async () => {
+  const [definition, states] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
+  for (const [name, taskActionId] of [
+    ["closed_existing_update_pending", "PR-11"],
+    ["closed_new_flow_missing", "PR-12"],
+  ]) {
+    const state = structuredClone(states[name]);
+    const stateBefore = structuredClone(state);
+    const result = evaluateWorkflowDefinition(definition, state);
+
+    assert.equal(result.status, "action_required", name);
+    assert.equal(result.task_action_id, taskActionId, name);
+    assert.equal(result.executor_reference, "github-simple-executor", name);
+    assert.deepEqual(state, stateBefore, name);
+  }
+});
+
+test("policy-review resumes the legacy terminal task action ID without the new completion fact", async () => {
+  const [definition, states] = await Promise.all([readJson(definitionUrl), readJson(statesUrl)]);
+  for (const name of ["completed_existing_issue", "completed_new_issue"]) {
+    const legacyState = structuredClone(states[name]);
+    delete legacyState.policy_review_feature_change_transition_completed;
+
+    assert.deepEqual(
+      evaluateWorkflowDefinition(definition, legacyState, { currentTaskActionId: "PR-9" }),
+      { status: "completed", task_action_id: "PR-9" },
+      name,
+    );
+  }
 });
 
 test("policy-review adapter maps observations in definition order and preserves copied evidence", async () => {
@@ -160,7 +279,12 @@ test("policy-review adapter maps observations in definition order and preserves 
     source_reference: "feature proposal issue #93",
     field_reference: "facts.feature_proposal_policy_review_transition_completed",
   }]);
-  assert.notEqual(result.evidence_by_fact.policy_review_requested[0], observations[1]);
+  assert.deepEqual(result.evidence_by_fact.policy_review_feature_change_transition_completed, [{
+    source_kind: "github_state",
+    source_reference: "feature change issue #110",
+    field_reference: "facts.policy_review_feature_change_transition_completed",
+  }]);
+  assert.notEqual(result.evidence_by_fact.policy_review_requested[0], observations[2]);
   assert.deepEqual(definition, definitionBefore);
   assert.deepEqual(observations, observationsBefore);
 });
@@ -211,6 +335,21 @@ test("policy-review adapter rejects workflow mismatch, wrong sources, and wrong 
   ]);
   assertAtomicFailure(wrongTransitionSource, "invalid_observations");
   assert.equal(hasError(wrongTransitionSource, "observation.source_kind.mismatch", "/observations/0/source_kind"), true);
+
+  const wrongFeatureChangeTransitionSource = normalizePolicyReviewFacts(definition, [
+    observation(
+      "policy_review_feature_change_transition_completed",
+      true,
+      "local_state",
+      "local handoff",
+    ),
+  ]);
+  assertAtomicFailure(wrongFeatureChangeTransitionSource, "invalid_observations");
+  assert.equal(hasError(
+    wrongFeatureChangeTransitionSource,
+    "observation.source_kind.mismatch",
+    "/observations/0/source_kind",
+  ), true);
 
   for (const [factId, sourceReference] of [
     ["policy_design_proposal_usable", "policy-review-next-triage"],

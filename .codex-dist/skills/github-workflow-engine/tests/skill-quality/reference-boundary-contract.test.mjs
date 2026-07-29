@@ -11,6 +11,7 @@ const urls = {
   reviewRuntime: new URL("../../references/review-runtime-contract.md", import.meta.url),
   claudeReview: new URL("../../references/claude-review-executor-contract.md", import.meta.url),
   artifactOutput: new URL("../../references/artifact-output-contract.md", import.meta.url),
+  stateObservation: new URL("../../references/state-observation-contract.md", import.meta.url),
   githubTemplates: new URL("../../references/github-templates.md", import.meta.url),
   implementation: new URL("../../definitions/implementation.json", import.meta.url),
   workflowDoc: new URL("../../../../../docs/github-workflow-engine.md", import.meta.url),
@@ -98,6 +99,49 @@ test("resume activation is covered by the structured execution contract", async 
     skill,
     /확정된 작업을 자동 실행할 때 `references\/structured-execution-contract\.md`/,
   );
+});
+
+test("close-first issue transitions are explicit and guarded on direct resume", async () => {
+  const structured = await read("structured");
+  const transitionSection = structured.match(
+    /## 종료 후 이슈 유형 전환 순서\n[\s\S]*?(?=\n## |\n?$)/,
+  )?.[0] ?? "";
+
+  for (const route of [
+    "기능제안 → 정책검토",
+    "기능제안 → 기능변경",
+    "정책검토 → 기능변경",
+  ]) {
+    assert.match(transitionSection, new RegExp(route));
+  }
+  assert.match(transitionSection, /`reflect → close → transition`/);
+  assert.match(transitionSection, /원본 이슈가 종료됐다는 GitHub fact[\s\S]*후속 이슈/);
+  assert.match(transitionSection, /`currentTaskActionId`[\s\S]*close-first 선행조건을 다시 검증/);
+  assert.match(transitionSection, /사후 기록[\s\S]*종료의 선행조건이 아니다/);
+});
+
+test("feature-change entry routing facts have owned and traceable observation rules", async () => {
+  const stateObservation = await read("stateObservation");
+  const routingSection = stateObservation.match(
+    /## 기능변경 진입 local_state 관측 규칙\n[\s\S]*?(?=\n## |\n?$)/,
+  )?.[0] ?? "";
+
+  assert.match(routingSection, /Workflow Engine[\s\S]*최초 상태 묶음[\s\S]*직접 산출/);
+  assert.match(routingSection, /완료된 전환 fact가 둘 다 `true`[\s\S]*현재 요청을 시작한 전환 하나/);
+  assert.match(routingSection, /`request_id`[\s\S]*`source_reference`/);
+  assert.match(routingSection, /`field_reference`[\s\S]*routing check/);
+  assert.match(routingSection, /근거가 누락되거나 충돌하면[\s\S]*중단/);
+  for (const factId of [
+    "feature_change_entry_source",
+    "feature_change_scope_identified",
+    "feature_change_completion_criteria_ready",
+    "additional_policy_decision_required",
+    "defect_investigation_required",
+  ]) {
+    assert.equal(routingSection.includes(`| \`${factId}\` |`), true, factId);
+    assert.equal(routingSection.includes(`| \`routing_check.${factId}\` |`), true, factId);
+  }
+  assert.match(routingSection, /normalizeFeatureChangeFacts[\s\S]*정확히 한 번 호출/);
 });
 
 test("structured execution loads command and target details only for matching work", async () => {

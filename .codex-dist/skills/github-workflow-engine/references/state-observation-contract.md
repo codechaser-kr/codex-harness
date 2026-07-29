@@ -20,6 +20,34 @@
 
 `legacy_marker_comments`는 marker 댓글마다 `comment_id`, `url`, 체크된 항목 수, 미체크 항목 수를 기록한다. 기존 marker 댓글이 없으면 빈 배열로 기록한다. 이 결과는 과거 댓글의 존재와 체크 상태를 안내하기 위한 호환 정보이며 GitHub 상태를 변경하거나 작업 전이를 결정하지 않는다.
 
+## 기능변경 진입 local_state 관측 규칙
+
+Workflow Engine은 단독 요청과 상위 워크플로 전환을 포함한 기능변경 최초 상태 묶음을 수집할 때
+`feature_change_entry_source`를 직접 산출한다. 값은 현재 요청이 직접 기능변경 요청이면
+`direct_request`, 기능제안 전환이면 `feature_proposal`, 정책검토 전환이면 `policy_review`다.
+과거에 같은 기능변경 이슈로 완료된 전환 fact가 둘 다 `true`여도 현재 요청을 시작한 전환 하나를
+선택하며, 누적 완료 fact 자체로 현재 출처를 추론하지 않는다. 단독 요청이면 나머지 네 routing fact도
+함께 산출한다. `github-state-summary`와 state adapter는 이 판단을 대신하지 않는다. state adapter는
+산출된 관측값의 `source_kind=local_state` 계약만 검증한다.
+
+각 산출 fact는 현재 요청을 식별하는 `request_id`를 `source_reference`로 사용하고, 아래
+`field_reference`가 가리키는 routing check 결과와 그 입력이 실행 로그에서 원본 사용자 요청 또는
+기준 이슈의 필드까지 추적 가능해야 한다. 참·거짓을 판단할 근거가 누락되거나 충돌하면 기본값을
+추론하지 않고 상태 수집을 중단한다.
+
+| fact | 값 산출 기준 | `field_reference` |
+| --- | --- | --- |
+| `feature_change_entry_source` | 현재 요청이 직접 요청, 기능제안 전환, 정책검토 전환 중 어디에서 시작됐는지에 따라 각각 `direct_request`, `feature_proposal`, `policy_review` | `routing_check.feature_change_entry_source` |
+| `feature_change_scope_identified` | 구현 또는 문서 변경 대상과 범위가 단일 기능변경 이슈 초안으로 특정되면 `true`, 대상이 없거나 복수 후보 중 하나를 확정할 수 없으면 `false` | `routing_check.feature_change_scope_identified` |
+| `feature_change_completion_criteria_ready` | 요청 또는 기준 이슈에서 검증 가능한 완료 기준을 작성할 수 있으면 `true`, 성공 조건이나 검증 기준을 확정할 수 없으면 `false` | `routing_check.feature_change_completion_criteria_ready` |
+| `additional_policy_decision_required` | 구현 범위를 바꾸는 미확정 정책·설계 결정이 하나 이상 남아 있으면 `true`, 현재 근거만으로 추가 정책 결정 없이 구현 범위를 확정할 수 있으면 `false` | `routing_check.additional_policy_decision_required` |
+| `defect_investigation_required` | 잘못된 동작의 원인 조사와 해결 방향 확정이 선행돼야 하면 `true`, 요청이 원인 조사를 요구하지 않는 확정된 기능변경이면 `false` | `routing_check.defect_investigation_required` |
+
+routing check 입력에는 현재 사용자 요청 식별자, 선택된 상위 전환 이슈가 있으면 그 이슈 번호,
+그리고 기준 이슈가 있으면 이슈 번호 및 판정에 사용한 본문 heading을 기록한다. 현재 진입에 필요한
+fact와 evidence를 같은 상태 묶음에 포함한 뒤
+`normalizeFeatureChangeFacts`를 정확히 한 번 호출한다.
+
 ## 상태 요약 출력 사용 가능 판정 규칙
 
 | 판정 상태 | 판정 기준 |

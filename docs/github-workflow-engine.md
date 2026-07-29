@@ -581,8 +581,10 @@ Claude CLI 인증 확인 기준:
 Claude 리뷰 실행 실패 판정 기준:
 
 1. `claude/*` 리뷰 실행 모드에서 선택된 `$cc:* --wait` foreground 실행의 companion 명령이 exit code `0`이 아닌 값으로 종료되면 companion stdout과 stderr 출력을 확인한다.
-2. 출력에 `Failed to authenticate`, `401 Invalid authentication credentials`, `Invalid authentication credentials` 중 하나가 포함되면 Claude 로그인이 오래되어 토큰이 만료됐을 수 있음을 안내한다.
-3. 재개 조건은 사용자가 Claude CLI 인증을 직접 복구한 뒤 재개를 요청한 상태다.
+2. companion wrapper는 호출 전 인증이 없으면 `Claude Code CLI is not authenticated`와 `Run \`claude auth login\``을 stderr에 기록한다. 이 문구 또는 raw Claude의 `Failed to authenticate`, `401 Invalid authentication credentials`, `Invalid authentication credentials` 중 하나가 있으면 재로그인 필요로 판정한다.
+3. raw 오류 문구가 companion 경계에서 바뀌거나 누락될 수 있으므로 실패 직후 `$cc:setup` machine-readable probe를 다시 실행한다. `auth.available: false` 또는 `auth.loggedIn: false`면 출력 문구와 무관하게 재로그인 필요로 판정한다.
+4. `$cc:setup`이 인증 가능 상태를 유지할 때만 네트워크·socket·rate limit·service unavailable 오류를 재시도 후보로 분류하고, 어느 조건에도 맞지 않으면 원인 확인 필요로 둔다.
+5. 재로그인 필요의 재개 조건은 사용자가 Claude CLI 인증을 직접 복구한 뒤 재개를 요청한 상태다.
 
 `codex/awesome-code-review`는 PR Review Template 필수 필드를 포함한 결과를 직접 출력해야 한다. `claude/awesome-code-review`의 `$cc:adversarial-review` companion stdout은 해당 Template을 직접 보장하는 것으로 간주하지 않는다. Workflow Engine은 companion 결과를 PR Review Template 필수 섹션과 필드에 맞게 정규화하고 PR 번호와 head commit SHA에 연결한 뒤 Review Comment Skill 입력으로 사용한다. 필수 필드를 채울 수 없으면 누락 필드와 재개 조건을 제시하고 게시로 전이하지 않는다.
 

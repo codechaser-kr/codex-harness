@@ -272,6 +272,29 @@ test("FI-16 uses the adversarial companion dependency and normalizes its output"
   );
 });
 
+test("Claude review auth failures use companion wrapper output and setup recheck", async () => {
+  const [claudeReview, workflowDoc, readme] = await Promise.all([
+    read("claudeReview"),
+    read("workflowDoc"),
+    read("readme"),
+  ]);
+
+  for (const source of [claudeReview, workflowDoc, readme]) {
+    assert.match(source, /Claude Code CLI is not authenticated/);
+    assert.match(source, /Run \\?`claude auth login\\?`/);
+    assert.match(source, /auth\.available/);
+    assert.match(source, /auth\.loggedIn/);
+  }
+  assert.match(
+    claudeReview,
+    /top-level wrapper 오류는 stderr에 기록[\s\S]*raw 문구 보존에만 의존하지 않는다/,
+  );
+  assert.match(
+    workflowDoc,
+    /실패 직후 `\$cc:setup` machine-readable probe를 다시 실행한다[\s\S]*출력 문구와 무관하게 재로그인 필요/,
+  );
+});
+
 test("artifact output rules use grouped sections", async () => {
   const artifactOutput = await read("artifactOutput");
   for (const heading of [

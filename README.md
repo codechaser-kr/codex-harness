@@ -132,6 +132,8 @@ Workflow Engine의 PR 리뷰 실행 모드는 `claude/code-review`, `claude/awes
 
 `claude/*` 리뷰 실행 모드는 `$cc:setup` 결과로 Claude CLI 인증 상태를 확인합니다. 인증 완료는 `auth.available: true`, `auth.loggedIn: true` 또는 authenticated 출력으로만 판정하며, 미인증이거나 판단할 수 없으면 `$cc:setup`의 login 안내를 전달하고 리뷰 실행을 중단합니다.
 
+companion 실행이 실패하면 stdout·stderr의 `Claude Code CLI is not authenticated`, `Run \`claude auth login\``을 포함한 wrapper·raw 인증 오류 문구와 실패 직후 `$cc:setup`의 `auth.available`, `auth.loggedIn`을 함께 확인합니다. 따라서 companion이 raw Claude 오류를 재포맷해도 `$cc:setup`이 미인증을 보고하면 재로그인 필요로 판정합니다.
+
 Workflow Engine은 `FI-15`의 `claude/code-review`를 `$cc:review --wait --base <pr-base-branch> --scope branch`, `FI-16`의 `claude/awesome-code-review`를 `$cc:adversarial-review --wait --base <pr-base-branch> --scope branch`로 호출합니다. 두 모드는 foreground/background 추가 질문 없이 같은 오케스트레이션 세션에서 결과를 기다리며 `--background`를 전달하지 않습니다. 이 고정값은 Workflow Engine 호출에만 적용되고, 직접 사용하는 `$cc:review`, `$cc:adversarial-review`의 일반 실행 정책과 `codex/awesome-code-review`에는 영향을 주지 않습니다.
 
 `$cc:adversarial-review`의 companion stdout은 PR Review Template을 직접 보장하는 것으로 간주하지 않습니다. Workflow Engine은 필수 섹션과 중요도·diff 위치·문제·영향·권장 조치·테스트 판단을 정규화하고 PR 번호와 head commit SHA에 연결한 뒤에만 Review Comment 입력으로 전달합니다.

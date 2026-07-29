@@ -10,13 +10,10 @@
 
 ### Claude 리뷰 실행 요청 고정값
 
-`FI-15`와 `FI-16`의 Claude 리뷰 실행 요청은 다음 값을 Workflow Engine 소유의
-`confirmed_request_values`로 기록한다.
-
-| `task_action_id` | `executor_reference` | 호출할 스킬과 인자 |
-| --- | --- | --- |
-| `FI-15` | `claude/code-review` | `$cc:review --wait --base <pr-base-branch> --scope branch` |
-| `FI-16` | `claude/awesome-code-review` | `$cc:adversarial-review --wait --base <pr-base-branch> --scope branch` |
+`FI-15`와 `FI-16`의 논리 실행 모드와 정확한 호출값은
+`claude-review-executor-contract.md`의 `Workflow Engine 호출 계약`을 단일 정본으로 사용한다.
+Workflow Engine은 해당 표의 `task_action_id`, 논리 실행 모드와 실제 호출을 그대로
+`confirmed_request_values`에 기록하며 이 계약에서 같은 호출 표를 다시 선언하지 않는다.
 
 - `execution_mode=foreground`, `execution_control_flag=--wait`,
   `planned_session_relation=same_session`은 실행 중 변경할 수 없는 요청값이다.

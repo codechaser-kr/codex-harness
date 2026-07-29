@@ -5,6 +5,9 @@ foreground 호출값, 실행 결과의 실패 판정과 재개 조건을 정의�
 
 ## Workflow Engine 호출 계약
 
+이 절은 `FI-15`와 `FI-16`의 논리 실행 모드와 정확한 호출값을 소유하는 단일 정본이다. 다른
+Workflow Engine 계약은 이 표를 참조하며 같은 호출 표를 다시 선언하지 않는다.
+
 | `task_action_id` | 논리 실행 모드 | 실제 호출 |
 | --- | --- | --- |
 | `FI-15` | `claude/code-review` | `$cc:review --wait --base <pr-base-branch> --scope branch` |

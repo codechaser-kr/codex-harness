@@ -222,12 +222,22 @@ test("workflow-owned Claude review modes pin foreground wait without changing ot
     read("readme"),
   ]);
 
-  for (const source of [skill, structured, claudeReview, workflowDoc, readme]) {
+  for (const source of [skill, claudeReview, workflowDoc, readme]) {
     assert.match(source, /\$cc:review --wait/);
     assert.match(source, /\$cc:adversarial-review --wait/);
     assert.doesNotMatch(source, /\$cc:review --background/);
     assert.doesNotMatch(source, /\$cc:adversarial-review --background/);
   }
+  assert.match(
+    claudeReview,
+    /`FI-15`와 `FI-16`[\s\S]*정확한 호출값[\s\S]*단일 정본[\s\S]*같은 호출 표를 다시 선언하지 않는다/,
+  );
+  assert.match(
+    structured,
+    /`claude-review-executor-contract\.md`의 `Workflow Engine 호출 계약`을 단일 정본으로 사용한다[\s\S]*`confirmed_request_values`[\s\S]*같은 호출 표를 다시 선언하지 않는다/,
+  );
+  assert.doesNotMatch(structured, /\$cc:review --wait --base/);
+  assert.doesNotMatch(structured, /\$cc:adversarial-review --wait --base/);
   assert.match(structured, /execution_mode=foreground[\s\S]*execution_control_flag=--wait[\s\S]*planned_session_relation=same_session/);
   assert.match(
     structured,

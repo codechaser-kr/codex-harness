@@ -7,7 +7,8 @@ const SOURCE_CONTRACTS = new Map([
   ["feature_proposal_direction", { sourceKind: "user_input" }],
   ["feature_proposal_direction_reflected", { sourceKind: "github_state" }],
   ["feature_proposal_issue_closed", { sourceKind: "github_state" }],
-  ["next_workflow", { sourceKind: "github_state" }],
+  ["feature_proposal_policy_review_transition_completed", { sourceKind: "github_state" }],
+  ["feature_proposal_feature_change_transition_completed", { sourceKind: "github_state" }],
 ]);
 
 /**

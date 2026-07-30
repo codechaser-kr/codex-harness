@@ -213,6 +213,39 @@ test("every review feedback requires a diff location and provider failures stay 
   assert.match(workflowDoc, /review thread 게시 위치 재지정[\s\S]*피드백 철회[\s\S]*기타 의견 입력/);
 });
 
+test("review feedback state comes only from diff review threads", async () => {
+  const [stateObservation, reviewComment, workflowDoc, readme] = await Promise.all([
+    read("stateObservation"),
+    read("reviewComment"),
+    read("workflowDoc"),
+    read("readme"),
+  ]);
+  const removedObservationKey = ["legacy", "marker", "comments"].join("_");
+  const removedSummaryMarker = ["codex-harness:", "summary", "-", "feedback", " v1"].join("");
+
+  assert.match(
+    stateObservation,
+    /Pull Request review threads는 diff가 있는 피드백과 resolved\/unresolved 상태를 리뷰 피드백 상태 원천으로 읽는다/,
+  );
+  assert.match(
+    stateObservation,
+    /Pull Request issue comments는 리뷰 피드백 상태 원천으로 쓰지 않는다/,
+  );
+  assert.match(
+    workflowDoc,
+    /\| Pull Request issue comments \| 리뷰 피드백 상태 원천으로 쓰지 않는다\. \|/,
+  );
+  assert.match(
+    readme,
+    /PR 본문과 diff가 있는 review thread의 resolved\/unresolved 상태를 읽어 현재 위치와 다음 액션을 판단합니다/,
+  );
+  assert.doesNotMatch(readme, /review thread, comment/);
+  for (const source of [stateObservation, reviewComment, workflowDoc]) {
+    assert.doesNotMatch(source, new RegExp(removedObservationKey));
+    assert.doesNotMatch(source, new RegExp(removedSummaryMarker));
+  }
+});
+
 test("workflow-owned Claude review modes pin foreground wait without changing other call sites", async () => {
   const [skill, structured, claudeReview, workflowDoc, readme] = await Promise.all([
     read("skill"),

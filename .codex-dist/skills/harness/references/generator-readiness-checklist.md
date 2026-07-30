@@ -138,7 +138,8 @@
 레퍼런스 문서 묶음은 아래 축을 빠짐없이 다뤄야 한다.
 
 - 런타임 계약: `codex-runtime-contract.md`
-- 역할 스펙 계약: `team-spec-contract.md`, `team-spec-schema.md`
+- 역할 스펙 정책·권한·불변 조건·생성 순서: `team-spec-contract.md`
+- 역할 스펙 구조·필드·형식·예시·구조 검증: `team-spec-schema.md`
 - 패턴 선택: `agent-design-patterns.md`, `orchestrator-template.md`
 - 스킬 작성: `skill-writing-guide.md`
 - QA와 검증: `qa-agent-guide.md`, `verification-checklist.md`, `skill-testing-guide.md`

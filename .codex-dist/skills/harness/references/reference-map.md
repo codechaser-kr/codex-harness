@@ -7,6 +7,8 @@
 - 레퍼런스는 부록이 아니라 메타시스템 설계 기준 라이브러리다.
 - 시작 진입 역할, 역할 스킬, 운영 감사 역할은 이 문서들을 필요할 때 골라 참조한다.
 - 모든 문서를 한 번에 읽기보다, 현재 결정하려는 축에 맞는 문서부터 읽는다.
+- Team Spec의 정책·권한·불변 조건·생성 순서·정본 관계는 `team-spec-contract.md`를 읽고,
+  필수 구조·필드·형식·예시·구조 검증은 `team-spec-schema.md`를 읽는다.
 
 ---
 
@@ -268,6 +270,7 @@
   - `reference-map.md`
   - `codex-runtime-contract.md`
   - `team-spec-contract.md`
+  - 역할 메타데이터 형식이나 매핑을 확인할 때 `team-spec-schema.md`
   - 필요 시 `orchestrator-template.md`
 - 하네스 Phase 7 피드백 반영과 타겟 평가:
   - `reference-map.md`
@@ -277,7 +280,8 @@
 - 패턴 선택:
   - `reference-map.md`
   - `agent-design-patterns.md`
-  - `team-spec-schema.md`
+  - 역할 경계와 생성 책임은 `team-spec-contract.md`
+  - 선택한 패턴의 역할 카드 표현은 `team-spec-schema.md`
   - 필요 시 `orchestrator-template.md`
 - 레퍼런스 패턴 기반 생성:
   - `reference-map.md`
@@ -289,6 +293,7 @@
   - `reference-map.md`
   - `initial-generation-contract.md`
   - `team-spec-contract.md`
+  - `team-spec-schema.md`
   - `skill-writing-guide.md`
   - 필요 시 `verification-checklist.md`
 - 운영 감사 강화:
@@ -303,6 +308,7 @@
   - `generator-readiness-checklist.md`
   - `codex-runtime-contract.md`
   - `team-spec-contract.md`
+  - `team-spec-schema.md`
   - 필요 시 `orchestrator-template.md`
 
 ---

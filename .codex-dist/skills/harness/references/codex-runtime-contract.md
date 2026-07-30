@@ -166,7 +166,8 @@ Codex 런타임 정렬이 끝났다고 보려면 아래 조건을 만족해야 �
 
 ## 다른 레퍼런스와의 연결
 
-- `team-spec-contract.md`: 역할 팀의 선언형 기준을 정의한다.
+- `team-spec-contract.md`: 역할 팀의 권한·불변 조건·생성 순서와 정본 관계를 정의한다.
+- `team-spec-schema.md`: 역할 팀의 필수 구조·필드·형식·매핑과 구조 검증을 정의한다.
 - `orchestrator-template.md`: 주 에이전트 중심 handoff와 재진입 흐름을 구체화한다.
 - `agents-sync-guide.md`: `AGENTS.md`와 로컬 하네스 자산의 정렬 기준을 제공한다.
 - `verification-checklist.md`: Codex 런타임 전제가 생성 결과에 반영됐는지 검토할 때 쓴다.

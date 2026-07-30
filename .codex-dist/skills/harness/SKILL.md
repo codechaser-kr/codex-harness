@@ -93,7 +93,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 
 하네스 Phase 2는 역할 팀을 설계하고 `team-spec`을 단일 원천으로 고정하는 단계다. 에이전트 TOML이나 역할 스킬 파일을 직접 작성하는 단계는 아니다. 그 작업은 하네스 Phase 3과 하네스 Phase 4에서 수행한다.
 
-`team-spec`에는 역할 인벤토리, 역할 경계, 실행 패턴, 시작/조율/QA/운영 감사 책임, 공통 출력 블록, 학습 후보 기록 규칙처럼 생성에 필요한 계약을 남긴다. 역할별 상세 작성법과 검증 절차는 `references/team-spec-contract.md`, `references/team-spec-schema.md`, `references/skill-writing-guide.md`, `references/verification-checklist.md`를 따른다. 하네스 Phase 2에는 설계 범위만 남긴다.
+`team-spec`에는 역할 인벤토리, 역할 경계, 실행 패턴, 시작/조율/QA/운영 감사 책임, 공통 출력 블록, 학습 후보 기록 규칙처럼 생성에 필요한 계약을 남긴다. Team Spec의 정책·권한·불변 조건·생성 순서·정본 관계는 `references/team-spec-contract.md`를, 필수 구조·필드·형식·예시·구조 검증은 `references/team-spec-schema.md`를 따른다. 역할 스킬 작성과 최종 검증은 `references/skill-writing-guide.md`, `references/verification-checklist.md`를 따른다. 하네스 Phase 2에는 설계 범위만 남긴다.
 
 ##### 아키텍처 패턴
 
@@ -122,8 +122,8 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 6. 요청이 추상적인지, 저장소 고유 용어와 범위가 충분한지 보고 질문을 앞에 둘지 바로 역할 시작할지 적는다.
 7. 팀 흐름을 조율하는 중심 역할과 팀을 실제로 시작시키는 진입 역할을 각각 설계한다.
 8. 운영 감사와 품질 전략이 별도 책임으로 읽히도록 역할 경계를 분리한다.
-9. 각 역할의 식별자, 책임, 입력/출력, 다음 역할, 실행 설정, 완료 기준을 `team-spec`에 정리한다. 상세 필드와 작성 순서는 `references/team-spec-contract.md`와 `references/team-spec-schema.md`를 따른다.
-10. 역할 목적, 책임, 주요 출력과 우선 입력 문서의 정합성은 `references/team-spec-contract.md`의 생성 규칙과 `references/team-spec-schema.md`의 역할별 실행 기준을 단일 상세 기준으로 따른다.
+9. 각 역할의 식별자, 책임, 입력/출력, 다음 역할, 실행 설정, 완료 기준을 `team-spec`에 정리한다. 생성 책임과 순서는 `references/team-spec-contract.md`를, 상세 필드와 작성 형식은 `references/team-spec-schema.md`를 따른다.
+10. 역할 목적, 책임, 주요 출력과 우선 입력 문서의 정합성 정책은 `references/team-spec-contract.md`를 따르고, 그 정합성을 표현하고 구조적으로 검증하는 필드 기준은 `references/team-spec-schema.md`를 따른다.
 11. 설계/정책/사양 문서는 team-spec 상단의 `설계 원천 우선순위` 또는 `설계 원천 인벤토리`에 포함하고, 운영 로그와 세션 요약 같은 재진입 문서는 설계 원천 우선순위에 넣지 않는다.
 12. team-spec 상단에는 왜 그 역할명이 현재 저장소의 도메인과 실패 경계를 더 잘 설명하는지 도메인 근거를 함께 남긴다.
 13. 새 역할명을 만들 때는 저장소 용어와 실패 경계를 드러내는 이름을 우선하고, `role_id`는 snake_case, 표시 이름과 파일명은 kebab-case로 정리한다.

@@ -20,6 +20,28 @@ const urls = {
   targetEditor: new URL("../../../target-harness-code-editor/SKILL.md", import.meta.url),
   reviewComment: new URL("../../../review-comment/SKILL.md", import.meta.url),
   harness: new URL("../../../harness/SKILL.md", import.meta.url),
+  teamSpecContract: new URL("../../../harness/references/team-spec-contract.md", import.meta.url),
+  teamSpecSchema: new URL("../../../harness/references/team-spec-schema.md", import.meta.url),
+  initialGeneration: new URL(
+    "../../../harness/references/initial-generation-contract.md",
+    import.meta.url,
+  ),
+  verificationChecklist: new URL(
+    "../../../harness/references/verification-checklist.md",
+    import.meta.url,
+  ),
+  qaAgentGuide: new URL("../../../harness/references/qa-agent-guide.md", import.meta.url),
+  referenceMap: new URL("../../../harness/references/reference-map.md", import.meta.url),
+  codexRuntime: new URL("../../../harness/references/codex-runtime-contract.md", import.meta.url),
+  evolutionContract: new URL("../../../harness/references/evolution-contract.md", import.meta.url),
+  generatorReadiness: new URL(
+    "../../../harness/references/generator-readiness-checklist.md",
+    import.meta.url,
+  ),
+  documentRegression: new URL(
+    "../../../../../.harness/document-regression-checklist.md",
+    import.meta.url,
+  ),
   templateCompatibility: new URL(
     "../../../harness/references/workflow-engine-template-compatibility-contract.md",
     import.meta.url,
@@ -72,6 +94,65 @@ function extractNamedSectionReferences(referenceLine) {
 
   return codeSpans;
 }
+
+test("Team Spec contract and schema have distinct ownership and aligned consumers", async () => {
+  const [
+    contract,
+    schema,
+    harness,
+    initialGeneration,
+    verificationChecklist,
+    qaAgentGuide,
+    referenceMap,
+    codexRuntime,
+    evolutionContract,
+    generatorReadiness,
+    documentRegression,
+  ] = await Promise.all([
+    read("teamSpecContract"),
+    read("teamSpecSchema"),
+    read("harness"),
+    read("initialGeneration"),
+    read("verificationChecklist"),
+    read("qaAgentGuide"),
+    read("referenceMap"),
+    read("codexRuntime"),
+    read("evolutionContract"),
+    read("generatorReadiness"),
+    read("documentRegression"),
+  ]);
+
+  assert.match(contract, /^## 문서 소유권과 참조 규칙$/m);
+  assert.match(contract, /정책·권한·불변 조건·생성 순서·정본 관계를 소유한다/);
+  assert.match(contract, /`team-spec-schema\.md`는 필수 섹션·필드[\s\S]*구조 검증 기준을 소유한다/);
+  assert.match(contract, /^## 생성 규칙$/m);
+  assert.doesNotMatch(contract, /```text\s+role_id\|display_name\|agent_file/);
+
+  assert.match(schema, /^## 문서 소유권과 참조 규칙$/m);
+  assert.match(schema, /필수 섹션·필드[\s\S]*역할 인벤토리와 역할 카드 형식[\s\S]*구조 검증 기준을 소유한다/);
+  assert.match(schema, /`team-spec-contract\.md`는 Team Spec의 정책·권한·불변 조건·생성 순서·정본 관계/);
+  assert.match(schema, /^### 필수 섹션과 필드$/m);
+  assert.match(schema, /```text\s+role_id\|display_name\|agent_file\|model\|reasoning\|sandbox\|description/);
+  assert.doesNotMatch(schema, /^## 생성 규칙$/m);
+
+  for (const consumer of [
+    harness,
+    initialGeneration,
+    verificationChecklist,
+    qaAgentGuide,
+    referenceMap,
+    codexRuntime,
+    evolutionContract,
+    generatorReadiness,
+  ]) {
+    assert.match(consumer, /team-spec-contract\.md/);
+    assert.match(consumer, /team-spec-schema\.md/);
+  }
+
+  assert.match(documentRegression, /team-spec-contract\.md.*정책·권한·불변 조건·생성 순서·정본 관계/);
+  assert.match(documentRegression, /team-spec-schema\.md.*필수 구조·필드·형식·예시·구조 검증/);
+  assert.match(documentRegression, /같은 규칙을 각각 정본으로 주장하지 않는가/);
+});
 
 test("user decisions are interpreted before automatic execution by one detailed contract", async () => {
   const [skill, structured, userDecision] = await Promise.all([

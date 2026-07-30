@@ -40,6 +40,9 @@ Codex용 하네스에서는 이 원칙을 다음처럼 옮긴다.
 | 로그 재사용성 부족 | 다음 시작 역할, 최근 출력, 남은 위험, 학습 후보가 없음 | 하네스 Phase 5, 하네스 Phase 6 | `session-log.md`, `latest-session-summary.md` | `logging-contract.md`, `reentry-rules.md` |
 | 생성기 반복 결함 | 여러 타겟 프로젝트에서 같은 종류의 약점이 반복됨 | 하네스 Phase 7 | 타겟 평가 기록 | 전역 `SKILL.md`, 관련 reference |
 
+Team Spec 재진입에서 역할 경계·권한·생성 순서의 정책 결함은 `team-spec-contract.md`를,
+필드·형식·매핑·구조 검증 결함은 `team-spec-schema.md`를 생성기 reference 보강 후보로 사용한다.
+
 ## 역할 출력에 남길 학습 항목
 
 역할 스킬은 산출 형식에 아래 항목을 필요에 따라 포함해야 한다.

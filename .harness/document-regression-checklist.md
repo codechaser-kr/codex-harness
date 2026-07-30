@@ -53,6 +53,10 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 
 `team-spec` 관련 reference를 바꿨다면 아래를 확인한다.
 
+- `team-spec-contract.md`가 정책·권한·불변 조건·생성 순서·정본 관계를 소유한다고 명시하는가
+- `team-spec-schema.md`가 필수 구조·필드·형식·예시·구조 검증을 소유한다고 명시하는가
+- 두 문서의 상호 참조만으로 규칙의 소유 문서를 식별할 수 있고 같은 규칙을 각각 정본으로 주장하지 않는가
+- 직접 소비 문서가 정책·권한·불변 조건·생성 순서에는 contract를, 구조·필드·형식·구조 검증에는 schema를 참조하는가
 - 역할 스펙 필드가 `.codex/agents/*`와 `.agents/skills/*` 생성에 필요한 정보를 충분히 담는가
 - `## 최종 역할 인벤토리`가 fenced `text` 블록이며, 헤더와 역할 행이 같은 블록 안에 있는가
 - 역할 행을 inline code로 흩어 놓은 예시가 남아 있지 않은가

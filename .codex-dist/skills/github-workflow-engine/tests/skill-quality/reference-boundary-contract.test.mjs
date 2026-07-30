@@ -222,9 +222,18 @@ test("workflow-owned Claude review modes pin foreground wait without changing ot
     read("readme"),
   ]);
 
-  for (const source of [skill, claudeReview, workflowDoc, readme]) {
-    assert.match(source, /\$cc:review --wait/);
-    assert.match(source, /\$cc:adversarial-review --wait/);
+  assert.match(
+    claudeReview,
+    /\| `FI-15` \| `claude\/code-review` \| `\$cc:review --wait --base <pr-base-branch> --scope branch` \|/,
+  );
+  assert.match(
+    claudeReview,
+    /\| `FI-16` \| `claude\/awesome-code-review` \| `\$cc:adversarial-review --wait --base <pr-base-branch> --scope branch` \|/,
+  );
+  for (const source of [skill, workflowDoc, readme]) {
+    assert.match(source, /`FI-15`[\s\S]*`FI-16`/);
+    assert.match(source, /--wait/);
+    assert.match(source, /foreground/);
     assert.doesNotMatch(source, /\$cc:review --background/);
     assert.doesNotMatch(source, /\$cc:adversarial-review --background/);
   }

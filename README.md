@@ -97,7 +97,7 @@ $HOME/.codex/skills/review-comment
 
 ## GitHub Workflow Engine 전역 스킬
 
-GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장소로 사용합니다. 별도 Run State Runtime을 만들지 않고, GitHub의 이슈 제목, 라벨, 본문, 체크리스트, PR 본문과 diff가 있는 review thread의 resolved/unresolved 상태를 읽어 현재 위치와 다음 액션을 판단합니다.
+GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장소로 사용합니다. 별도 Run State Runtime을 만들지 않고, GitHub의 이슈 제목, 라벨, 본문, 체크리스트, PR 본문, diff가 있는 review thread의 resolved/unresolved 상태를 읽어 현재 위치와 다음 액션을 판단합니다.
 
 배포본에는 다음 Codex 전역 스킬 기본형이 포함됩니다.
 

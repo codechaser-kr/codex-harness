@@ -237,7 +237,7 @@ test("review feedback state comes only from diff review threads", async () => {
   );
   assert.match(
     readme,
-    /PR 본문과 diff가 있는 review thread의 resolved\/unresolved 상태를 읽어 현재 위치와 다음 액션을 판단합니다/,
+    /PR 본문, diff가 있는 review thread의 resolved\/unresolved 상태를 읽어 현재 위치와 다음 액션을 판단합니다/,
   );
   assert.doesNotMatch(readme, /review thread, comment/);
   for (const source of [stateObservation, reviewComment, workflowDoc]) {

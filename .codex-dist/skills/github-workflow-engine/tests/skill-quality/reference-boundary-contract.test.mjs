@@ -15,6 +15,7 @@ const urls = {
   githubTemplates: new URL("../../references/github-templates.md", import.meta.url),
   implementation: new URL("../../definitions/implementation.json", import.meta.url),
   workflowDoc: new URL("../../../../../docs/github-workflow-engine.md", import.meta.url),
+  readme: new URL("../../../../../README.md", import.meta.url),
   simpleExecutor: new URL("../../../github-simple-executor/SKILL.md", import.meta.url),
   targetEditor: new URL("../../../target-harness-code-editor/SKILL.md", import.meta.url),
   reviewComment: new URL("../../../review-comment/SKILL.md", import.meta.url),
@@ -210,6 +211,111 @@ test("every review feedback requires a diff location and provider failures stay 
   }
   assert.doesNotMatch(workflowDoc, /비실행 피드백 재분류|reclassify_non_actionable_feedback/);
   assert.match(workflowDoc, /review thread 게시 위치 재지정[\s\S]*피드백 철회[\s\S]*기타 의견 입력/);
+});
+
+test("workflow-owned Claude review modes pin foreground wait without changing other call sites", async () => {
+  const [skill, structured, claudeReview, workflowDoc, readme] = await Promise.all([
+    read("skill"),
+    read("structured"),
+    read("claudeReview"),
+    read("workflowDoc"),
+    read("readme"),
+  ]);
+
+  assert.match(
+    claudeReview,
+    /\| `FI-15` \| `claude\/code-review` \| `\$cc:review --wait --base <pr-base-branch> --scope branch` \|/,
+  );
+  assert.match(
+    claudeReview,
+    /\| `FI-16` \| `claude\/awesome-code-review` \| `\$cc:adversarial-review --wait --base <pr-base-branch> --scope branch` \|/,
+  );
+  for (const source of [skill, workflowDoc, readme]) {
+    assert.match(source, /`FI-15`[\s\S]*`FI-16`/);
+    assert.match(source, /--wait/);
+    assert.match(source, /foreground/);
+    assert.doesNotMatch(source, /\$cc:review --background/);
+    assert.doesNotMatch(source, /\$cc:adversarial-review --background/);
+  }
+  assert.match(
+    claudeReview,
+    /`FI-15`와 `FI-16`[\s\S]*정확한 호출값[\s\S]*단일 정본[\s\S]*같은 호출 표를 다시 선언하지 않는다/,
+  );
+  assert.match(
+    structured,
+    /`claude-review-executor-contract\.md`의 `Workflow Engine 호출 계약`을 단일 정본으로 사용한다[\s\S]*`confirmed_request_values`[\s\S]*같은 호출 표를 다시 선언하지 않는다/,
+  );
+  assert.doesNotMatch(structured, /\$cc:review --wait --base/);
+  assert.doesNotMatch(structured, /\$cc:adversarial-review --wait --base/);
+  assert.match(structured, /execution_mode=foreground[\s\S]*execution_control_flag=--wait[\s\S]*planned_session_relation=same_session/);
+  assert.match(
+    structured,
+    /`--base <pr-base-branch>`와 `--scope branch`[\s\S]*PR의 head branch에 포함된 전체 변경[\s\S]*base branch와 비교[\s\S]*branch diff 전체/,
+  );
+  assert.match(claudeReview, /같은 세션의 foreground 실행[\s\S]*결과가 반환될 때까지/);
+  assert.match(claudeReview, /Workflow Engine 밖의[\s\S]*일반 호출 정책[\s\S]*`FI-17`/);
+  assert.match(workflowDoc, /foreground\/background 선택 질문을 추가하지 않고[\s\S]*`--background`를 전달하지 않는다/);
+  assert.match(readme, /Workflow Engine 호출에만 적용[\s\S]*일반 실행 정책[\s\S]*`codex\/awesome-code-review`/);
+});
+
+test("FI-16 uses the adversarial companion dependency and normalizes its output", async () => {
+  const [claudeReview, workflowDoc, readme] = await Promise.all([
+    read("claudeReview"),
+    read("workflowDoc"),
+    read("readme"),
+  ]);
+
+  assert.match(
+    claudeReview,
+    /`FI-16`의 `claude\/awesome-code-review`[\s\S]*실제 실행기는[\s\S]*`\$cc:adversarial-review`/,
+  );
+  assert.match(
+    claudeReview,
+    /외부 `awesome-code-review` 스킬에는 의존하지 않는다[\s\S]*companion stdout은 PR Review Template을 직접 보장하는 출력으로[\s\S]*간주하지 않는다/,
+  );
+  assert.match(
+    workflowDoc,
+    /\| `claude\/awesome-code-review` \| Claude[\s\S]*`\$cc:setup` 및 `\$cc:adversarial-review` 준비 상태/,
+  );
+  assert.doesNotMatch(
+    workflowDoc,
+    /\| `claude\/awesome-code-review` \| Claude\s+\| Claude CLI 인증, Claude 환경의 `awesome-code-review`/,
+  );
+  assert.match(
+    workflowDoc,
+    /`claude\/awesome-code-review`의 `\$cc:adversarial-review` companion stdout은 해당 Template을 직접 보장하는 것으로 간주하지 않는다/,
+  );
+  assert.match(
+    readme,
+    /`claude\/awesome-code-review`의 실행기와 의존성은 이 플러그인의 `\$cc:adversarial-review`[\s\S]*`awesome-code-review`가 아닙니다/,
+  );
+  assert.match(
+    readme,
+    /`\$cc:adversarial-review`의 companion stdout은 PR Review Template을 직접 보장하는 것으로 간주하지 않습니다/,
+  );
+});
+
+test("Claude review auth failures use companion wrapper output and setup recheck", async () => {
+  const [claudeReview, workflowDoc, readme] = await Promise.all([
+    read("claudeReview"),
+    read("workflowDoc"),
+    read("readme"),
+  ]);
+
+  for (const source of [claudeReview, workflowDoc, readme]) {
+    assert.match(source, /Claude Code CLI is not authenticated/);
+    assert.match(source, /Run \\?`claude auth login\\?`/);
+    assert.match(source, /auth\.available/);
+    assert.match(source, /auth\.loggedIn/);
+  }
+  assert.match(
+    claudeReview,
+    /top-level wrapper 오류는 stderr에 기록[\s\S]*raw 문구 보존에만 의존하지 않는다/,
+  );
+  assert.match(
+    workflowDoc,
+    /실패 직후 `\$cc:setup` machine-readable probe를 다시 실행한다[\s\S]*출력 문구와 무관하게 재로그인 필요/,
+  );
 });
 
 test("artifact output rules use grouped sections", async () => {

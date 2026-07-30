@@ -121,18 +121,22 @@ GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장�
 외부 의존 스킬은 이 저장소가 설치하거나 관리하지 않습니다. 타겟 레포에 GitHub Workflow Engine을 설치하거나 갱신할 때 사용 가능 상태를 `.harness/workflow-engine.json`에 기록하고, Workflow Engine은 필요한 액션에 들어가기 전에 이 설정을 읽습니다. `commit` 스킬은 `dependencies.commit.available`에 기록합니다. 사용 가능 상태가 없거나 실행 불가로 기록되어 있으면 설치 가능한 소스, 설치 대상 경로, 설치 후 확인할 파일, 재개 조건을 안내한 뒤 워크플로우를 중단합니다.
 
 - Codex 전역 `commit`: `$CODEX_HOME/skills/commit/SKILL.md` 또는 `$HOME/.codex/skills/commit/SKILL.md`
-- Codex 전역 `awesome-code-review`: `$CODEX_HOME/skills/awesome-code-review/SKILL.md` 또는 `$HOME/.codex/skills/awesome-code-review/SKILL.md`
-- Claude 리뷰 브리지 `sendbird/cc-plugin-codex`: Codex에서 Claude 기반 리뷰 실행 모드인 `claude/code-review` 또는 `claude/awesome-code-review`를 호출할 때 준비 상태 확인에 필요. `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`과 같은 플러그인 루트 파일과 `$cc:setup` 실행 결과로 설치 여부를 확인합니다.
+- Codex 전역 `awesome-code-review`: `codex/awesome-code-review` 실행에 필요. `$CODEX_HOME/skills/awesome-code-review/SKILL.md` 또는 `$HOME/.codex/skills/awesome-code-review/SKILL.md`
+- Claude 리뷰 브리지 `sendbird/cc-plugin-codex`: Codex에서 `claude/code-review`의 `$cc:review`와 `claude/awesome-code-review`의 `$cc:adversarial-review`를 호출할 때 필요. `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`과 같은 플러그인 루트 파일과 `$cc:setup` 실행 결과로 설치 여부를 확인합니다.
 
 Workflow Engine의 PR 리뷰 실행 모드는 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중에서 선택합니다. 타겟 레포에 Workflow Engine을 설치할 때 기본 리뷰 실행 모드를 선택할 수 있어야 하며, PR 생성 후 리뷰 실행 전에는 실제 사용할 리뷰 실행 모드를 다시 확정합니다. `dependencies.commit.available`과 설치 기본 리뷰 실행 모드는 타겟 레포의 `.harness/workflow-engine.json`에 저장하고, 리뷰 실행 모드는 PR별 선택 시 기본 후보로만 사용합니다. 사용자가 지원 모드 중 하나를 명시적으로 선택하기 전에는 리뷰 실행 모드 검사로 넘어가지 않습니다.
 
-`awesome-code-review`는 PR diff와 이슈 맥락을 읽어 PR Review Template 형식의 리뷰 결과를 만드는 외부 의존 스킬입니다. 이 저장소는 해당 스킬을 설치하거나 관리하지 않습니다. 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용합니다. 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만, Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춥니다.
+`awesome-code-review`는 `codex/awesome-code-review`가 PR diff와 이슈 맥락을 읽어 PR Review Template 형식의 리뷰 결과를 만들 때 사용하는 외부 의존 스킬입니다. `claude/awesome-code-review`는 이 스킬을 사용하지 않고 `sendbird/cc-plugin-codex`의 `$cc:adversarial-review`를 실행합니다. 이 저장소는 `awesome-code-review`를 설치하거나 관리하지 않습니다. 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용합니다. 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만, Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춥니다.
 
-`sendbird/cc-plugin-codex`는 Codex에서 Claude를 호출하기 위한 외부 의존성입니다. 이 저장소는 해당 플러그인을 설치하거나 관리하지 않으며, 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당합니다. 선택된 리뷰 실행 모드의 의존성이 없으면 Workflow Engine은 다른 모드로 자동 fallback하지 않고, 설치 대상과 재개 조건을 안내한 뒤 중단합니다.
+`sendbird/cc-plugin-codex`는 Codex에서 Claude를 호출하기 위한 외부 의존성입니다. 특히 `claude/awesome-code-review`의 실행기와 의존성은 이 플러그인의 `$cc:adversarial-review`이며 Claude 환경 또는 Codex 전역의 `awesome-code-review`가 아닙니다. 이 저장소는 해당 플러그인을 설치하거나 관리하지 않으며, 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당합니다. 선택된 리뷰 실행 모드의 의존성이 없으면 Workflow Engine은 다른 모드로 자동 fallback하지 않고, 설치 대상과 재개 조건을 안내한 뒤 중단합니다.
 
 `claude/*` 리뷰 실행 모드는 `$cc:setup` 결과로 Claude CLI 인증 상태를 확인합니다. 인증 완료는 `auth.available: true`, `auth.loggedIn: true` 또는 authenticated 출력으로만 판정하며, 미인증이거나 판단할 수 없으면 `$cc:setup`의 login 안내를 전달하고 리뷰 실행을 중단합니다.
 
-`claude/code-review`는 `$cc:review` companion review가 아니라 base/head 브랜치를 target으로 전달해 Claude Code의 `/code-review` command를 단독 호출하는 모드입니다. PR 맥락과 출력 조건은 command arguments에 붙이지 않고 별도 정규화 프롬프트로 넘깁니다. `/code-review --comment`와 `/code-review --fix`는 사용하지 않으며, GitHub comment 게시와 파일 수정은 Workflow Engine 후속 단계에서만 수행합니다.
+companion 실행이 실패하면 stdout·stderr의 `Claude Code CLI is not authenticated`, `Run \`claude auth login\``을 포함한 wrapper·raw 인증 오류 문구와 실패 직후 `$cc:setup`의 `auth.available`, `auth.loggedIn`을 함께 확인합니다. 따라서 companion이 raw Claude 오류를 재포맷해도 `$cc:setup`이 미인증을 보고하면 재로그인 필요로 판정합니다.
+
+Workflow Engine은 `FI-15`의 `claude/code-review`를 `$cc:review --wait --base <pr-base-branch> --scope branch`, `FI-16`의 `claude/awesome-code-review`를 `$cc:adversarial-review --wait --base <pr-base-branch> --scope branch`로 호출합니다. 두 모드는 foreground/background 추가 질문 없이 같은 오케스트레이션 세션에서 결과를 기다리며 `--background`를 전달하지 않습니다. 이 고정값은 Workflow Engine 호출에만 적용되고, 직접 사용하는 `$cc:review`, `$cc:adversarial-review`의 일반 실행 정책과 `codex/awesome-code-review`에는 영향을 주지 않습니다.
+
+`$cc:adversarial-review`의 companion stdout은 PR Review Template을 직접 보장하는 것으로 간주하지 않습니다. Workflow Engine은 필수 섹션과 중요도·diff 위치·문제·영향·권장 조치·테스트 판단을 정규화하고 PR 번호와 head commit SHA에 연결한 뒤에만 Review Comment 입력으로 전달합니다.
 
 PR 연결은 PR 본문의 `연관 이슈` 섹션에서 `Refs #번호`를 파싱해 판단합니다. Workflow Engine이 관리하는 이슈에는 `Closes #번호`, `Fixes #번호`, `Resolves #번호`처럼 GitHub가 자동 close하는 키워드를 사용하지 않습니다.
 

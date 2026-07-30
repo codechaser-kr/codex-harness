@@ -222,6 +222,9 @@ test("review feedback state comes only from diff review threads", async () => {
   ]);
   const removedObservationKey = ["legacy", "marker", "comments"].join("_");
   const removedSummaryMarker = ["codex-harness:", "summary", "-", "feedback", " v1"].join("");
+  const readmeStateSourceParagraph = readme
+    .split(/\n{2,}/)
+    .find((paragraph) => paragraph.startsWith("GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장소로 사용합니다."));
 
   assert.match(
     stateObservation,
@@ -239,7 +242,8 @@ test("review feedback state comes only from diff review threads", async () => {
     readme,
     /PR 본문, diff가 있는 review thread의 resolved\/unresolved 상태를 읽어 현재 위치와 다음 액션을 판단합니다/,
   );
-  assert.doesNotMatch(readme, /review thread, comment/);
+  assert.equal(typeof readmeStateSourceParagraph, "string");
+  assert.doesNotMatch(readmeStateSourceParagraph, /\bcomments?\b|댓글/i);
   for (const source of [stateObservation, reviewComment, workflowDoc]) {
     assert.doesNotMatch(source, new RegExp(removedObservationKey));
     assert.doesNotMatch(source, new RegExp(removedSummaryMarker));

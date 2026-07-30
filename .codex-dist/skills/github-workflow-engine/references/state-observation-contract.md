@@ -11,14 +11,6 @@
 - Workflow Engine 관리 이슈는 PR 본문에 `Refs #번호`로 연결한다.
 - Pull Request review threads는 diff가 있는 피드백과 resolved/unresolved 상태를 리뷰 피드백 상태 원천으로 읽는다.
 - Pull Request issue comments는 리뷰 피드백 상태 원천으로 쓰지 않는다.
-- 기존 marker 요약 피드백 댓글은 `리뷰 대응 대상 확인`과 `남은 피드백 확인`에서만 과거 호환 정보로 읽고 `legacy_marker_comments`를 산출한다. 새 게시 대상, 새 대응 대상, 완료 근거, 미완료 근거, merge 대기 판정 근거로 쓰지 않는다.
-- 기존 marker 요약 피드백은 다음 marker가 있는 PR comment로 식별한다.
-
-```markdown
-<!-- codex-harness:summary-feedback v1 -->
-```
-
-`legacy_marker_comments`는 marker 댓글마다 `comment_id`, `url`, 체크된 항목 수, 미체크 항목 수를 기록한다. 기존 marker 댓글이 없으면 빈 배열로 기록한다. 이 결과는 과거 댓글의 존재와 체크 상태를 안내하기 위한 호환 정보이며 GitHub 상태를 변경하거나 작업 전이를 결정하지 않는다.
 
 ## 기능변경 진입 local_state 관측 규칙
 

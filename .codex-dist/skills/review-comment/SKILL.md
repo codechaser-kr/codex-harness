@@ -68,4 +68,4 @@ Workflow Engine이 `review thread 게시 위치 재지정`을 확정하면 새 `
 - `inline_review_threads`: review thread 게시 대상으로 판정된 피드백의 게시 초안
 - `questions`: Workflow Engine이 확인할 보류 질문
 
-기존 marker 요약 피드백 댓글은 Workflow Engine이 `리뷰 대응 대상 확인`과 `남은 피드백 확인`에서 다시 읽어 `legacy_marker_comments` 읽기 전용 호환 관찰값으로 산출한다. 새 review thread 게시 초안은 모든 피드백의 `file`, `line`, diff position 근거로 구성한다.
+새 review thread 게시 초안은 모든 피드백의 `file`, `line`, diff position 근거로 구성한다.

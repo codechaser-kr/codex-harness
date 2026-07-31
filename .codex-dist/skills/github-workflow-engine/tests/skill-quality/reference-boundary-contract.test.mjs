@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
 const urls = {
@@ -24,6 +24,7 @@ const urls = {
   simpleExecutor: new URL("../../../github-simple-executor/SKILL.md", import.meta.url),
   workflowEditor: new URL("../../../workflow-code-editor/SKILL.md", import.meta.url),
   reviewComment: new URL("../../../review-comment/SKILL.md", import.meta.url),
+  harnessRoot: new URL("../../../harness/", import.meta.url),
   harness: new URL("../../../harness/SKILL.md", import.meta.url),
   harnessTemplateCompatibility: new URL(
     "../../../harness/references/workflow-engine-template-compatibility-contract.md",
@@ -78,6 +79,22 @@ const artifactOutputConsumers = [
 
 async function read(name) {
   return readFile(urls[name], "utf8");
+}
+
+async function readMarkdownTree(directoryUrl) {
+  const entries = await readdir(directoryUrl, { withFileTypes: true });
+  const documents = [];
+
+  for (const entry of entries) {
+    const entryUrl = new URL(entry.isDirectory() ? `${entry.name}/` : entry.name, directoryUrl);
+    if (entry.isDirectory()) {
+      documents.push(...await readMarkdownTree(entryUrl));
+    } else if (entry.name.endsWith(".md")) {
+      documents.push([entryUrl.pathname, await readFile(entryUrl, "utf8")]);
+    }
+  }
+
+  return documents;
 }
 
 function extractNamedSectionReferences(referenceLine) {
@@ -263,10 +280,11 @@ test("structured execution loads command and target details only for matching wo
 });
 
 test("target runtime bootstrap and template compatibility belong to the workflow engine", async () => {
-  const [skill, harness, githubTemplates, targetRuntimeBootstrap, templateCompatibility, workflowDoc, readme] =
+  const [skill, harness, harnessDocuments, githubTemplates, targetRuntimeBootstrap, templateCompatibility, workflowDoc, readme] =
     await Promise.all([
       read("skill"),
       read("harness"),
+      readMarkdownTree(urls.harnessRoot),
       read("githubTemplates"),
       read("targetRuntimeBootstrap"),
       read("templateCompatibility"),
@@ -285,6 +303,14 @@ test("target runtime bootstrap and template compatibility belong to the workflow
   assert.match(templateCompatibility, /허용된 타겟 확장[\s\S]*보존/);
   assert.doesNotMatch(harness, /workflow-engine-template-compatibility-contract\.md/);
   await assert.rejects(access(urls.harnessTemplateCompatibility));
+  for (const [path, document] of harnessDocuments) {
+    assert.doesNotMatch(document, /Workflow Engine|workflow-engine|GitHub Workflow/i, path);
+    assert.doesNotMatch(
+      document,
+      /\.harness\/workflow-engine\.json|target_ids_or_files|공통 구조화 실행 결과 계약/,
+      path,
+    );
+  }
   assert.match(githubTemplates, /target-runtime-bootstrap-contract\.md/);
   assert.match(githubTemplates, /workflow-engine-template-compatibility-contract\.md/);
   assert.match(skill, /target-runtime-bootstrap-contract\.md/);

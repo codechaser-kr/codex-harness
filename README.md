@@ -28,7 +28,7 @@
 - `.codex-dist/skills/harness/references/*`: 하네스 Phase 선택 기준, 역할 설계, 에이전트 생성, QA, 로그, 재진입, 자기진화 기준
 - `.codex-dist/skills/github-workflow-engine/SKILL.md`: GitHub Run State를 읽고 다음 Workflow 액션을 제안하는 전역 스킬
 - `.codex-dist/skills/{workflow-code-editor,github-state-summary,github-simple-executor,target-harness-code-editor,issue-creation,feature-proposal-triage,policy-plan,policy-review-next-triage,feature-plan,fix-analysis,fix-plan,branch-proposal,commit-plan,pr-proposal,pr-creation,review-comment}/SKILL.md`: GitHub Workflow Engine에서 사용하는 Codex 전용 전역 스킬 기본형
-- `install.sh`, `uninstall.sh`: 전역 Codex 스킬 경로에 배포본을 설치하거나 제거하는 스크립트
+- `install.sh`, `uninstall.sh`: Harness와 Workflow Engine 배포본을 각각 또는 함께 전역 Codex 스킬 경로에 설치하거나 제거하는 스크립트
 - `.harness/development-quality-evaluation.md`: 하네스 생성기 품질 평가 기준
 - `.harness/document-regression-checklist.md`: README와 reference 문서 변경 후 회귀 점검 기준
 - `docs/github-workflow-engine.md`: GitHub 이슈/PR 기반 Workflow Engine 설계
@@ -36,17 +36,33 @@
 - `.github/*`: 이 저장소의 이슈/PR 협업 템플릿
 - `AGENTS.md`, `.gemini/styleguide.md`: 이 저장소에서 자동 리뷰 도구가 따르는 리뷰 코멘트 작성 지침
 
-## 전역 하네스 스킬 설치
+## 전역 스킬 설치
 
-전역에서 사용하려면 설치 스크립트로 `harness`와 GitHub Workflow Engine 스킬들을 Codex 스킬 경로에 배치합니다.
+`harness`와 GitHub Workflow Engine 스킬 묶음은 서로 독립적으로 설치할 수 있습니다. 인자를 생략하면 기존과 같이 전체 배포본을 함께 설치합니다.
+
+Harness만 설치:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/install.sh | sh -s -- harness
+```
+
+Workflow Engine 스킬 묶음만 설치:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/install.sh | sh -s -- workflow-engine
+```
+
+전체 설치:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/install.sh | sh
 ```
 
-저장소를 클론한 상태라면 로컬 배포본을 바로 설치할 수 있습니다.
+저장소를 클론한 상태에서는 같은 대상을 인자로 전달합니다.
 
 ```sh
+./install.sh harness
+./install.sh workflow-engine
 ./install.sh
 ```
 
@@ -361,7 +377,21 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 
 ## 제거
 
-제거 스크립트는 이 저장소가 관리하는 전역 스킬 전체를 active 스킬 경로에서 제거합니다. 각 스킬 디렉터리는 영구 삭제하지 않고 `<기존 경로>.removed.<timestamp>.<pid>` 형식의 경로로 이동하며, 출력된 백업 위치를 원래 경로로 되돌리는 방식으로 필요할 때 수동 복구할 수 있습니다. 각 프로젝트 내부에 생성된 `.agents/skills/*`, `.harness/*` 등은 제거하지 않으며 프로젝트별 자산으로 따로 관리합니다.
+제거 스크립트도 `harness`, `workflow-engine`, `all` 대상을 구분합니다. 인자를 생략하면 이 저장소가 관리하는 전역 스킬 전체를 active 스킬 경로에서 제거합니다. 각 스킬 디렉터리는 영구 삭제하지 않고 `<기존 경로>.removed.<timestamp>.<pid>` 형식의 경로로 이동하며, 출력된 백업 위치를 원래 경로로 되돌리는 방식으로 필요할 때 수동 복구할 수 있습니다. 각 프로젝트 내부에 생성된 `.agents/skills/*`, `.harness/*` 등은 제거하지 않으며 프로젝트별 자산으로 따로 관리합니다.
+
+Harness만 제거:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/uninstall.sh | sh -s -- harness
+```
+
+Workflow Engine 스킬 묶음만 제거:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/uninstall.sh | sh -s -- workflow-engine
+```
+
+전체 제거:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/uninstall.sh | sh
@@ -370,5 +400,7 @@ curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/un
 저장소를 클론한 상태라면 다음 명령을 사용할 수 있습니다.
 
 ```sh
+./uninstall.sh harness
+./uninstall.sh workflow-engine
 ./uninstall.sh
 ```

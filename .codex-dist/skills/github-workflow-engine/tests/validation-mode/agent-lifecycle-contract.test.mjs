@@ -113,7 +113,7 @@ test("workflow editor returns cleanup evidence through existing result fields", 
 test("harness logging lifecycle remains scoped to harness-owned agents", async () => {
   const loggingContract = await read(loggingContractUrl);
   assert.match(loggingContract, /하네스가 직접 생성한 역할과 subagent에만 적용/);
-  assert.match(loggingContract, /Workflow Engine이나 다른 스킬의 runtime 계약[\s\S]{0,40}사용하지 않는다/);
+  assert.match(loggingContract, /하네스 외부 스킬의 runtime 계약 원천으로[\s\S]{0,20}사용하지 않는다/);
   assert.match(loggingContract, /하네스가 직접 발급받은 각 subagent ID에 `close_agent`/);
   assert.match(loggingContract, /다른 스킬이 직접 생성한 ID[\s\S]{0,100}중복으로 닫지 않는다/);
 });

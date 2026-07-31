@@ -87,35 +87,6 @@ Codex용 오케스트레이터는 팀 조율 책임을 주 에이전트 중심 �
 
 ---
 
-## 3-1. Workflow Engine 구조화 코드 수정 라우팅
-
-생성된 타겟 프로젝트의 `run-harness`는 Workflow Engine의 완전 구조화 코드 수정 요청을 진입 입력으로 받을 수 있다. 이 흐름은 메타 저장소의 생성기 계약 수정과 타겟 프로젝트 준비 상태를 혼동하지 않는다. 생성기 계약이 이 기능을 지원하는지와 타겟 프로젝트에 실제 코드 수정 역할 자산이 준비됐는지는 별도로 확인한다.
-
-### 불변 요청 입력
-
-`orchestration-plan.md`는 `codex-runtime-contract.md`의 공통 구조화 요청 계약을 그대로 handoff하는 규칙만 둔다. 요청 필드 집합이나 결과 필드를 여기에서 별칭으로 재정의하지 않는다. 이 필드는 라우팅 역할이나 실제 수정 역할이 재판단, 확대, 대체, 누락할 수 없으며, 역할 선택은 그 조건을 만족하는 일이다.
-
-### 정확히 하나 선택 또는 중단
-
-`run-harness`는 `team-spec.md` 역할 카드와 최종 역할 인벤토리, 이 문서의 라우팅 규칙을 근거로 코드 수정 후보를 찾는다. 후보는 코드 수정 책임과 `target_ids_or_files`, 권한·도구·명령 경로·파괴적 명령 위험 조건을 역할 카드에 선언하고 모두 일치해야 한다.
-
-선택 전에 다음 연결을 모두 확인한다.
-
-- team-spec의 `role_id`와 `agent_file`
-- `.codex/agents/<agent_file>.toml`
-- `.agents/skills/<agent_file>/SKILL.md`
-- agent TOML의 `model`, `model_reasoning_effort`, `sandbox_mode`
-
-후보가 정확히 하나이고 위 연결이 일치할 때만 `run-harness`는 실제 수정 서브에이전트로 handoff한다. 후보가 0개 또는 복수이거나 role/agent/skill이 누락 또는 불일치하면, `run-harness`는 파일을 수정하지 않고 `aborted`로 중단한다. `run-harness`는 직접 코드를 수정하거나 모델을 임의 선택하지 않는다.
-
-### 라우팅 handoff와 반환 계약
-
-선택 handoff에는 공통 구조화 요청, `selected_role_id`, `agent_config_path`, `local_skill_path`, 확인한 `model`, `model_reasoning_effort`, `sandbox_mode`, 라우팅 근거를 포함한다. 실제 수정 서브에이전트는 선택 역할의 agent config, local skill, model/reasoning/sandbox와 공통 요청의 권한·도구·명령 경로 조건을 사용한다.
-
-최종 반환과 중단 반환은 `codex-runtime-contract.md`의 공통 구조화 실행 결과 계약을 그대로 따른다. `routing_status: aborted`이면 그 계약의 적용 불가 실제 실행 필드는 `not_applicable`과 사유를 기록하고, 파일 및 GitHub 상태 변경은 빈 값으로 남긴다.
-
----
-
 ## 4. 기본 실행 흐름
 
 범용 실행 하네스 팀의 기본 흐름은 다음 성격을 따라 설계한다.
@@ -196,8 +167,6 @@ Codex용 오케스트레이터는 팀 조율 책임을 주 에이전트 중심 �
 - 로그 반영 여부
 - 학습 후보와 승격 대상
 
-Workflow Engine 구조화 코드 수정 handoff에는 위 일반 항목에 더해 `codex-runtime-contract.md`의 공통 요청, 선택 역할의 agent/skill/config 실행 메타데이터, 라우팅 고유 필드를 포함한다. 공통 결과 계약은 이 문서에서 재정의하지 않는다.
-
 파일 기반 산출물은 가능한 한 저장소 기준 상대 경로로 적는다. 절대경로나 사용자 홈 경로를 남기지 않는다.
 
 ### 보존 문서 호환성 메모
@@ -248,7 +217,7 @@ handoff:
 - 역할 출력 부족: 해당 역할의 입력과 완료 기준을 다시 확인하고 필요한 하네스 Phase로 재진입한다.
 - 역할 간 판단 충돌: 한쪽을 삭제하지 않고 출처와 충돌 지점을 함께 남긴다.
 - 보조 위임 실패 또는 지연: 주 에이전트가 현재까지의 산출물을 통합하고 남은 위험으로 기록한다.
-- 구조화 코드 수정 후보 0개/복수 또는 role/agent/skill 불일치: `run-harness`가 파일을 수정하지 않고 공통 구조화 실행 결과 계약의 중단 규칙에 따라 근거를 남긴다.
+- 코드 수정 후보 0개/복수 또는 role/agent/skill 불일치: `run-harness`가 파일을 수정하지 않고 중단 근거와 다음 재진입 조건을 남긴다.
 - 운영 감사 실패: 단순 수정으로 끝내지 않고 하네스 재진입 Phase와 책임 역할을 지정한다.
 - 반복될 수 있는 역할 오판이나 검증 공백: 학습 후보와 승격 대상을 함께 남긴다.
 
@@ -336,7 +305,6 @@ handoff:
 - 역할 간 handoff 규칙
 - 보류와 오류 처리 기준
 - 정상 흐름과 보류 흐름 시나리오
-- Workflow Engine 구조화 코드 수정 요청의 정확히 하나 선택 또는 파일 미수정 중단 규칙과 반환 계약
 
 ## 보조 운영 문서와 handoff
 

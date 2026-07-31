@@ -84,9 +84,17 @@ test("active harness contracts no longer assign legacy quality verdicts to agent
     }
   }
 
-  const skill = await read("skill");
-  for (const term of legacyTerms) {
-    assert.equal(skill.includes(term), false, `SKILL.md: ${term}`);
+  const activeGuidance = await Promise.all([
+    ["SKILL.md", "skill"],
+    ["README.md", "readme"],
+    [".harness/development-quality-evaluation.md", "developmentEvaluation"],
+    [".harness/document-regression-checklist.md", "documentRegression"],
+  ].map(async ([path, name]) => [path, await read(name)]));
+
+  for (const [path, source] of activeGuidance) {
+    for (const term of legacyTerms) {
+      assert.equal(source.includes(term), false, `${path}: ${term}`);
+    }
   }
 });
 

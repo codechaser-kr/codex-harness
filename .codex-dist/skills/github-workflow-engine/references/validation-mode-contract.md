@@ -10,8 +10,9 @@ pass/mismatch, 다수결 또는 대표 결과를 자동 산출하거나 채택�
 
 ## 대상과 고정 조건
 
-1. 선택된 실행 주체와 `file-change-execution-contract.md`의 선택 경로로 검증 대상 호출의 실행 가능 여부를 먼저 확인한다.
-   확인할 수 없으면 검증 세션을 시작하지 않고 중단한다.
+1. 선택된 실행 주체의 계약으로 검증 대상 호출의 실행 가능 여부를 먼저 확인한다. 검증 대상이 파일 변경
+   executor이면 `file-change-execution-contract.md`의 선택 경로도 함께 확인한다. 적용되는 계약으로 실행
+   가능 여부를 확인할 수 없으면 검증 세션을 시작하지 않고 중단한다.
 2. 현재 작업에서 선택한 실제 LLM 의존 호출 하나를 검증 대상으로 정한다. Workflow Definition의
    `executor_reference`는 직접 식별자일 뿐 registry를 통해 해석하지 않는다.
 3. parser, adapter, evaluator와 같은 결정론적 제어 도구는 검증 대상이 아니며 필요한 경우 한 번만

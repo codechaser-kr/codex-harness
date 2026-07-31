@@ -30,7 +30,9 @@ test("validation mode requires explicit activation, ten independent sessions, ra
   assert.match(contract, /primary와 외부 상태를 변경하지 않는다/);
   assert.match(workflowEditor, /격리[\s\S]*workspace/);
   assert.match(workflowEditor, /완전 fan-out이면[\s\S]*정확히 10개/);
-  assert.match(contract, /선택된 실행 주체[\s\S]*file-change-execution-contract\.md[\s\S]*실행 가능 여부를[\s\S]{0,30}확인/);
+  assert.match(contract, /선택된 실행 주체의 계약으로[\s\S]*실행 가능 여부를 먼저 확인/);
+  assert.match(contract, /파일 변경[\s\S]*executor이면 `file-change-execution-contract\.md`의 선택 경로도 함께 확인/);
+  assert.doesNotMatch(contract, /선택된 실행 주체와 `file-change-execution-contract\.md`/);
   assert.match(workflowEditor, /사용자가 판단하는 코드 수정 호출 재현성/);
   assert.doesNotMatch(workflowEditor, /unanimous patch/);
 });

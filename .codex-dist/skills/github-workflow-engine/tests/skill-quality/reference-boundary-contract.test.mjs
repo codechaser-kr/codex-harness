@@ -275,6 +275,11 @@ test("structured execution loads command and target details only for matching wo
   assert.match(workflowEditor, /file-change-execution-contract\.md[\s\S]*structured-execution-contract\.md[\s\S]*command-execution-path-contract\.md[\s\S]*target-harness-execution-contract\.md/);
   assert.match(fileChange, /target_harness[\s\S]*general_code_change/);
   assert.match(fileChange, /실행을 시작한 뒤에는 다른 경로로 전환하거나[\s\S]*재시도하지 않는다/);
+  assert.match(fileChange, /^## `general_code_change` 성공 결과 예시$/m);
+  assert.match(fileChange, /"actual_executor_type": "workflow-code-editor"/);
+  assert.match(fileChange, /"actual_config_identifier": "not_applicable"[\s\S]*"actual_config_identifier_not_applicable_reason"/);
+  assert.match(fileChange, /"actual_orchestration_session_id"[\s\S]*"actual_execution_session_id"[\s\S]*"actual_session_relation": "same_session"/);
+  assert.match(fileChange, /현재 Codex 오케스트레이션 agent와 model[\s\S]*`not_applicable`로 기록하지 않는다/);
   assert.match(targetHarness, /Workflow Engine 전용 설정·필드·역할·결과 계약을 요구하지 않는다/);
   assert.match(workflowEditor, /Harness가 없거나 실행 전에 준비되지 않았음[\s\S]*현재 Codex 세션/);
 });

@@ -38,6 +38,44 @@ Harness의 일반 결과는 `workflow-code-editor`가 원 요청 범위와 대�
 
 일반 경로를 선택할 권한·도구가 없거나 baseline이 달라졌으면 파일을 변경하지 않고 구조화 실행 중단으로 반환한다.
 
+## `general_code_change` 성공 결과 예시
+
+다음은 별도 execution session을 만들지 않고 현재 Codex 오케스트레이션 세션에서 변경과 검증을 마친 경우의 최소 예시다. `<...>` 값은 결과를 만들 때 실제 관측 식별자와 대상 값으로 바꾸며 literal 값으로 반환하지 않는다.
+
+```json
+{
+  "request_id": "<원 요청 request_id>",
+  "target_baseline": "<변경 전 commit SHA>",
+  "actual_executor_type": "workflow-code-editor",
+  "actual_agent_or_role": "<현재 Codex orchestration agent ID>",
+  "actual_model_identifier": "<현재 Codex orchestration model ID>",
+  "actual_skill_identifier": "workflow-code-editor",
+  "actual_config_identifier": "not_applicable",
+  "actual_config_identifier_not_applicable_reason": "general_code_change에서 별도 Harness 또는 editor config를 선택하지 않음",
+  "actual_orchestration_session_id": "<orchestration-session-id>",
+  "actual_execution_session_id": "<같은 orchestration-session-id>",
+  "actual_session_relation": "same_session",
+  "actual_permission_conditions": ["<확인된 workspace 쓰기 조건>"],
+  "actual_available_tool_conditions": ["<사용한 편집·검증 도구 조건>"],
+  "actual_command_execution_path": "일반 경로",
+  "execution_path_recheck_result": "실행 직전 경로 재판정 통과",
+  "performed_actions": [
+    "general_code_change 선택과 Harness 준비도 실패 근거 기록",
+    "<확정된 대상 파일 변경>"
+  ],
+  "changed_files": ["<실제로 변경한 파일>"],
+  "github_state_changes": [],
+  "verification_results": [
+    "general_code_change 경로와 선택 근거 확인",
+    "<요청된 검증 성공>"
+  ],
+  "postconditions_satisfied": true,
+  "residual_risks_or_failure_reasons": []
+}
+```
+
+현재 Codex 오케스트레이션 agent와 model이 편집을 수행했으므로 해당 두 식별자는 실제 값이며 `not_applicable`로 기록하지 않는다. 새 session을 만들지 않은 경우 `actual_execution_session_id`는 `actual_orchestration_session_id`와 같고 `actual_session_relation`은 `same_session`이다. 별도 config처럼 실제로 선택하지 않은 식별자만 `not_applicable`로 기록하고 대응하는 `*_not_applicable_reason`에 사유를 남긴다. 이 예시는 공통 결과 필드를 재정의하지 않으며 필드의 최종 의미와 상관관계 판정은 `structured-execution-contract.md`를 따른다.
+
 ## 공통 결과 검증
 
 두 경로 모두 다음을 만족해야 한다.

@@ -28,6 +28,7 @@
 - `.codex-dist/skills/harness/references/*`: 하네스 Phase 선택 기준, 역할 설계, 에이전트 생성, QA, 로그, 재진입, 자기진화 기준
 - `.codex-dist/skills/github-workflow-engine/SKILL.md`: GitHub Run State를 읽고 다음 Workflow 액션을 제안하는 전역 스킬
 - `.codex-dist/skills/{workflow-code-editor,github-state-summary,github-simple-executor,target-harness-code-editor,issue-creation,feature-proposal-triage,policy-plan,policy-review-next-triage,feature-plan,fix-analysis,fix-plan,branch-proposal,commit-plan,pr-proposal,pr-creation,review-comment}/SKILL.md`: GitHub Workflow Engine에서 사용하는 Codex 전용 전역 스킬 기본형
+  - `target-harness-code-editor`는 이전 배포와의 호환을 위해 포함된 자산이며, 현재 파일 변경 executor는 `workflow-code-editor`입니다.
 - `install.sh`, `uninstall.sh`: Harness와 Workflow Engine 배포본을 각각 또는 함께 전역 Codex 스킬 경로에 설치하거나 제거하는 스크립트
 - `.harness/development-quality-evaluation.md`: 하네스 생성기 품질 평가 기준
 - `.harness/document-regression-checklist.md`: README와 reference 문서 변경 후 회귀 점검 기준

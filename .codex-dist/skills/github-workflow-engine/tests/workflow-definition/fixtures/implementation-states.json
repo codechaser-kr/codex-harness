@@ -39,7 +39,7 @@
   "executor_references": {
     "FI-1": "branch-proposal",
     "FI-3": "commit-plan",
-    "FI-5": "target-harness-code-editor",
+    "FI-5": "workflow-code-editor",
     "FI-6": "commit",
     "FI-10": "pr-proposal",
     "FI-12": "pr-creation",
@@ -48,7 +48,7 @@
     "FI-17": "codex/awesome-code-review",
     "FI-19": "review-comment",
     "FI-24": "github-state-summary",
-    "FI-26": "target-harness-code-editor",
+    "FI-26": "workflow-code-editor",
     "FI-27": "commit",
     "FI-30": "github-simple-executor",
     "FI-33": "github-state-summary"

@@ -23,7 +23,7 @@ import "../skill-quality/reference-boundary-contract.test.mjs";
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const installScript = join(repositoryRoot, "install.sh");
-const sourceTargetEditor = join(repositoryRoot, ".codex-dist/skills/target-harness-code-editor/SKILL.md");
+const sourceWorkflowEditor = join(repositoryRoot, ".codex-dist/skills/workflow-code-editor/SKILL.md");
 const removedRulesRelativePath = ["references/workflow-engine", "rules.md"].join("-");
 const removedRulesFilenamePattern = new RegExp(["workflow-engine", "rules\\.md"].join("-"));
 
@@ -60,6 +60,7 @@ const requiredArtifacts = [
   "references/structured-execution-contract.md",
   "references/user-decision-contract.md",
   "references/command-execution-path-contract.md",
+  "references/file-change-execution-contract.md",
   "references/target-harness-execution-contract.md",
   "definitions/feature-proposal.json",
   "definitions/policy-review.json",
@@ -203,6 +204,7 @@ test("runtime contracts do not duplicate natural-language transition tables", as
     "references/structured-execution-contract.md",
     "references/user-decision-contract.md",
     "references/command-execution-path-contract.md",
+    "references/file-change-execution-contract.md",
     "references/target-harness-execution-contract.md",
     "references/target-runtime-bootstrap-contract.md",
     "references/workflow-engine-template-compatibility-contract.md",
@@ -265,8 +267,8 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
   assert.equal((await listRegularFiles(installedSkillDirectory)).includes(removedRulesRelativePath), false);
   await parseJsonArtifacts(installedSkillDirectory);
   assert.deepEqual(
-    await readFile(join(destinationRoot, "target-harness-code-editor/SKILL.md")),
-    await readFile(sourceTargetEditor),
+    await readFile(join(destinationRoot, "workflow-code-editor/SKILL.md")),
+    await readFile(sourceWorkflowEditor),
   );
   assert.equal(
     (await listRegularFiles(installedSkillDirectory)).includes(

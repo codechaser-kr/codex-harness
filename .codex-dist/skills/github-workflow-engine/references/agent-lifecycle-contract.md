@@ -10,7 +10,7 @@
   서브에이전트로 시작한 세션만 소유한다.
 - 같은 세션에서 스킬 지시를 읽고 수행하는 단순 스킬 호출은 새 실행 리소스를 만들지 않으므로 관리
   대상이 아니다.
-- `target-harness-code-editor`처럼 하위 실행 주체가 직접 발급받은 ID는 해당 실행 주체가 소유한다.
+- `workflow-code-editor`나 Harness처럼 하위 실행 주체가 직접 발급받은 ID는 해당 실행 주체가 소유한다.
   부모는 하위 ID를 추적하거나 중복으로 `close_agent`하지 않는다.
 
 ## 결과 보존과 정리
@@ -28,7 +28,7 @@
 - 구조화 실행 주체는 ID별 정리 시도와 결과를 기존 `verification_results`에 기록하고, 정리 실패를 기존
   `residual_risks_or_failure_reasons`에 기록한다.
 - 검증 모드에서 Workflow Engine이 직접 생성한 세션의 정리 결과는 진단 결과에 기록한다.
-  `target-harness-code-editor`가 생성한 검증 세션은 기존 `integrity_verification`과
+  `workflow-code-editor`가 생성한 검증 세션은 기존 `integrity_verification`과
   `integrity_failure_reasons`에 기록한다.
 - 부모는 반환된 근거가 하위 실행 주체가 발급받은 모든 ID와 대응하는지 검증한다. 근거 누락, 소유하지
   않은 ID의 정리 시도 또는 정리 실패가 있으면 구조화 실행 성공이나 완전한 검증으로 판정하지 않는다.

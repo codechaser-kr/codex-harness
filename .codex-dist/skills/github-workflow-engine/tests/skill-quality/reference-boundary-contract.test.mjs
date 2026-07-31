@@ -7,6 +7,7 @@ const urls = {
   structured: new URL("../../references/structured-execution-contract.md", import.meta.url),
   userDecision: new URL("../../references/user-decision-contract.md", import.meta.url),
   commandPath: new URL("../../references/command-execution-path-contract.md", import.meta.url),
+  fileChange: new URL("../../references/file-change-execution-contract.md", import.meta.url),
   targetHarness: new URL("../../references/target-harness-execution-contract.md", import.meta.url),
   reviewRuntime: new URL("../../references/review-runtime-contract.md", import.meta.url),
   claudeReview: new URL("../../references/claude-review-executor-contract.md", import.meta.url),
@@ -21,7 +22,7 @@ const urls = {
   workflowDoc: new URL("../../../../../docs/github-workflow-engine.md", import.meta.url),
   readme: new URL("../../../../../README.md", import.meta.url),
   simpleExecutor: new URL("../../../github-simple-executor/SKILL.md", import.meta.url),
-  targetEditor: new URL("../../../target-harness-code-editor/SKILL.md", import.meta.url),
+  workflowEditor: new URL("../../../workflow-code-editor/SKILL.md", import.meta.url),
   reviewComment: new URL("../../../review-comment/SKILL.md", import.meta.url),
   harness: new URL("../../../harness/SKILL.md", import.meta.url),
   teamSpecContract: new URL("../../../harness/references/team-spec-contract.md", import.meta.url),
@@ -231,25 +232,30 @@ test("feature-change entry routing facts have owned and traceable observation ru
 });
 
 test("structured execution loads command and target details only for matching work", async () => {
-  const [skill, structured, commandPath, targetHarness, simpleExecutor, targetEditor] = await Promise.all([
+  const [skill, structured, commandPath, fileChange, targetHarness, simpleExecutor, workflowEditor] = await Promise.all([
     read("skill"),
     read("structured"),
     read("commandPath"),
+    read("fileChange"),
     read("targetHarness"),
     read("simpleExecutor"),
-    read("targetEditor"),
+    read("workflowEditor"),
   ]);
 
   assert.match(commandPath, /^## 명령 실행 경로 규칙$/m);
+  assert.match(fileChange, /^# 파일 변경 실행 경로 계약$/m);
   assert.match(targetHarness, /^## 준비도와 라우팅$/m);
   assert.match(structured, /^### 요청-결과 상관관계 검사$/m);
-  assert.match(targetHarness, /^### 실행 세션 미시작 중단 상관관계$/m);
   assert.doesNotMatch(structured, /^## 명령 실행 경로 규칙$/m);
   assert.doesNotMatch(structured, /^## Target Harness Code Editor 준비도/m);
   assert.match(skill, /실제 명령의 권한 경로[\s\S]*command-execution-path-contract\.md/);
-  assert.match(skill, /파일 수정 작업[\s\S]*target-harness-execution-contract\.md/);
+  assert.match(skill, /파일 수정 작업[\s\S]*file-change-execution-contract\.md/);
   assert.match(simpleExecutor, /command-execution-path-contract\.md/);
-  assert.match(targetEditor, /structured-execution-contract\.md[\s\S]*command-execution-path-contract\.md[\s\S]*target-harness-execution-contract\.md/);
+  assert.match(workflowEditor, /file-change-execution-contract\.md[\s\S]*structured-execution-contract\.md[\s\S]*command-execution-path-contract\.md[\s\S]*target-harness-execution-contract\.md/);
+  assert.match(fileChange, /target_harness[\s\S]*general_code_change/);
+  assert.match(fileChange, /실행을 시작한 뒤에는 다른 경로로 전환하거나[\s\S]*재시도하지 않는다/);
+  assert.match(targetHarness, /Workflow Engine 전용 설정·필드·역할·결과 계약을 요구하지 않는다/);
+  assert.match(workflowEditor, /Harness가 없거나 실행 전에 준비되지 않았음[\s\S]*현재 Codex 세션/);
 });
 
 test("target runtime bootstrap and template compatibility belong to the workflow engine", async () => {

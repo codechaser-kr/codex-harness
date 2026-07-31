@@ -16,7 +16,6 @@ Codex용 Harness는 주 에이전트가 역할 계약을 읽고, 필요한 작�
 - 생성된 역할들이 서로 자동 통신한다고 가정하지 않는다.
 - 역할 간 연결은 `run-harness`와 `orchestration-plan.md`가 설명하는 주 에이전트 중심 handoff로 표현한다.
 - 생성 판단은 `team-spec.md`와 문서 계약이 담당하고, 역할 스킬은 해당 역할 섹션을 읽게 하는 실행 포인터로 작동한다.
-- GitHub Workflow Engine의 완전 구조화 코드 수정 요청은 `run-harness`의 진입 입력이 될 수 있다. 이 요청의 공통 필드 집합은 아래 계약을 따르며, 라우팅 중 재판단, 확장, 변경할 수 없다.
 - 메타 저장소의 생성기 계약을 수정하는 실행과 생성된 타겟 프로젝트의 코드 수정 실행을 구분한다. 전자는 생성기 역할의 범위이고, 후자는 타겟 프로젝트가 생성한 실제 코드 수정 역할의 범위다.
 
 ## Codex 실행 모델
@@ -24,109 +23,10 @@ Codex용 Harness는 주 에이전트가 역할 계약을 읽고, 필요한 작�
 Codex용 Harness는 다음 흐름을 기본으로 한다.
 
 1. 주 에이전트가 `AGENTS.md`와 `run-harness` 스킬을 읽고 현재 요청을 분류한다.
-2. `run-harness`가 `team-spec.md`, `domain-analysis.md`, `orchestration-plan.md`를 기준으로 시작 역할과 다음 역할을 정한다. Workflow Engine 구조화 코드 수정 요청이면 `team-spec.md`와 `orchestration-plan.md`의 코드 수정 라우팅 규칙으로 정확히 하나의 실제 수정 역할을 선택하거나 중단한다.
+2. `run-harness`가 `team-spec.md`, `domain-analysis.md`, `orchestration-plan.md`를 기준으로 시작 역할과 다음 역할을 정한다.
 3. 각 역할 스킬은 자신의 `role_id`에 해당하는 `team-spec.md` 섹션을 읽고, 그 섹션의 절차, 입력, 출력, 완료 기준을 따른다.
 4. 필요한 경우에만 주 에이전트가 독립적이고 경계가 분명한 작업을 보조 서브에이전트에 위임한다.
 5. 결과 통합, 하네스 재진입 Phase 결정, 최신 세션 요약 갱신은 주 에이전트 책임으로 남긴다.
-
-## Workflow Engine 구조화 코드 수정 라우팅
-
-### 공통 구조화 요청 계약
-
-아래 식별자는 Workflow Engine 공통 구조화 요청 계약의 정확한 필드명이다. 한국어 설명은 의미를 보조할 뿐 필드명을 대체하지 않는다.
-
-```text
-request_id                         # 요청 식별자
-base_issue_or_pr                   # 기준 이슈 또는 풀 리퀘스트
-work_target_id                     # 작업 대상 식별자
-work_type                          # 확정된 작업 유형
-target_ids_or_files                # 변경 대상 식별자 또는 파일
-confirmed_request_values           # 확정된 요청 값
-target_baseline                    # 변경 기준선
-preconditions                      # 사전 조건
-expected_postconditions            # 기대 사후 조건
-verification_criteria              # 검증 기준
-command_execution_path             # 명령 실행 경로
-permission_conditions              # 권한 조건
-available_tool_conditions          # 사용 가능한 도구 조건
-destructive_command_risk           # 파괴적 명령 위험
-planned_executor_type              # 예정 실행 주체 유형
-planned_agent_or_role              # 예정 agent 또는 역할
-planned_model_identifier           # 예정 모델 식별자
-planned_skill_identifier           # 예정 skill 식별자
-planned_config_identifier          # 예정 config 식별자
-orchestration_session_id           # 오케스트레이션 세션 식별자
-planned_session_relation           # 예정 세션 관계
-planned_execution_session_id       # 예정 실행 세션 식별자
-```
-
-`run-harness`는 위 요청 필드를 그대로 보존하고, `team-spec.md`의 역할 카드와 최종 역할 인벤토리, `orchestration-plan.md`의 라우팅 규칙으로 후보를 확인한다. 선택 가능한 후보는 `target_ids_or_files`, `permission_conditions`, `available_tool_conditions`, `command_execution_path`, `destructive_command_risk` 조건을 모두 만족하는 코드 수정 역할이어야 한다.
-
-비명령 실행 주체이면 `command_execution_path`는 `not_applicable`이고 `command_execution_path_not_applicable_reason`을 보존한다. `planned_agent_or_role`, `planned_model_identifier`, `planned_skill_identifier`, `planned_config_identifier`은 예정 실행 주체 유형에 적용되지 않으면 각각 `not_applicable`과 `planned_agent_or_role_not_applicable_reason`, `planned_model_identifier_not_applicable_reason`, `planned_skill_identifier_not_applicable_reason`, `planned_config_identifier_not_applicable_reason`을 보존한다. `planned_session_relation = separate_execution_session`이면 `planned_execution_session_id`는 알려진 세션 값 또는 도구 발급 대기 값 `pending_tool_issued`와 그 근거를 유지한다.
-
-선택 전에는 해당 역할의 `role_id`, `agent_file`, `.codex/agents/<agent_file>.toml`, `.agents/skills/<agent_file>/SKILL.md`가 모두 존재하고 서로 일치하는지 확인한다. agent TOML과 team-spec의 실행 설정은 다음 매핑으로 대조한다.
-
-| team-spec | agent TOML |
-| --- | --- |
-| `model` | `model` |
-| `reasoning` | `model_reasoning_effort` |
-| `sandbox` | `sandbox_mode` |
-
-후보가 0개 또는 복수이거나, role/agent/skill 메타데이터가 누락 또는 불일치하면 `run-harness`는 파일을 수정하지 않고 중단한다. `run-harness`는 코드 수정 역할을 대신 실행하거나 모델을 임의 선택하지 않는다. 선택이 성공한 경우에만 실제 수정 서브에이전트가 선택 역할의 agent config, local skill, model, reasoning, sandbox와 요청의 `permission_conditions`, `available_tool_conditions`, `command_execution_path`, `destructive_command_risk`를 사용하도록 라우팅한다.
-
-라우팅 단계는 아래 고유 필드를 별도로 유지할 수 있다.
-
-```text
-routing_status, selected_role_id, agent_config_path, local_skill_path, routing_evidence, model, model_reasoning_effort, sandbox_mode
-```
-
-반환하는 라우팅 고유 필드는 검증해 전달한 입력 라우팅 결과와 일치해야 한다. 이 결과 계약은 유효한 `request_id`, orchestration context와 검증된 라우팅 입력을 받아 target editor가 호출된 경우에만 적용한다. 단, `실행 세션 미시작 중단`에서만 `routing_status`를 `aborted`로 전이할 수 있으며, 나머지 `selected_role_id`, `agent_config_path`, `local_skill_path`, `routing_evidence`, `model`, `model_reasoning_effort`, `sandbox_mode`는 항상 검증해 전달한 입력과 일치해야 한다. 구조화 요청 식별 자체가 불가능하거나 검증된 라우팅 입력이 없는 선택 전 중단은 Workflow Engine이 `구조화 실행 중단`으로 처리하며 이 결과 계약 또는 target editor 결과로 만들지 않는다.
-
-최종 반환은 라우팅 고유 필드와 함께 아래 Workflow Engine 공통 구조화 실행 결과 계약을 정확한 필드명으로 포함해야 한다.
-
-```text
-request_id
-target_baseline
-actual_executor_type
-actual_agent_or_role
-actual_model_identifier
-actual_skill_identifier
-actual_config_identifier
-actual_orchestration_session_id
-actual_execution_session_id
-actual_session_relation
-actual_permission_conditions
-actual_available_tool_conditions
-actual_command_execution_path
-execution_path_recheck_result
-performed_actions
-changed_files
-github_state_changes
-verification_results
-postconditions_satisfied
-residual_risks_or_failure_reasons
-```
-
-실제 실행 주체 유형에 적용되지 않는 `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`은 각각 `not_applicable`과 `actual_agent_or_role_not_applicable_reason`, `actual_model_identifier_not_applicable_reason`, `actual_skill_identifier_not_applicable_reason`, `actual_config_identifier_not_applicable_reason`을 반환한다. 비명령 실행 주체이면 `actual_command_execution_path`, `execution_path_recheck_result`는 각각 `not_applicable`이고 `command_execution_path_not_applicable_reason`을 반환한다. 사전 검증 실패로 별도 execution session 시작을 시도하지 않았거나, 시작을 시도했지만 도구가 실제 세션 ID를 발급하기 전에 실패한 `실행 세션 미시작 중단`인 경우에만 `actual_execution_session_id = not_applicable`과 `actual_execution_session_id_not_applicable_reason = execution_session_not_started`, `actual_session_relation = not_applicable`과 `actual_session_relation_not_applicable_reason = execution_session_not_started`를 반환할 수 있다.
-
-`routing_status = aborted`이면 공통 결과 계약으로도 반환한다. 단, 이 문장은 target editor가 유효한 `request_id`, orchestration context와 검증된 라우팅 입력을 받아 호출된 경우에만 적용한다. 적용할 수 없는 실제 실행 필드는 위 사유 필드와 함께 `not_applicable`으로 기록하고, `changed_files`와 `github_state_changes`는 빈 값으로 둔다. `performed_actions`에는 실제로 수행한 사전 검증과 중단을, `verification_results`에는 실제 사전 검증 결과를, `residual_risks_or_failure_reasons`에는 중단 원인을 기록한다. 세션 관련 실제 필드의 `not_applicable`은 target editor 호출 후의 `실행 세션 미시작 중단` 예외에서만 허용한다. 이 예외는 사전 검증 실패로 별도 execution session 시작을 시도하지 않았거나 시작을 시도했지만 도구가 실제 세션 ID를 발급하기 전에 실패했고, `routing_status = aborted`, `planned_session_relation = separate_execution_session`, 실제 세션 ID 미발급, 파일 변경과 GitHub 상태 변경 모두 빈 값인 공통 조건을 충족해야 한다. `performed_actions`, `verification_results`, `residual_risks_or_failure_reasons`에는 실제로 수행한 사전 검증과 중단 원인이 기록되어야 하며, 세션 시작 시도·실패 기록은 시도한 경우에만 요구한다. 시도하지 않은 경우에는 시도하지 않았음과 실제 사전 검증 실패 근거를 기록한다. 이 실행 세션 미시작 중단에서는 검증된 입력 라우팅의 `routing_status`만 `aborted`로 전이하고 나머지 라우팅 고유 필드는 항상 입력과 일치해야 한다. 실제 execution session ID가 발급된 뒤의 중단은 기존 실제 별도 세션 ID와 관계 검증을 따른다. 구조화 요청 식별 자체가 불가능하거나 검증된 라우팅 입력이 없는 선택 전 중단은 Workflow Engine이 `구조화 실행 중단`으로 처리하며 이 결과 계약으로 만들지 않는다.
-
-### 요청-결과 상관관계
-
-결과는 `request_id` 일치로만 원 요청을 식별하고 선택한다. `base_issue_or_pr`, `work_target_id`, `target_ids_or_files` 또는 다른 식별자는 fallback으로 사용할 수 없다. 원 요청을 선택한 뒤에만 다음을 대조한다.
-
-Workflow Engine은 동일 `request_id`의 활성 시도가 없는지 확인하는 판정과 해당 `request_id`의 활성 실행 슬롯 선점을 하나의 원자적 동작으로 수행한다. 동시에 경쟁하는 요청 중 정확히 하나만 슬롯을 선점해 구조화 실행 요청 사용 가능 판정을 통과하며, 선점하지 못한 요청은 `duplicate_active_request_id` 선택 전 중단을 따른다.
-
-하나의 `request_id`에는 동시에 활성인 라우팅·실행 시도를 정확히 하나만 허용한다. 활성 상태는 해당 `request_id`의 구조화 요청이 라우팅 진입을 위해 수락된 시점부터 그 시도의 구조화 실행 성공 또는 구조화 실행 중단이 최종 기록될 때까지다. 활성 시도가 있는 동안 동일 요청의 단순 재전송이나 재라우팅 요청이 들어오면 기존 시도를 대체·변경·중단하지 않고, 기존 시도의 활성 상태를 종료하거나 실행 슬롯을 해제하지 않으며, 새 `run-harness` 라우팅, `target-harness-code-editor` 호출, 별도 execution session 시작을 수행하지 않는다. Workflow Engine은 선택 전에 `duplicate_active_request_id` 원인을 기록한 `구조화 실행 중단`으로 반환하며, 이 중단은 target editor 결과로 만들지 않는다. 파일과 GitHub 상태 변경은 없어야 한다.
-
-이전 시도가 성공 또는 중단으로 최종 기록되어 활성 상태가 끝난 뒤에는 같은 요청 내용을 유지한 순차 재전송만 같은 `request_id`를 다시 사용할 수 있다. 각 순차 실행 시도는 execution session ID로 구분하며, 요청 내용 불변 규칙은 유지한다.
-
-- 결과의 `target_baseline`과 요청의 `target_baseline`
-- `actual_executor_type`과 예정 실행 주체, 적용 가능한 actual/planned agent·model·skill·config 식별자 또는 `not_applicable` 사유
-- `actual_permission_conditions`, `actual_available_tool_conditions`, `actual_command_execution_path`, `execution_path_recheck_result`와 요청의 권한·도구·명령 경로 조건
-- `actual_orchestration_session_id`와 `orchestration_session_id`, `actual_session_relation` 및 `actual_execution_session_id`와 예정 세션 관계. 단, 위 조건을 모두 충족한 `실행 세션 미시작 중단`만 두 세션 필드의 `not_applicable`과 해당 사유를 허용한다.
-
-명령 실행 주체이면 실제 명령 경로는 요청의 `command_execution_path`와 일치하고 `execution_path_recheck_result`는 실행 직전 경로 재판정 통과여야 한다. 비명령 실행 주체이면 두 실제 경로 필드의 `not_applicable`과 사유가 요청의 `command_execution_path_not_applicable_reason`과 일치해야 한다. `same_session`이면 실제 오케스트레이션 세션과 실행 세션이 같아야 하며, `separate_execution_session`이면 달라야 한다. 알려진 `planned_execution_session_id`는 실제 세션과 일치해야 하지만, 값이 `pending_tool_issued`이면 문자 그대로 대조하지 않고 도구가 발급한 `actual_execution_session_id`를 확인한다. 단, `실행 세션 미시작 중단`의 모든 허용 조건을 충족하면 세션 ID와 관계의 `not_applicable` 및 사유를 대조하고, 그렇지 않으면 실제 별도 세션 ID와 관계 검증을 생략하지 않는다.
 
 ## 병렬 위임 기준
 
@@ -146,7 +46,7 @@ Codex용 Harness의 생성 책임은 다음 순서로 정리한다.
 
 1. `team-spec.md`가 역할 팀의 단일 진실원천이다.
 2. `AGENTS.md`는 상위 운영 기준과 진입 규칙을 담는다.
-3. `.codex/config.toml`과 `.codex/agents/*.toml`은 역할 식별, 모델/추론 설정, sandbox 정책 같은 실행 메타데이터를 담는다. 선택 전 대조는 앞의 실행 설정 매핑 표를 따른다.
+3. `.codex/config.toml`과 `.codex/agents/*.toml`은 역할 식별, 모델/추론 설정, sandbox 정책 같은 실행 메타데이터를 담는다.
 4. `.agents/skills/*`는 각 역할의 `team-spec.md` 섹션과 공통 출력 블록을 참조하는 실행 포인터를 담는다.
 5. `.harness/docs/*`는 저장소 입력, 오케스트레이션, 검증, 재진입 상태를 담는다.
 6. 생성 절차는 위 계약을 기준으로 주 에이전트가 직접 수행한다.
@@ -157,8 +57,6 @@ Codex 런타임 정렬이 끝났다고 보려면 아래 조건을 만족해야 �
 
 - README와 SKILL 본문이 Codex 실행 계약을 기준으로 쓰여 있다.
 - `run-harness`가 주 에이전트 중심 진입점으로 설명돼 있다.
-- Workflow Engine 구조화 코드 수정 요청에서 `run-harness`가 공통 구조화 요청 계약을 보존하고, 정확히 하나의 실제 코드 수정 역할을 라우팅하거나 파일 수정 없이 중단한다.
-- 최종 결과가 라우팅 고유 필드와 공통 구조화 실행 결과 계약의 실제 값을 제공한다.
 - `team-spec.md`가 역할, handoff, 검증, 재진입 기준의 기준 문서로 남아 있다.
 - `.codex/config.toml`과 `.codex/agents/*.toml`이 생성됐다면 `team-spec.md`의 역할 인벤토리와 같은 역할 식별자를 말한다.
 - `.agents/skills/*/SKILL.md`가 `team-spec.md`의 해당 역할 섹션과 공통 출력 블록을 참조한다.

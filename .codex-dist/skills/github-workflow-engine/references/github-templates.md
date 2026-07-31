@@ -2,9 +2,13 @@
 
 Workflow Engine은 이슈와 PR 본문에 사람이 확인할 작업 내용, 판단 근거, 완료 기준만 남긴다.
 
-이 파일은 GitHub Workflow Engine이 사용하는 템플릿 계약 문서다. 실제 이슈와 PR 본문 형식의 단일 원천은 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`다.
+이 파일은 GitHub Workflow Engine이 사용하는 템플릿 계약 문서다. 실제 이슈와 PR 본문 형식의 단일 원천은 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`다. 필요한 타겟 템플릿이 아직 없으면 이 문서가 최초 생성 기준이 되며, 생성된 뒤에는 타겟 템플릿을 단일 원천으로 사용한다.
 
 Workflow Engine은 이 파일을 title prefix, label, 필수 섹션, 연결 규칙을 판정하는 런타임 계약으로 사용한다.
+
+템플릿과 라벨의 최초 요구 시점은 `target-runtime-bootstrap-contract.md`, 적용·감사와 기존 확장 보존은
+`workflow-engine-template-compatibility-contract.md`를 따른다. Workflow Engine 설치만으로 모든 템플릿과
+라벨을 미리 만들지 않는다.
 
 ## 이슈 템플릿
 

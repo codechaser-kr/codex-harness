@@ -49,13 +49,31 @@ description: GitHub 이슈와 PR의 관측 상태를 선언형 워크플로 정�
 - 중단·재개를 판정할 때 `references/structured-execution-contract.md`
 - 확정된 작업을 자동 실행할 때 `references/structured-execution-contract.md`
 - 실제 명령의 권한 경로를 판정하거나 실행 직전에 재판정할 때 `references/command-execution-path-contract.md`
-- 확정된 파일 수정 작업을 대상 하네스에 전달할 때 `references/target-harness-execution-contract.md`
+- 확정된 파일 수정 작업의 Harness 또는 일반 경로를 선택할 때 `references/file-change-execution-contract.md`
+- 파일 수정에서 Harness 경로의 준비도와 일반 handoff를 판정할 때만 `references/target-harness-execution-contract.md`
+- 타겟 저장소의 설정, GitHub 템플릿 또는 라벨을 최초로 필요로 할 때 `references/target-runtime-bootstrap-contract.md`
 - 사용자가 현재 요청에서 검증 모드를 명시했을 때만 `references/validation-mode-contract.md`
 - 이 스킬이 서브에이전트를 직접 생성하거나 하위 실행 주체의 정리 근거를 검증할 때 `references/agent-lifecycle-contract.md`
-- 이슈 또는 PR 템플릿, 제목, 라벨, 연관 이슈 계약이 필요할 때 `references/github-templates.md`
+- 이슈 또는 PR 템플릿, 제목, 라벨, 연관 이슈 계약이 필요할 때 `references/github-templates.md`와 `references/workflow-engine-template-compatibility-contract.md`
 
 필요한 경우 대상 저장소의 `.harness/logs/github-workflow-log.md`를 보조 근거로 읽는다.
 런타임 입력은 위 계약과 실행 코드로 한정한다. `docs/github-workflow-engine.md`는 설계 문서로 취급한다.
+
+## 타겟 런타임 지연 초기화
+
+Workflow Engine 설치는 타겟 저장소의 설정, 템플릿 또는 GitHub 라벨을 생성하지 않는다. 현재 작업이
+해당 항목을 최초로 요구할 때만 `target-runtime-bootstrap-contract.md`로 누락 상태를 확인하고 필요한
+범위만 준비한다.
+
+- `.harness/workflow-engine.json`은 Workflow Engine이 필요한 설정 필드만 보완하며 기존 유효 값을
+  보존한다.
+- 사용자 선호가 필요한 설정은 임의 기본값을 만들지 않고 사용 가능한 선택지를 제시해 확정받는다.
+- GitHub 템플릿은 `github-templates.md`와 `workflow-engine-template-compatibility-contract.md`로 적용·감사하며
+  허용된 타겟 확장을 덮어쓰지 않는다.
+- 이 초기화는 Harness의 설치, 생성, 갱신 또는 존재 여부와 무관하다.
+
+필요한 초기화가 완료된 경우에만 원래 작업의 상태 관측과 실행을 계속한다. 충돌이나 사용자 결정 대기는
+초기화 계약의 재개 조건을 기록하고 중단한다.
 
 ## 워크플로 선택
 
@@ -138,10 +156,10 @@ ID, 현재 정규화 상태와 불일치하는 ID, 누락된 재개 ID가 발견
 
 - 같은 입력에 항상 같은 결과를 내는 비파일 실행 경로를 우선 사용한다.
 - 결정론적 경로가 없는 확정된 단일 비파일 동작은 `github-simple-executor`에 맡긴다.
-- 파일 수정은 대상 프로젝트의 로컬 `run-harness`가 하나의 역할을 선택해 반환한 정보와
-  해당 역할의 자산·모델·권한을
-  `target-harness-execution-contract.md`로 검증한 뒤 `target-harness-code-editor`에 전달한다. 이 경로의
-  준비도나 검증에 실패하면 계약이 제시한 사유와 재개 조건으로 중단한다.
+- 파일 수정은 `file-change-execution-contract.md`로 실행 경로를 판정한 뒤 `workflow-code-editor`에
+  전달한다. Harness와 일반 진입점이 사용 가능하면 Workflow Engine 전용 계약을 제외한 일반 코드 변경
+  요청으로 Harness를 호출하고, 설치되지 않았거나 실행 전 준비되지 않았으면 현재 Codex 세션의 일반
+  코드 변경 경로를 사용한다. 선택 경로 실행이 시작된 뒤에는 다른 경로로 fallback하지 않는다.
 - 리뷰 내용은 사용자가 확정한 리뷰 실행 모드의 실행 주체만 생성한다. `claude/*` 모드는
   `claude-review-executor-contract.md`로 실행 요청과 실패·재개 조건을 판정한다. `FI-15`의
   `claude/code-review`는 `$cc:review --wait`, `FI-16`의 `claude/awesome-code-review`는

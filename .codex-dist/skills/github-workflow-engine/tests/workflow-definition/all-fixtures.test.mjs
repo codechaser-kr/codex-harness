@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { access, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -23,11 +23,8 @@ import "../skill-quality/reference-boundary-contract.test.mjs";
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const installScript = join(repositoryRoot, "install.sh");
-const sourceTargetEditor = join(repositoryRoot, ".codex-dist/skills/target-harness-code-editor/SKILL.md");
-const sourceHarnessTemplateCompatibility = join(
-  repositoryRoot,
-  ".codex-dist/skills/harness/references/workflow-engine-template-compatibility-contract.md",
-);
+const uninstallScript = join(repositoryRoot, "uninstall.sh");
+const sourceWorkflowEditor = join(repositoryRoot, ".codex-dist/skills/workflow-code-editor/SKILL.md");
 const removedRulesRelativePath = ["references/workflow-engine", "rules.md"].join("-");
 const removedRulesFilenamePattern = new RegExp(["workflow-engine", "rules\\.md"].join("-"));
 
@@ -56,12 +53,15 @@ const requiredArtifacts = [
   "references/normalized-fact-adapter-contract.md",
   "references/artifact-output-contract.md",
   "references/github-templates.md",
+  "references/target-runtime-bootstrap-contract.md",
+  "references/workflow-engine-template-compatibility-contract.md",
   "references/state-observation-contract.md",
   "references/review-runtime-contract.md",
   "references/claude-review-executor-contract.md",
   "references/structured-execution-contract.md",
   "references/user-decision-contract.md",
   "references/command-execution-path-contract.md",
+  "references/file-change-execution-contract.md",
   "references/target-harness-execution-contract.md",
   "definitions/feature-proposal.json",
   "definitions/policy-review.json",
@@ -205,7 +205,10 @@ test("runtime contracts do not duplicate natural-language transition tables", as
     "references/structured-execution-contract.md",
     "references/user-decision-contract.md",
     "references/command-execution-path-contract.md",
+    "references/file-change-execution-contract.md",
     "references/target-harness-execution-contract.md",
+    "references/target-runtime-bootstrap-contract.md",
+    "references/workflow-engine-template-compatibility-contract.md",
     "references/claude-review-executor-contract.md",
   ]) {
     const source = await readFile(join(sourceSkillDirectory, relativePath), "utf8");
@@ -229,13 +232,55 @@ test("removed workflow rules filename is not referenced by distribution or docs"
   }
 });
 
-test("install.sh has valid shell syntax", (t) => {
-  const result = runProcess("sh", ["-n", installScript]);
-  if (isNestedSpawnDenied(result)) {
+test("install and uninstall scripts have valid shell syntax", (t) => {
+  for (const script of [installScript, uninstallScript]) {
+    const result = runProcess("sh", ["-n", script]);
+    if (isNestedSpawnDenied(result)) {
+      t.skip("The current execution sandbox does not permit nested child processes.");
+      return;
+    }
+    assertProcessSucceeded(result, `sh -n ${script}`);
+  }
+});
+
+test("installer and uninstaller keep harness and workflow-engine targets independent", async (t) => {
+  const temporaryRoot = await mkdtemp(`${tmpdir()}/independent-skill-install-`);
+  t.after(() => rm(temporaryRoot, { recursive: true, force: true }));
+
+  const destinationRoot = join(temporaryRoot, "skills");
+  const harnessDestination = join(temporaryRoot, "harness");
+  const environment = {
+    ...process.env,
+    HOME: join(temporaryRoot, "home"),
+    CODEX_HOME: join(temporaryRoot, "codex-home"),
+    CODEX_HARNESS_DEST_ROOT: destinationRoot,
+    CODEX_HARNESS_DEST: harnessDestination,
+  };
+
+  const harnessInstall = runProcess("sh", [installScript, "harness"], { cwd: repositoryRoot, env: environment });
+  if (isNestedSpawnDenied(harnessInstall)) {
     t.skip("The current execution sandbox does not permit nested child processes.");
     return;
   }
-  assertProcessSucceeded(result, "sh -n install.sh");
+  assertProcessSucceeded(harnessInstall, "install.sh harness");
+  await access(join(harnessDestination, "SKILL.md"));
+  await assert.rejects(access(join(destinationRoot, "github-workflow-engine/SKILL.md")));
+
+  const workflowInstall = runProcess("sh", [installScript, "workflow-engine"], { cwd: repositoryRoot, env: environment });
+  assertProcessSucceeded(workflowInstall, "install.sh workflow-engine");
+  await access(join(harnessDestination, "SKILL.md"));
+  await access(join(destinationRoot, "github-workflow-engine/SKILL.md"));
+  await access(join(destinationRoot, "workflow-code-editor/SKILL.md"));
+
+  const harnessUninstall = runProcess("sh", [uninstallScript, "harness"], { cwd: repositoryRoot, env: environment });
+  assertProcessSucceeded(harnessUninstall, "uninstall.sh harness");
+  await assert.rejects(access(join(harnessDestination, "SKILL.md")));
+  await access(join(destinationRoot, "github-workflow-engine/SKILL.md"));
+
+  const workflowUninstall = runProcess("sh", [uninstallScript, "workflow-engine"], { cwd: repositoryRoot, env: environment });
+  assertProcessSucceeded(workflowUninstall, "uninstall.sh workflow-engine");
+  await assert.rejects(access(join(destinationRoot, "github-workflow-engine/SKILL.md")));
+  await assert.rejects(access(join(destinationRoot, "workflow-code-editor/SKILL.md")));
 });
 
 test("installer preserves the github-workflow-engine distribution", async (t) => {
@@ -265,12 +310,14 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
   assert.equal((await listRegularFiles(installedSkillDirectory)).includes(removedRulesRelativePath), false);
   await parseJsonArtifacts(installedSkillDirectory);
   assert.deepEqual(
-    await readFile(join(destinationRoot, "target-harness-code-editor/SKILL.md")),
-    await readFile(sourceTargetEditor),
+    await readFile(join(destinationRoot, "workflow-code-editor/SKILL.md")),
+    await readFile(sourceWorkflowEditor),
   );
-  assert.deepEqual(
-    await readFile(join(harnessDestination, "references/workflow-engine-template-compatibility-contract.md")),
-    await readFile(sourceHarnessTemplateCompatibility),
+  assert.equal(
+    (await listRegularFiles(installedSkillDirectory)).includes(
+      "references/workflow-engine-template-compatibility-contract.md",
+    ),
+    true,
   );
 
   const evaluationCases = await readFile(join(sourceSkillDirectory, "tests/workflow-definition/fixtures/evaluation-cases.json"), "utf8").then(JSON.parse);

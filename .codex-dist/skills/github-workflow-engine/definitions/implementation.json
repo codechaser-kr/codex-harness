@@ -358,7 +358,7 @@
           "all_work_units_completed"
         ]
       },
-      "executor_reference": "target-harness-code-editor",
+      "executor_reference": "workflow-code-editor",
       "next_transition_rules": [
         {
           "condition": null,
@@ -1109,7 +1109,7 @@
         "operator": "equals",
         "value": true
       },
-      "executor_reference": "target-harness-code-editor",
+      "executor_reference": "workflow-code-editor",
       "next_transition_rules": [
         {
           "condition": null,

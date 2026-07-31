@@ -4,7 +4,31 @@ set -eu
 CODEX_HOME="${CODEX_HOME:-"$HOME/.codex"}"
 DEST_ROOT="${CODEX_HARNESS_DEST_ROOT:-"$CODEX_HOME/skills"}"
 HARNESS_DEST="${CODEX_HARNESS_DEST:-"$DEST_ROOT/harness"}"
-CODEX_SKILLS="harness github-workflow-engine github-state-summary github-simple-executor target-harness-code-editor issue-creation feature-proposal-triage policy-plan policy-review-next-triage feature-plan fix-analysis fix-plan branch-proposal commit-plan pr-proposal pr-creation review-comment"
+HARNESS_SKILLS="harness"
+WORKFLOW_ENGINE_SKILLS="github-workflow-engine workflow-code-editor github-state-summary github-simple-executor target-harness-code-editor issue-creation feature-proposal-triage policy-plan policy-review-next-triage feature-plan fix-analysis fix-plan branch-proposal commit-plan pr-proposal pr-creation review-comment"
+UNINSTALL_TARGET="${1:-all}"
+
+die() {
+  printf '%s\n' "uninstall.sh: $*" >&2
+  exit 1
+}
+
+select_skills() {
+  case "$UNINSTALL_TARGET" in
+    harness)
+      CODEX_SKILLS="$HARNESS_SKILLS"
+      ;;
+    workflow-engine)
+      CODEX_SKILLS="$WORKFLOW_ENGINE_SKILLS"
+      ;;
+    all)
+      CODEX_SKILLS="$HARNESS_SKILLS $WORKFLOW_ENGINE_SKILLS"
+      ;;
+    *)
+      die "제거 대상은 harness, workflow-engine, all 중 하나여야 합니다: $UNINSTALL_TARGET"
+      ;;
+  esac
+}
 
 dest_for_skill() {
   skill="$1"
@@ -34,6 +58,9 @@ remove_skill() {
 }
 
 removed=0
+
+[ "$#" -le 1 ] || die "제거 대상은 하나만 지정할 수 있습니다."
+select_skills
 
 for skill in $CODEX_SKILLS; do
   remove_skill "$skill" "$(dest_for_skill "$skill")"

@@ -7,7 +7,7 @@ const structuredContractUrl = new URL("../../references/structured-execution-con
 const targetHarnessContractUrl = new URL("../../references/target-harness-execution-contract.md", import.meta.url);
 const validationContractUrl = new URL("../../references/validation-mode-contract.md", import.meta.url);
 const lifecycleContractUrl = new URL("../../references/agent-lifecycle-contract.md", import.meta.url);
-const targetEditorUrl = new URL("../../../target-harness-code-editor/SKILL.md", import.meta.url);
+const workflowEditorUrl = new URL("../../../workflow-code-editor/SKILL.md", import.meta.url);
 const harnessSkillUrl = new URL("../../../harness/SKILL.md", import.meta.url);
 const loggingContractUrl = new URL("../../../harness/references/logging-contract.md", import.meta.url);
 const readinessChecklistUrl = new URL("../../../harness/references/generator-readiness-checklist.md", import.meta.url);
@@ -37,26 +37,26 @@ test("subagent result status is distinct from execution resource cleanup", async
 });
 
 test("runtime orchestrators do not depend on the harness logging contract", async () => {
-  const [engineSkill, targetEditor, structuredContract] = await Promise.all([
+  const [engineSkill, workflowEditor, structuredContract] = await Promise.all([
     read(engineSkillUrl),
-    read(targetEditorUrl),
+    read(workflowEditorUrl),
     read(structuredContractUrl),
   ]);
 
-  for (const source of [engineSkill, targetEditor, structuredContract]) {
+  for (const source of [engineSkill, workflowEditor, structuredContract]) {
     assert.doesNotMatch(source, /(?:harness\/references\/)?logging-contract\.md/);
   }
 });
 
 test("each runtime owner closes only agent IDs it issued directly", async () => {
-  const [engineSkill, lifecycleContract, targetEditor, designDocument] = await Promise.all([
+  const [engineSkill, lifecycleContract, workflowEditor, designDocument] = await Promise.all([
     read(engineSkillUrl),
     read(lifecycleContractUrl),
-    read(targetEditorUrl),
+    read(workflowEditorUrl),
     read(designDocumentUrl),
   ]);
 
-  for (const source of [lifecycleContract, targetEditor, designDocument]) {
+  for (const source of [lifecycleContract, workflowEditor, designDocument]) {
     assert.match(source, /(?:결과|raw result|raw 결과)[\s\S]{0,500}(?:보존|기록)[\s\S]{0,500}close_agent/);
     assert.match(source, /직접[^\n]{0,120}발급받은[^\n]{0,120}ID/);
   }
@@ -64,7 +64,8 @@ test("each runtime owner closes only agent IDs it issued directly", async () => 
   assert.match(engineSkill, /agent-lifecycle-contract\.md/);
   assert.match(lifecycleContract, /같은 세션에서[\s\S]{0,150}단순 스킬 호출[\s\S]{0,150}관리\s*대상이 아니다/);
   assert.match(lifecycleContract, /부모는[\s\S]{0,180}(?:하위|child) ID[\s\S]{0,180}중복으로 `close_agent`하지 않는다/);
-  assert.match(targetEditor, /Workflow Engine은[\s\S]{0,180}직접 발급받은 ID[\s\S]{0,100}중복으로 닫지 않는다/);
+  assert.match(workflowEditor, /직접 발급받으면[\s\S]{0,240}발급받은 모든 ID[\s\S]{0,80}`close_agent`/);
+  assert.match(workflowEditor, /Harness 또는 그 하위 역할[\s\S]{0,180}중복으로 닫지 않고/);
 });
 
 test("agent lifecycle contract is the single source for shared cleanup rules", async () => {
@@ -83,46 +84,36 @@ test("agent lifecycle contract is the single source for shared cleanup rules", a
   assert.doesNotMatch(validationContract, /completed[^\n]*timed_out[^\n]*정리/);
 });
 
-test("ordinary target editing and validation fan-out both close issued sessions", async () => {
-  const targetEditor = await read(targetEditorUrl);
-  const ordinaryStart = targetEditor.indexOf("## 일반 모드");
-  const validationStart = targetEditor.indexOf("## 검증 모드", ordinaryStart);
-  const outputStart = targetEditor.indexOf("## 출력", validationStart);
-  assert.notEqual(ordinaryStart, -1);
-  assert.notEqual(validationStart, -1);
-  assert.notEqual(outputStart, -1);
-
-  const ordinary = targetEditor.slice(ordinaryStart, validationStart);
-  const validation = targetEditor.slice(validationStart, outputStart);
-  assert.match(ordinary, /결과·오류·timeout[\s\S]*보존[\s\S]*close_agent/);
-  assert.match(ordinary, /성공·실패·중단과 무관하게/);
-  assert.match(validation, /10개 의도된 slot[\s\S]*실제 발급받은 모든 검증 session ID[\s\S]*close_agent/);
-  assert.match(validation, /completed` 또는[\s\S]{0,30}`timed_out`은 실행 리소스 정리 완료가 아니다/);
+test("workflow editor closes only sessions it actually issues", async () => {
+  const workflowEditor = await read(workflowEditorUrl);
+  assert.match(workflowEditor, /같은 세션의 일반 코드 변경은 새 실행 리소스가 아니므로 별도 정리하지 않는다/);
+  assert.match(workflowEditor, /execution 또는 validation session ID를 직접 발급받으면[\s\S]*결과·오류·timeout[\s\S]*close_agent/);
+  assert.match(workflowEditor, /성공·실패·중단과 무관하게/);
+  assert.match(workflowEditor, /Harness 또는 그 하위 역할이 직접 생성한 child ID[\s\S]*중복으로 닫지 않고/);
 });
 
-test("target editor returns cleanup evidence through existing result fields", async () => {
-  const [targetEditor, lifecycleContract, targetHarnessContract] = await Promise.all([
-    read(targetEditorUrl),
+test("workflow editor returns cleanup evidence through existing result fields", async () => {
+  const [workflowEditor, lifecycleContract, targetHarnessContract] = await Promise.all([
+    read(workflowEditorUrl),
     read(lifecycleContractUrl),
     read(targetHarnessContractUrl),
   ]);
 
-  for (const source of [targetEditor, lifecycleContract]) {
+  for (const source of [workflowEditor, lifecycleContract]) {
     assert.match(source, /(?:정리 시도와 결과|정리 결과)[\s\S]{0,220}verification_results|verification_results[\s\S]{0,220}(?:정리 시도와 결과|정리 결과)/);
     assert.match(source, /정리 실패[\s\S]{0,180}residual_risks_or_failure_reasons|residual_risks_or_failure_reasons[\s\S]{0,180}정리 실패/);
   }
-  assert.match(targetEditor, /새 cleanup 필드[\s\S]{0,80}(?:schema|필드)/);
+  assert.match(workflowEditor, /새 cleanup 필드[\s\S]{0,80}(?:schema|필드)/);
   assert.match(lifecycleContract, /새 정리용 필드, 스키마 또는 등록부를 만들지 않는다/);
-  assert.match(targetHarnessContract, /^### Target Harness Code Editor 출력 사용 가능$/m);
-  assert.match(targetHarnessContract, /target editor가 직접 발급받은 모든 ID[\s\S]*verification_results/);
-  assert.match(targetHarnessContract, /정리 실패[\s\S]*residual_risks_or_failure_reasons/);
-  assert.match(targetHarnessContract, /Workflow Engine은[\s\S]*child ID[\s\S]*중복으로 `close_agent`하지 않는다/);
+  assert.match(targetHarnessContract, /^## 결과 수용과 정규화$/m);
+  assert.match(targetHarnessContract, /Harness가 하위 session을 직접 생성했다면 Harness가 그 ID를 소유하고 정리한다/);
+  assert.match(targetHarnessContract, /child ID를 중복으로 닫지 않는다/);
 });
 
 test("harness logging lifecycle remains scoped to harness-owned agents", async () => {
   const loggingContract = await read(loggingContractUrl);
   assert.match(loggingContract, /하네스가 직접 생성한 역할과 subagent에만 적용/);
-  assert.match(loggingContract, /Workflow Engine이나 다른 스킬의 runtime 계약[\s\S]{0,40}사용하지 않는다/);
+  assert.match(loggingContract, /하네스 외부 스킬의 runtime 계약 원천으로[\s\S]{0,20}사용하지 않는다/);
   assert.match(loggingContract, /하네스가 직접 발급받은 각 subagent ID에 `close_agent`/);
   assert.match(loggingContract, /다른 스킬이 직접 생성한 ID[\s\S]{0,100}중복으로 닫지 않는다/);
 });

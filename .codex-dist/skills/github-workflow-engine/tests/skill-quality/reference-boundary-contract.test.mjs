@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
 const urls = {
@@ -7,19 +7,29 @@ const urls = {
   structured: new URL("../../references/structured-execution-contract.md", import.meta.url),
   userDecision: new URL("../../references/user-decision-contract.md", import.meta.url),
   commandPath: new URL("../../references/command-execution-path-contract.md", import.meta.url),
+  fileChange: new URL("../../references/file-change-execution-contract.md", import.meta.url),
   targetHarness: new URL("../../references/target-harness-execution-contract.md", import.meta.url),
   reviewRuntime: new URL("../../references/review-runtime-contract.md", import.meta.url),
   claudeReview: new URL("../../references/claude-review-executor-contract.md", import.meta.url),
   artifactOutput: new URL("../../references/artifact-output-contract.md", import.meta.url),
   stateObservation: new URL("../../references/state-observation-contract.md", import.meta.url),
   githubTemplates: new URL("../../references/github-templates.md", import.meta.url),
+  targetRuntimeBootstrap: new URL(
+    "../../references/target-runtime-bootstrap-contract.md",
+    import.meta.url,
+  ),
   implementation: new URL("../../definitions/implementation.json", import.meta.url),
   workflowDoc: new URL("../../../../../docs/github-workflow-engine.md", import.meta.url),
   readme: new URL("../../../../../README.md", import.meta.url),
   simpleExecutor: new URL("../../../github-simple-executor/SKILL.md", import.meta.url),
-  targetEditor: new URL("../../../target-harness-code-editor/SKILL.md", import.meta.url),
+  workflowEditor: new URL("../../../workflow-code-editor/SKILL.md", import.meta.url),
   reviewComment: new URL("../../../review-comment/SKILL.md", import.meta.url),
+  harnessRoot: new URL("../../../harness/", import.meta.url),
   harness: new URL("../../../harness/SKILL.md", import.meta.url),
+  harnessTemplateCompatibility: new URL(
+    "../../../harness/references/workflow-engine-template-compatibility-contract.md",
+    import.meta.url,
+  ),
   teamSpecContract: new URL("../../../harness/references/team-spec-contract.md", import.meta.url),
   teamSpecSchema: new URL("../../../harness/references/team-spec-schema.md", import.meta.url),
   initialGeneration: new URL(
@@ -43,7 +53,7 @@ const urls = {
     import.meta.url,
   ),
   templateCompatibility: new URL(
-    "../../../harness/references/workflow-engine-template-compatibility-contract.md",
+    "../../references/workflow-engine-template-compatibility-contract.md",
     import.meta.url,
   ),
   workflowDefinitionContract: new URL(
@@ -69,6 +79,22 @@ const artifactOutputConsumers = [
 
 async function read(name) {
   return readFile(urls[name], "utf8");
+}
+
+async function readMarkdownTree(directoryUrl) {
+  const entries = await readdir(directoryUrl, { withFileTypes: true });
+  const documents = [];
+
+  for (const entry of entries) {
+    const entryUrl = new URL(entry.isDirectory() ? `${entry.name}/` : entry.name, directoryUrl);
+    if (entry.isDirectory()) {
+      documents.push(...await readMarkdownTree(entryUrl));
+    } else if (entry.name.endsWith(".md")) {
+      documents.push([entryUrl.pathname, await readFile(entryUrl, "utf8")]);
+    }
+  }
+
+  return documents;
 }
 
 function extractNamedSectionReferences(referenceLine) {
@@ -227,38 +253,80 @@ test("feature-change entry routing facts have owned and traceable observation ru
 });
 
 test("structured execution loads command and target details only for matching work", async () => {
-  const [skill, structured, commandPath, targetHarness, simpleExecutor, targetEditor] = await Promise.all([
+  const [skill, structured, commandPath, fileChange, targetHarness, simpleExecutor, workflowEditor] = await Promise.all([
     read("skill"),
     read("structured"),
     read("commandPath"),
+    read("fileChange"),
     read("targetHarness"),
     read("simpleExecutor"),
-    read("targetEditor"),
+    read("workflowEditor"),
   ]);
 
   assert.match(commandPath, /^## 명령 실행 경로 규칙$/m);
+  assert.match(fileChange, /^# 파일 변경 실행 경로 계약$/m);
   assert.match(targetHarness, /^## 준비도와 라우팅$/m);
   assert.match(structured, /^### 요청-결과 상관관계 검사$/m);
-  assert.match(targetHarness, /^### 실행 세션 미시작 중단 상관관계$/m);
   assert.doesNotMatch(structured, /^## 명령 실행 경로 규칙$/m);
   assert.doesNotMatch(structured, /^## Target Harness Code Editor 준비도/m);
   assert.match(skill, /실제 명령의 권한 경로[\s\S]*command-execution-path-contract\.md/);
-  assert.match(skill, /파일 수정 작업[\s\S]*target-harness-execution-contract\.md/);
+  assert.match(skill, /파일 수정 작업[\s\S]*file-change-execution-contract\.md/);
   assert.match(simpleExecutor, /command-execution-path-contract\.md/);
-  assert.match(targetEditor, /structured-execution-contract\.md[\s\S]*command-execution-path-contract\.md[\s\S]*target-harness-execution-contract\.md/);
+  assert.match(workflowEditor, /file-change-execution-contract\.md[\s\S]*structured-execution-contract\.md[\s\S]*command-execution-path-contract\.md[\s\S]*target-harness-execution-contract\.md/);
+  assert.match(fileChange, /target_harness[\s\S]*general_code_change/);
+  assert.match(fileChange, /실행을 시작한 뒤에는 다른 경로로 전환하거나[\s\S]*재시도하지 않는다/);
+  assert.match(fileChange, /^## `general_code_change` 성공 결과 예시$/m);
+  assert.match(fileChange, /"actual_executor_type": "workflow-code-editor"/);
+  assert.match(fileChange, /"actual_config_identifier": "not_applicable"[\s\S]*"actual_config_identifier_not_applicable_reason"/);
+  assert.match(fileChange, /"actual_orchestration_session_id"[\s\S]*"actual_execution_session_id"[\s\S]*"actual_session_relation": "same_session"/);
+  assert.match(fileChange, /현재 Codex 오케스트레이션 agent와 model[\s\S]*`not_applicable`로 기록하지 않는다/);
+  assert.match(targetHarness, /Workflow Engine 전용 설정·필드·역할·결과 계약을 요구하지 않는다/);
+  assert.match(workflowEditor, /Harness가 없거나 실행 전에 준비되지 않았음[\s\S]*현재 Codex 세션/);
 });
 
-test("template compatibility belongs to the harness", async () => {
-  const [githubTemplates, templateCompatibility, harness] = await Promise.all([
-    read("githubTemplates"),
-    read("templateCompatibility"),
-    read("harness"),
-  ]);
+test("target runtime bootstrap and template compatibility belong to the workflow engine", async () => {
+  const [skill, harness, harnessDocuments, githubTemplates, targetRuntimeBootstrap, templateCompatibility, workflowDoc, readme] =
+    await Promise.all([
+      read("skill"),
+      read("harness"),
+      readMarkdownTree(urls.harnessRoot),
+      read("githubTemplates"),
+      read("targetRuntimeBootstrap"),
+      read("templateCompatibility"),
+      read("workflowDoc"),
+      read("readme"),
+    ]);
 
-  assert.doesNotMatch(githubTemplates, /^## 타겟 템플릿 정합성 검사$/m);
+  assert.match(targetRuntimeBootstrap, /^# 타겟 Workflow Engine 런타임 초기화 계약$/m);
+  assert.match(targetRuntimeBootstrap, /최초로 필요로 하는 시점/);
+  assert.match(targetRuntimeBootstrap, /Harness 설치, 생성, 갱신 또는 감사\(audit\)의 책임이 아니다/);
+  assert.match(targetRuntimeBootstrap, /임의 기본값을 만들지 않는다/);
+  assert.match(targetRuntimeBootstrap, /기존 키와 값을 보존하면서 누락 필드만 보완/);
   assert.match(templateCompatibility, /^# Workflow Engine 템플릿 정합성 계약$/m);
-  assert.match(templateCompatibility, /github-workflow-engine\/references\/github-templates\.md/);
-  assert.match(harness, /workflow-engine-template-compatibility-contract\.md/);
+  assert.match(templateCompatibility, /같은 스킬의 `github-templates\.md`/);
+  assert.match(templateCompatibility, /현재 작업이 요구하는 이슈 유형 또는 PR 템플릿만/);
+  assert.match(templateCompatibility, /허용된 타겟 확장[\s\S]*보존/);
+  assert.doesNotMatch(harness, /workflow-engine-template-compatibility-contract\.md/);
+  await assert.rejects(access(urls.harnessTemplateCompatibility));
+  for (const [path, document] of harnessDocuments) {
+    assert.doesNotMatch(document, /Workflow Engine|workflow-engine|GitHub Workflow/i, path);
+    assert.doesNotMatch(
+      document,
+      /\.harness\/workflow-engine\.json|target_ids_or_files|공통 구조화 실행 결과 계약/,
+      path,
+    );
+  }
+  assert.match(githubTemplates, /target-runtime-bootstrap-contract\.md/);
+  assert.match(githubTemplates, /workflow-engine-template-compatibility-contract\.md/);
+  assert.match(skill, /target-runtime-bootstrap-contract\.md/);
+  assert.match(skill, /workflow-engine-template-compatibility-contract\.md/);
+  assert.match(workflowDoc, /현재 작업에서 해당 이슈 유형 라벨을 최초로 필요로 할 때/);
+  assert.match(workflowDoc, /Harness 설치·생성·갱신 과정은 이 라벨을 만들거나 검사하지 않는다/);
+  assert.match(workflowDoc, /`workflow-code-editor`가 실행 전 Harness 준비도를 확인/);
+  assert.match(workflowDoc, /현재 Codex 세션의 일반 코드 변경 경로/);
+  assert.doesNotMatch(workflowDoc, /직접 수정으로 우회하지 않고/);
+  assert.match(readme, /해당 의존성을 최초로 필요로 할 때/);
+  assert.match(readme, /`workflow-code-editor`:[\s\S]*Harness 일반 진입점[\s\S]*일반 코드 변경 경로/);
 });
 
 test("existence operators are documented without a value field", async () => {

@@ -32,7 +32,7 @@
 - 경량 모델은 읽기 전용 상태 요약, 후보 분류, 단순 라우팅, 참조문서 추출과 실행 내용이 확정된 단순 상태 변경처럼 실패 비용과 판단 범위가 낮은 작업에만 적용 후보로 둔다.
 - 전이 매칭과 평가는 검증기와 평가기가 담당한다. LLM은 근거에 묶인 의미 사실과 사용자 결정 입력만 구조화해 반환하며 `task_action_id`를 추론하지 않는다.
 - 확정된 단순 상태 변경은 결정론적 실행기를 우선하고, 결정론적 실행이 불가능할 때만 제한된 저비용 서브에이전트에 맡긴다.
-- 코드 수정은 대상 프로젝트의 `run-harness`를 진입점으로 사용하는 하위 서브에이전트에 맡기고, PR 리뷰 생성은 선택된 리뷰 실행 모드가 수행한다.
+- 코드 수정은 `workflow-code-editor`가 Harness 일반 진입점 또는 현재 Codex 세션의 일반 코드 변경 경로 중 하나를 실행 전에 선택하며, PR 리뷰 생성은 선택된 리뷰 실행 모드가 수행한다.
 - GitHub Workflow Engine의 설계 문서, 템플릿, 배포본 스킬 기본형은 `codex-harness`에서 관리하고 타겟 레포에 적용한다.
 
 ## 핵심 개념
@@ -139,7 +139,7 @@ Workflow Engine이 이슈 유형 판단과 이슈 생성에 사용하는 프로�
 
 이슈 생성 시에는 이슈 유형에 맞는 이슈 유형별 라벨 하나를 반드시 붙인다. 이슈 유형별 라벨 집합에 없는 라벨은 Workflow Engine이 임의로 붙이지 않는다.
 
-프로젝트별 라벨 생성은 `repo-bootstrap` 저장소의 설치 절차가 담당한다. `codex-harness`는 라벨을 생성하지 않고, 타겟 레포에 Workflow Engine을 적용하거나 갱신할 때 이슈 유형별 라벨이 정확한 이름으로 설치되어 있는지 검증한다.
+Workflow Engine은 현재 작업에서 해당 이슈 유형 라벨을 최초로 필요로 할 때 정확한 이름의 존재 여부를 검사한다. 라벨이 없으면 현재 GitHub 실행 경로와 권한 조건을 확인한 뒤 필요한 라벨 하나만 생성한다. Harness 설치·생성·갱신 과정은 이 라벨을 만들거나 검사하지 않는다.
 
 ### 선언형 작업 평가
 
@@ -249,12 +249,12 @@ Workflow Engine이 사용자 결정을 요청할 때는 결정 대상과 선택 
 - LLM 의존 하위 스킬 또는 서브에이전트 호출마다 서로 독립된 세션 10개를 시작한다. 세션 사이에 대화 문맥이나 결과를 공유하지 않는다.
 - 결정론적 평가기와 상태 조회는 반복하지 않으며, 고정된 상태 스냅샷과 한 번의 결정론적 평가 결과를 사용할 수 있다.
 - 모든 raw 결과와 session ID를 보존해 사용자에게 제시한다. 결과 의미, 구조화 필드, patch의 일치 여부는 자동 비교하지 않는다.
-- raw 결과, 오류, timeout과 session ID를 먼저 보존한 뒤 검증 session을 실제 생성한 구성 요소가 자신이 직접 발급받은 모든 session ID에 `close_agent`를 호출한다. Workflow Engine의 직접 fan-out은 Workflow Engine이, 타겟 편집기의 격리 fan-out은 타겟 편집기가 소유한다. `completed`와 `timed_out`은 작업 결과 상태일 뿐 실행 리소스 정리 완료가 아니다.
+- raw 결과, 오류, timeout과 session ID를 먼저 보존한 뒤 검증 session을 실제 생성한 구성 요소가 자신이 직접 발급받은 모든 session ID에 `close_agent`를 호출한다. Workflow Engine의 직접 fan-out은 Workflow Engine이, `workflow-code-editor`의 격리 fan-out은 editor가 소유한다. `completed`와 `timed_out`은 작업 결과 상태일 뿐 실행 리소스 정리 완료가 아니다.
 - 파일 수정처럼 대상 실행 계약이 격리를 요구하는 호출은 같은 baseline의 독립 workspace 10개에서 실행한다. 검증 모드에서도 실제 LLM 호출을 수행하며 dry-run이나 결과 예측으로 대체하지 않는다.
 
 검증 모드에서는 정확히 10개의 고유 session, 동일 고정 조건, raw 결과 보존, 필요한 격리, primary와 외부 상태 미변경만 확인한다. 하나라도 충족하지 못하면 실험 무결성 실패를 보고한다. 재현성 판단, skill/prompt 개선 여부, 이후 일반 workflow 재개 여부는 사용자가 결정한다. 검증 결과는 transition을 진행하거나 결과를 채택하지 않는다.
 
-일반 실행에서도 서브에이전트 수명 주기는 생성 주체가 소유한다. Workflow Engine은 자신이 직접 시작한 상태 요약·단순 실행·리뷰 session만 닫고, 타겟 편집기는 자신이 직접 시작한 일반 편집 session을 닫는다. 부모는 하위 실행 주체의 child ID를 중복으로 닫지 않으며, 하위 실행 주체는 기존 `verification_results`와 `residual_risks_or_failure_reasons`로 정리 결과와 실패를 반환한다. 같은 session의 단순 스킬 호출은 수명 주기 대상이 아니다.
+일반 실행에서도 서브에이전트 수명 주기는 생성 주체가 소유한다. Workflow Engine은 자신이 직접 시작한 상태 요약·단순 실행·리뷰 session만 닫고, `workflow-code-editor` 또는 Harness는 자신이 직접 시작한 편집 session만 닫는다. 부모는 하위 실행 주체의 child ID를 중복으로 닫지 않으며, 하위 실행 주체는 기존 `verification_results`와 `residual_risks_or_failure_reasons`로 정리 결과와 실패를 반환한다. 같은 session의 단순 스킬 호출은 수명 주기 대상이 아니다.
 
 ### 현재 선언형 런타임
 
@@ -309,7 +309,7 @@ Workflow Engine은 모든 이슈 유형과 연결 PR에 같은 실행 루프를 
 5. 실행 범위 안에서 구조화 실행 요청을 만들고 결과를 검증한다.
    - 전용 스킬은 후보, 초안, 분석 결과만 만든다.
    - GitHub 상태 변경은 단순 상태 변경 실행 절차에 따라 결정론적 실행기를 우선하고, 불가능할 때만 저비용 서브에이전트에 맡긴다.
-   - 파일 변경은 대상 프로젝트의 `run-harness`를 사용하는 타겟 하네스 코드 수정 서브에이전트에 위임한다.
+   - 파일 변경은 `workflow-code-editor`가 실행 전 Harness 준비도를 확인해 Harness 일반 진입점 또는 현재 Codex 세션의 일반 코드 변경 경로 하나로 실행한다.
    - 실행 주체는 현재 작업의 작업내역과 실행 범위를 넓히지 않고 요청을 처리한 뒤 결과를 반환한다.
    - Workflow Engine은 반환 결과를 확인한 뒤에만 작업 완료 여부와 다음 전이를 판단한다.
 6. 작업이 끝나면 다시 GitHub 실행 상태와 현재 코드 상태를 읽고 1번부터 반복한다.
@@ -467,7 +467,7 @@ Commit Plan은 확정된 현재 브랜치/PR 단위를 상위 계획으로 삼�
 
 Workflow Engine은 확정된 커밋 단위의 ID와 작업 범위로 체크항목 내용을 정하고, 상위 이슈의 현재 구현 단위 부모 항목 아래에 중첩하는 구조화 실행 요청을 만든다. 결정론적 실행기 또는 저비용 서브에이전트가 요청을 적용하고 결과를 반환한다. 기능변경과 기능결함은 `완료 기준은 무엇인가요?`의 현재 브랜치/PR 단위 항목을 부모로 사용하고, 정책검토의 설계 문서 구현은 `후속 작업은 무엇인가요?`의 `결정된 정책을 관련 설계 문서에 반영` 항목을 부모로 사용한다. 하위 커밋 단위는 구현 진행 상태이며, 상위 이슈 종료를 판정하는 완료 기준은 부모 항목이다.
 
-Workflow Engine은 현재 커밋 단위의 구현 범위와 검증 기준을 확정하고 대상 프로젝트 하네스를 사용하는 하위 서브에이전트에 코드 수정을 위임한다. 수정·검증 결과를 현재 실행 범위와 대조한 뒤 커밋 메시지 확정, 커밋 생성, 하위 항목 체크와 `(<commit hash>)` 기록 요청을 순서대로 확정한다. 각 실행 주체의 사후조건 반환을 확인한 뒤 남은 단위가 있으면 Commit Plan의 구현 순서상 다음 미체크 커밋 단위를 현재 단위로 지정하고 `구현 작업`부터 반복한다.
+Workflow Engine은 현재 커밋 단위의 구현 범위와 검증 기준을 확정하고 `workflow-code-editor`에 코드 수정을 요청한다. editor는 실행 전에 Harness 준비도를 확인해 Harness 일반 진입점 또는 현재 Codex 세션의 일반 코드 변경 경로 하나를 선택한다. 수정·검증 결과를 현재 실행 범위와 대조한 뒤 커밋 메시지 확정, 커밋 생성, 하위 항목 체크와 `(<commit hash>)` 기록 요청을 순서대로 확정한다. 각 실행 주체의 사후조건 반환을 확인한 뒤 남은 단위가 있으면 Commit Plan의 구현 순서상 다음 미체크 커밋 단위를 현재 단위로 지정하고 `구현 작업`부터 반복한다.
 
 구현 흐름은 브랜치 이름 확정, 커밋 단위 계획, 구현과 커밋 반복, push, PR 생성, 리뷰, 피드백 반복, merge 반영을 하나의 공통 수명주기로 묶는다. 리뷰 피드백은 한 건씩 처리하고 해결 여부를 반영한 뒤 GitHub 상태를 다시 읽는다. 남은 피드백이 있으면 피드백 대응으로 돌아가고, 없을 때만 merge 결정으로 진행한다.
 
@@ -491,11 +491,11 @@ Workflow Engine은 실행 주체에 작업을 넘기기 전에 구조화 실행 
 2. 결정론적 실행이 불가능하면 저비용 서브에이전트가 실행 전 상태를 확인하고 단일 동작을 수행한 뒤 사후조건을 검증해 성공 결과를 메인 Workflow Engine에 반환한다.
 3. 전제조건 불일치, 범위 밖 변경 필요, 실행 실패, 사후조건 불충족은 재판단하지 않고 실패 사유와 함께 메인 Workflow Engine에 반환한다.
 
-코드 수정 실행은 단순 상태 변경 실행과 분리한다. 구현 작업과 수용된 리뷰 피드백처럼 파일 수정이 필요한 작업은 대상 프로젝트의 `run-harness`를 진입점으로 사용하는 하위 서브에이전트에 위임한다. Workflow Engine은 수정 범위, 검증 기준, 권한 요구사항을 확정하지만 코드를 직접 수정하지 않는다. 하위 서브에이전트는 대상 하네스가 라우팅한 역할과 모델 설정을 따르고, 같은 명령 실행 경로와 파괴적 명령 기준을 적용해 수정과 검증을 수행한 뒤 변경 파일, 검증 결과, 남은 위험을 반환한다. 필요한 권한이나 변경 손실 방지 조건을 충족하지 못하면 수정하지 않고 실패 사유를 반환한다. 메인 Workflow Engine은 반환 결과가 확정 범위와 예상 사후조건을 충족하는지 확인한 뒤 다음 전이를 판단한다.
+코드 수정 실행은 단순 상태 변경 실행과 분리한다. 구현 작업과 수용된 리뷰 피드백처럼 파일 수정이 필요한 작업은 `workflow-code-editor`가 담당한다. Workflow Engine은 수정 범위, 검증 기준과 권한 요구사항을 확정하고, editor는 실행 전에 정확히 한 경로를 선택한다. Harness와 대상 저장소의 일반 진입점이 준비됐으면 Workflow Engine 전용 설정·필드·역할·결과 형식을 제외한 일반 코드 변경 요청으로 Harness를 호출한다. Harness가 없거나 실행 전에 사용할 수 없음이 확인되면 현재 Codex 세션에서 저장소 지시와 일반 파일 편집 도구로 수정한다.
 
-전역 `harness` 생성기와 Workflow Engine은 함께 설치된다. 타겟 프로젝트에서는 전역 `harness`가 생성한 `.codex/agents/*`, `.agents/skills/*`, `.harness/docs/*`와 `run-harness` 시작 역할을 코드 수정 실행 기반으로 사용한다. 로컬 하네스가 생성되지 않았거나 시작 역할과 역할 자산의 실행 가능 상태를 확인할 수 없으면 직접 수정으로 우회하지 않고 하네스 생성 또는 갱신 필요 상태로 중단한다.
+Harness 경로와 일반 코드 변경 경로는 같은 baseline, 요청 범위, 권한·도구·명령 경로, 검증과 구조화 결과 계약을 적용한다. 선택 경로 실행이 시작된 뒤 실패하면 부분 변경을 중복 실행할 위험이 있으므로 다른 경로로 fallback하지 않는다. Harness는 호출자가 Workflow Engine인지 알 필요가 없으며 Workflow Engine 전용 타겟 역할이나 Team Spec 필드를 생성하지 않는다.
 
-`codex-harness` 메타 저장소는 전역 스킬과 타겟 하네스 생성 원천을 관리하므로 저장소 자체에 타겟 프로젝트용 역할 자산이 없을 수 있다. 이 상태는 타겟 프로젝트의 하네스 준비 실패와 구분한다. 코드 수정 위임 계약은 생성된 로컬 하네스를 가진 타겟 프로젝트에서 적용하고, 메타 저장소 변경은 해당 변경의 성격과 별도 실행 하네스 유무를 기준으로 처리한다.
+`codex-harness` 메타 저장소처럼 프로젝트 로컬 Harness가 없는 저장소도 일반 코드 변경 경로로 처리할 수 있다. 일반 경로 선택은 Harness 설치·생성·갱신을 유발하지 않는다.
 
 각 전용 스킬은 불분명한 프롬프트로 상태 변경 책임을 넘겨받지 않도록 `description`, 입력, 출력, 책임, 하지 않는 일, 사용자 결정, 중단 조건, 후속 전이 대상을 명확히 가져야 한다. 특히 제안형 스킬은 초안이나 후보와 보류 질문만 반환한다. Workflow Engine은 스킬 결과를 산출물 계약으로 검증해 정규화 입력에 반영하고, evaluator 결과로 상태와 실행 요청을 확정한다. GitHub 변경은 결정론적 실행기 또는 저비용 서브에이전트가 수행한다.
 
@@ -509,7 +509,7 @@ Workflow Engine은 실행 주체에 작업을 넘기기 전에 구조화 실행 
 | GitHub Workflow Engine | 기준 대상과 현재 작업 산출, 전용 스킬 호출, 사용자 결정 처리, 구조화 실행 요청 확정과 결과 검증 |
 | 결정론적 실행기 | 확정된 단순 상태 변경 요청을 추가 판단 없이 실행하고 사후조건을 반환 |
 | 저비용 실행 서브에이전트 | 결정론적 실행이 불가능한 단순 상태 변경 요청 한 건을 실행 전후 검증과 함께 처리 |
-| 타겟 하네스 코드 수정 서브에이전트 | `run-harness`와 대상 프로젝트 역할 라우팅을 사용하고 권한 확인·변경 손실 방지 기준을 적용해 확정된 코드 수정 범위를 구현한 뒤 검증 결과를 반환 |
+| Workflow Code Editor | 실행 전 Harness 준비도를 확인해 Harness 일반 진입점 또는 현재 Codex 세션의 일반 코드 변경 경로 하나를 선택하고, 확정된 코드 수정 범위와 검증 결과를 공통 계약으로 반환 |
 | Issue Creation | 이슈 유형별 템플릿과 라벨에 맞는 이슈 초안 작성 |
 | Feature Proposal Triage | 기능제안의 진행 방향 후보와 판단 근거 제시 |
 | Policy Plan | 정책 설계 후보와 설계 문서 반영 범위 제시 |
@@ -528,7 +528,7 @@ Workflow Engine은 실행 주체에 작업을 넘기기 전에 구조화 실행 
 
 리뷰 실행은 PR diff와 연결 이슈의 작업 범위 및 완료 판단 기준을 검토해 PR Review Template 형식의 결과를 만드는 책임만 가진다. Review Comment는 review thread 게시 초안을 만들고, Workflow Engine은 게시·resolve 요청의 내용과 실행 범위를 확정한다. 실제 GitHub 변경은 단순 상태 변경 실행 절차를 따르며, Workflow Engine은 반환된 사후조건을 확인한다. 리뷰 판정은 `review-runtime-contract.md`, 실행 절차와 출력 형식은 관련 스킬을 따른다.
 
-Workflow Engine을 타겟 레포에 설치할 때는 기본 리뷰 실행 모드를 저장할 수 있다. 저장된 기본 리뷰 실행 모드는 리뷰 실행 모드 선택 사용자 결정에서 기본 후보로만 사용하며, PR 생성 후 실제 사용할 리뷰 실행 모드는 매번 사용자가 확정해야 한다.
+Workflow Engine이 리뷰 설정을 최초로 필요로 할 때는 사용 가능한 모드를 관측하고 사용자 결정 뒤 기본 리뷰 실행 모드를 저장할 수 있다. 저장된 기본 리뷰 실행 모드는 리뷰 실행 모드 선택 사용자 결정에서 기본 후보로만 사용하며, PR 생성 후 실제 사용할 리뷰 실행 모드는 매번 사용자가 확정해야 한다. 설치만으로 설정 파일이나 기본값을 만들지 않는다.
 
 지원 리뷰 실행 모드는 다음 세 가지다.
 
@@ -548,7 +548,7 @@ Workflow Engine을 타겟 레포에 설치할 때는 기본 리뷰 실행 모드
 }
 ```
 
-- 저장 위치는 타겟 레포의 `.harness/workflow-engine.json`이다.
+- 저장 위치는 타겟 레포의 `.harness/workflow-engine.json`이며 Workflow Engine이 필요한 시점에 필요한 필드만 생성하거나 보완한다.
 - `review.defaultMode` 값은 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중 하나여야 한다.
 - 지원 모드의 번호 또는 선택지 문구가 입력되면 리뷰 실행 모드 검사로 전이한다.
 - `기타 의견 입력`은 사용자 결정 규칙에 따라 처리하며, 리뷰 실행 모드가 확정된 경우에만 리뷰 실행 모드 검사로 전이한다.
@@ -902,7 +902,7 @@ Workflow Engine은 작업에 진입하거나 중단 또는 재개 상태를 기�
 - GitHub Workflow Engine 설계 문서
 - 기능제안, 정책검토, 기능변경, 기능결함 이슈 템플릿 기본형
 - Pull Request 템플릿 기본형
-- Harness, GitHub Workflow Engine, Issue Creation, Feature Proposal Triage, Policy Plan, Policy Review Next Triage, Feature Plan, Fix Analysis, Fix Plan, Branch Proposal, Commit Plan, PR Proposal, PR Creation, Review Comment 전역 스킬 기본형
+- Harness, GitHub Workflow Engine, Workflow Code Editor, Issue Creation, Feature Proposal Triage, Policy Plan, Policy Review Next Triage, Feature Plan, Fix Analysis, Fix Plan, Branch Proposal, Commit Plan, PR Proposal, PR Creation, Review Comment 전역 스킬 기본형
 - 이슈 유형별 라벨 계약
 
 전역 `commit` 스킬, `awesome-code-review`, `sendbird/cc-plugin-codex`는 외부 의존성으로만 다루며 `codex-harness` 관리 기본형에 포함하지 않는다.
@@ -926,6 +926,7 @@ codex-harness/
 │   └── skills/
 │       ├── harness/
 │       ├── github-workflow-engine/
+│       ├── workflow-code-editor/
 │       ├── issue-creation/
 │       ├── feature-proposal-triage/
 │       ├── policy-plan/
@@ -942,7 +943,7 @@ codex-harness/
 
 ### 타겟 프로젝트 적용 자산
 
-전역 `harness` 생성기와 Workflow Engine 스킬은 같은 설치 단위로 배치한다. 전역 `harness`는 타겟 프로젝트에 로컬 실행 하네스를 생성하고, Workflow Engine 적용 절차는 같은 프로젝트에 GitHub 템플릿과 `.harness` 운영 파일을 추가한다. Workflow Engine 전역 스킬 사본은 타겟 프로젝트 안에 생성하지 않는다.
+현재 편의 설치 스크립트는 전역 `harness`와 Workflow Engine 스킬 묶음을 함께 배치하지만 두 런타임은 서로의 설치를 전제로 하지 않는다. 전역 `harness`는 명시적으로 요청받았을 때만 타겟 프로젝트의 로컬 실행 하네스를 생성한다. Workflow Engine은 실제 작업에서 설정이나 템플릿을 최초로 요구할 때만 필요한 항목을 준비하며, 전역 스킬 사본을 타겟 프로젝트 안에 생성하지 않는다.
 
 ```text
 target-repo/
@@ -970,22 +971,22 @@ target-repo/
         └── github-workflow-log.md
 ```
 
-`.codex/agents/*`, `.agents/skills/*`, `.harness/docs/*`는 타겟 프로젝트 하네스의 역할 라우팅과 실행 기준을 제공한다. `.harness/workflow-engine.json`은 타겟별 설치 설정, `dependencies.commit.available`, 리뷰 실행 모드 사용 가능 상태를 저장한다. `.harness/logs/github-workflow-log.md`는 실행 로그를 저장한다. `.harness`의 운영 파일은 보조 운영 자산이며, 현재 작업 상태의 기준 원천은 GitHub 실행 상태다.
+`.codex/agents/*`, `.agents/skills/*`, `.harness/docs/*`는 Harness를 별도로 구성한 프로젝트에만 존재하며 일반 코드 변경 경로의 선행 조건이 아니다. `.harness/workflow-engine.json`은 Workflow Engine의 타겟별 런타임 설정으로 `dependencies.commit.available`, 리뷰 실행 모드 사용 가능 상태와 사용자가 선택한 기본 모드를 필요할 때 저장한다. `.harness/logs/github-workflow-log.md`는 실행 로그를 저장한다. `.harness`의 운영 파일은 보조 운영 자산이며, 현재 작업 상태의 기준 원천은 GitHub 실행 상태다.
 
 ### 템플릿 정합성 검사
 
-타겟 레포에 GitHub Workflow Engine을 적용하거나 템플릿을 갱신하기 전에는 타겟 `.github` 템플릿, 이슈 유형별 라벨, `github-templates.md` 계약의 정합성을 먼저 검사한다. `github-templates.md`는 실제 템플릿 본문 복제본이 아니라 이슈 title prefix, label, 이슈 유형별 라벨, 필수 섹션, 연결 규칙을 검증하는 계약 문서다.
+Workflow Engine이 이슈 또는 PR 템플릿을 최초로 요구할 때 해당 유형의 타겟 `.github` 템플릿, 라벨과 `github-templates.md` 계약의 정합성을 검사한다. `github-templates.md`는 실제 템플릿 본문 복제본이 아니라 이슈 title prefix, label, 이슈 유형별 라벨, 필수 섹션, 연결 규칙을 검증하는 계약 문서다. 아직 요구하지 않은 다른 유형의 템플릿과 라벨은 미리 만들지 않는다.
 
-1. `github-templates.md`에서 기대 파일명, 이슈 title prefix, label, 이슈 유형별 라벨 집합, 필수 섹션, 연결 규칙, 판정 기준을 읽는다.
-2. 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`를 읽는다.
-3. 타겟 GitHub 레포에 이슈 유형별 라벨이 정확한 이름으로 존재하는지 확인한다.
-4. 기본 파일명이 없으면 같은 역할의 기존 템플릿이 있는지 찾고 매핑 근거를 남긴다.
-5. 각 이슈 템플릿의 YAML frontmatter `title`, `labels`, 필수 섹션, 기본 체크리스트를 비교한다.
-6. PR 템플릿의 필수 섹션, `연관 이슈 (optional)`, `Refs #번호` 안내, 자동 종료 키워드 부재를 확인한다.
+1. Workflow Engine 소유의 `target-runtime-bootstrap-contract.md`와 `workflow-engine-template-compatibility-contract.md`에서 현재 요구 범위와 적용·보존 규칙을 읽는다.
+2. `github-templates.md`에서 기대 파일명, 이슈 title prefix, label, 이슈 유형별 라벨 집합, 필수 섹션, 연결 규칙, 판정 기준을 읽는다.
+3. 타겟 레포에서 현재 요구 유형에 대응하는 `.github/ISSUE_TEMPLATE/*.md` 또는 `.github/pull_request_template.md`를 읽는다.
+4. 타겟 GitHub 레포에 현재 이슈 유형 라벨이 정확한 이름으로 존재하는지 확인한다.
+5. 기본 파일명이 없으면 같은 역할의 기존 템플릿이 있는지 찾고 매핑 근거를 남긴다.
+6. 이슈 템플릿의 YAML frontmatter `title`, `labels`, 필수 섹션, 기본 체크리스트 또는 PR 템플릿의 필수 섹션과 연결 규칙을 비교한다.
 7. 결과를 `정합`, `허용된 확장`, `불일치`로 분류한다.
-8. 라벨이 없거나 이름이 다르면 `repo-bootstrap` 설치 절차로 라벨을 생성 또는 정렬해야 한다고 기록한다. 하네스는 라벨을 직접 생성하지 않는다.
-9. 불일치가 있으면 차이, 워크플로우 영향, 수정 후보를 사용자에게 제시한다.
-10. 사용자 결정으로 확정된 경우에만 타겟 `.github` 템플릿을 생성 또는 갱신한다.
+8. 템플릿이나 라벨이 없으면 Workflow Engine이 권한·명령 경로를 확인한 뒤 현재 요구 항목만 생성한다.
+9. 불일치가 있으면 자동으로 덮어쓰지 않고 차이, 워크플로우 영향, 수정 후보를 사용자에게 제시한다.
+10. 사용자 결정으로 확정된 경우에만 기존 타겟 템플릿의 필요한 부분을 갱신한다.
 
 타겟 레포에서 발견한 개선점은 자동으로 `codex-harness`에 역반영하지 않는다. 여러 타겟에서 반복되거나 공통화할 가치가 있을 때만 사용자 결정 후 기본형으로 승격한다.
 

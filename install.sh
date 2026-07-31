@@ -7,7 +7,9 @@ CODEX_HOME="${CODEX_HOME:-"$HOME/.codex"}"
 DEST_ROOT="${CODEX_HARNESS_DEST_ROOT:-"$CODEX_HOME/skills"}"
 HARNESS_DEST="${CODEX_HARNESS_DEST:-"$DEST_ROOT/harness"}"
 TMP_ROOT="${TMPDIR:-/tmp}/codex-harness-install.$$"
-CODEX_SKILLS="harness github-workflow-engine github-state-summary github-simple-executor target-harness-code-editor issue-creation feature-proposal-triage policy-plan policy-review-next-triage feature-plan fix-analysis fix-plan branch-proposal commit-plan pr-proposal pr-creation review-comment"
+HARNESS_SKILLS="harness"
+WORKFLOW_ENGINE_SKILLS="github-workflow-engine workflow-code-editor github-state-summary github-simple-executor target-harness-code-editor issue-creation feature-proposal-triage policy-plan policy-review-next-triage feature-plan fix-analysis fix-plan branch-proposal commit-plan pr-proposal pr-creation review-comment"
+INSTALL_TARGET="${1:-all}"
 
 cleanup() {
   rm -rf "$TMP_ROOT"
@@ -16,6 +18,26 @@ cleanup() {
 die() {
   printf '%s\n' "install.sh: $*" >&2
   exit 1
+}
+
+select_skills() {
+  case "$INSTALL_TARGET" in
+    harness)
+      CODEX_SKILLS="$HARNESS_SKILLS"
+      SOURCE_MARKER="harness"
+      ;;
+    workflow-engine)
+      CODEX_SKILLS="$WORKFLOW_ENGINE_SKILLS"
+      SOURCE_MARKER="github-workflow-engine"
+      ;;
+    all)
+      CODEX_SKILLS="$HARNESS_SKILLS $WORKFLOW_ENGINE_SKILLS"
+      SOURCE_MARKER="harness"
+      ;;
+    *)
+      die "설치 대상은 harness, workflow-engine, all 중 하나여야 합니다: $INSTALL_TARGET"
+      ;;
+  esac
 }
 
 download() {
@@ -35,7 +57,7 @@ find_local_source() {
   script_dir=$(CDPATH= cd "$(dirname "$0")" 2>/dev/null && pwd || printf '.')
   candidate="$script_dir/.codex-dist/skills"
 
-  if [ -f "$candidate/harness/SKILL.md" ]; then
+  if [ -f "$candidate/$SOURCE_MARKER/SKILL.md" ]; then
     printf '%s\n' "$candidate"
     return 0
   fi
@@ -52,8 +74,8 @@ find_remote_source() {
   download "$archive_url" "$archive"
   tar -xzf "$archive" -C "$extract_dir"
 
-  skill_file=$(find "$extract_dir" -type f -name SKILL.md | grep '/\.codex-dist/skills/harness/SKILL\.md$' | head -n 1)
-  [ -n "$skill_file" ] || die "아카이브에서 harness 스킬을 찾지 못했습니다: $archive_url"
+  skill_file=$(find "$extract_dir" -type f -name SKILL.md | grep "/\.codex-dist/skills/$SOURCE_MARKER/SKILL\.md$" | head -n 1)
+  [ -n "$skill_file" ] || die "아카이브에서 $SOURCE_MARKER 스킬을 찾지 못했습니다: $archive_url"
 
   dirname "$(dirname "$skill_file")"
 }
@@ -99,6 +121,8 @@ install_source() {
 }
 
 trap cleanup EXIT INT TERM
+[ "$#" -le 1 ] || die "설치 대상은 하나만 지정할 수 있습니다."
+select_skills
 mkdir -p "$TMP_ROOT"
 
 if source_dir=$(find_local_source); then
@@ -111,6 +135,6 @@ fi
 install_source "$source_dir"
 
 printf '%s\n' "설치 완료: $DEST_ROOT"
-printf '%s\n' "확인: $(dest_for_skill harness)/SKILL.md"
-printf '%s\n' "확인: $DEST_ROOT/github-workflow-engine/SKILL.md"
-printf '%s\n' "확인: $DEST_ROOT/target-harness-code-editor/SKILL.md"
+for skill in $CODEX_SKILLS; do
+  printf '%s\n' "확인: $(dest_for_skill "$skill")/SKILL.md"
+done

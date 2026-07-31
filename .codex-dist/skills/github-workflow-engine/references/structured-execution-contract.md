@@ -1,6 +1,6 @@
 # 구조화 실행 계약
 
-이 문서는 확정된 작업의 실행 범위, 실행 중단과 재개, 공통 구조화 요청·결과·상관관계·성공·중단, 파일 수정 이외 실행 주체 선택을 정의한다. 사용자 결정 입력은 `user-decision-contract.md`, 명령 권한 경로는 `command-execution-path-contract.md`, Target Harness 파일 수정은 `target-harness-execution-contract.md`를 따른다. 작업 전이, 전용 스킬 산출물, 상태 관측, 리뷰 형식과 검증 모드는 이 문서의 책임이 아니다. 각각 `definitions/*.json`과 `evaluator.mjs`, `artifact-output-contract.md`, `state-observation-contract.md`, `review-runtime-contract.md`, `validation-mode-contract.md`를 따른다.
+이 문서는 확정된 작업의 실행 범위, 실행 중단과 재개, 공통 구조화 요청·결과·상관관계·성공·중단, 파일 수정 이외 실행 주체 선택을 정의한다. 사용자 결정 입력은 `user-decision-contract.md`, 명령 권한 경로는 `command-execution-path-contract.md`, 파일 수정 실행 주체 선택은 `file-change-execution-contract.md`를 따른다. 작업 전이, 전용 스킬 산출물, 상태 관측, 리뷰 형식과 검증 모드는 이 문서의 책임이 아니다. 각각 `definitions/*.json`과 `evaluator.mjs`, `artifact-output-contract.md`, `state-observation-contract.md`, `review-runtime-contract.md`, `validation-mode-contract.md`를 따른다.
 
 ## 실행 범위 규칙
 
@@ -143,6 +143,6 @@ Workflow Engine은 해당 표의 `task_action_id`, 논리 실행 모드와 실�
 
 - 최종 판단, 사용자 결정 해석, 커밋 생성 여부 판단, PR 생성 여부 판단은 실행 주체에 위임하지 않는다.
 - `github-state-summary`는 읽기 전용 지원 단위이고, 그 결과는 Workflow Engine의 상태 판정 입력이다. `github-simple-executor`는 일반 구조화 실행 결과 계약을 따르는 실행 단위다.
-- 파일 수정 작업의 실행 주체 선택과 중단은 `target-harness-execution-contract.md`를 적용한다. 이 계약은 Target Harness Code Editor 선택, 출력 사용 가능, 세션 미시작 예외와 직접 수정 fallback 금지를 정의한다.
+- 파일 수정 작업의 실행 주체 선택과 중단은 `file-change-execution-contract.md`를 적용한다. 이 계약은 실행 전 Harness 준비도에 따라 Harness 또는 일반 코드 변경 경로 하나를 선택하고, 선택 경로 실행 시작 뒤의 재시도 금지와 두 경로의 공통 결과 검증을 정의한다.
 - 리뷰 내용 생성은 사용자가 확정한 리뷰 실행 모드에 대해 `리뷰 실행 주체 선택`으로 확정된 실행 주체만 담당한다. 결정론적 실행기와 저비용 실행 서브에이전트에는 리뷰 내용 생성을 위임하지 않는다. Workflow Engine은 리뷰 결과 정규화와 게시할 리뷰 피드백 존재 또는 없음 판정을 담당한다.
 - 위 선택 판정에 맞는 실행 주체가 없으면 `구조화 실행 중단`으로 판정한다.

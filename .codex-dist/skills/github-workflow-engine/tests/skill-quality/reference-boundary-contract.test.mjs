@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
 const urls = {
@@ -25,6 +25,10 @@ const urls = {
   workflowEditor: new URL("../../../workflow-code-editor/SKILL.md", import.meta.url),
   reviewComment: new URL("../../../review-comment/SKILL.md", import.meta.url),
   harness: new URL("../../../harness/SKILL.md", import.meta.url),
+  harnessTemplateCompatibility: new URL(
+    "../../../harness/references/workflow-engine-template-compatibility-contract.md",
+    import.meta.url,
+  ),
   teamSpecContract: new URL("../../../harness/references/team-spec-contract.md", import.meta.url),
   teamSpecSchema: new URL("../../../harness/references/team-spec-schema.md", import.meta.url),
   initialGeneration: new URL(
@@ -259,9 +263,10 @@ test("structured execution loads command and target details only for matching wo
 });
 
 test("target runtime bootstrap and template compatibility belong to the workflow engine", async () => {
-  const [skill, githubTemplates, targetRuntimeBootstrap, templateCompatibility, workflowDoc, readme] =
+  const [skill, harness, githubTemplates, targetRuntimeBootstrap, templateCompatibility, workflowDoc, readme] =
     await Promise.all([
       read("skill"),
+      read("harness"),
       read("githubTemplates"),
       read("targetRuntimeBootstrap"),
       read("templateCompatibility"),
@@ -278,6 +283,8 @@ test("target runtime bootstrap and template compatibility belong to the workflow
   assert.match(templateCompatibility, /같은 스킬의 `github-templates\.md`/);
   assert.match(templateCompatibility, /현재 작업이 요구하는 이슈 유형 또는 PR 템플릿만/);
   assert.match(templateCompatibility, /허용된 타겟 확장[\s\S]*보존/);
+  assert.doesNotMatch(harness, /workflow-engine-template-compatibility-contract\.md/);
+  await assert.rejects(access(urls.harnessTemplateCompatibility));
   assert.match(githubTemplates, /target-runtime-bootstrap-contract\.md/);
   assert.match(githubTemplates, /workflow-engine-template-compatibility-contract\.md/);
   assert.match(skill, /target-runtime-bootstrap-contract\.md/);

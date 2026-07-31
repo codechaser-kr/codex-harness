@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
+const legacySettingsRelativePath = [
+  ".harness",
+  ["workflow", "engine.json"].join("-"),
+].join("/");
+
 const urls = {
   skill: new URL("../../SKILL.md", import.meta.url),
   structured: new URL("../../references/structured-execution-contract.md", import.meta.url),
@@ -21,6 +26,8 @@ const urls = {
   implementation: new URL("../../definitions/implementation.json", import.meta.url),
   workflowDoc: new URL("../../../../../docs/github-workflow-engine.md", import.meta.url),
   readme: new URL("../../../../../README.md", import.meta.url),
+  settings: new URL("../../../../../.workflow-engine/settings.json", import.meta.url),
+  legacySettings: new URL(`../../../../../${legacySettingsRelativePath}`, import.meta.url),
   simpleExecutor: new URL("../../../github-simple-executor/SKILL.md", import.meta.url),
   workflowEditor: new URL("../../../workflow-code-editor/SKILL.md", import.meta.url),
   reviewComment: new URL("../../../review-comment/SKILL.md", import.meta.url),
@@ -285,23 +292,56 @@ test("structured execution loads command and target details only for matching wo
 });
 
 test("target runtime bootstrap and template compatibility belong to the workflow engine", async () => {
-  const [skill, harness, harnessDocuments, githubTemplates, targetRuntimeBootstrap, templateCompatibility, workflowDoc, readme] =
-    await Promise.all([
-      read("skill"),
-      read("harness"),
-      readMarkdownTree(urls.harnessRoot),
-      read("githubTemplates"),
-      read("targetRuntimeBootstrap"),
-      read("templateCompatibility"),
-      read("workflowDoc"),
-      read("readme"),
-    ]);
+  const [
+    skill,
+    harness,
+    harnessDocuments,
+    workflowEngineDocuments,
+    githubTemplates,
+    targetRuntimeBootstrap,
+    templateCompatibility,
+    reviewRuntime,
+    structured,
+    workflowDoc,
+    readme,
+    settingsSource,
+    referenceEntries,
+  ] = await Promise.all([
+    read("skill"),
+    read("harness"),
+    readMarkdownTree(urls.harnessRoot),
+    readMarkdownTree(new URL("../../", import.meta.url)),
+    read("githubTemplates"),
+    read("targetRuntimeBootstrap"),
+    read("templateCompatibility"),
+    read("reviewRuntime"),
+    read("structured"),
+    read("workflowDoc"),
+    read("readme"),
+    read("settings"),
+    readdir(new URL("../../references/", import.meta.url)),
+  ]);
 
+  const settings = JSON.parse(settingsSource);
+  const supportedReviewModes = [
+    "claude/code-review",
+    "claude/awesome-code-review",
+    "codex/awesome-code-review",
+  ];
   assert.match(targetRuntimeBootstrap, /^# 타겟 Workflow Engine 런타임 초기화 계약$/m);
   assert.match(targetRuntimeBootstrap, /최초로 필요로 하는 시점/);
   assert.match(targetRuntimeBootstrap, /Harness 설치, 생성, 갱신 또는 감사\(audit\)의 책임이 아니다/);
   assert.match(targetRuntimeBootstrap, /임의 기본값을 만들지 않는다/);
-  assert.match(targetRuntimeBootstrap, /기존 키와 값을 보존하면서 누락 필드만 보완/);
+  assert.match(targetRuntimeBootstrap, /기존 키와 유효한 값을 보존하면서 누락 필드만 생성/);
+  assert.match(targetRuntimeBootstrap, /`\.workflow-engine\/settings\.json`은 Workflow Engine이 독점적으로 생성·해석/);
+  assert.match(targetRuntimeBootstrap, /^### 누락 상태의 지연 초기화$/m);
+  assert.match(targetRuntimeBootstrap, /^### 인식 불가 상태의 fail-closed 중단$/m);
+  assert.match(targetRuntimeBootstrap, /설정 경로[\s\S]*문제가 된 필드와 관측된 값[\s\S]*기대 형식과 지원 값[\s\S]*현재 작업[\s\S]*재개 조건/);
+  assert.match(targetRuntimeBootstrap, /별도 JSON Schema나[\s\S]*범용 설정 validator를 두지 않고/);
+  assert.match(targetRuntimeBootstrap, /임의 기본값, 실행 모드 fallback, 충돌 값 덮어쓰기 또는 Harness 호출/);
+  assert.match(reviewRuntime, /리뷰 실행 모드 지연 초기화 필요/);
+  assert.match(reviewRuntime, /리뷰 실행 모드 설정 인식 불가/);
+  assert.match(structured, /`\.workflow-engine\/settings\.json`에서 `리뷰 실행 모드 사용 가능`/);
   assert.match(templateCompatibility, /^# Workflow Engine 템플릿 정합성 계약$/m);
   assert.match(templateCompatibility, /같은 스킬의 `github-templates\.md`/);
   assert.match(templateCompatibility, /현재 작업이 요구하는 이슈 유형 또는 PR 템플릿만/);
@@ -312,9 +352,28 @@ test("target runtime bootstrap and template compatibility belong to the workflow
     assert.doesNotMatch(document, /Workflow Engine|workflow-engine|GitHub Workflow/i, path);
     assert.doesNotMatch(
       document,
-      /\.harness\/workflow-engine\.json|target_ids_or_files|공통 구조화 실행 결과 계약/,
+      /\.workflow-engine\/settings\.json|target_ids_or_files|공통 구조화 실행 결과 계약/,
       path,
     );
+  }
+  for (const [path, document] of workflowEngineDocuments) {
+    assert.equal(document.includes(legacySettingsRelativePath), false, path);
+  }
+  for (const [path, document] of [["README.md", readme], ["docs/github-workflow-engine.md", workflowDoc]]) {
+    assert.equal(document.includes(legacySettingsRelativePath), false, path);
+  }
+  assert.equal(referenceEntries.some((entry) => /settings.*(?:schema|validator)/i.test(entry)), false);
+  await access(urls.settings);
+  await assert.rejects(access(urls.legacySettings));
+  assert.equal(typeof settings.dependencies.commit.available, "boolean");
+  assert.equal(typeof settings.dependencies.commit.checkedAt, "string");
+  assert.equal(typeof settings.dependencies.commit.evidence, "string");
+  assert.equal(supportedReviewModes.includes(settings.review.defaultMode), true);
+  assert.deepEqual(Object.keys(settings.review.modes).sort(), supportedReviewModes.sort());
+  for (const mode of Object.values(settings.review.modes)) {
+    assert.equal(typeof mode.available, "boolean");
+    assert.equal(typeof mode.checkedAt, "string");
+    assert.equal(typeof mode.evidence, "string");
   }
   assert.match(githubTemplates, /target-runtime-bootstrap-contract\.md/);
   assert.match(githubTemplates, /workflow-engine-template-compatibility-contract\.md/);
@@ -324,8 +383,10 @@ test("target runtime bootstrap and template compatibility belong to the workflow
   assert.match(workflowDoc, /Harness 설치·생성·갱신 과정은 이 라벨을 만들거나 검사하지 않는다/);
   assert.match(workflowDoc, /`workflow-code-editor`가 실행 전 Harness 준비도를 확인/);
   assert.match(workflowDoc, /현재 Codex 세션의 일반 코드 변경 경로/);
+  assert.match(workflowDoc, /`\.workflow-engine\/settings\.json`은 Workflow Engine이 독점적으로 생성·해석/);
   assert.doesNotMatch(workflowDoc, /직접 수정으로 우회하지 않고/);
   assert.match(readme, /해당 의존성을 최초로 필요로 할 때/);
+  assert.match(readme, /`\.workflow-engine\/settings\.json`의 필요한 필드만 생성하거나 보완/);
   assert.match(readme, /`workflow-code-editor`:[\s\S]*Harness 일반 진입점[\s\S]*일반 코드 변경 경로/);
 });
 

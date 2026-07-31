@@ -65,8 +65,9 @@ Workflow Engine 설치는 타겟 저장소의 설정, 템플릿 또는 GitHub �
 해당 항목을 최초로 요구할 때만 `target-runtime-bootstrap-contract.md`로 누락 상태를 확인하고 필요한
 범위만 준비한다.
 
-- `.harness/workflow-engine.json`은 Workflow Engine이 필요한 설정 필드만 보완하며 기존 유효 값을
-  보존한다.
+- `.workflow-engine/settings.json`은 Workflow Engine만 생성·해석하며 필요한 설정 필드만 보완하고
+  기존 유효 값을 보존한다. 파일·필드 부재는 지연 초기화하고 인식할 수 없는 타입·값은 자동 교정이나
+  fallback 없이 원래 작업을 중단한다.
 - 사용자 선호가 필요한 설정은 임의 기본값을 만들지 않고 사용 가능한 선택지를 제시해 확정받는다.
 - GitHub 템플릿은 `github-templates.md`와 `workflow-engine-template-compatibility-contract.md`로 적용·감사하며
   허용된 타겟 확장을 덮어쓰지 않는다.

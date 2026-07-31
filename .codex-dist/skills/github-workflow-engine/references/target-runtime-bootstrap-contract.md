@@ -16,23 +16,54 @@
 | --- | --- |
 | 이슈 생성 또는 이슈 유형 판정 | 해당 이슈 유형의 `.github/ISSUE_TEMPLATE/*.md`와 유형 라벨 하나 |
 | PR 초안 생성 또는 PR 본문 판정 | `.github/pull_request_template.md` |
-| 리뷰 실행 모드 선택 또는 실행 | `.harness/workflow-engine.json`의 `review.defaultMode`와 `review.modes` |
-| 커밋 스킬 사용 가능 여부 판정 | `.harness/workflow-engine.json`의 `dependencies.commit` |
+| 리뷰 실행 모드 선택 또는 실행 | `.workflow-engine/settings.json`의 `review.defaultMode`와 `review.modes` |
+| 커밋 스킬 사용 가능 여부 판정 | `.workflow-engine/settings.json`의 `dependencies.commit` |
 
 여러 항목을 한 작업에서 요구하면 필요한 범위를 합쳐 한 번만 확인한다. 아직 요구하지 않은 항목은 미리 만들지 않는다.
 
 ## 설정 파일 초기화
 
-`.harness/workflow-engine.json`은 Workflow Engine의 타겟별 런타임 설정이다. 경로 이름과 관계없이 Harness가 이 파일을 생성하거나 해석해야 한다는 의미는 아니다.
+`.workflow-engine/settings.json`은 Workflow Engine이 독점적으로 생성·해석하는 타겟별 런타임 설정이다.
+Harness 설치, 생성, 갱신 또는 실행은 이 파일을 만들거나 읽거나 보완하지 않는다. 별도 JSON Schema나
+범용 설정 validator를 두지 않고, Workflow Engine의 생성·소비 계약과 회귀 테스트로 지원 값을 고정한다.
+
+### 지원 값과 생성 근거
+
+- `dependencies.commit.available`과 `review.modes.<지원 모드>.available`은 실제 사용 가능 상태를 관측한
+  boolean만 기록한다.
+- capability 관측 레코드는 비어 있지 않은 문자열 `checkedAt`과 `evidence`를 함께 가진다.
+- `review.defaultMode`는 `claude/code-review`, `claude/awesome-code-review`,
+  `codex/awesome-code-review` 중 사용자가 확정한 값만 기록한다.
+- `review.modes`의 모드 키는 위 지원 모드만 인식한다. 관측하지 않은 capability나 사용자 선호를 추정하지
+  않는다.
+
+### 누락 상태의 지연 초기화
 
 1. 파일이 없으면 현재 작업에 필요한 최상위 객체와 필드만 포함해 생성한다.
-2. 파일이 있으면 JSON을 파싱하고 필요한 필드의 존재와 값 형식을 확인한다.
-3. 필요한 필드만 누락됐으면 기존 키와 값을 보존하면서 누락 필드만 보완한다.
-4. 파일을 파싱할 수 없거나 기존 값이 계약과 충돌하면 덮어쓰지 않고 차이, 영향, 수정 후보를 제시한 뒤 사용자 결정으로 멈춘다.
-5. capability 값은 실제 도구·스킬 관측 결과와 `checkedAt`, `evidence`를 함께 기록한다. 관측하지 않은 capability를 추정하지 않는다.
-6. `review.defaultMode`처럼 사용자 선호가 필요한 값은 사용 가능한 모드와 근거를 제시하고 사용자가 선택한 뒤 기록한다. 임의 기본값을 만들지 않는다.
+2. 파일이 있고 JSON으로 인식할 수 있으면 현재 작업에 필요한 필드만 확인한다.
+3. 필요한 필드가 없으면 기존 키와 유효한 값을 보존하면서 누락 필드만 생성한다.
+4. capability 값은 실제 도구·스킬 관측 결과와 `checkedAt`, `evidence`를 함께 기록한다.
+5. 사용자 선호가 필요한 값은 사용 가능한 모드와 근거를 제시하고 사용자가 선택한 뒤 기록한다. 임의 기본값을 만들지 않는다.
 
-같은 관측값과 사용자 결정으로 다시 실행했을 때 추가 변경이 없어야 한다.
+파일 또는 필요한 필드가 없는 상태는 오류가 아니다. 필요한 항목의 지연 초기화가 끝난 경우에만 원래
+작업을 계속한다. 같은 관측값과 사용자 결정으로 다시 실행했을 때 추가 변경이 없어야 한다.
+
+### 인식 불가 상태의 fail-closed 중단
+
+JSON 파싱 실패, 지원하지 않는 값 또는 위 형식으로 인식할 수 없는 타입이 하나라도 있으면 Workflow
+Engine은 설정을 추정하거나 자동 교정하지 않고 원래 작업을 즉시 중단한다. 누락 상태로 재해석하거나
+임의 기본값, 실행 모드 fallback, 충돌 값 덮어쓰기 또는 Harness 호출로 계속하지 않는다.
+
+중단 결과에는 다음을 모두 포함한다.
+
+- 설정 경로
+- 문제가 된 필드와 관측된 값
+- 기대 형식과 지원 값
+- 설정을 요구한 현재 작업과 계속할 수 없는 영향
+- 사용자가 값을 수정한 뒤 같은 작업을 재개해야 한다는 재개 조건
+
+사용자가 재개하면 설정을 새로 읽어 인식 가능한 상태인지 확인한다. 중단 전의 잘못된 값을 Workflow
+Engine이 대신 변경하지 않는다.
 
 ## 템플릿과 라벨 초기화
 

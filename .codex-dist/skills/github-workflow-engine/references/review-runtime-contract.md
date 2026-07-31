@@ -1,6 +1,6 @@
 # 리뷰 런타임 계약
 
-이 문서는 PR 리뷰 결과의 형식, 모든 피드백의 diff 기반 게시 위치, 리뷰 실행 모드 설정을 정의한다. `claude/*` 리뷰 실행 모드를 선택할 때는 `claude-review-executor-contract.md`를 함께 읽는다. 전용 Review Comment 산출물의 사용 가능 판정은 `artifact-output-contract.md`, 구조화 실행은 `structured-execution-contract.md`, 검증 모드는 `validation-mode-contract.md`를 따른다.
+이 문서는 PR 리뷰 결과의 형식, 모든 피드백의 diff 기반 게시 위치, 리뷰 실행 모드 설정을 정의한다. 리뷰 설정이 최초로 필요하거나 누락된 경우 `target-runtime-bootstrap-contract.md`를 먼저 적용한다. `claude/*` 리뷰 실행 모드를 선택할 때는 `claude-review-executor-contract.md`를 함께 읽는다. 전용 Review Comment 산출물의 사용 가능 판정은 `artifact-output-contract.md`, 구조화 실행은 `structured-execution-contract.md`, 검증 모드는 `validation-mode-contract.md`를 따른다.
 
 ## PR Review Template 판정 규칙
 
@@ -62,3 +62,8 @@ PR Review Template의 섹션명은 사람이 읽는 출력 구조이므로 한�
 | 리뷰 실행 모드 선택지 존재      | `review.modes`에 `available: true`인 모드가 하나 이상 기록된 상태다.                               |
 | 리뷰 실행 모드 설정 보완 필요   | `review.modes`가 비어 있거나 모든 모드의 `available` 값이 `false`인 상태다.                        |
 | 리뷰 실행 모드 설정 재생성 필요 | `.harness/workflow-engine.json`이 없거나 `review.defaultMode` 또는 `review.modes`가 없는 상태다.   |
+
+`리뷰 실행 모드 설정 재생성 필요`이면 Harness 설치나 갱신을 요구하지 않는다. Workflow Engine이 실제
+리뷰 provider와 스킬 사용 가능 여부를 관측해 `review.modes`를 기록하고, 사용 가능한 모드를 사용자에게
+제시한다. `review.defaultMode`는 사용자가 선택한 뒤에만 기록하며 임의 기본값을 만들지 않는다. 기존 파일의
+다른 설정과 유효한 mode 근거는 보존하고 필요한 필드만 보완한다.

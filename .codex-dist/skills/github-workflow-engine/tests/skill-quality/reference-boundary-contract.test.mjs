@@ -13,6 +13,10 @@ const urls = {
   artifactOutput: new URL("../../references/artifact-output-contract.md", import.meta.url),
   stateObservation: new URL("../../references/state-observation-contract.md", import.meta.url),
   githubTemplates: new URL("../../references/github-templates.md", import.meta.url),
+  targetRuntimeBootstrap: new URL(
+    "../../references/target-runtime-bootstrap-contract.md",
+    import.meta.url,
+  ),
   implementation: new URL("../../definitions/implementation.json", import.meta.url),
   workflowDoc: new URL("../../../../../docs/github-workflow-engine.md", import.meta.url),
   readme: new URL("../../../../../README.md", import.meta.url),
@@ -43,7 +47,7 @@ const urls = {
     import.meta.url,
   ),
   templateCompatibility: new URL(
-    "../../../harness/references/workflow-engine-template-compatibility-contract.md",
+    "../../references/workflow-engine-template-compatibility-contract.md",
     import.meta.url,
   ),
   workflowDefinitionContract: new URL(
@@ -248,17 +252,27 @@ test("structured execution loads command and target details only for matching wo
   assert.match(targetEditor, /structured-execution-contract\.md[\s\S]*command-execution-path-contract\.md[\s\S]*target-harness-execution-contract\.md/);
 });
 
-test("template compatibility belongs to the harness", async () => {
-  const [githubTemplates, templateCompatibility, harness] = await Promise.all([
+test("target runtime bootstrap and template compatibility belong to the workflow engine", async () => {
+  const [skill, githubTemplates, targetRuntimeBootstrap, templateCompatibility] = await Promise.all([
+    read("skill"),
     read("githubTemplates"),
+    read("targetRuntimeBootstrap"),
     read("templateCompatibility"),
-    read("harness"),
   ]);
 
-  assert.doesNotMatch(githubTemplates, /^## 타겟 템플릿 정합성 검사$/m);
+  assert.match(targetRuntimeBootstrap, /^# 타겟 Workflow Engine 런타임 초기화 계약$/m);
+  assert.match(targetRuntimeBootstrap, /최초로 필요로 하는 시점/);
+  assert.match(targetRuntimeBootstrap, /Harness 설치, 생성, 갱신 또는 감사\(audit\)의 책임이 아니다/);
+  assert.match(targetRuntimeBootstrap, /임의 기본값을 만들지 않는다/);
+  assert.match(targetRuntimeBootstrap, /기존 키와 값을 보존하면서 누락 필드만 보완/);
   assert.match(templateCompatibility, /^# Workflow Engine 템플릿 정합성 계약$/m);
-  assert.match(templateCompatibility, /github-workflow-engine\/references\/github-templates\.md/);
-  assert.match(harness, /workflow-engine-template-compatibility-contract\.md/);
+  assert.match(templateCompatibility, /같은 스킬의 `github-templates\.md`/);
+  assert.match(templateCompatibility, /현재 작업이 요구하는 이슈 유형 또는 PR 템플릿만/);
+  assert.match(templateCompatibility, /허용된 타겟 확장[\s\S]*보존/);
+  assert.match(githubTemplates, /target-runtime-bootstrap-contract\.md/);
+  assert.match(githubTemplates, /workflow-engine-template-compatibility-contract\.md/);
+  assert.match(skill, /target-runtime-bootstrap-contract\.md/);
+  assert.match(skill, /workflow-engine-template-compatibility-contract\.md/);
 });
 
 test("existence operators are documented without a value field", async () => {

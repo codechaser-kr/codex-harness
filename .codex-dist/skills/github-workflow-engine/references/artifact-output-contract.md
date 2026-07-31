@@ -2,7 +2,7 @@
 
 이 문서는 전용 제안·분석 스킬이 만든 초안, 후보, 분석 결과의 사용 가능 기준을 정의한다. 작업 전이, 현재 작업, 다음 작업 산출은 `definitions/*.json`, 각 state adapter, `evaluator.mjs`가 계산한다. PR 제목 판정과 각 산출물의 `... 사용 가능` 또는 `... 제시 가능` 기준을 모두 충족하면 산출물을 사용할 수 있다. 보류 판정은 미충족 기준을 산출한다. PR 제목의 세부 긍정 판정 기준은 최종 판정 근거로 각각 유지한다.
 
-이슈와 PR 본문 형식은 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`를 기준으로 판정하고, 이슈 title prefix, label, 필수 섹션, 연결 규칙은 `github-templates.md`로 판정한다.
+이슈와 PR 본문 형식은 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`를 기준으로 판정하고, 이슈 title prefix, label, 필수 섹션, 연결 규칙은 `github-templates.md`로 판정한다. 필요한 타겟 템플릿이나 라벨이 없으면 산출물을 판정하기 전에 `target-runtime-bootstrap-contract.md`와 `workflow-engine-template-compatibility-contract.md`로 현재 작업에 필요한 범위만 초기화한다.
 
 ## 공통 판정
 

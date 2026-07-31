@@ -24,10 +24,6 @@ const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const installScript = join(repositoryRoot, "install.sh");
 const sourceTargetEditor = join(repositoryRoot, ".codex-dist/skills/target-harness-code-editor/SKILL.md");
-const sourceHarnessTemplateCompatibility = join(
-  repositoryRoot,
-  ".codex-dist/skills/harness/references/workflow-engine-template-compatibility-contract.md",
-);
 const removedRulesRelativePath = ["references/workflow-engine", "rules.md"].join("-");
 const removedRulesFilenamePattern = new RegExp(["workflow-engine", "rules\\.md"].join("-"));
 
@@ -56,6 +52,8 @@ const requiredArtifacts = [
   "references/normalized-fact-adapter-contract.md",
   "references/artifact-output-contract.md",
   "references/github-templates.md",
+  "references/target-runtime-bootstrap-contract.md",
+  "references/workflow-engine-template-compatibility-contract.md",
   "references/state-observation-contract.md",
   "references/review-runtime-contract.md",
   "references/claude-review-executor-contract.md",
@@ -206,6 +204,8 @@ test("runtime contracts do not duplicate natural-language transition tables", as
     "references/user-decision-contract.md",
     "references/command-execution-path-contract.md",
     "references/target-harness-execution-contract.md",
+    "references/target-runtime-bootstrap-contract.md",
+    "references/workflow-engine-template-compatibility-contract.md",
     "references/claude-review-executor-contract.md",
   ]) {
     const source = await readFile(join(sourceSkillDirectory, relativePath), "utf8");
@@ -268,9 +268,11 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
     await readFile(join(destinationRoot, "target-harness-code-editor/SKILL.md")),
     await readFile(sourceTargetEditor),
   );
-  assert.deepEqual(
-    await readFile(join(harnessDestination, "references/workflow-engine-template-compatibility-contract.md")),
-    await readFile(sourceHarnessTemplateCompatibility),
+  assert.equal(
+    (await listRegularFiles(installedSkillDirectory)).includes(
+      "references/workflow-engine-template-compatibility-contract.md",
+    ),
+    true,
   );
 
   const evaluationCases = await readFile(join(sourceSkillDirectory, "tests/workflow-definition/fixtures/evaluation-cases.json"), "utf8").then(JSON.parse);

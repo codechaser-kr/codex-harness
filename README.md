@@ -27,7 +27,7 @@
 - `.codex-dist/skills/harness/SKILL.md`: Codex에 설치되는 전역 `harness` 스킬 진입점
 - `.codex-dist/skills/harness/references/*`: 하네스 Phase 선택 기준, 역할 설계, 에이전트 생성, QA, 로그, 재진입, 자기진화 기준
 - `.codex-dist/skills/github-workflow-engine/SKILL.md`: GitHub Run State를 읽고 다음 Workflow 액션을 제안하는 전역 스킬
-- `.codex-dist/skills/{github-state-summary,github-simple-executor,target-harness-code-editor,issue-creation,feature-proposal-triage,policy-plan,policy-review-next-triage,feature-plan,fix-analysis,fix-plan,branch-proposal,commit-plan,pr-proposal,pr-creation,review-comment}/SKILL.md`: GitHub Workflow Engine에서 사용하는 Codex 전용 전역 스킬 기본형
+- `.codex-dist/skills/{workflow-code-editor,github-state-summary,github-simple-executor,target-harness-code-editor,issue-creation,feature-proposal-triage,policy-plan,policy-review-next-triage,feature-plan,fix-analysis,fix-plan,branch-proposal,commit-plan,pr-proposal,pr-creation,review-comment}/SKILL.md`: GitHub Workflow Engine에서 사용하는 Codex 전용 전역 스킬 기본형
 - `install.sh`, `uninstall.sh`: 전역 Codex 스킬 경로에 배포본을 설치하거나 제거하는 스크립트
 - `.harness/development-quality-evaluation.md`: 하네스 생성기 품질 평가 기준
 - `.harness/document-regression-checklist.md`: README와 reference 문서 변경 후 회귀 점검 기준
@@ -65,6 +65,7 @@ $HOME/.codex/skills/harness/SKILL.md
 $HOME/.codex/skills/harness/references/
 $HOME/.codex/skills/github-workflow-engine
 $HOME/.codex/skills/github-workflow-engine/SKILL.md
+$HOME/.codex/skills/workflow-code-editor
 $HOME/.codex/skills/github-state-summary
 $HOME/.codex/skills/github-simple-executor
 $HOME/.codex/skills/target-harness-code-editor
@@ -104,7 +105,8 @@ GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장�
 - `github-workflow-engine`: GitHub Run State를 읽고 State Transition Rule에 따라 다음 액션을 제안합니다.
 - `github-state-summary`: 출처가 있는 GitHub·로컬 상태를 읽기 전용으로 요약합니다.
 - `github-simple-executor`: 확정된 단일 비파일 단순 상태 변경을 검증 후 수행합니다.
-- `target-harness-code-editor`: Workflow Engine이 검증한 대상 로컬 `run-harness` 라우팅 결과를 재검증하는 중개 절차입니다. Workflow Engine은 이 절차를 통해 선택된 하나의 편집 역할 서브에이전트를 별도 실행 세션으로 시작하고, 그 실제 역할의 공통 결과를 받습니다.
+- `workflow-code-editor`: 파일 변경 전에 Harness 일반 진입점 사용 가능 여부를 확인합니다. 사용 가능하면 Workflow Engine 전용 계약을 제외한 일반 요청으로 Harness를 호출하고, 사용할 수 없으면 현재 Codex 세션의 일반 코드 변경 경로를 사용합니다. 선택 경로 실행을 시작한 뒤에는 다른 경로로 재시도하지 않습니다.
+- `target-harness-code-editor`: 이전 Target Harness 강제 라우팅과의 배포 호환을 위해 남아 있는 자산이며 현재 Workflow Definition의 파일 변경 executor로 사용하지 않습니다.
 - `issue-creation`: `기능제안`, `정책검토`, `기능변경`, `기능결함` 이슈 초안을 템플릿 기준으로 제안합니다.
 - `feature-proposal-triage`: 기능제안 이슈를 기준으로 진행하지 않음, 정책 검토 필요, 기능 변경 필요 중 적절한 진행 방향 후보와 판단 근거를 제안합니다.
 - `policy-plan`: 정책검토 이슈를 기준으로 정책 설계, 판단 맥락, 설계 문서 반영 대상, 설계 반영 후 기능변경 전환 범위를 제안합니다.
@@ -118,13 +120,13 @@ GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장�
 - `pr-creation`: PR 생성 입력을 검증하고 생성 요청 초안을 제안합니다.
 - `review-comment`: PR Review Template 출력 결과를 review thread 게시 초안으로 정리하고 위치 매핑 보류 대상을 점검합니다.
 
-외부 의존 스킬은 이 저장소가 설치하거나 관리하지 않습니다. 타겟 레포에 GitHub Workflow Engine을 설치하거나 갱신할 때 사용 가능 상태를 `.harness/workflow-engine.json`에 기록하고, Workflow Engine은 필요한 액션에 들어가기 전에 이 설정을 읽습니다. `commit` 스킬은 `dependencies.commit.available`에 기록합니다. 사용 가능 상태가 없거나 실행 불가로 기록되어 있으면 설치 가능한 소스, 설치 대상 경로, 설치 후 확인할 파일, 재개 조건을 안내한 뒤 워크플로우를 중단합니다.
+외부 의존 스킬은 이 저장소가 설치하거나 관리하지 않습니다. Workflow Engine은 타겟 레포에서 해당 의존성을 최초로 필요로 할 때 사용 가능 상태를 관측하고 `.harness/workflow-engine.json`의 필요한 필드만 생성하거나 보완합니다. `commit` 스킬은 `dependencies.commit.available`에 기록합니다. 기존 유효 값은 보존하며, 사용 가능 상태가 없거나 실행 불가로 확인되면 설치 가능한 소스, 설치 대상 경로, 설치 후 확인할 파일, 재개 조건을 안내한 뒤 워크플로우를 중단합니다.
 
 - Codex 전역 `commit`: `$CODEX_HOME/skills/commit/SKILL.md` 또는 `$HOME/.codex/skills/commit/SKILL.md`
 - Codex 전역 `awesome-code-review`: `codex/awesome-code-review` 실행에 필요. `$CODEX_HOME/skills/awesome-code-review/SKILL.md` 또는 `$HOME/.codex/skills/awesome-code-review/SKILL.md`
 - Claude 리뷰 브리지 `sendbird/cc-plugin-codex`: Codex에서 `claude/code-review`의 `$cc:review`와 `claude/awesome-code-review`의 `$cc:adversarial-review`를 호출할 때 필요. `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`과 같은 플러그인 루트 파일과 `$cc:setup` 실행 결과로 설치 여부를 확인합니다.
 
-Workflow Engine의 PR 리뷰 실행 모드는 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중에서 선택합니다. 타겟 레포에 Workflow Engine을 설치할 때 기본 리뷰 실행 모드를 선택할 수 있어야 하며, PR 생성 후 리뷰 실행 전에는 실제 사용할 리뷰 실행 모드를 다시 확정합니다. `dependencies.commit.available`과 설치 기본 리뷰 실행 모드는 타겟 레포의 `.harness/workflow-engine.json`에 저장하고, 리뷰 실행 모드는 PR별 선택 시 기본 후보로만 사용합니다. 사용자가 지원 모드 중 하나를 명시적으로 선택하기 전에는 리뷰 실행 모드 검사로 넘어가지 않습니다.
+Workflow Engine의 PR 리뷰 실행 모드는 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중에서 선택합니다. 리뷰 설정을 최초로 필요로 할 때 실제 사용 가능한 모드를 관측하고 사용자에게 기본 모드를 확인하며, 임의 기본값을 만들지 않습니다. PR 생성 후 리뷰 실행 전에는 실제 사용할 리뷰 실행 모드를 다시 확정합니다. `dependencies.commit.available`과 사용자가 선택한 기본 리뷰 실행 모드는 타겟 레포의 `.harness/workflow-engine.json`에 저장하고, 리뷰 실행 모드는 PR별 선택 시 기본 후보로만 사용합니다. 사용자가 지원 모드 중 하나를 명시적으로 선택하기 전에는 리뷰 실행 모드 검사로 넘어가지 않습니다.
 
 `awesome-code-review`는 `codex/awesome-code-review`가 PR diff와 이슈 맥락을 읽어 PR Review Template 형식의 리뷰 결과를 만들 때 사용하는 외부 의존 스킬입니다. `claude/awesome-code-review`는 이 스킬을 사용하지 않고 `sendbird/cc-plugin-codex`의 `$cc:adversarial-review`를 실행합니다. 이 저장소는 `awesome-code-review`를 설치하거나 관리하지 않습니다. 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용합니다. 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만, Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춥니다.
 
@@ -140,7 +142,7 @@ Workflow Engine은 `FI-15`의 `claude/code-review`를 `$cc:review --wait --base 
 
 PR 연결은 PR 본문의 `연관 이슈` 섹션에서 `Refs #번호`를 파싱해 판단합니다. Workflow Engine이 관리하는 이슈에는 `Closes #번호`, `Fixes #번호`, `Resolves #번호`처럼 GitHub가 자동 close하는 키워드를 사용하지 않습니다.
 
-타겟 레포에 GitHub Workflow Engine을 적용하거나 템플릿을 갱신할 때는 `github-templates.md`의 원형과 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`, `.github/pull_request_template.md`가 정합적인지 먼저 점검합니다. 불일치가 있으면 차이와 영향 범위, 수정 후보를 제시하고 승인 후 갱신합니다.
+Workflow Engine은 이슈 또는 PR 템플릿을 최초로 필요로 할 때 해당 유형의 템플릿과 라벨만 확인합니다. 누락됐으면 `github-templates.md`와 Engine 소유 템플릿 정합성 계약으로 생성하고, 기존 템플릿은 허용된 타겟 확장을 보존합니다. 불일치가 있으면 자동으로 덮어쓰지 않고 차이와 영향 범위, 수정 후보를 제시한 뒤 사용자 결정으로 갱신합니다.
 
 Workflow Engine의 액션 진입과 중단 기록은 타겟 프로젝트의 `.harness/logs/github-workflow-log.md`에 남깁니다. 이 로그는 빠른 재진입을 돕는 보조 체크포인트이며, 기준 상태는 GitHub Issue와 PR입니다. 기능변경/기능결함 계획과 완료 기준 갱신처럼 후속 전이 판단에 쓰이는 상태는 댓글이 아니라 이슈 본문에 반영합니다.
 

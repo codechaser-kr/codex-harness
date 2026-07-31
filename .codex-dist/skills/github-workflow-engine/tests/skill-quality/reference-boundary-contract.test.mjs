@@ -259,12 +259,15 @@ test("structured execution loads command and target details only for matching wo
 });
 
 test("target runtime bootstrap and template compatibility belong to the workflow engine", async () => {
-  const [skill, githubTemplates, targetRuntimeBootstrap, templateCompatibility] = await Promise.all([
-    read("skill"),
-    read("githubTemplates"),
-    read("targetRuntimeBootstrap"),
-    read("templateCompatibility"),
-  ]);
+  const [skill, githubTemplates, targetRuntimeBootstrap, templateCompatibility, workflowDoc, readme] =
+    await Promise.all([
+      read("skill"),
+      read("githubTemplates"),
+      read("targetRuntimeBootstrap"),
+      read("templateCompatibility"),
+      read("workflowDoc"),
+      read("readme"),
+    ]);
 
   assert.match(targetRuntimeBootstrap, /^# 타겟 Workflow Engine 런타임 초기화 계약$/m);
   assert.match(targetRuntimeBootstrap, /최초로 필요로 하는 시점/);
@@ -279,6 +282,13 @@ test("target runtime bootstrap and template compatibility belong to the workflow
   assert.match(githubTemplates, /workflow-engine-template-compatibility-contract\.md/);
   assert.match(skill, /target-runtime-bootstrap-contract\.md/);
   assert.match(skill, /workflow-engine-template-compatibility-contract\.md/);
+  assert.match(workflowDoc, /현재 작업에서 해당 이슈 유형 라벨을 최초로 필요로 할 때/);
+  assert.match(workflowDoc, /Harness 설치·생성·갱신 과정은 이 라벨을 만들거나 검사하지 않는다/);
+  assert.match(workflowDoc, /`workflow-code-editor`가 실행 전 Harness 준비도를 확인/);
+  assert.match(workflowDoc, /현재 Codex 세션의 일반 코드 변경 경로/);
+  assert.doesNotMatch(workflowDoc, /직접 수정으로 우회하지 않고/);
+  assert.match(readme, /해당 의존성을 최초로 필요로 할 때/);
+  assert.match(readme, /`workflow-code-editor`:[\s\S]*Harness 일반 진입점[\s\S]*일반 코드 변경 경로/);
 });
 
 test("existence operators are documented without a value field", async () => {

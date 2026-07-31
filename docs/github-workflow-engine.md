@@ -548,10 +548,12 @@ Workflow Engine이 리뷰 설정을 최초로 필요로 할 때는 사용 가능
 }
 ```
 
-- 저장 위치는 타겟 레포의 `.harness/workflow-engine.json`이며 Workflow Engine이 필요한 시점에 필요한 필드만 생성하거나 보완한다.
+- 저장 위치는 타겟 레포의 `.workflow-engine/settings.json`이며 Workflow Engine만 필요한 시점에 필요한 필드를 생성하거나 보완한다.
 - `review.defaultMode` 값은 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중 하나여야 한다.
 - 지원 모드의 번호 또는 선택지 문구가 입력되면 리뷰 실행 모드 검사로 전이한다.
 - `기타 의견 입력`은 사용자 결정 규칙에 따라 처리하며, 리뷰 실행 모드가 확정된 경우에만 리뷰 실행 모드 검사로 전이한다.
+- 설정 파일이나 필요한 필드 부재는 지연 초기화하고, JSON 파싱 실패나 인식할 수 없는 타입·값은 자동 교정·기본값·fallback·Harness 호출 없이 리뷰 흐름을 중단한다.
+- 인식 불가 중단 결과에는 설정 경로, 문제 필드·값, 기대 형식·지원 값, 영향받은 작업과 수정 후 재개 조건을 포함한다.
 
 선택된 리뷰 실행 모드의 의존성이 설치되어 있지 않으면 Workflow Engine은 필요한 설치 경로, 설치 주체, 설치 후 확인할 파일 또는 명령, 재개 조건을 안내하고 리뷰 실행 작업을 중단한다. 다른 리뷰 실행 모드로 자동 전환하지 않는다.
 
@@ -947,6 +949,8 @@ codex-harness/
 
 ```text
 target-repo/
+├── .workflow-engine/
+│   └── settings.json
 ├── .codex/
 │   ├── config.toml
 │   └── agents/
@@ -963,7 +967,6 @@ target-repo/
 │   │   └── fix_template.md
 │   └── pull_request_template.md
 └── .harness/
-    ├── workflow-engine.json
     ├── docs/
     │   ├── team-spec.md
     │   └── orchestration-plan.md
@@ -971,7 +974,7 @@ target-repo/
         └── github-workflow-log.md
 ```
 
-`.codex/agents/*`, `.agents/skills/*`, `.harness/docs/*`는 Harness를 별도로 구성한 프로젝트에만 존재하며 일반 코드 변경 경로의 선행 조건이 아니다. `.harness/workflow-engine.json`은 Workflow Engine의 타겟별 런타임 설정으로 `dependencies.commit.available`, 리뷰 실행 모드 사용 가능 상태와 사용자가 선택한 기본 모드를 필요할 때 저장한다. `.harness/logs/github-workflow-log.md`는 실행 로그를 저장한다. `.harness`의 운영 파일은 보조 운영 자산이며, 현재 작업 상태의 기준 원천은 GitHub 실행 상태다.
+`.codex/agents/*`, `.agents/skills/*`, `.harness/docs/*`는 Harness를 별도로 구성한 프로젝트에만 존재하며 일반 코드 변경 경로의 선행 조건이 아니다. `.workflow-engine/settings.json`은 Workflow Engine이 독점적으로 생성·해석하는 타겟별 런타임 설정으로 `dependencies.commit.available`, 리뷰 실행 모드 사용 가능 상태와 사용자가 선택한 기본 모드를 필요할 때 저장한다. Harness는 이 파일을 생성하거나 읽거나 보완하지 않는다. `.harness/logs/github-workflow-log.md`는 Workflow Engine 실행 로그를 저장한다. `.harness`의 운영 파일은 보조 운영 자산이며, 현재 작업 상태의 기준 원천은 GitHub 실행 상태다.
 
 ### 템플릿 정합성 검사
 

@@ -76,15 +76,15 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 - 학습 후보가 있으면 어느 문서/스킬로 승격할지 남는가
 - 관찰이 없을 때는 `없음`으로 짧게 정리할 수 있는가
 
-## 6. 타겟 평가 코퍼스 점검
+## 6. 타겟 판단 자료 코퍼스 점검
 
 타겟 평가 문서를 추가했다면 아래를 확인한다.
 
 - 타겟 프로젝트와 브랜치가 명시돼 있는가
-- 현재 판정이 `운영 가능 / 재작성 필요 / 재구성 필요` 중 하나인가
-- 가장 약한 축과 다음 하네스 재진입 Phase가 연결되는가
-- 재검토 결과가 있다면 이전 판정과 새로 확인한 결함이 구분돼 있는가
-- 이전 생성 결과와 새 생성 결과를 비교할 수 있다면 해결된 결함과 남은 결함을 분리했는가
+- 구조·계약 검증 결과, 관찰된 차이와 불확실성이 구분돼 있는가
+- `현재 유지 / 부분 수정 / 구조 재설계` 선택지별 영향과 후보 하네스 Phase가 연결되는가
+- 사용자 결정 상태와 확정 범위가 관찰 자료와 구분돼 있는가
+- 이전 생성 결과와 새 생성 결과를 비교할 수 있다면 원본 결과와 비교 조건을 보존했는가
 - 타겟에서 확인한 결함이 생성기 회귀 점검 항목으로 반영됐는가
 - 타겟 로컬 보강 후보와 생성기 환류 후보가 분리돼 있는가
 - 타겟 프로젝트 파일을 직접 수정하지 않았다는 점이 드러나는가
@@ -95,6 +95,7 @@ rg -n "새-reference-파일명" .codex-dist/skills/harness README.md docs
 
 ```sh
 git diff --check
+node .codex-dist/skills/harness/tests/user-decision-boundary.test.mjs
 # rg 패턴 안의 | 는 쉘 파이프가 아니라 정규식 OR 조건이다.
 rg -n "initial-generation-contract|초기 생성|신규 구축" .codex-dist/skills/harness README.md docs .harness
 rg -n "도메인 설명|첫 성공 시나리오|저장소 근거가 적" .codex-dist/skills/harness README.md docs .harness
@@ -121,5 +122,5 @@ test -f /tmp/gwk-install-test/.codex/skills/harness/SKILL.md
 - 학습 후보와 승격 대상이 역할 출력, 로그, 운영 감사 기준 중 적어도 하나에서 확인된다.
 - 보존 문서 호환성이나 역할 인벤토리 형식을 바꿨다면 회귀 점검 항목과 타겟 평가 기준이 함께 갱신돼 있다.
 - 로그 정책을 바꿨다면 `logging-policy.md`가 스크립트 없는 Markdown 계약으로 유지된다.
-- 타겟 평가 결과가 있다면 로컬 보강과 생성기 환류 후보가 분리되고, 재검토 결함이 회귀 점검에 반영돼 있다.
+- 타겟 판단 자료가 있다면 로컬 보강과 생성기 환류 후보가 분리되고, 사용자 확정 범위의 계약 결함이 회귀 점검에 반영돼 있다.
 - `git diff --check`가 통과한다.

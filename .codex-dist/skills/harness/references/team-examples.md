@@ -296,7 +296,7 @@ command-flow-analyst
 | `editor-boundary-architect` | 에디터/파일/링크 경계 설계 | `harness-architecture.md` |
 | `interaction-qa` | 상호작용과 상태 정합성 질문 설계 | `qa-strategy.md` |
 | `workspace-orchestrator` | 복합 흐름과 재진입 기준 조율 | `orchestration-plan.md` |
-| `release-auditor` | 운영 가능성 감사 | 감사 결과 |
+| `release-auditor` | 구조·계약 감사와 사용자 판단 자료 준비 | 감사 결과 |
 
 ### 중심 역할
 
@@ -372,7 +372,7 @@ workspace-flow-analyst
 핵심 원칙:
 
 - 역할 수는 많을수록 좋은 것이 아니다
-- 역할 팀은 운영 가능한 크기를 유지해야 한다
+- 역할 팀 크기의 근거와 역할별 차이를 사용자가 검토할 수 있어야 한다
 - 정렬 전용 역할은 기본값이 아니므로, 운영 불일치가 실제로 있을 때만 추가한다
 
 ---

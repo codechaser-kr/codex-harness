@@ -400,7 +400,7 @@ handoff:
 - orchestrator는 실행 하네스 팀의 중심 조율자다
 - 흐름, 연결, 피드백 루프를 책임진다
 - 시작 컨텍스트, handoff, 보류 흐름을 함께 고정한다
-- QA와 운영 감사의 결과를 구조 보완으로 연결한다
+- QA와 운영 감사의 관찰을 사용자 결정 자료로 연결하고 확정된 범위만 구조 보완으로 전달한다
 - 본체는 역할 팀이고, 리포트는 보조다
 - 좋은 orchestrator는 팀을 더 단순하고 더 강하게 만든다
 
@@ -409,7 +409,7 @@ handoff:
 ## 17. 다른 레퍼런스와의 연결
 
 - `agent-design-patterns.md`: 실행 단위, 패턴 선택 기준, 역할 분리 기준의 상위 설계 원칙을 제공한다.
-- `generator-readiness-checklist.md`: 생성기 자체 준비도와 타겟 프로젝트 운영 감사 판정, 품질 비교를 구분하는 기준을 제공한다.
+- `generator-readiness-checklist.md`: 생성기 자체 준비도와 타겟 프로젝트 사용자 판단 자료 준비를 구분하는 기준을 제공한다.
 - `qa-agent-guide.md`: QA 질문을 흐름 보완으로 다시 연결해야 하는 지점을 보강한다.
 - `team-examples.md`: 저장소 예시별로 orchestrator가 어느 위치에서 중심 역할이 되는지 보여 준다.
 - `skill-writing-guide.md`: orchestrator 스킬이 입력/출력과 협업 규칙을 어떻게 드러내야 하는지 연결한다.

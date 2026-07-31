@@ -187,4 +187,4 @@
 - `reentry-rules.md`: 요약 문서에 어떤 재진입 정보를 남겨야 하는지 정의한다.
 - `evolution-contract.md`: 학습 후보, 반복 신호, 승격 대상, 생성기 환류 후보의 의미를 정의한다.
 - `verification-checklist.md`: 로그 문서가 최소 기준을 충족하는지 검토할 때 쓴다.
-- `target-evaluation-playbook.md`: 로그를 읽고 운영 가능/재작성 필요/재구성 필요를 판정할 때 쓴다.
+- `target-evaluation-playbook.md`: 로그를 읽고 구조·계약 관찰, 선택지별 영향과 사용자 결정 상태를 준비할 때 쓴다.

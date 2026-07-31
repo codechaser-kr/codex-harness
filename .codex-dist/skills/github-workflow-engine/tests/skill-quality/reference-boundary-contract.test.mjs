@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
+// Keep the removed path out of official source text while still asserting that it is absent.
 const legacySettingsRelativePath = [
   ".harness",
   ["workflow", "engine.json"].join("-"),
@@ -323,6 +324,11 @@ test("target runtime bootstrap and template compatibility belong to the workflow
   ]);
 
   const settings = JSON.parse(settingsSource);
+  assert.ok(settings && typeof settings === "object");
+  assert.ok(settings.dependencies && typeof settings.dependencies === "object");
+  assert.ok(settings.dependencies.commit && typeof settings.dependencies.commit === "object");
+  assert.ok(settings.review && typeof settings.review === "object");
+  assert.ok(settings.review.modes && typeof settings.review.modes === "object");
   const supportedReviewModes = [
     "claude/code-review",
     "claude/awesome-code-review",

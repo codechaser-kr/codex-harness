@@ -62,12 +62,13 @@ PR Review Template의 섹션명은 사람이 읽는 출력 구조이므로 한�
 | 리뷰 실행 모드 선택지 존재      | `review.modes`에 `available: true`인 지원 모드가 하나 이상 기록된 상태다.                                      |
 | 리뷰 실행 모드 설정 보완 필요   | 인식 가능한 `review.modes`가 비어 있거나 모든 지원 모드의 `available` 값이 `false`인 상태다.                   |
 | 리뷰 실행 모드 지연 초기화 필요 | 설정 파일이 없거나 `review.defaultMode` 또는 `review.modes`가 없는 상태다.                                     |
-| 리뷰 실행 모드 설정 인식 불가   | JSON 파싱 실패, 지원하지 않는 mode 값 또는 `available`·`checkedAt`·`evidence`의 타입이나 값이 인식 불가다.     |
+| 리뷰 실행 모드 설정 인식 불가   | JSON 파싱 실패, 지원하지 않는 default mode 값이나 `review.modes` 키 또는 `available`·`checkedAt`·`evidence`의 타입이나 값이 인식 불가다. |
 
 `리뷰 실행 모드 지연 초기화 필요`이면 Harness 설치나 갱신을 요구하지 않는다. Workflow Engine이 실제
 리뷰 provider와 스킬 사용 가능 여부를 관측해 `review.modes`를 기록하고, 사용 가능한 모드를 사용자에게
 제시한다. `review.defaultMode`는 사용자가 선택한 뒤에만 기록하며 임의 기본값을 만들지 않는다. 기존 파일의
 다른 설정과 유효한 mode 근거는 보존하고 필요한 필드만 보완한다.
 
-`리뷰 실행 모드 설정 인식 불가`이면 다른 모드로 fallback하거나 값을 고치지 않는다. 설정 경로, 문제
-필드·값, 기대 형식·지원 값, 중단되는 리뷰 작업과 수정 후 재개 조건을 반환하고 리뷰 흐름을 중단한다.
+`review.modes`에 지원하지 않는 키가 있는 경우를 포함해 `리뷰 실행 모드 설정 인식 불가`이면 다른
+모드로 fallback하거나 값을 고치지 않는다. 설정 경로, 문제 필드·값, 기대 형식·지원 값, 중단되는 리뷰
+작업과 수정 후 재개 조건을 반환하고 리뷰 흐름을 중단한다.

@@ -137,7 +137,9 @@ GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장�
 - `pr-creation`: PR 생성 입력을 검증하고 생성 요청 초안을 제안합니다.
 - `review-comment`: PR Review Template 출력 결과를 review thread 게시 초안으로 정리하고 위치 매핑 보류 대상을 점검합니다.
 
-외부 의존 스킬은 이 저장소가 설치하거나 관리하지 않습니다. Workflow Engine은 타겟 레포에서 해당 의존성을 최초로 필요로 할 때 사용 가능 상태를 관측하고 `.workflow-engine/settings.json`의 필요한 필드만 생성하거나 보완합니다. `commit` 스킬은 `dependencies.commit.available`에 기록합니다. 설정 파일이나 필요한 필드가 없는 상태는 정상적인 지연 초기화 대상으로 처리하고 기존 유효 값은 보존합니다. JSON 파싱 실패나 인식할 수 없는 타입·값은 자동 교정, 기본값, fallback 또는 Harness 호출로 우회하지 않고 문제 필드와 기대 형식, 영향받는 작업과 재개 조건을 안내한 뒤 워크플로우를 중단합니다.
+외부 의존 스킬은 이 저장소가 설치하거나 관리하지 않습니다. Workflow Engine은 타겟 레포에서 해당 의존성을 최초로 필요로 할 때 사용 가능 상태를 관측하고 `.workflow-engine/settings.json`의 필요한 필드만 생성하거나 보완합니다. `commit` 스킬은 `dependencies.commit.available`에 기록합니다. 설정 파일이나 필요한 필드가 없는 상태는 정상적인 지연 초기화 대상으로 처리하고 기존 유효 값은 보존합니다.
+
+JSON 파싱 실패나 인식할 수 없는 타입·값은 자동 교정, 기본값, fallback 또는 Harness 호출로 우회하지 않고 문제 필드와 기대 형식, 영향받는 작업과 재개 조건을 안내한 뒤 워크플로우를 중단합니다.
 
 - Codex 전역 `commit`: `$CODEX_HOME/skills/commit/SKILL.md` 또는 `$HOME/.codex/skills/commit/SKILL.md`
 - Codex 전역 `awesome-code-review`: `codex/awesome-code-review` 실행에 필요. `$CODEX_HOME/skills/awesome-code-review/SKILL.md` 또는 `$HOME/.codex/skills/awesome-code-review/SKILL.md`

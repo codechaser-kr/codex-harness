@@ -71,33 +71,33 @@ curl -fsSL https://raw.githubusercontent.com/codechaser-kr/codex-harness/main/in
 
 ```text
 Codex 소스: .codex-dist/skills/*
-Codex 대상: $HOME/.codex/skills/*
+Codex 대상: $HOME/.agents/skills/*
 ```
 
 배치한 뒤 대상 디렉터리에 다음 항목이 있는지 확인합니다.
 
 ```text
-$HOME/.codex/skills/harness
-$HOME/.codex/skills/harness/SKILL.md
-$HOME/.codex/skills/harness/references/
-$HOME/.codex/skills/github-workflow-engine
-$HOME/.codex/skills/github-workflow-engine/SKILL.md
-$HOME/.codex/skills/workflow-code-editor
-$HOME/.codex/skills/github-state-summary
-$HOME/.codex/skills/github-simple-executor
-$HOME/.codex/skills/target-harness-code-editor
-$HOME/.codex/skills/issue-creation
-$HOME/.codex/skills/feature-proposal-triage
-$HOME/.codex/skills/policy-plan
-$HOME/.codex/skills/policy-review-next-triage
-$HOME/.codex/skills/feature-plan
-$HOME/.codex/skills/fix-analysis
-$HOME/.codex/skills/fix-plan
-$HOME/.codex/skills/branch-proposal
-$HOME/.codex/skills/commit-plan
-$HOME/.codex/skills/pr-proposal
-$HOME/.codex/skills/pr-creation
-$HOME/.codex/skills/review-comment
+$HOME/.agents/skills/harness
+$HOME/.agents/skills/harness/SKILL.md
+$HOME/.agents/skills/harness/references/
+$HOME/.agents/skills/github-workflow-engine
+$HOME/.agents/skills/github-workflow-engine/SKILL.md
+$HOME/.agents/skills/workflow-code-editor
+$HOME/.agents/skills/github-state-summary
+$HOME/.agents/skills/github-simple-executor
+$HOME/.agents/skills/target-harness-code-editor
+$HOME/.agents/skills/issue-creation
+$HOME/.agents/skills/feature-proposal-triage
+$HOME/.agents/skills/policy-plan
+$HOME/.agents/skills/policy-review-next-triage
+$HOME/.agents/skills/feature-plan
+$HOME/.agents/skills/fix-analysis
+$HOME/.agents/skills/fix-plan
+$HOME/.agents/skills/branch-proposal
+$HOME/.agents/skills/commit-plan
+$HOME/.agents/skills/pr-proposal
+$HOME/.agents/skills/pr-creation
+$HOME/.agents/skills/review-comment
 ```
 
 설치 범위:
@@ -105,7 +105,9 @@ $HOME/.codex/skills/review-comment
 - 전역 `harness` 스킬 디렉터리를 배치합니다.
 - GitHub Workflow Engine Codex 전역 스킬 기본형을 함께 배치합니다.
 
-기존 `harness`만 별도 경로에 설치해야 하는 경우에는 `CODEX_HARNESS_DEST`를 사용할 수 있습니다. Codex 전체 스킬 루트는 `CODEX_HARNESS_DEST_ROOT`로 바꿀 수 있습니다.
+기본 설치 루트는 Codex 사용자 스킬 경로인 `$HOME/.agents/skills`입니다. `CODEX_HOME`은 설치 루트를 변경하지 않습니다. `harness`만 별도 경로에 설치해야 하는 경우에는 `CODEX_HARNESS_DEST`를 사용할 수 있고, 전체 스킬 루트는 `CODEX_HARNESS_DEST_ROOT`로 바꿀 수 있습니다.
+
+재설치할 때 기존 스킬은 active 스킬 루트 밖의 `${XDG_STATE_HOME:-$HOME/.local/state}/codex-harness/backups`로 이동합니다. 백업 루트는 `CODEX_HARNESS_BACKUP_ROOT`로 바꿀 수 있습니다. `$CODEX_HOME/skills`에 있는 기존 디렉터리는 설치·감지·이전 대상이 아닙니다.
 
 ## 전역 하네스 스킬의 구성
 
@@ -141,8 +143,8 @@ GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장�
 
 JSON 파싱 실패나 인식할 수 없는 타입·값은 자동 교정, 기본값, fallback 또는 Harness 호출로 우회하지 않고 문제 필드와 기대 형식, 영향받는 작업과 재개 조건을 안내한 뒤 워크플로우를 중단합니다.
 
-- Codex 전역 `commit`: `$CODEX_HOME/skills/commit/SKILL.md` 또는 `$HOME/.codex/skills/commit/SKILL.md`
-- Codex 전역 `awesome-code-review`: `codex/awesome-code-review` 실행에 필요. `$CODEX_HOME/skills/awesome-code-review/SKILL.md` 또는 `$HOME/.codex/skills/awesome-code-review/SKILL.md`
+- Codex 전역 `commit`: `$HOME/.agents/skills/commit/SKILL.md`
+- Codex 전역 `awesome-code-review`: `codex/awesome-code-review` 실행에 필요. `$HOME/.agents/skills/awesome-code-review/SKILL.md`
 - Claude 리뷰 브리지 `sendbird/cc-plugin-codex`: Codex에서 `claude/code-review`의 `$cc:review`와 `claude/awesome-code-review`의 `$cc:adversarial-review`를 호출할 때 필요. `$CODEX_HOME/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json` 또는 `$HOME/.codex/plugins/cache/sendbird/cc/*/.codex-plugin/plugin.json`과 같은 플러그인 루트 파일과 `$cc:setup` 실행 결과로 설치 여부를 확인합니다.
 
 Workflow Engine의 PR 리뷰 실행 모드는 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중에서 선택합니다. 리뷰 설정을 최초로 필요로 할 때 실제 사용 가능한 모드를 관측하고 사용자에게 기본 모드를 확인하며, 임의 기본값을 만들지 않습니다. PR 생성 후 리뷰 실행 전에는 실제 사용할 리뷰 실행 모드를 다시 확정합니다. `dependencies.commit.available`과 사용자가 선택한 기본 리뷰 실행 모드는 타겟 레포의 `.workflow-engine/settings.json`에 저장하고, 리뷰 실행 모드는 PR별 선택 시 기본 후보로만 사용합니다. 사용자가 지원 모드 중 하나를 명시적으로 선택하기 전에는 리뷰 실행 모드 검사로 넘어가지 않습니다.
@@ -380,7 +382,7 @@ QA와 운영 감사 역할도 이 프로젝트 특화 역할 팀의 일부로 �
 
 ## 제거
 
-제거 스크립트도 `harness`, `workflow-engine`, `all` 대상을 구분합니다. 인자를 생략하면 이 저장소가 관리하는 전역 스킬 전체를 active 스킬 경로에서 제거합니다. 각 스킬 디렉터리는 영구 삭제하지 않고 `<기존 경로>.removed.<timestamp>.<pid>` 형식의 경로로 이동하며, 출력된 백업 위치를 원래 경로로 되돌리는 방식으로 필요할 때 수동 복구할 수 있습니다. 각 프로젝트 내부에 생성된 `.agents/skills/*`, `.harness/*` 등은 제거하지 않으며 프로젝트별 자산으로 따로 관리합니다.
+제거 스크립트도 `harness`, `workflow-engine`, `all` 대상을 구분합니다. 인자를 생략하면 이 저장소가 관리하는 전역 스킬 전체를 `$HOME/.agents/skills`에서 제거합니다. 각 스킬 디렉터리는 영구 삭제하지 않고 `${XDG_STATE_HOME:-$HOME/.local/state}/codex-harness/backups/<skill>.removed.<timestamp>.<pid>`로 이동하며, 출력된 백업 위치를 원래 경로로 되돌리는 방식으로 필요할 때 수동 복구할 수 있습니다. `CODEX_HARNESS_DEST_ROOT`, `CODEX_HARNESS_DEST`, `CODEX_HARNESS_BACKUP_ROOT`를 지정하면 설치와 같은 사용자 정의 경로를 사용합니다. `$CODEX_HOME/skills`와 각 프로젝트 내부에 생성된 `.agents/skills/*`, `.harness/*` 등은 제거하지 않습니다.
 
 Harness만 제거:
 

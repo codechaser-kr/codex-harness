@@ -7,6 +7,19 @@ const legacySettingsRelativePath = [
   ".harness",
   ["workflow", "engine.json"].join("-"),
 ].join("/");
+const previousWorkflowSettingsRelativePath = [
+  [".workflow", "engine"].join("-"),
+  "settings.json",
+].join("/");
+const previousWorkflowLogRelativePath = [
+  ".harness",
+  "logs",
+  "github-workflow-log.md",
+].join("/");
+const workflowRuntimeRoot = ".github-agentic-loop";
+const workflowSettingsRelativePath = `${workflowRuntimeRoot}/settings.json`;
+const dailyWorkflowLogRelativePath =
+  `${workflowRuntimeRoot}/logs/github-workflow-log-YYYY-MM-DD.md`;
 
 const urls = {
   skill: new URL("../../SKILL.md", import.meta.url),
@@ -27,8 +40,13 @@ const urls = {
   implementation: new URL("../../definitions/implementation.json", import.meta.url),
   workflowDoc: new URL("../../../../../docs/github-workflow-engine.md", import.meta.url),
   readme: new URL("../../../../../README.md", import.meta.url),
-  settings: new URL("../../../../../.workflow-engine/settings.json", import.meta.url),
+  settings: new URL(`../../../../../${workflowSettingsRelativePath}`, import.meta.url),
+  previousWorkflowSettings: new URL(
+    `../../../../../${previousWorkflowSettingsRelativePath}`,
+    import.meta.url,
+  ),
   legacySettings: new URL(`../../../../../${legacySettingsRelativePath}`, import.meta.url),
+  gitignore: new URL("../../../../../.gitignore", import.meta.url),
   simpleExecutor: new URL("../../../github-simple-executor/SKILL.md", import.meta.url),
   workflowEditor: new URL("../../../workflow-code-editor/SKILL.md", import.meta.url),
   reviewComment: new URL("../../../review-comment/SKILL.md", import.meta.url),
@@ -311,6 +329,7 @@ test("target runtime bootstrap and template compatibility belong to the workflow
     workflowDoc,
     readme,
     settingsSource,
+    gitignore,
     referenceEntries,
   ] = await Promise.all([
     read("skill"),
@@ -325,6 +344,7 @@ test("target runtime bootstrap and template compatibility belong to the workflow
     read("workflowDoc"),
     read("readme"),
     read("settings"),
+    read("gitignore"),
     readdir(new URL("../../references/", import.meta.url)),
   ]);
 
@@ -344,7 +364,7 @@ test("target runtime bootstrap and template compatibility belong to the workflow
   assert.match(targetRuntimeBootstrap, /Harness 설치, 생성, 갱신 또는 감사\(audit\)의 책임이 아니다/);
   assert.match(targetRuntimeBootstrap, /임의 기본값을 만들지 않는다/);
   assert.match(targetRuntimeBootstrap, /기존 키와 유효한 값을 보존하면서 누락 필드만 생성/);
-  assert.match(targetRuntimeBootstrap, /`\.workflow-engine\/settings\.json`은 Workflow Engine이 독점적으로 생성·해석/);
+  assert.match(targetRuntimeBootstrap, /`\.github-agentic-loop\/settings\.json`은 Workflow Engine이 독점적으로 생성·해석/);
   assert.match(targetRuntimeBootstrap, /^### 누락 상태의 지연 초기화$/m);
   assert.match(targetRuntimeBootstrap, /^### 인식 불가 상태의 fail-closed 중단$/m);
   assert.match(targetRuntimeBootstrap, /설정 경로[\s\S]*문제가 된 필드와 관측된 값[\s\S]*기대 형식과 지원 값[\s\S]*현재 작업[\s\S]*재개 조건/);
@@ -352,7 +372,7 @@ test("target runtime bootstrap and template compatibility belong to the workflow
   assert.match(targetRuntimeBootstrap, /임의 기본값, 실행 모드 fallback, 충돌 값 덮어쓰기 또는 Harness 호출/);
   assert.match(reviewRuntime, /리뷰 실행 모드 지연 초기화 필요/);
   assert.match(reviewRuntime, /리뷰 실행 모드 설정 인식 불가/);
-  assert.match(structured, /`\.workflow-engine\/settings\.json`에서 `리뷰 실행 모드 사용 가능`/);
+  assert.match(structured, /`\.github-agentic-loop\/settings\.json`에서 `리뷰 실행 모드 사용 가능`/);
   assert.match(templateCompatibility, /^# Workflow Engine 템플릿 정합성 계약$/m);
   assert.match(templateCompatibility, /같은 스킬의 `github-templates\.md`/);
   assert.match(templateCompatibility, /현재 작업이 요구하는 이슈 유형 또는 PR 템플릿만/);
@@ -369,12 +389,17 @@ test("target runtime bootstrap and template compatibility belong to the workflow
   }
   for (const [path, document] of workflowEngineDocuments) {
     assert.equal(document.includes(legacySettingsRelativePath), false, path);
+    assert.equal(document.includes(previousWorkflowSettingsRelativePath), false, path);
+    assert.equal(document.includes(previousWorkflowLogRelativePath), false, path);
   }
   for (const [path, document] of [["README.md", readme], ["docs/github-workflow-engine.md", workflowDoc]]) {
     assert.equal(document.includes(legacySettingsRelativePath), false, path);
+    assert.equal(document.includes(previousWorkflowSettingsRelativePath), false, path);
+    assert.equal(document.includes(previousWorkflowLogRelativePath), false, path);
   }
   assert.equal(referenceEntries.some((entry) => /settings.*(?:schema|validator)/i.test(entry)), false);
   await access(urls.settings);
+  await assert.rejects(access(urls.previousWorkflowSettings));
   await assert.rejects(access(urls.legacySettings));
   assert.equal(typeof settings.dependencies.commit.available, "boolean");
   assert.equal(typeof settings.dependencies.commit.checkedAt, "string");
@@ -394,10 +419,19 @@ test("target runtime bootstrap and template compatibility belong to the workflow
   assert.match(workflowDoc, /Harness 설치·생성·갱신 과정은 이 라벨을 만들거나 검사하지 않는다/);
   assert.match(workflowDoc, /`workflow-code-editor`가 실행 전 Harness 준비도를 확인/);
   assert.match(workflowDoc, /현재 Codex 세션의 일반 코드 변경 경로/);
-  assert.match(workflowDoc, /`\.workflow-engine\/settings\.json`은 Workflow Engine이 독점적으로 생성·해석/);
+  assert.match(workflowDoc, /`\.github-agentic-loop\/settings\.json`은 Workflow Engine이 독점적으로 생성·해석/);
+  assert.match(workflowDoc, /github-workflow-log-YYYY-MM-DD\.md/);
+  assert.match(workflowDoc, /기록 시점의 실행 환경 현재 날짜/);
+  assert.match(skill, /github-workflow-log-YYYY-MM-DD\.md/);
+  assert.match(skill, /기록 시점의 실행 환경 현재 날짜/);
+  assert.match(skill, /Workflow Engine은 `\.harness\/logs\/`에 실행 로그를 기록하지 않는다/);
+  assert.equal(skill.includes(dailyWorkflowLogRelativePath), true);
+  assert.match(gitignore, /^\.github-agentic-loop\/logs\/$/m);
+  assert.match(gitignore, /^\.harness\/logs\/$/m);
   assert.doesNotMatch(workflowDoc, /직접 수정으로 우회하지 않고/);
   assert.match(readme, /해당 의존성을 최초로 필요로 할 때/);
-  assert.match(readme, /`\.workflow-engine\/settings\.json`의 필요한 필드만 생성하거나 보완/);
+  assert.match(readme, /`\.github-agentic-loop\/settings\.json`의 필요한 필드만 생성하거나 보완/);
+  assert.equal(readme.includes(dailyWorkflowLogRelativePath), true);
   assert.match(readme, /`workflow-code-editor`:[\s\S]*Harness 일반 진입점[\s\S]*일반 코드 변경 경로/);
 });
 

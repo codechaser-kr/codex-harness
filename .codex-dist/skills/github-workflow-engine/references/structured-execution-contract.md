@@ -139,7 +139,7 @@ Workflow Engine은 해당 표의 `task_action_id`, 논리 실행 모드와 실�
 | 결정론적 실행기 선택 | 파일 수정 작업이 아닌 경우에만 성립하며, 확정된 단순 상태 변경이고, `command-execution-path-contract.md`와 사용 가능 도구 조건으로 확인되는 결정론적 도구 경로가 있다. |
 | 저비용 상태 요약 실행 주체 선택 | 읽기 전용 상태 요약이 필요하고, `github-state-summary`가 출처 식별자가 있는 관측값만 반환하며, 파일·GitHub 상태·로그 변경, 현재 작업·사용자 결정·상태 전이 판단이 없고, `planned_model_identifier`와 `planned_config_identifier`가 실행 환경에서 확인 가능한 저비용 실행 설정을 가리키며, 실행 주체 식별 정보와 읽기 전용 도구 조건이 확인 가능한 상태다. |
 | 저비용 실행 서브에이전트 선택 | `github-simple-executor`에만 적용하며, 파일 수정 작업이 아닌 경우에만 성립하고, 결정론적 도구 경로가 없으며, 정확히 하나의 확정된 비파일 단순 상태 변경을 판단·값 재해석·범위 변경 없이 수행할 수 있고, `planned_model_identifier`와 `planned_config_identifier`가 실행 환경에서 확인 가능한 저비용 실행 설정을 가리키며, 실행 주체 유형에 적용되는 agent/role, model, skill, config 식별 정보가 확인 가능하거나 `not_applicable` 근거가 있다. |
-| 리뷰 실행 주체 선택 | 현재 작업이 `리뷰 실행`이고, 사용자가 확정한 리뷰 실행 모드가 `.workflow-engine/settings.json`에서 `리뷰 실행 모드 사용 가능`이며, 해당 모드의 실행 주체 식별 정보와 권한·도구 조건이 확인 가능한 상태다. |
+| 리뷰 실행 주체 선택 | 현재 작업이 `리뷰 실행`이고, 사용자가 확정한 리뷰 실행 모드가 `.github-agentic-loop/settings.json`에서 `리뷰 실행 모드 사용 가능`이며, 해당 모드의 실행 주체 식별 정보와 권한·도구 조건이 확인 가능한 상태다. |
 
 - 최종 판단, 사용자 결정 해석, 커밋 생성 여부 판단, PR 생성 여부 판단은 실행 주체에 위임하지 않는다.
 - `github-state-summary`는 읽기 전용 지원 단위이고, 그 결과는 Workflow Engine의 상태 판정 입력이다. `github-simple-executor`는 일반 구조화 실행 결과 계약을 따르는 실행 단위다.

@@ -56,9 +56,9 @@ PR Review Template의 섹션명은 사람이 읽는 출력 구조이므로 한�
 
 | 판정 상태                       | 판정 기준                                                                                          |
 | ------------------------------- | -------------------------------------------------------------------------------------------------- |
-| 리뷰 실행 모드 설정 존재        | `.workflow-engine/settings.json`에 인식 가능한 `review.defaultMode`와 `review.modes`가 기록된 상태다.           |
-| 커밋 스킬 설정 존재             | `.workflow-engine/settings.json`에 boolean `dependencies.commit.available`과 관측 근거가 기록된 상태다.       |
-| 리뷰 실행 모드 사용 가능        | `.workflow-engine/settings.json`의 지원 모드에 boolean `available: true`와 관측 근거가 기록된 상태다.          |
+| 리뷰 실행 모드 설정 존재        | `.github-agentic-loop/settings.json`에 인식 가능한 `review.defaultMode`와 `review.modes`가 기록된 상태다.           |
+| 커밋 스킬 설정 존재             | `.github-agentic-loop/settings.json`에 boolean `dependencies.commit.available`과 관측 근거가 기록된 상태다.       |
+| 리뷰 실행 모드 사용 가능        | `.github-agentic-loop/settings.json`의 지원 모드에 boolean `available: true`와 관측 근거가 기록된 상태다.          |
 | 리뷰 실행 모드 선택지 존재      | `review.modes`에 `available: true`인 지원 모드가 하나 이상 기록된 상태다.                                      |
 | 리뷰 실행 모드 설정 보완 필요   | 인식 가능한 `review.modes`가 비어 있거나 모든 지원 모드의 `available` 값이 `false`인 상태다.                   |
 | 리뷰 실행 모드 지연 초기화 필요 | 설정 파일이 없거나 `review.defaultMode` 또는 `review.modes`가 없는 상태다.                                     |

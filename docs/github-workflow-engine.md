@@ -551,7 +551,7 @@ Workflow Engine이 리뷰 설정을 최초로 필요로 할 때는 사용 가능
 }
 ```
 
-- 저장 위치는 타겟 레포의 `.workflow-engine/settings.json`이며 Workflow Engine만 필요한 시점에 필요한 필드를 생성하거나 보완한다.
+- 저장 위치는 타겟 레포의 `.github-agentic-loop/settings.json`이며 Workflow Engine만 필요한 시점에 필요한 필드를 생성하거나 보완한다.
 - `review.defaultMode` 값은 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중 하나여야 한다.
 - 지원 모드의 번호 또는 선택지 문구가 입력되면 리뷰 실행 모드 검사로 전이한다.
 - `기타 의견 입력`은 사용자 결정 규칙에 따라 처리하며, 리뷰 실행 모드가 확정된 경우에만 리뷰 실행 모드 검사로 전이한다.
@@ -865,7 +865,12 @@ Workflow Engine은 Commit Plan의 커밋 단위 ID와 작업 범위로 체크항
 
 ### 실행 로그
 
-Workflow Engine은 작업에 진입하거나 중단 또는 재개 상태를 기록해야 할 때 타겟 저장소의 `.harness/logs/github-workflow-log.md`에 보조 로그를 남긴다. 실행 로그는 빠른 맥락 복원과 재개 조건 확인을 돕는 보조 근거이며, GitHub 실행 상태를 대체하지 않는다.
+Workflow Engine은 작업에 진입하거나 중단 또는 재개 상태를 기록해야 할 때 타겟 저장소의
+`.github-agentic-loop/logs/github-workflow-log-YYYY-MM-DD.md`에 보조 로그를 남긴다. 파일명의
+`YYYY-MM-DD`는 기록 시점의 실행 환경 현재 날짜다. 같은 날짜의 사건은 같은 파일에 추가하고 날짜가
+바뀌면 새 날짜 파일을 선택한다. Workflow Engine은 Harness 소유의 `.harness/logs/`에 실행 로그를
+기록하지 않는다. 실행 로그는 빠른 맥락 복원과 재개 조건 확인을 돕는 보조 근거이며, GitHub 실행 상태를
+대체하지 않는다.
 
 로그 항목은 다음을 포함한다.
 
@@ -953,8 +958,10 @@ codex-harness/
 
 ```text
 target-repo/
-├── .workflow-engine/
-│   └── settings.json
+├── .github-agentic-loop/
+│   ├── settings.json
+│   └── logs/
+│       └── github-workflow-log-YYYY-MM-DD.md
 ├── .codex/
 │   ├── config.toml
 │   └── agents/
@@ -975,10 +982,11 @@ target-repo/
     │   ├── team-spec.md
     │   └── orchestration-plan.md
     └── logs/
-        └── github-workflow-log.md
+        ├── session-log.md
+        └── latest-session-summary.md
 ```
 
-`.codex/agents/*`, `.agents/skills/*`, `.harness/docs/*`는 Harness를 별도로 구성한 프로젝트에만 존재하며 일반 코드 변경 경로의 선행 조건이 아니다. `.workflow-engine/settings.json`은 Workflow Engine이 독점적으로 생성·해석하는 타겟별 런타임 설정으로 `dependencies.commit.available`, 리뷰 실행 모드 사용 가능 상태와 사용자가 선택한 기본 모드를 필요할 때 저장한다. Harness는 이 파일을 생성하거나 읽거나 보완하지 않는다. `.harness/logs/github-workflow-log.md`는 Workflow Engine 실행 로그를 저장한다. `.harness`의 운영 파일은 보조 운영 자산이며, 현재 작업 상태의 기준 원천은 GitHub 실행 상태다.
+`.codex/agents/*`, `.agents/skills/*`, `.harness/docs/*`는 Harness를 별도로 구성한 프로젝트에만 존재하며 일반 코드 변경 경로의 선행 조건이 아니다. `.github-agentic-loop/settings.json`은 Workflow Engine이 독점적으로 생성·해석하는 타겟별 런타임 설정으로 `dependencies.commit.available`, 리뷰 실행 모드 사용 가능 상태와 사용자가 선택한 기본 모드를 필요할 때 저장한다. `.github-agentic-loop/logs/github-workflow-log-YYYY-MM-DD.md`는 Workflow Engine의 날짜별 실행 로그를 저장한다. Harness는 이 설정과 로그를 생성하거나 읽거나 보완하지 않으며 자체 운영 로그는 `.harness/logs/`에 저장한다. 두 런타임의 운영 파일은 보조 운영 자산이며, 현재 작업 상태의 기준 원천은 GitHub 실행 상태다.
 
 ### 템플릿 정합성 검사
 
@@ -1003,7 +1011,7 @@ Workflow Engine이 이슈 또는 PR 템플릿을 최초로 요구할 때 해당 
 
 - 이슈와 PR 본문에는 사용자가 확인할 작업 내용, 판단 근거, 완료 기준만 남긴다. Workflow Engine 규칙 자체는 설계 문서와 전역 스킬 배포본에서 관리한다.
 - 새 요청이나 다음 계획 요청을 받으면 열린 PR과 이슈에서 이어갈 작업을 먼저 확인한다. 이어갈 작업이 없을 때만 새 기능제안 후보를 검토한다.
-- 계획, 진행 상태, 완료 기준처럼 후속 전이 판단에 쓰이는 정보는 이슈 또는 PR 본문에 반영한다. 리뷰 결과, 실행 로그, merge 알림처럼 본문 상태가 아닌 기록은 댓글이나 `.harness/logs/github-workflow-log.md`에 남긴다.
+- 계획, 진행 상태, 완료 기준처럼 후속 전이 판단에 쓰이는 정보는 이슈 또는 PR 본문에 반영한다. 리뷰 결과, 실행 로그, merge 알림처럼 본문 상태가 아닌 기록은 댓글이나 `.github-agentic-loop/logs/github-workflow-log-YYYY-MM-DD.md`에 남긴다.
 - 기능결함 구현 중 확인된 설계 문서, 규칙 문서, 코드, 템플릿, 스킬 변경은 결함 해결 계획의 해결 단위로 반영한다.
 - 리뷰 피드백은 자동 수정 명령이 아니라 사용자 결정 대상이다. 대응 방향과 해결 여부 결정은 리뷰 피드백 처리 규칙을 따른다.
 - PR merge는 사람이 수행한다. Workflow Engine은 merge 이후 GitHub 실행 상태를 다시 읽고 연결 이슈의 완료 기준과 후속 작업 갱신 요청을 확정한다. 실제 GitHub 변경은 단순 상태 변경 실행 절차를 따른다.

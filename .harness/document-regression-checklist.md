@@ -109,7 +109,8 @@ find .harness/evaluations -type f | sort
 
 ```sh
 env HOME=/tmp/gwk-install-test ./install.sh
-test -f /tmp/gwk-install-test/.codex/skills/harness/SKILL.md
+test -f /tmp/gwk-install-test/.agents/skills/harness/SKILL.md
+test ! -e /tmp/gwk-install-test/.codex/skills/harness
 ```
 
 이 명령은 배포본 복사 확인용이다. 생성기의 자기진화 루프가 이 명령에 의존한다는 뜻은 아니다.

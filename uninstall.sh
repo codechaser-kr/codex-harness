@@ -1,9 +1,10 @@
 #!/usr/bin/env sh
 set -eu
 
-CODEX_HOME="${CODEX_HOME:-"$HOME/.codex"}"
-DEST_ROOT="${CODEX_HARNESS_DEST_ROOT:-"$CODEX_HOME/skills"}"
+DEST_ROOT="${CODEX_HARNESS_DEST_ROOT:-"$HOME/.agents/skills"}"
 HARNESS_DEST="${CODEX_HARNESS_DEST:-"$DEST_ROOT/harness"}"
+STATE_HOME="${XDG_STATE_HOME:-"$HOME/.local/state"}"
+BACKUP_ROOT="${CODEX_HARNESS_BACKUP_ROOT:-"$STATE_HOME/codex-harness/backups"}"
 HARNESS_SKILLS="harness"
 WORKFLOW_ENGINE_SKILLS="github-workflow-engine workflow-code-editor github-state-summary github-simple-executor target-harness-code-editor issue-creation feature-proposal-triage policy-plan policy-review-next-triage feature-plan fix-analysis fix-plan branch-proposal commit-plan pr-proposal pr-creation review-comment"
 UNINSTALL_TARGET="${1:-all}"
@@ -40,6 +41,21 @@ dest_for_skill() {
   fi
 }
 
+next_backup_path() {
+  skill="$1"
+  event="$2"
+  backup_base="$BACKUP_ROOT/$skill.$event.$(date +%Y%m%d%H%M%S).$$"
+  backup_candidate="$backup_base"
+  backup_suffix=0
+
+  while [ -e "$backup_candidate" ]; do
+    backup_suffix=$((backup_suffix + 1))
+    backup_candidate="$backup_base.$backup_suffix"
+  done
+
+  printf '%s\n' "$backup_candidate"
+}
+
 remove_skill() {
   skill="$1"
   dest="$2"
@@ -49,7 +65,8 @@ remove_skill() {
     return 0
   fi
 
-  backup="$dest.removed.$(date +%Y%m%d%H%M%S).$$"
+  mkdir -p "$BACKUP_ROOT"
+  backup=$(next_backup_path "$skill" removed)
   mv "$dest" "$backup"
   removed=1
 

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { access, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -243,18 +243,66 @@ test("install and uninstall scripts have valid shell syntax", (t) => {
   }
 });
 
+test("installer uses the user skill root and keeps legacy CODEX_HOME skills untouched", async (t) => {
+  const temporaryRoot = await mkdtemp(`${tmpdir()}/default-skill-install-`);
+  t.after(() => rm(temporaryRoot, { recursive: true, force: true }));
+
+  const home = join(temporaryRoot, "home");
+  const codexHome = join(temporaryRoot, "codex-home");
+  const legacySkill = join(codexHome, "skills/harness/SKILL.md");
+  const destinationRoot = join(home, ".agents/skills");
+  const backupRoot = join(home, ".local/state/codex-harness/backups");
+  await mkdir(join(codexHome, "skills/harness"), { recursive: true });
+  await writeFile(legacySkill, "legacy sentinel\n");
+
+  const {
+    CODEX_HARNESS_BACKUP_ROOT: _backupRoot,
+    CODEX_HARNESS_DEST: _harnessDestination,
+    CODEX_HARNESS_DEST_ROOT: _destinationRoot,
+    XDG_STATE_HOME: _xdgStateHome,
+    ...baseEnvironment
+  } = process.env;
+  const environment = {
+    ...baseEnvironment,
+    HOME: home,
+    CODEX_HOME: codexHome,
+  };
+
+  const firstInstall = runProcess("sh", [installScript, "harness"], { cwd: repositoryRoot, env: environment });
+  if (isNestedSpawnDenied(firstInstall)) {
+    t.skip("The current execution sandbox does not permit nested child processes.");
+    return;
+  }
+  assertProcessSucceeded(firstInstall, "first default install.sh harness");
+  await access(join(destinationRoot, "harness/SKILL.md"));
+  assert.equal(await readFile(legacySkill, "utf8"), "legacy sentinel\n");
+
+  const secondInstall = runProcess("sh", [installScript, "harness"], { cwd: repositoryRoot, env: environment });
+  assertProcessSucceeded(secondInstall, "second default install.sh harness");
+  assert.deepEqual(await readdir(destinationRoot), ["harness"]);
+  assert.equal((await readdir(backupRoot)).some((name) => /^harness\.backup\./.test(name)), true);
+
+  const uninstall = runProcess("sh", [uninstallScript, "harness"], { cwd: repositoryRoot, env: environment });
+  assertProcessSucceeded(uninstall, "default uninstall.sh harness");
+  await assert.rejects(access(join(destinationRoot, "harness/SKILL.md")));
+  assert.equal(await readFile(legacySkill, "utf8"), "legacy sentinel\n");
+  assert.equal((await readdir(backupRoot)).some((name) => /^harness\.removed\./.test(name)), true);
+});
+
 test("installer and uninstaller keep harness and workflow-engine targets independent", async (t) => {
   const temporaryRoot = await mkdtemp(`${tmpdir()}/independent-skill-install-`);
   t.after(() => rm(temporaryRoot, { recursive: true, force: true }));
 
   const destinationRoot = join(temporaryRoot, "skills");
   const harnessDestination = join(temporaryRoot, "harness");
+  const backupRoot = join(temporaryRoot, "backups");
   const environment = {
     ...process.env,
     HOME: join(temporaryRoot, "home"),
     CODEX_HOME: join(temporaryRoot, "codex-home"),
     CODEX_HARNESS_DEST_ROOT: destinationRoot,
     CODEX_HARNESS_DEST: harnessDestination,
+    CODEX_HARNESS_BACKUP_ROOT: backupRoot,
   };
 
   const harnessInstall = runProcess("sh", [installScript, "harness"], { cwd: repositoryRoot, env: environment });
@@ -281,6 +329,9 @@ test("installer and uninstaller keep harness and workflow-engine targets indepen
   assertProcessSucceeded(workflowUninstall, "uninstall.sh workflow-engine");
   await assert.rejects(access(join(destinationRoot, "github-workflow-engine/SKILL.md")));
   await assert.rejects(access(join(destinationRoot, "workflow-code-editor/SKILL.md")));
+  const backupNames = await readdir(backupRoot);
+  assert.equal(backupNames.some((name) => /^harness\.removed\./.test(name)), true);
+  assert.equal(backupNames.some((name) => /^github-workflow-engine\.removed\./.test(name)), true);
 });
 
 test("installer preserves the github-workflow-engine distribution", async (t) => {

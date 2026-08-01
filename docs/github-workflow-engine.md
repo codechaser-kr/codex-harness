@@ -562,10 +562,9 @@ Workflow Engine이 리뷰 설정을 최초로 필요로 할 때는 사용 가능
 
 `codex/awesome-code-review`에서 사용하는 Codex 전역 `awesome-code-review` 설치 확인 경로:
 
-- `$CODEX_HOME/skills/awesome-code-review/SKILL.md`
-- `$HOME/.codex/skills/awesome-code-review/SKILL.md`
+- `$HOME/.agents/skills/awesome-code-review/SKILL.md`
 
-`codex/awesome-code-review`의 `awesome-code-review` 누락 안내에는 이 저장소가 해당 스킬을 배포하거나 관리하지 않는다는 점, 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다는 점, 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만 Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다는 점을 포함한다. 설치 후에는 위 경로 중 하나에 `SKILL.md`가 있고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다. 이 검사는 `claude/awesome-code-review`에는 적용하지 않는다.
+`codex/awesome-code-review`의 `awesome-code-review` 누락 안내에는 이 저장소가 해당 스킬을 배포하거나 관리하지 않는다는 점, 설치는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차를 사용한다는 점, 원천 스킬은 `https://github.com/awesome-skills/code-review-skill`이지만 Codex 전역 설치명과 frontmatter `name`은 기본 내장 리뷰 스킬과의 이름 충돌을 피하기 위해 `awesome-code-review`로 맞춘다는 점을 포함한다. 설치 후에는 위 경로에 `SKILL.md`가 있고, 해당 파일의 frontmatter `name`이 `awesome-code-review`여야 리뷰 실행을 재개할 수 있다. 이 검사는 `claude/awesome-code-review`에는 적용하지 않는다.
 
 Claude 기반 리뷰 실행 모드를 Codex에서 호출하려면 `sendbird/cc-plugin-codex`가 필요하다. `claude/awesome-code-review`는 이 플러그인의 `$cc:adversarial-review`를 실행하며 Claude 환경 또는 Codex 전역의 `awesome-code-review` 스킬에 의존하지 않는다. 이 플러그인은 `commit`, `awesome-code-review`처럼 외부 전역 의존성으로만 다루며, `codex-harness` 관리 기본형에 포함하지 않는다. 설치 관리는 `https://github.com/codechaser-kr/repo-bootstrap`의 install 절차에서 담당한다.
 
@@ -949,6 +948,8 @@ codex-harness/
 ### 타겟 프로젝트 적용 자산
 
 현재 편의 설치 스크립트는 전역 `harness`와 Workflow Engine 스킬 묶음을 함께 배치하지만 두 런타임은 서로의 설치를 전제로 하지 않는다. 전역 `harness`는 명시적으로 요청받았을 때만 타겟 프로젝트의 로컬 실행 하네스를 생성한다. Workflow Engine은 실제 작업에서 설정이나 템플릿을 최초로 요구할 때만 필요한 항목을 준비하며, 전역 스킬 사본을 타겟 프로젝트 안에 생성하지 않는다.
+
+편의 설치·제거 스크립트의 기본 사용자 스킬 루트는 `$HOME/.agents/skills`다. `CODEX_HOME`은 이 루트를 변경하지 않으며 `$CODEX_HOME/skills`는 설치, 탐지, 이전, 제거하지 않는다. 명시적 설치 위치가 필요하면 `CODEX_HARNESS_DEST_ROOT` 또는 Harness 전용 `CODEX_HARNESS_DEST`를 사용한다. 재설치와 제거로 보존되는 기존 디렉터리는 스킬 탐색 범위 밖의 `${XDG_STATE_HOME:-$HOME/.local/state}/codex-harness/backups`에 저장하고, `CODEX_HARNESS_BACKUP_ROOT`로 이 위치를 재정의할 수 있다.
 
 ```text
 target-repo/

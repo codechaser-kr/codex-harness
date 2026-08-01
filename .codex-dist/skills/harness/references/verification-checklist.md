@@ -103,8 +103,10 @@
 - 세션 환경 메모, 승인 이력, 일회성 권한 문제가 `latest-session-summary.md`에 섞여 있지 않다.
 - 환경성 권한/승인 이슈가 있었다면 `session-log.md`에 기록돼 있다.
 - `completed`, `timed_out`, `failed`가 subagent 작업 결과 상태일 뿐 실행 리소스 정리 완료가 아님을 로그 정책이 구분한다.
+- 첫 spawn 전에 callable `close_agent`를 확인하고, capability가 없으면 새 ID 없이 주 에이전트 중심 순차
+  실행으로 전환하며 `interrupt_agent`를 close로 대체하지 않도록 오케스트레이션과 로그 정책이 정렬돼 있다.
 - 현재 오케스트레이션에서 발급된 subagent ID마다 결과·오류·timeout 보존과 소비 후, 다음 전이 또는 최종 응답 전에 `close_agent`를 호출하도록 오케스트레이션과 로그 정책이 정렬돼 있다.
-- `close_agent` 성공 또는 `not_found`만 실행 리소스 정리 완료로 기록하고, `not_found`를 이유로 내부 상태 DB를 직접 수정하지 않는다.
+- 실제 `close_agent` 호출의 성공 또는 `not_found`만 실행 리소스 정리 완료로 기록하고, `not_found`를 이유로 내부 상태 DB를 직접 수정하지 않는다. 발급 ID가 0개면 정리 `not_applicable`을 허용한다.
 
 세부 기준은 `logging-contract.md`를 따른다.
 

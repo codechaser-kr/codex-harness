@@ -7,8 +7,11 @@ const structuredContractUrl = new URL("../../references/structured-execution-con
 const targetHarnessContractUrl = new URL("../../references/target-harness-execution-contract.md", import.meta.url);
 const validationContractUrl = new URL("../../references/validation-mode-contract.md", import.meta.url);
 const lifecycleContractUrl = new URL("../../references/agent-lifecycle-contract.md", import.meta.url);
+const fileChangeContractUrl = new URL("../../references/file-change-execution-contract.md", import.meta.url);
 const workflowEditorUrl = new URL("../../../workflow-code-editor/SKILL.md", import.meta.url);
+const targetEditorUrl = new URL("../../../target-harness-code-editor/SKILL.md", import.meta.url);
 const harnessSkillUrl = new URL("../../../harness/SKILL.md", import.meta.url);
+const harnessRuntimeUrl = new URL("../../../harness/references/codex-runtime-contract.md", import.meta.url);
 const loggingContractUrl = new URL("../../../harness/references/logging-contract.md", import.meta.url);
 const readinessChecklistUrl = new URL("../../../harness/references/generator-readiness-checklist.md", import.meta.url);
 const verificationChecklistUrl = new URL("../../../harness/references/verification-checklist.md", import.meta.url);
@@ -116,4 +119,64 @@ test("harness logging lifecycle remains scoped to harness-owned agents", async (
   assert.match(loggingContract, /하네스 외부 스킬의 runtime 계약 원천으로[\s\S]{0,20}사용하지 않는다/);
   assert.match(loggingContract, /하네스가 직접 발급받은 각 subagent ID에 `close_agent`/);
   assert.match(loggingContract, /다른 스킬이 직접 생성한 ID[\s\S]{0,100}중복으로 닫지 않는다/);
+});
+
+test("runtime owners check terminal close capability before the first spawn", async () => {
+  const [
+    engineSkill,
+    lifecycleContract,
+    workflowEditor,
+    targetEditor,
+    harnessSkill,
+    harnessRuntime,
+  ] = await Promise.all([
+    read(engineSkillUrl),
+    read(lifecycleContractUrl),
+    read(workflowEditorUrl),
+    read(targetEditorUrl),
+    read(harnessSkillUrl),
+    read(harnessRuntimeUrl),
+  ]);
+
+  for (const source of [engineSkill, lifecycleContract, workflowEditor, targetEditor, harnessSkill, harnessRuntime]) {
+    assert.match(source, /첫\s+`spawn`\s+전|처음 생성하기 전에|만들기 전에/);
+    assert.match(source, /callable `close_agent`|`close_agent`가 callable/);
+  }
+
+  assert.match(lifecycleContract, /`interrupt_agent`[\s\S]{0,180}(?:terminal close|대체 호출)/);
+  assert.match(lifecycleContract, /발급된 ID가 0개[\s\S]{0,100}`not_applicable`/);
+  assert.match(lifecycleContract, /실제 `close_agent` 호출[\s\S]{0,100}`not_found`/);
+  assert.match(lifecycleContract, /unresolved cleanup[\s\S]{0,180}완전한 구조화 실행 성공이나 완전한 검증/);
+});
+
+test("close capability absence preserves each executor's intentional session boundary", async () => {
+  const [
+    lifecycleContract,
+    fileChangeContract,
+    validationContract,
+    workflowEditor,
+    targetEditor,
+    harnessSkill,
+    harnessRuntime,
+  ] = await Promise.all([
+    read(lifecycleContractUrl),
+    read(fileChangeContractUrl),
+    read(validationContractUrl),
+    read(workflowEditorUrl),
+    read(targetEditorUrl),
+    read(harnessSkillUrl),
+    read(harnessRuntimeUrl),
+  ]);
+
+  assert.match(lifecycleContract, /선택 사항[\s\S]{0,180}(?:same-session|주 에이전트 순차 실행)/);
+  assert.match(harnessSkill, /새 ID를 발급하지 않고 주 에이전트 중심 순차 실행/);
+  assert.match(harnessRuntime, /동일한 역할 계약을 주 에이전트가 순차 실행/);
+  assert.match(fileChangeContract, /같은 session에서 실행하므로 `close_agent` capability가 없어도 사용할 수/);
+  assert.match(workflowEditor, /일반 코드 변경 경로[\s\S]{0,180}close capability가 필요 없/);
+
+  assert.match(targetEditor, /capability가 없으면 ID와 workspace를[\s\S]{0,100}`실행 세션 미시작 중단`/);
+  assert.match(targetEditor, /직접 수정 fallback이나 두 번째 편집 session은 금지/);
+  assert.match(validationContract, /capability가 없으면 ID와 workspace를 하나도 만들지 않고 검증 모드를 중단/);
+  assert.match(validationContract, /더 적은 session으로 축소 실행하지 않/);
+  assert.match(workflowEditor, /더 적은 session으로 축소하거나 ordinary[\s\S]{0,40}workflow를 자동 재개하지 않는다/);
 });

@@ -43,7 +43,9 @@ Harness 경로 또는 일반 코드 변경 경로 하나를 선택해 실행한 
 7. 경로별 원본 결과를 공통 구조화 실행 결과로 정규화하고 요청-결과 상관관계, 범위와 사후조건을 검증한다.
 
 Harness 경로는 Harness에 Workflow Engine 설정, 구조화 필드, 전용 역할 또는 전용 결과 형식을 요구하지
-않는다. 일반 코드 변경 경로는 Harness 자산을 생성하거나 갱신하지 않는다.
+않는다. Harness가 현재 요청에 새 session을 요구하면 그 생성 주체의 callable `close_agent` 확인도 준비도에
+포함한다. 이 capability가 없으면 첫 spawn 전에 Harness 경로를 선택하지 않는다. 일반 코드 변경 경로는
+같은 session에서 실행하므로 close capability가 필요 없고 Harness 자산을 생성하거나 갱신하지 않는다.
 
 ## 검증 모드
 
@@ -51,6 +53,9 @@ Harness 경로는 Harness에 Workflow Engine 설정, 구조화 필드, 전용 �
 
 1. primary와 외부 상태를 변경하지 않고 동일 baseline의 격리 workspace와 fresh independent editing
    session을 정확히 10개 시작하려고 시도한다.
+   첫 workspace 또는 session을 만들기 전에 이 스킬이 현재 host에서 callable `close_agent`를 확인한다.
+   capability가 없으면 관측 session 수 0과 중단 사유를 반환하고, 더 적은 session으로 축소하거나 ordinary
+   workflow를 자동 재개하지 않는다.
 2. 각 session에 같은 요청, 선택 경로, 저장소 지시, permission/tool/path 조건과 동일 유한 deadline을
    전달한다.
 3. session과 workspace를 재사용하지 않고 결과, 오류, timeout과 실제 ID를 그대로 보존한다.
@@ -116,6 +121,8 @@ count, 실제 ID와 사용 가능한 결과만 반환하고 누락 ID나 결과�
 ## 실행 리소스 소유권
 
 - 같은 세션의 일반 코드 변경은 새 실행 리소스가 아니므로 별도 정리하지 않는다.
+- execution 또는 validation session을 만들기 전에 callable `close_agent`를 확인한다. 없으면 새 ID를
+  발급하지 않으며 `interrupt_agent`나 host 자동 정리를 close로 간주하지 않는다.
 - 이 스킬이 execution 또는 validation session ID를 직접 발급받으면 결과·오류·timeout을 먼저 보존한
   뒤 성공·실패·중단과 무관하게 자신이 발급받은 모든 ID에 `close_agent`를 호출한다.
 - `close_agent` 성공 또는 `not_found`를 정리 완료로 기록하고 내부 상태 DB를 직접 수정하지 않는다.
@@ -123,6 +130,9 @@ count, 실제 ID와 사용 가능한 결과만 반환하고 누락 ID나 결과�
   `residual_risks_or_failure_reasons`에 기록한다. 검증 session은 기존 `integrity_verification`과
   `integrity_failure_reasons`를 사용하며 새 cleanup 필드나 schema를 만들지 않는다.
 - Harness 또는 그 하위 역할이 직접 생성한 child ID는 중복으로 닫지 않고 반환된 정리 근거만 검증한다.
+- 발급된 ID가 0개인 same-session 일반 변경의 정리는 적용되지 않는다. 예외적으로 ID 발급 뒤
+  `close_agent`를 호출할 수 없게 되면 결과를 보존하고 기존 실패 필드에 unresolved cleanup을 기록하며
+  구조화 실행 성공 또는 완전한 검증으로 반환하지 않는다.
 
 ## 하지 않는 일
 

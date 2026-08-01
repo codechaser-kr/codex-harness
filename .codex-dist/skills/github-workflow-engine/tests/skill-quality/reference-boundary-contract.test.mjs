@@ -290,6 +290,11 @@ test("structured execution loads command and target details only for matching wo
   assert.match(fileChange, /현재 Codex 오케스트레이션 agent와 model[\s\S]*`not_applicable`로 기록하지 않는다/);
   assert.match(targetHarness, /Workflow Engine 전용 설정·필드·역할·결과 계약을 요구하지 않는다/);
   assert.match(workflowEditor, /Harness가 없거나 실행 전에 준비되지 않았음[\s\S]*현재 Codex 세션/);
+  assert.match(targetHarness, /실행 session 수명 주기 준비됨/);
+  assert.match(targetHarness, /새 session이 필요하면[\s\S]{0,120}callable `close_agent`/);
+  assert.match(targetHarness, /같은 session에서 처리할 수 있는 요청은 이 사유만으로 제외하지 않는다/);
+  assert.match(fileChange, /같은 session에서 실행하므로 `close_agent` capability가 없어도 사용할 수/);
+  assert.match(fileChange, /필요한 별도 session의 close capability 부재[\s\S]{0,120}일반 경로/);
 });
 
 test("target runtime bootstrap and template compatibility belong to the workflow engine", async () => {

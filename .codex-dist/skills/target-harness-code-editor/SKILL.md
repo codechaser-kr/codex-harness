@@ -42,6 +42,9 @@ session을 오케스트레이션한다. 검증 결과는 사용자 판단을 위
    재대조한다. 후보가 0개 또는 복수이거나 role/agent/skill/config가 다르면 파일을 변경하지 않는다.
 3. model, reasoning, sandbox, permission, available tool, command path, destructive risk가 요청과 같은지
    확인한다. 확인 불가능하거나 불일치하면 session을 시작하지 않는다.
+4. 이 스킬은 일반 모드의 별도 execution session과 검증 모드의 10개 session을 직접 생성하므로 첫
+   `spawn` 전에 현재 host에서 callable `close_agent`를 확인한다. capability가 없으면 ID와 workspace를
+   만들지 않고 `실행 세션 미시작 중단`으로 반환한다. `interrupt_agent`를 close로 대체하지 않는다.
 
 ## 일반 모드
 
@@ -95,6 +98,9 @@ session을 오케스트레이션한다. 검증 결과는 사용자 판단을 위
    실패 사유를 사용자에게 제시하고 skill/prompt 개선, validation 종료 또는 나중의 ordinary workflow 실행
    중 다음 행동을 명시적으로 결정하도록 요청한 뒤 종료한다. 이 결정은 Workflow Definition transition으로
    추가하지 않고 ordinary workflow를 자동 재개하지 않는다.
+
+close capability preflight 실패는 1개 또는 더 적은 session으로 축소하지 않는다. 관측 session 수 0,
+발급된 ID 없음과 명시적 실패 사유만 기록하며 호출하지 않은 raw result나 정리 결과를 만들지 않는다.
 
 ## 출력
 

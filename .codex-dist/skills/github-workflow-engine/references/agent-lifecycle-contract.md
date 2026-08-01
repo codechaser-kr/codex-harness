@@ -13,14 +13,30 @@
 - `workflow-code-editor`나 Harness처럼 하위 실행 주체가 직접 발급받은 ID는 해당 실행 주체가 소유한다.
   부모는 하위 ID를 추적하거나 중복으로 `close_agent`하지 않는다.
 
+## 첫 spawn 전 capability preflight
+
+1. ID를 직접 발급할 실행 주체는 첫 `spawn` 전에 현재 host의 callable tool surface에 명시적 terminal
+   close capability인 `close_agent`가 노출됐는지 확인한다. 문서에 이름이 있거나 다른 세션에서 사용할 수
+   있었다는 사실만으로 현재 호출 가능하다고 가정하지 않는다.
+2. `close_agent`가 callable이면 아래 결과 보존과 정리 절차를 전제로 필요한 session을 생성할 수 있다.
+3. `close_agent`가 callable이 아니면 새 ID를 발급하지 않는다. `interrupt_agent`, wait timeout, 결과 상태,
+   host의 자동 정리를 terminal close로 간주하거나 대체 호출로 매핑하지 않는다.
+4. 새 session이 선택 사항인 실행 주체는 자신의 계약에 same-session 또는 주 에이전트 순차 실행 경로가
+   있을 때만 그 경로로 계속한다. 별도 session이나 정확한 fan-out 수가 필수인 실행은 첫 spawn 전에
+   중단하며 session 수를 줄이거나 호출하지 않은 결과를 만들지 않는다.
+5. preflight에서 발급된 ID가 0개면 실행 리소스 정리는 `not_applicable`이다. 이 사실만으로 same-session
+   fallback 결과나 session을 사용하지 않는 결정론적 실행을 실패로 판정하지 않는다.
+
 ## 결과 보존과 정리
 
 1. 생성 주체는 직접 발급받은 모든 ID의 결과, 오류와 시간 초과를 먼저 보존하고 사용한다.
-2. 성공·실패·중단과 관계없이 다음 전이 또는 최종 응답 전에 자신이 소유한 각 ID에 `close_agent`를
-   호출한다. 완전하거나 불완전한 병렬 호출에도 실제 발급받은 모든 ID를 정리한다.
+2. preflight에서 `close_agent` callable을 확인한 생성 주체는 성공·실패·중단과 관계없이 다음 전이 또는
+   최종 응답 전에 자신이 소유한 각 ID에 `close_agent`를 호출한다. 완전하거나 불완전한 병렬 호출에도
+   실제 발급받은 모든 ID를 정리한다.
 3. `completed`와 `timed_out`은 결과 상태일 뿐 실행 리소스 정리 완료가 아니다.
-4. `close_agent` 성공 또는 `not_found`를 정리 완료로 기록한다. `not_found`는 런타임에서 이미 제거된
-   상태로 기록하되 내부 상태 DB를 직접 수정하지 않는다.
+4. 실제 `close_agent` 호출의 성공 또는 `not_found`를 정리 완료로 기록한다. `not_found`는 런타임에서
+   이미 제거된 상태로 기록하되 내부 상태 DB를 직접 수정하지 않는다. 호출하지 않은 상태를
+   `not_found`로 추정하지 않는다.
 5. 정리 결과는 보존한 결과의 의미, 실험 무결성이나 워크플로 정의 전이 판정을 바꾸지 않는다.
 
 ## 결과 필드와 부모 검증
@@ -33,9 +49,14 @@
 - 부모는 반환된 근거가 하위 실행 주체가 발급받은 모든 ID와 대응하는지 검증한다. 근거 누락, 소유하지
   않은 ID의 정리 시도 또는 정리 실패가 있으면 구조화 실행 성공이나 완전한 검증으로 판정하지 않는다.
 - 정리만을 위한 새 정리용 필드, 스키마 또는 등록부를 만들지 않는다.
+- capability preflight와 same-session fallback 근거도 새 필드 없이 실행 주체가 이미 소유한
+  `verification_results`, `integrity_verification`, 실패 또는 위험 필드에 기록한다.
 
 ## 오류 처리
 
 - 결과 보존 전에 정리를 시도했거나 소유하지 않은 ID를 닫으려 한 경우 계약 위반으로 기록하고 중단한다.
 - 정리 호출이 실패하면 보존한 실행 결과는 유지하고, 기존 실패 필드에 원인과 재개 조건을 기록한다.
 - 부모는 하위 실행 주체의 정리 실패를 대신 닫아 복구하지 않는다. 해당 생성 주체가 후속 조치를 맡는다.
+- preflight 전에 ID가 발급됐거나 실행 도중 callable `close_agent`가 사라진 예외 상황에서는 사용 가능한
+  결과·오류·timeout을 먼저 보존하고 unresolved cleanup을 기존 실패 또는 위험 필드에 기록한다. 이 상태는
+  완전한 구조화 실행 성공이나 완전한 검증으로 판정하지 않는다.

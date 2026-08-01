@@ -266,6 +266,9 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 - 각 역할 또는 subagent 완료 뒤에는 호출 역할, 결과 상태, 입력/출력 요약, 변경 파일, 남은 위험을 같은 세션 기록에 누적한다.
 - 역할 출력이나 세션 로그에는 필요 시 `evolution-contract.md` 기준의 학습 후보, 반복 신호, 승격 대상, 생성기 환류 후보를 남긴다.
 - 생성된 로그 정책 문서와 로그 예시는 별도 스크립트, TSV 이벤트 파일, 자동 append 도구를 필수 전제로 삼지 않는다.
+- 보조 역할 또는 subagent를 처음 생성하기 전에 현재 host에 callable `close_agent`가 있는지 확인한다.
+  없으면 새 ID를 발급하지 않고 주 에이전트 중심 순차 실행으로 계속한다. Harness의 보조 위임은
+  선택 사항이므로 이 fallback은 역할 계약을 생략하지 않으며, `interrupt_agent`를 close로 사용하지 않는다.
 - `completed`, `timed_out`, `failed`는 subagent의 작업 결과 상태일 뿐 실행 리소스 정리 상태가 아니다. 현재 오케스트레이션에서 발급받은 subagent ID만 추적하고, 결과·오류·timeout을 먼저 기록·소비한 뒤 성공·실패·중단과 무관하게 다음 전이 또는 최종 응답 전에 각 ID에 `close_agent`를 호출한다.
 - `close_agent` 성공 또는 `not_found`만 실행 리소스가 정리된 것으로 취급한다. `not_found`는 런타임에서 이미 제거된 상태로 기록하며 내부 상태 DB를 직접 수정하지 않는다. 그 밖의 정리 실패는 운영상 위험으로 기록하되 보존한 결과의 의미나 워크플로 상태 전이 판정을 바꾸지 않는다.
 - 하네스 구성의 구조·계약 검증 결과를 보고하기 전에 운영 감사 역할이 `references/verification-checklist.md`를 기준으로 현재 상태를 검토해야 한다. 하네스 품질과 운영 적합성은 이 검토 결과를 읽은 사용자가 판단한다.
@@ -371,7 +374,7 @@ description: "현재 저장소에 맞는 실행 하네스 팀을 설계, 생성,
 6. 오케스트레이션 흐름이 정상, 보류, 실패, 재진입 상황을 모두 다룬다.
 7. 운영 감사 역할이 `references/verification-checklist.md` 기준으로 구조 누락과 골격 잔존이 없다고 설명할 수 있다.
 8. 마지막 실행 세션이 `.harness/logs/session-log.md`, `.harness/logs/latest-session-summary.md`에 같은 세션 ID로 남아 있다.
-9. 모든 필수 역할과 subagent의 결과·오류·timeout이 기록되고, 현재 오케스트레이션에서 발급된 각 subagent ID에 결과 소비 뒤 `close_agent`가 호출돼 있다. `close_agent` 성공 또는 `not_found`는 실행 리소스 정리로 기록하고, `timed_out`, `failed` 또는 그 밖의 정리 실패는 남은 위험과 후속 보강 대상으로 기록돼 있다.
+9. 모든 필수 역할과 실제 생성된 subagent의 결과·오류·timeout이 기록되고, 현재 오케스트레이션에서 발급된 각 subagent ID에 결과 소비 뒤 `close_agent`가 호출돼 있다. `close_agent` 성공 또는 실제 호출 결과인 `not_found`는 실행 리소스 정리로 기록하고, `timed_out`, `failed` 또는 그 밖의 정리 실패는 남은 위험과 후속 보강 대상으로 기록돼 있다. capability preflight로 발급된 ID가 0개라면 주 에이전트 실행 근거와 정리 `not_applicable`이 기록돼 있다.
 10. 운영 감사 역할이 새 학습 후보의 반영 위치를 설명하거나, 이번 작업에는 학습 후보가 없다고 명시할 수 있다.
 11. 신규 구축 결과는 `references/initial-generation-contract.md` 기준으로 첫 세션부터 자기진화 루프를 이어 갈 수 있다고 설명할 수 있다.
 12. 하네스 품질과 운영 적합성에 관한 최종 판단은 사용자에게 남고, 하네스 Phase 7 변경이 있었다면 사용자 결정과 실제 변경 범위가 일치한다.

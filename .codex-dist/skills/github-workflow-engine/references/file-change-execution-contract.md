@@ -9,7 +9,7 @@
 파일을 변경하기 전에 다음 순서로 정확히 한 경로를 선택한다.
 
 1. 대상 저장소의 현재 baseline과 저장소 지시를 확인한다.
-2. 설치된 Harness와 대상 저장소의 일반 실행 진입점이 현재 요청을 Workflow Engine 전용 계약 없이 처리할 수 있는지 `target-harness-execution-contract.md`로 확인한다.
+2. 설치된 Harness와 대상 저장소의 일반 실행 진입점이 현재 요청을 Workflow Engine 전용 계약 없이 처리할 수 있는지, 새 session이 필요하면 현재 host가 그 session을 명시적으로 닫을 수 있는지 `target-harness-execution-contract.md`로 확인한다.
 3. 준비되었으면 `target_harness`, 설치되지 않았거나 준비되지 않았으면 `general_code_change`를 선택한다.
 4. 선택 결과와 근거를 구조화 실행 요청의 예정 실행 주체와 세션 관계에 반영한다.
 5. 실행을 시작한 뒤에는 다른 경로로 전환하거나 같은 변경을 재시도하지 않는다.
@@ -22,6 +22,8 @@ Harness 준비도 실패는 파일 변경 자체의 중단 사유가 아니다. 
 
 - 전역 Harness 스킬과 대상 저장소의 일반 실행 진입점이 존재한다.
 - Harness가 현재 저장소와 변경 유형을 처리할 수 있다는 준비도 근거가 있다.
+- Harness가 현재 요청을 새 session 없이 처리하거나, 새 session이 필요하면 생성 주체가 callable
+  `close_agent`를 확인했다.
 - Workflow Engine 전용 설정, 요청 필드, 결과 필드 또는 전용 역할 생성을 Harness에 요구하지 않는다.
 - Workflow Engine 요청을 작업 설명, 대상 파일, baseline, 변경 제약, 검증 기준으로 구성한 일반 코드 변경 요청으로 변환할 수 있다.
 
@@ -35,6 +37,9 @@ Harness의 일반 결과는 `workflow-code-editor`가 원 요청 범위와 대�
 - 별도의 Harness 설정, 역할, Team Spec 또는 Workflow Engine 전용 타겟 자산을 생성하지 않는다.
 - `target_ids_or_files`, `confirmed_request_values`, `target_baseline`, 권한·도구·명령 경로·파괴적 위험 조건을 그대로 따른다.
 - 변경 뒤 요청의 `verification_criteria`를 실행하고 실제 결과만 기록한다.
+
+이 경로는 현재 오케스트레이션과 같은 session에서 실행하므로 `close_agent` capability가 없어도 사용할 수
+있다. 새 ID를 발급하지 않았다는 사실은 정리 실패가 아니며 실행 리소스 정리는 적용되지 않는다.
 
 일반 경로를 선택할 권한·도구가 없거나 baseline이 달라졌으면 파일을 변경하지 않고 구조화 실행 중단으로 반환한다.
 
@@ -90,7 +95,8 @@ Harness 전용 결과 형식은 공통 결과 계약의 선행 조건이 아니�
 
 ## 중단과 재개
 
-- 실행 전 Harness 미설치 또는 준비도 실패: 조건을 충족하면 일반 경로를 선택해 계속한다.
+- 실행 전 Harness 미설치, 준비도 실패 또는 필요한 별도 session의 close capability 부재: 조건을 충족하면
+  새 ID를 발급하지 않고 일반 경로를 선택해 계속한다.
 - 선택 경로 실행 시작 뒤 실패 또는 부분 변경 가능성: 다른 경로로 재시도하지 않고 실제 변경 여부와 복구 조건을 기록한다.
 - baseline, 요청 범위 또는 사용자 확정값 불일치: 파일을 변경하지 않고 새 관측과 새 요청이 필요하다고 기록한다.
 - 검증 실패: 변경 결과와 실패 근거를 보존하고 구조화 실행 중단으로 반환한다.

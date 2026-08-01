@@ -35,6 +35,11 @@ test("validation mode requires explicit activation, ten independent sessions, ra
   assert.doesNotMatch(contract, /선택된 실행 주체와 `file-change-execution-contract\.md`/);
   assert.match(workflowEditor, /사용자가 판단하는 코드 수정 호출 재현성/);
   assert.doesNotMatch(workflowEditor, /unanimous patch/);
+  assert.match(contract, /첫 `spawn` 전에[\s\S]{0,100}callable `close_agent`/);
+  assert.match(contract, /capability가 없으면 ID와 workspace를 하나도 만들지 않고 검증 모드를 중단/);
+  assert.match(contract, /더 적은 session으로 축소 실행하지 않/);
+  assert.match(contract, /관측 session 수 0[\s\S]{0,120}정리 호출이나 `not_found`를 꾸며내지 않/);
+  assert.match(workflowEditor, /첫 workspace 또는 session을 만들기 전에[\s\S]{0,120}callable `close_agent`/);
 });
 
 test("validation diagnostic is separate from the ordinary structured execution result", async () => {

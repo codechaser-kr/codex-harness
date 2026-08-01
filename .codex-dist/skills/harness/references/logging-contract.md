@@ -147,10 +147,16 @@
 ## 하네스 Subagent 실행 리소스 정리
 
 - 하네스의 주 에이전트는 하네스 오케스트레이션에서 자신이 `spawn` 도구를 직접 호출해 발급받은 역할과 subagent ID만 메모리의 실행 문맥에서 추적한다. 파일 기반 active-agent 목록이나 별도 레지스트리를 만들지 않는다.
+- 첫 `spawn` 전에 현재 host의 callable tool surface에서 `close_agent`를 확인한다. 없으면 새 ID를 발급하지
+  않고 주 에이전트 중심 순차 실행으로 전환한 근거를 세션 기록에 남긴다. `interrupt_agent`, 결과 상태나
+  host 자동 정리를 terminal close로 간주하지 않는다.
 - 결과, 오류 또는 timeout을 먼저 세션 기록과 오케스트레이션 문맥에 보존하고 소비한다. 그 뒤 성공, 실패, timeout, 사용자 중단과 무관하게 다음 전이 또는 최종 응답 전에 발급된 각 ID에 `close_agent`를 호출한다.
 - 결과 보존 전에 `close_agent`를 호출하지 않는다. 정리 호출은 이미 보존한 결과의 의미나 워크플로 상태 전이 판정을 바꾸지 않는다.
-- `close_agent` 성공 또는 `not_found`를 실행 리소스 정리 완료로 기록한다. `not_found`는 런타임에서 이미 제거된 상태로 기록하며 내부 상태 DB를 직접 수정하지 않는다.
+- 실제 `close_agent` 호출의 성공 또는 `not_found`를 실행 리소스 정리 완료로 기록한다. `not_found`는 런타임에서 이미 제거된 상태로 기록하며 내부 상태 DB를 직접 수정하지 않는다.
 - 그 밖의 정리 실패는 실행 결과 상태와 분리해 운영상 위험 및 후속 조치로 기록한다.
+- capability preflight 결과 발급된 ID가 0개면 정리를 `not_applicable`로 기록할 수 있으며 Harness 완료를
+  막지 않는다. ID가 이미 발급된 뒤 close가 불가능해진 예외는 결과를 보존하고 unresolved cleanup을
+  운영상 위험에 기록하며 완전한 완료로 판정하지 않는다.
 
 ## 기록 규칙
 

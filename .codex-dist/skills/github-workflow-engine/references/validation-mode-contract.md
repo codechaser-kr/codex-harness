@@ -19,12 +19,16 @@ pass/mismatch, 다수결 또는 대표 결과를 자동 산출하거나 채택�
    실행한다.
 4. 대상 호출 전 GitHub/local raw snapshot을 읽기 전용으로 한 번 수집한다. 검증 중에는 같은 snapshot,
    route, model, reasoning, role, skill version, config, input, deadline을 사용한다.
+5. 10개 session ID를 직접 발급할 실행 주체가 첫 `spawn` 전에 현재 host에서 callable `close_agent`를
+   확인한다. capability가 없으면 ID와 workspace를 하나도 만들지 않고 검증 모드를 중단한다.
 
 ## 실행과 무결성
 
 1. 10개 의도된 slot마다 fresh independent LLM session 하나를 시작하려고 시도한다. 완전 fan-out이면
    session ID는 모두 고유한 정확히 10개이며 session reuse/continue와 prompt, context, result 공유를
    금지한다.
+   `close_agent` capability 부재를 이유로 1개 또는 더 적은 session으로 축소 실행하지 않으며, 호출하지
+   않은 slot의 ID나 raw result를 만들지 않는다.
 2. 호출 대상의 자체 실행 계약이 격리 workspace를 요구하면 동일 baseline에서 slot마다 별도 workspace를
    만들려고 시도한다. 완전 fan-out이면 workspace ID도 모두 고유한 정확히 10개다. 격리가 필요하지 않은
    호출에 patch, manifest, baseline 필드를 강제하지 않는다.
@@ -47,6 +51,9 @@ pass/mismatch, 다수결 또는 대표 결과를 자동 산출하거나 채택�
    검증 결과로 workflow를 진행하거나 일반 실행을 자동 재개하지 않는다.
 4. comparator, validation CLI, consensus request/receipt, `unanimous_outcome`, canonical patch digest와
    전략 선택은 이 계약에 존재하지 않는다.
+
+close capability preflight에서 중단했다면 관측 session 수 0, 발급된 ID 없음과 명시적 중단 사유만
+보고한다. 정리 호출이나 `not_found`를 꾸며내지 않으며 ordinary workflow를 자동 재개하지 않는다.
 
 실제 10개 session의 실행 식별자와 raw result만 live evidence다. fixture나 정적 계약 테스트는 실행
 절차의 형식만 확인하며 실제 LLM 호출의 증거가 아니다.

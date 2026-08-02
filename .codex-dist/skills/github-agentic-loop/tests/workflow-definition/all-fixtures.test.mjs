@@ -232,6 +232,17 @@ test("removed workflow rules filename is not referenced by distribution or docs"
   }
 });
 
+test("installer owns the current workflow engine skill identifier in one variable", async () => {
+  const source = await readFile(installScript, "utf8");
+  const currentSkillIdentifier = "github-agentic-loop";
+
+  assert.equal(source.split(currentSkillIdentifier).length - 1, 1);
+  assert.match(source, /^WORKFLOW_ENGINE_SKILL="github-agentic-loop"$/m);
+  assert.match(source, /^WORKFLOW_ENGINE_SKILLS="\$WORKFLOW_ENGINE_SKILL workflow-code-editor/m);
+  assert.match(source, /^      SOURCE_MARKER="\$WORKFLOW_ENGINE_SKILL"$/m);
+  assert.match(source, /^  if \[ "\$skill" = "\$WORKFLOW_ENGINE_SKILL" \]; then$/m);
+});
+
 test("install and uninstall scripts have valid shell syntax", (t) => {
   for (const script of [installScript, uninstallScript]) {
     const result = runProcess("sh", ["-n", script]);

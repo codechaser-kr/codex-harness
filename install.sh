@@ -9,7 +9,8 @@ STATE_HOME="${XDG_STATE_HOME:-"$HOME/.local/state"}"
 BACKUP_ROOT="${CODEX_HARNESS_BACKUP_ROOT:-"$STATE_HOME/codex-harness/backups"}"
 TMP_ROOT="${TMPDIR:-/tmp}/codex-harness-install.$$"
 HARNESS_SKILLS="harness"
-WORKFLOW_ENGINE_SKILLS="github-agentic-loop workflow-code-editor github-state-summary github-simple-executor target-harness-code-editor issue-creation feature-proposal-triage policy-plan policy-review-next-triage feature-plan fix-analysis fix-plan branch-proposal commit-plan pr-proposal pr-creation review-comment"
+WORKFLOW_ENGINE_SKILL="github-agentic-loop"
+WORKFLOW_ENGINE_SKILLS="$WORKFLOW_ENGINE_SKILL workflow-code-editor github-state-summary github-simple-executor target-harness-code-editor issue-creation feature-proposal-triage policy-plan policy-review-next-triage feature-plan fix-analysis fix-plan branch-proposal commit-plan pr-proposal pr-creation review-comment"
 LEGACY_WORKFLOW_ENGINE_SKILL="github-workflow-engine"
 INSTALL_TARGET="${1:-all}"
 
@@ -30,7 +31,7 @@ select_skills() {
       ;;
     workflow-engine)
       CODEX_SKILLS="$WORKFLOW_ENGINE_SKILLS"
-      SOURCE_MARKER="github-agentic-loop"
+      SOURCE_MARKER="$WORKFLOW_ENGINE_SKILL"
       ;;
     all)
       CODEX_SKILLS="$HARNESS_SKILLS $WORKFLOW_ENGINE_SKILLS"
@@ -119,7 +120,7 @@ install_skill() {
   cp -R "$source_dir/." "$stage/"
   mkdir -p "$(dirname "$dest")"
 
-  if [ "$skill" = "github-agentic-loop" ]; then
+  if [ "$skill" = "$WORKFLOW_ENGINE_SKILL" ]; then
     legacy_dest="$DEST_ROOT/$LEGACY_WORKFLOW_ENGINE_SKILL"
     if [ -e "$legacy_dest" ]; then
       mkdir -p "$BACKUP_ROOT"

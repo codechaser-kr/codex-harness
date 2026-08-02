@@ -11,12 +11,12 @@ Harness 경로 또는 일반 코드 변경 경로 하나를 선택해 실행한 
 
 ## 먼저 읽을 문서
 
-- `github-workflow-engine/references/file-change-execution-contract.md`
-- `github-workflow-engine/references/structured-execution-contract.md`
-- `github-workflow-engine/references/command-execution-path-contract.md`
-- Harness 경로를 검토할 때만 `github-workflow-engine/references/target-harness-execution-contract.md`
-- 명시적 검증 모드일 때만 `github-workflow-engine/references/validation-mode-contract.md`
-- 새 execution session을 직접 생성할 때만 `github-workflow-engine/references/agent-lifecycle-contract.md`
+- `github-agentic-loop/references/file-change-execution-contract.md`
+- `github-agentic-loop/references/structured-execution-contract.md`
+- `github-agentic-loop/references/command-execution-path-contract.md`
+- Harness 경로를 검토할 때만 `github-agentic-loop/references/target-harness-execution-contract.md`
+- 명시적 검증 모드일 때만 `github-agentic-loop/references/validation-mode-contract.md`
+- 새 execution session을 직접 생성할 때만 `github-agentic-loop/references/agent-lifecycle-contract.md`
 - 대상 저장소의 `AGENTS.md`와 현재 요청에 적용되는 저장소 지시
 
 ## 입력

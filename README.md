@@ -26,7 +26,7 @@
 
 - `.codex-dist/skills/harness/SKILL.md`: Codex에 설치되는 전역 `harness` 스킬 진입점
 - `.codex-dist/skills/harness/references/*`: 하네스 Phase 선택 기준, 역할 설계, 에이전트 생성, QA, 로그, 재진입, 자기진화 기준
-- `.codex-dist/skills/github-workflow-engine/SKILL.md`: GitHub Run State를 읽고 다음 Workflow 액션을 제안하는 전역 스킬
+- `.codex-dist/skills/github-agentic-loop/SKILL.md`: GitHub Run State를 읽고 다음 Workflow 액션을 제안하는 전역 스킬
 - `.codex-dist/skills/{workflow-code-editor,github-state-summary,github-simple-executor,target-harness-code-editor,issue-creation,feature-proposal-triage,policy-plan,policy-review-next-triage,feature-plan,fix-analysis,fix-plan,branch-proposal,commit-plan,pr-proposal,pr-creation,review-comment}/SKILL.md`: GitHub Workflow Engine에서 사용하는 Codex 전용 전역 스킬 기본형
   - `target-harness-code-editor`는 이전 배포와의 호환을 위해 포함된 자산이며, 현재 파일 변경 executor는 `workflow-code-editor`입니다.
 - `install.sh`, `uninstall.sh`: Harness와 Workflow Engine 배포본을 각각 또는 함께 전역 Codex 스킬 경로에 설치하거나 제거하는 스크립트
@@ -80,8 +80,8 @@ Codex 대상: $HOME/.agents/skills/*
 $HOME/.agents/skills/harness
 $HOME/.agents/skills/harness/SKILL.md
 $HOME/.agents/skills/harness/references/
-$HOME/.agents/skills/github-workflow-engine
-$HOME/.agents/skills/github-workflow-engine/SKILL.md
+$HOME/.agents/skills/github-agentic-loop
+$HOME/.agents/skills/github-agentic-loop/SKILL.md
 $HOME/.agents/skills/workflow-code-editor
 $HOME/.agents/skills/github-state-summary
 $HOME/.agents/skills/github-simple-executor
@@ -109,6 +109,8 @@ $HOME/.agents/skills/review-comment
 
 재설치할 때 기존 스킬은 active 스킬 루트 밖의 `${XDG_STATE_HOME:-$HOME/.local/state}/codex-harness/backups`로 이동합니다. 백업 루트는 `CODEX_HARNESS_BACKUP_ROOT`로 바꿀 수 있습니다. `$CODEX_HOME/skills`에 있는 기존 디렉터리는 설치·감지·이전 대상이 아닙니다.
 
+Workflow Engine 스킬 묶음을 설치할 때 기존 `$HOME/.agents/skills/github-workflow-engine`이 있으면 같은 백업 루트로 먼저 이동한 뒤 `github-agentic-loop`만 설치합니다. `workflow-engine` 제거는 새 이름과 레거시 이름을 모두 확인해 각각 복구 가능한 백업으로 이동합니다.
+
 ## 전역 하네스 스킬의 구성
 
 설치된 전역 `harness` 스킬의 진입점은 `SKILL.md`입니다. 이 파일은 전체 실행 흐름을 안내하고, `references/`는 하네스 Phase 선택 기준, 역할 설계, 에이전트 생성, QA, 로그, 재진입 기준을 나눠 담습니다.
@@ -121,7 +123,7 @@ GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장�
 
 배포본에는 다음 Codex 전역 스킬 기본형이 포함됩니다.
 
-- `github-workflow-engine`: GitHub Run State를 읽고 State Transition Rule에 따라 다음 액션을 제안합니다.
+- `github-agentic-loop`: GitHub Run State를 읽고 State Transition Rule에 따라 다음 액션을 제안합니다.
 - `github-state-summary`: 출처가 있는 GitHub·로컬 상태를 읽기 전용으로 요약합니다.
 - `github-simple-executor`: 확정된 단일 비파일 단순 상태 변경을 검증 후 수행합니다.
 - `workflow-code-editor`: 파일 변경 전에 Harness 일반 진입점 사용 가능 여부를 확인합니다. 사용 가능하면 Workflow Engine 전용 계약을 제외한 일반 요청으로 Harness를 호출하고, 사용할 수 없으면 현재 Codex 세션의 일반 코드 변경 경로를 사용합니다. 선택 경로 실행을 시작한 뒤에는 다른 경로로 재시도하지 않습니다.

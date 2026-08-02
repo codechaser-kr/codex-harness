@@ -9,7 +9,7 @@ description: Workflow Engine 구현 흐름에서 작업 브랜치 전환이 완�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``커밋 계획(`commit-plan`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/artifact-output-contract.md`에서 ``커밋 계획(`commit-plan`) 출력 판정 규칙`` 섹션만 읽는다.
 
 ## 입력
 
@@ -43,7 +43,7 @@ description: Workflow Engine 구현 흐름에서 작업 브랜치 전환이 완�
 
 ## 사용자 결정
 
-- 제안한 커밋 단위와 구현 순서를 사용자 결정으로 해석하지 않는다. 계획 채택, 구현 요청, 커밋 메시지 확정과 커밋 생성 여부는 `github-workflow-engine`이 처리한다.
+- 제안한 커밋 단위와 구현 순서를 사용자 결정으로 해석하지 않는다. 계획 채택, 구현 요청, 커밋 메시지 확정과 커밋 생성 여부는 `github-agentic-loop`가 처리한다.
 
 ## 중단 조건
 
@@ -52,7 +52,7 @@ description: Workflow Engine 구현 흐름에서 작업 브랜치 전환이 완�
 
 ## 후속 전이
 
-- 제어와 기존 출력 구조를 `github-workflow-engine`에 반환한다.
+- 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 현재 커밋 단위와 확정된 구현 요청을 결정한다.
 
 ## 필수 출력 섹션

@@ -9,8 +9,8 @@ description: 기능결함 이슈의 현상과 확인 위치를 기준으로 근�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``결함 원인 분석(`fix-analysis`) 출력 판정 규칙`` 섹션만 읽는다.
-- `../github-workflow-engine/references/github-templates.md`
+- `../github-agentic-loop/references/artifact-output-contract.md`에서 ``결함 원인 분석(`fix-analysis`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/github-templates.md`
 
 ## 입력
 
@@ -53,7 +53,7 @@ description: 기능결함 이슈의 현상과 확인 위치를 기준으로 근�
 
 ## 사용자 결정
 
-- 추천 원인을 사용자 결정으로 해석하지 않는다. 원인 조사 결과의 확정과 이슈 본문 반영, 해결 계획 진입은 `github-workflow-engine`이 사용자 결정과 전이 규칙으로 처리한다.
+- 추천 원인을 사용자 결정으로 해석하지 않는다. 원인 조사 결과의 확정과 이슈 본문 반영, 해결 계획 진입은 `github-agentic-loop`가 사용자 결정과 전이 규칙으로 처리한다.
 
 ## 중단 조건
 
@@ -62,7 +62,7 @@ description: 기능결함 이슈의 현상과 확인 위치를 기준으로 근�
 
 ## 후속 전이
 
-- 제어와 기존 출력 구조를 `github-workflow-engine`에 반환한다.
+- 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 원인 조사 결과 확정 또는 `fix-plan` 호출 여부를 결정한다.
 
 ## 필수 출력 섹션

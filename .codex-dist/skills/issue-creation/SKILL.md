@@ -9,8 +9,8 @@ description: 기능제안, 정책검토, 기능변경, 기능결함 GitHub 이�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/github-templates.md`
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``이슈 생성(`issue-creation`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/github-templates.md`
+- `../github-agentic-loop/references/artifact-output-contract.md`에서 ``이슈 생성(`issue-creation`) 출력 판정 규칙`` 섹션만 읽는다.
 
 대상 저장소에 `.github/ISSUE_TEMPLATE/*.md`가 있으면 해당 파일을 실제 본문 형식의 단일 원천으로 먼저 읽는다. `github-templates.md`는 본문 복제본이 아니라 title prefix, label, 필수 섹션, 연결 규칙을 검증하는 계약 문서로 사용한다.
 
@@ -44,7 +44,7 @@ description: 기능제안, 정책검토, 기능변경, 기능결함 GitHub 이�
 ## 사용자 결정
 
 - 이슈 유형과 초안 내용은 추천 또는 후보로만 제시한다. 사용자의 선택이나 일반 진행 표현을 확정으로 해석하지 않는다.
-- 초안 채택과 GitHub 이슈 생성 요청 확정은 `github-workflow-engine`이 사용자 결정과 전이 규칙으로 처리한다.
+- 초안 채택과 GitHub 이슈 생성 요청 확정은 `github-agentic-loop`가 사용자 결정과 전이 규칙으로 처리한다.
 
 ## 중단 조건
 
@@ -53,7 +53,7 @@ description: 기능제안, 정책검토, 기능변경, 기능결함 GitHub 이�
 
 ## 후속 전이
 
-- 제어와 위 필수 출력 구조를 `github-workflow-engine`에 반환한다.
+- 제어와 위 필수 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine은 사용자 결정과 산출물 판정 규칙을 적용한 뒤에만 이슈 생성 요청 또는 다음 흐름을 확정한다.
 
 ## 분류 기준

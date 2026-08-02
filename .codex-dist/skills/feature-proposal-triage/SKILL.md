@@ -9,8 +9,8 @@ description: 기능제안 이슈를 기준으로 진행하지 않음, 정책 검
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``기능 제안 분류(`feature-proposal-triage`) 출력 판정 규칙`` 섹션만 읽는다.
-- `../github-workflow-engine/references/github-templates.md`
+- `../github-agentic-loop/references/artifact-output-contract.md`에서 ``기능 제안 분류(`feature-proposal-triage`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/github-templates.md`
 
 ## 입력
 
@@ -43,7 +43,7 @@ description: 기능제안 이슈를 기준으로 진행하지 않음, 정책 검
 
 ## 사용자 결정
 
-- 추천 방향을 사용자 결정으로 해석하지 않는다. 사용자에게 제시할 선택지와 결정 결과의 반영은 `github-workflow-engine`의 책임이다.
+- 추천 방향을 사용자 결정으로 해석하지 않는다. 사용자에게 제시할 선택지와 결정 결과의 반영은 `github-agentic-loop`의 책임이다.
 
 ## 중단 조건
 
@@ -52,7 +52,7 @@ description: 기능제안 이슈를 기준으로 진행하지 않음, 정책 검
 
 ## 후속 전이
 
-- 제어와 기존 출력 구조를 `github-workflow-engine`에 반환한다.
+- 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 처리해 `진행하지 않음`, 정책검토, 기능변경 중 다음 전이를 확정한다.
 
 ## 판정 기준

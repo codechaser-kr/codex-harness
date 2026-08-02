@@ -103,9 +103,31 @@ const artifactOutputConsumers = [
   ["review-comment", new URL("../../../review-comment/SKILL.md", import.meta.url)],
 ];
 
+const workflowEngineConsumers = [
+  ...artifactOutputConsumers,
+  ["github-state-summary", new URL("../../../github-state-summary/SKILL.md", import.meta.url)],
+  ["github-simple-executor", urls.simpleExecutor],
+  ["workflow-code-editor", urls.workflowEditor],
+  ["target-harness-code-editor", new URL("../../../target-harness-code-editor/SKILL.md", import.meta.url)],
+];
+
 async function read(name) {
   return readFile(urls[name], "utf8");
 }
+
+test("workflow engine distribution and consumers use the github-agentic-loop identifier", async () => {
+  const legacySkillIdentifier = ["github", "workflow", "engine"].join("-");
+  const skill = await read("skill");
+
+  assert.match(skill, /^name: github-agentic-loop$/m);
+  assert.doesNotMatch(skill, new RegExp(`^name: ${legacySkillIdentifier}$`, "m"));
+
+  for (const [consumerName, consumerUrl] of workflowEngineConsumers) {
+    const consumer = await readFile(consumerUrl, "utf8");
+    assert.match(consumer, /github-agentic-loop/, consumerName);
+    assert.equal(consumer.includes(legacySkillIdentifier), false, consumerName);
+  }
+});
 
 async function readMarkdownTree(directoryUrl) {
   const entries = await readdir(directoryUrl, { withFileTypes: true });

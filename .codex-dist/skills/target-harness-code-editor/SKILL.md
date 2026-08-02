@@ -13,11 +13,11 @@ session을 오케스트레이션한다. 검증 결과는 사용자 판단을 위
 
 ## 먼저 읽을 문서
 
-- 설치된 `github-workflow-engine/references/structured-execution-contract.md`에서 `실행 범위 규칙`, `중단과 재개 판정 규칙`, `구조화 실행 요청 판정 규칙`, `구조화 실행 결과와 요청-결과 상관관계 판정 규칙`, `구조화 실행 성공과 중단 판정 규칙`을 읽는다.
-- 명령을 실행할 때 `github-workflow-engine/references/command-execution-path-contract.md`를 읽는다.
-- 파일 수정 요청의 준비도·라우팅·선택·세션 예외·출력 사용 가능을 판정할 때 `github-workflow-engine/references/target-harness-execution-contract.md`를 읽는다.
-- 검증 모드이면 `github-workflow-engine/references/validation-mode-contract.md`에서 `대상과 고정 조건`, `실행과 무결성`, `사용자 반환과 종료` 섹션만 읽는다.
-- `spawn`으로 editing session을 시작할 때 `github-workflow-engine/references/agent-lifecycle-contract.md`를 읽는다.
+- 설치된 `github-agentic-loop/references/structured-execution-contract.md`에서 `실행 범위 규칙`, `중단과 재개 판정 규칙`, `구조화 실행 요청 판정 규칙`, `구조화 실행 결과와 요청-결과 상관관계 판정 규칙`, `구조화 실행 성공과 중단 판정 규칙`을 읽는다.
+- 명령을 실행할 때 `github-agentic-loop/references/command-execution-path-contract.md`를 읽는다.
+- 파일 수정 요청의 준비도·라우팅·선택·세션 예외·출력 사용 가능을 판정할 때 `github-agentic-loop/references/target-harness-execution-contract.md`를 읽는다.
+- 검증 모드이면 `github-agentic-loop/references/validation-mode-contract.md`에서 `대상과 고정 조건`, `실행과 무결성`, `사용자 반환과 종료` 섹션만 읽는다.
+- `spawn`으로 editing session을 시작할 때 `github-agentic-loop/references/agent-lifecycle-contract.md`를 읽는다.
 - 대상 프로젝트의 `AGENTS.md`, `.agents/skills/run-harness/SKILL.md`
 - 대상 프로젝트의 `.harness/docs/team-spec.md`, `.harness/docs/orchestration-plan.md`
 - 선택 역할의 `.codex/agents/<agent_file>.toml`, `.agents/skills/<agent_file>/SKILL.md`

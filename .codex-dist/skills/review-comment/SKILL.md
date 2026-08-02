@@ -9,8 +9,8 @@ description: PR Review Template 출력을 GitHub PR review thread 게시 초안�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/review-runtime-contract.md`에서 `PR Review Template 판정 규칙`과 `리뷰 게시 위치 판정 규칙` 섹션만 읽는다.
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``리뷰 코멘트 출력 판정 규칙 (`review-comment`)`` 섹션만 읽는다.
+- `../github-agentic-loop/references/review-runtime-contract.md`에서 `PR Review Template 판정 규칙`과 `리뷰 게시 위치 판정 규칙` 섹션만 읽는다.
+- `../github-agentic-loop/references/artifact-output-contract.md`에서 ``리뷰 코멘트 출력 판정 규칙 (`review-comment`)`` 섹션만 읽는다.
 
 ## 입력
 
@@ -42,7 +42,7 @@ description: PR Review Template 출력을 GitHub PR review thread 게시 초안�
 ## 사용자 결정
 
 - 위치 재지정, 피드백 철회 또는 기타 입력이 필요한 경우 `questions`에 선택지로 반환하고, 사용자의 명시 입력으로 선택지를 확정한다.
-- 게시 대상, 피드백 철회, 게시 요청, 이후 대응 방향과 해결 여부는 `github-workflow-engine`이 사용자 결정과 전이 규칙으로 처리한다.
+- 게시 대상, 피드백 철회, 게시 요청, 이후 대응 방향과 해결 여부는 `github-agentic-loop`가 사용자 결정과 전이 규칙으로 처리한다.
 
 ## 중단 조건
 
@@ -51,7 +51,7 @@ description: PR Review Template 출력을 GitHub PR review thread 게시 초안�
 
 ## 후속 전이
 
-- 제어와 기존 출력 구조를 `github-workflow-engine`에 반환한다.
+- 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 위치 매핑 재시도, 피드백 철회, 또는 review thread 게시의 구조화 실행 요청을 확정한다.
 
 ## 판정 기준 참조

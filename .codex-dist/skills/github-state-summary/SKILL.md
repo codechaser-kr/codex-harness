@@ -5,12 +5,12 @@ description: GitHub와 로컬의 지정된 상태를 읽기 전용으로 수집�
 
 # GitHub State Summary
 
-이 스킬은 `github-workflow-engine`이 이미 식별한 대상의 GitHub 및 로컬 상태를 읽기 전용으로 요약한다. 저비용 실행에 적합한 보조 단위이며, 관측 결과는 Workflow Engine의 입력일 뿐 상태나 다음 작업의 결정이 아니다.
+이 스킬은 `github-agentic-loop`가 이미 식별한 대상의 GitHub 및 로컬 상태를 읽기 전용으로 요약한다. 저비용 실행에 적합한 보조 단위이며, 관측 결과는 Workflow Engine의 입력일 뿐 상태나 다음 작업의 결정이 아니다.
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/state-observation-contract.md`에서 `상태 읽기 규칙`과 `상태 요약 출력 사용 가능 판정 규칙` 섹션만 읽는다.
-- `../github-workflow-engine/references/structured-execution-contract.md`에서 `실행 주체 선택 판정 규칙` 섹션만 읽는다.
+- `../github-agentic-loop/references/state-observation-contract.md`에서 `상태 읽기 규칙`과 `상태 요약 출력 사용 가능 판정 규칙` 섹션만 읽는다.
+- `../github-agentic-loop/references/structured-execution-contract.md`에서 `실행 주체 선택 판정 규칙` 섹션만 읽는다.
 
 ## 입력
 
@@ -42,7 +42,7 @@ description: GitHub와 로컬의 지정된 상태를 읽기 전용으로 수집�
 ## 사용자 결정
 
 - 관측 결과, 누락 사실, 충돌 사실을 사용자 결정이나 상태 변경 의도로 해석하지 않는다.
-- 사용자 결정이 필요하다는 판단과 선택지 제시는 `github-workflow-engine`만 수행한다.
+- 사용자 결정이 필요하다는 판단과 선택지 제시는 `github-agentic-loop`만 수행한다.
 
 ## 중단 조건
 
@@ -52,5 +52,5 @@ description: GitHub와 로컬의 지정된 상태를 읽기 전용으로 수집�
 
 ## 후속 전이
 
-- 출처가 있는 관측 결과만 `github-workflow-engine`에 반환한다.
+- 출처가 있는 관측 결과만 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 `상태 요약 출력 사용 가능`을 판정한 뒤 현재 작업, 사용자 결정, 상태 전이 또는 후속 실행 요청을 확정한다.

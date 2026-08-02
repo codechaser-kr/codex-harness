@@ -11,6 +11,13 @@
 - Workflow Engine 관리 이슈는 PR 본문에 `Refs #번호`로 연결한다.
 - Pull Request review threads는 diff가 있는 피드백과 resolved/unresolved 상태를 리뷰 피드백 상태 원천으로 읽는다.
 - Pull Request issue comments는 리뷰 피드백 상태 원천으로 쓰지 않는다.
+- 날짜별 Workflow Engine 로그가 보조 근거로 필요하면 현재 실행 환경 날짜 파일을 먼저 읽는다.
+- 날짜 경계를 넘긴 재개 요청에서 현재 날짜 파일이 없거나 관련 `request_id`, `task_action_id`, 재개 조건이
+  없으면 `.github-agentic-loop/logs/github-workflow-log-YYYY-MM-DD.md` 파일명을 날짜 내림차순으로
+  확인한다. 같은 기준 이슈 또는 PR과 워크플로에 해당하는 최신 이전 날짜 파일부터 필요한 재개 근거가
+  복원될 때까지만 최소 범위로 읽고, 무관한 날짜 파일까지 전부 읽지 않는다.
+- 날짜별 로그는 보조 근거로만 분류한다. 로그가 GitHub 완료·미완료 근거와 충돌하면 GitHub 실행 상태를
+  우선하고, 관련 이전 날짜 파일에서도 필요한 재개 근거를 찾지 못하면 값을 추론하지 않고 중단한다.
 
 ## 기능변경 진입 local_state 관측 규칙
 

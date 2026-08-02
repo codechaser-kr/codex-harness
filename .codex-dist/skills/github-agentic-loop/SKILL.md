@@ -56,9 +56,11 @@ description: GitHub 이슈와 PR의 관측 상태를 선언형 워크플로 정�
 - 이 스킬이 서브에이전트를 직접 생성하거나 하위 실행 주체의 정리 근거를 검증할 때 `references/agent-lifecycle-contract.md`
 - 이슈 또는 PR 템플릿, 제목, 라벨, 연관 이슈 계약이 필요할 때 `references/github-templates.md`와 `references/workflow-engine-template-compatibility-contract.md`
 
-필요한 경우 대상 저장소의
-`.github-agentic-loop/logs/github-workflow-log-YYYY-MM-DD.md` 중 현재 실행 환경 날짜에 해당하는
-파일을 보조 근거로 읽는다.
+필요한 경우 대상 저장소의 `.github-agentic-loop/logs/github-workflow-log-YYYY-MM-DD.md` 중 현재
+실행 환경 날짜 파일을 먼저 보조 근거로 읽는다. 날짜 경계를 넘긴 재개 요청에서 현재 날짜 파일에 관련
+`request_id`, `task_action_id` 또는 재개 조건이 없으면 파일명을 날짜 내림차순으로 확인하고, 같은 기준
+대상과 워크플로에 해당하는 최신 이전 날짜 파일을 필요한 근거가 복원될 때까지만 최소 범위로 읽는다.
+날짜별 로그는 GitHub 실행 상태를 대체하지 않으며 충돌하면 GitHub 상태를 우선한다.
 런타임 입력은 위 계약과 실행 코드로 한정한다. `docs/github-workflow-engine.md`는 설계 문서로 취급한다.
 
 ## 타겟 런타임 지연 초기화

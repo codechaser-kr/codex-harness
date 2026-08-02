@@ -457,6 +457,24 @@ test("target runtime bootstrap and template compatibility belong to the workflow
   assert.match(readme, /`workflow-code-editor`:[\s\S]*Harness 일반 진입점[\s\S]*일반 코드 변경 경로/);
 });
 
+test("daily workflow logs preserve cross-day resume evidence without replacing GitHub state", async () => {
+  const [skill, stateObservation, workflowDoc, readme] = await Promise.all([
+    read("skill"),
+    read("stateObservation"),
+    read("workflowDoc"),
+    read("readme"),
+  ]);
+
+  assert.match(skill, /현재[\s\S]*날짜 파일을 먼저[\s\S]*파일명을 날짜 내림차순/);
+  assert.match(skill, /최신 이전 날짜 파일[\s\S]*최소 범위/);
+  assert.match(stateObservation, /관련 `request_id`, `task_action_id`, 재개 조건/);
+  assert.match(stateObservation, /필요한 재개 근거가[\s\S]*최소 범위/);
+  assert.match(stateObservation, /로그가 GitHub 완료·미완료 근거와 충돌하면 GitHub 실행 상태/);
+  assert.match(workflowDoc, /날짜 경계를 넘긴 재개 요청[\s\S]*날짜 내림차순/);
+  assert.match(workflowDoc, /관련 이전 날짜 파일에서도 재개 근거를 찾지 못하면[\s\S]*중단/);
+  assert.match(readme, /날짜 경계를 넘어 재개[\s\S]*최신순으로 관련 이전 날짜 파일/);
+});
+
 test("existence operators are documented without a value field", async () => {
   const contract = await read("workflowDefinitionContract");
   const valuelessOperators = [...contract.matchAll(/^\| `(exists|not_exists)` \| `value` 필드 없음 \|$/gm)]

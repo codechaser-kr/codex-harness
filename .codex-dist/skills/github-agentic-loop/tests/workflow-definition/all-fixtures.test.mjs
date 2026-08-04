@@ -8,6 +8,7 @@ import test from "node:test";
 
 import "./structural-validation.test.mjs";
 import "./semantic-validation.test.mjs";
+import "./compiled-definition.test.mjs";
 import "./evaluator.test.mjs";
 import "./feature-proposal.test.mjs";
 import "./normalized-fact-adapter.test.mjs";
@@ -71,6 +72,8 @@ const requiredArtifacts = [
   "scripts/workflow-definition/parser.mjs",
   "scripts/workflow-definition/expression.mjs",
   "scripts/workflow-definition/validator.mjs",
+  "scripts/workflow-definition/compiler.mjs",
+  "scripts/workflow-definition/compiled-definition-loader.mjs",
   "scripts/workflow-definition/evaluator.mjs",
   "scripts/workflow-definition/normalized-fact-adapter.mjs",
   "scripts/workflow-definition/workflow-state-adapter.mjs",
@@ -82,6 +85,7 @@ const requiredArtifacts = [
   "scripts/workflow-definition/cli.mjs",
   "tests/workflow-definition/structural-validation.test.mjs",
   "tests/workflow-definition/semantic-validation.test.mjs",
+  "tests/workflow-definition/compiled-definition.test.mjs",
   "tests/workflow-definition/evaluator.test.mjs",
   "tests/workflow-definition/feature-proposal.test.mjs",
   "tests/workflow-definition/normalized-fact-adapter.test.mjs",

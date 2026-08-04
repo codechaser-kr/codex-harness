@@ -16,14 +16,14 @@
 | --- | --- |
 | 이슈 생성 또는 이슈 유형 판정 | 해당 이슈 유형의 `.github/ISSUE_TEMPLATE/*.md`와 유형 라벨 하나 |
 | PR 초안 생성 또는 PR 본문 판정 | `.github/pull_request_template.md` |
-| 리뷰 실행 모드 선택 또는 실행 | `.workflow-engine/settings.json`의 `review.defaultMode`와 `review.modes` |
-| 커밋 스킬 사용 가능 여부 판정 | `.workflow-engine/settings.json`의 `dependencies.commit` |
+| 리뷰 실행 모드 선택 또는 실행 | `.github-agentic-loop/settings.json`의 `review.defaultMode`와 `review.modes` |
+| 커밋 스킬 사용 가능 여부 판정 | `.github-agentic-loop/settings.json`의 `dependencies.commit` |
 
 여러 항목을 한 작업에서 요구하면 필요한 범위를 합쳐 한 번만 확인한다. 아직 요구하지 않은 항목은 미리 만들지 않는다.
 
 ## 설정 파일 초기화
 
-`.workflow-engine/settings.json`은 Workflow Engine이 독점적으로 생성·해석하는 타겟별 런타임 설정이다.
+`.github-agentic-loop/settings.json`은 Workflow Engine이 독점적으로 생성·해석하는 타겟별 런타임 설정이다.
 Harness 설치, 생성, 갱신 또는 실행은 이 파일을 만들거나 읽거나 보완하지 않는다. 별도 JSON Schema나
 범용 설정 validator를 두지 않고, Workflow Engine의 생성·소비 계약과 회귀 테스트로 지원 값을 고정한다.
 

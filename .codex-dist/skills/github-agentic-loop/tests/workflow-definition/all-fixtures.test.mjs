@@ -232,6 +232,17 @@ test("removed workflow rules filename is not referenced by distribution or docs"
   }
 });
 
+test("installer owns the current workflow engine skill identifier in one variable", async () => {
+  const source = await readFile(installScript, "utf8");
+  const currentSkillIdentifier = "github-agentic-loop";
+
+  assert.equal(source.split(currentSkillIdentifier).length - 1, 1);
+  assert.match(source, /^WORKFLOW_ENGINE_SKILL="github-agentic-loop"$/m);
+  assert.match(source, /^WORKFLOW_ENGINE_SKILLS="\$WORKFLOW_ENGINE_SKILL workflow-code-editor/m);
+  assert.match(source, /^      SOURCE_MARKER="\$WORKFLOW_ENGINE_SKILL"$/m);
+  assert.match(source, /^  if \[ "\$skill" = "\$WORKFLOW_ENGINE_SKILL" \]; then$/m);
+});
+
 test("install and uninstall scripts have valid shell syntax", (t) => {
   for (const script of [installScript, uninstallScript]) {
     const result = runProcess("sh", ["-n", script]);
@@ -312,29 +323,80 @@ test("installer and uninstaller keep harness and workflow-engine targets indepen
   }
   assertProcessSucceeded(harnessInstall, "install.sh harness");
   await access(join(harnessDestination, "SKILL.md"));
+  await assert.rejects(access(join(destinationRoot, "github-agentic-loop/SKILL.md")));
   await assert.rejects(access(join(destinationRoot, "github-workflow-engine/SKILL.md")));
 
   const workflowInstall = runProcess("sh", [installScript, "workflow-engine"], { cwd: repositoryRoot, env: environment });
   assertProcessSucceeded(workflowInstall, "install.sh workflow-engine");
   await access(join(harnessDestination, "SKILL.md"));
-  await access(join(destinationRoot, "github-workflow-engine/SKILL.md"));
+  await access(join(destinationRoot, "github-agentic-loop/SKILL.md"));
+  await assert.rejects(access(join(destinationRoot, "github-workflow-engine/SKILL.md")));
   await access(join(destinationRoot, "workflow-code-editor/SKILL.md"));
 
   const harnessUninstall = runProcess("sh", [uninstallScript, "harness"], { cwd: repositoryRoot, env: environment });
   assertProcessSucceeded(harnessUninstall, "uninstall.sh harness");
   await assert.rejects(access(join(harnessDestination, "SKILL.md")));
-  await access(join(destinationRoot, "github-workflow-engine/SKILL.md"));
+  await access(join(destinationRoot, "github-agentic-loop/SKILL.md"));
 
   const workflowUninstall = runProcess("sh", [uninstallScript, "workflow-engine"], { cwd: repositoryRoot, env: environment });
   assertProcessSucceeded(workflowUninstall, "uninstall.sh workflow-engine");
+  await assert.rejects(access(join(destinationRoot, "github-agentic-loop/SKILL.md")));
   await assert.rejects(access(join(destinationRoot, "github-workflow-engine/SKILL.md")));
   await assert.rejects(access(join(destinationRoot, "workflow-code-editor/SKILL.md")));
   const backupNames = await readdir(backupRoot);
   assert.equal(backupNames.some((name) => /^harness\.removed\./.test(name)), true);
+  assert.equal(backupNames.some((name) => /^github-agentic-loop\.removed\./.test(name)), true);
+});
+
+test("installer migrates a legacy workflow engine installation and uninstaller handles both names", async (t) => {
+  const temporaryRoot = await mkdtemp(`${tmpdir()}/workflow-engine-rename-install-`);
+  t.after(() => rm(temporaryRoot, { recursive: true, force: true }));
+
+  const destinationRoot = join(temporaryRoot, "skills");
+  const backupRoot = join(temporaryRoot, "backups");
+  const legacySkillDirectory = join(destinationRoot, "github-workflow-engine");
+  const currentSkillDirectory = join(destinationRoot, "github-agentic-loop");
+  const environment = {
+    ...process.env,
+    HOME: join(temporaryRoot, "home"),
+    CODEX_HOME: join(temporaryRoot, "codex-home"),
+    CODEX_HARNESS_DEST_ROOT: destinationRoot,
+    CODEX_HARNESS_BACKUP_ROOT: backupRoot,
+  };
+
+  await mkdir(legacySkillDirectory, { recursive: true });
+  await writeFile(join(legacySkillDirectory, "SKILL.md"), "legacy sentinel\n");
+
+  const installResult = runProcess("sh", [installScript, "workflow-engine"], { cwd: repositoryRoot, env: environment });
+  if (isNestedSpawnDenied(installResult)) {
+    t.skip("The current execution sandbox does not permit nested child processes.");
+    return;
+  }
+  assertProcessSucceeded(installResult, "install.sh workflow-engine with legacy installation");
+  await access(join(currentSkillDirectory, "SKILL.md"));
+  await assert.rejects(access(legacySkillDirectory));
+
+  let backupNames = await readdir(backupRoot);
+  const migratedLegacyBackup = backupNames.find((name) => /^github-workflow-engine\.backup\./.test(name));
+  assert.ok(migratedLegacyBackup);
+  assert.equal(
+    await readFile(join(backupRoot, migratedLegacyBackup, "SKILL.md"), "utf8"),
+    "legacy sentinel\n",
+  );
+
+  await mkdir(legacySkillDirectory, { recursive: true });
+  await writeFile(join(legacySkillDirectory, "SKILL.md"), "stale legacy sentinel\n");
+  const uninstallResult = runProcess("sh", [uninstallScript, "workflow-engine"], { cwd: repositoryRoot, env: environment });
+  assertProcessSucceeded(uninstallResult, "uninstall.sh workflow-engine with both installation names");
+  await assert.rejects(access(currentSkillDirectory));
+  await assert.rejects(access(legacySkillDirectory));
+
+  backupNames = await readdir(backupRoot);
+  assert.equal(backupNames.some((name) => /^github-agentic-loop\.removed\./.test(name)), true);
   assert.equal(backupNames.some((name) => /^github-workflow-engine\.removed\./.test(name)), true);
 });
 
-test("installer preserves the github-workflow-engine distribution", async (t) => {
+test("installer preserves the github-agentic-loop distribution", async (t) => {
   const temporaryRoot = await mkdtemp(`${tmpdir()}/workflow-definition-install-`);
   t.after(() => rm(temporaryRoot, { recursive: true, force: true }));
 
@@ -355,7 +417,7 @@ test("installer preserves the github-workflow-engine distribution", async (t) =>
   }
   assertProcessSucceeded(installResult, "install.sh");
 
-  const installedSkillDirectory = join(destinationRoot, "github-workflow-engine");
+  const installedSkillDirectory = join(destinationRoot, "github-agentic-loop");
   await assertTreesMatch(sourceSkillDirectory, installedSkillDirectory);
   assert.equal((await listRegularFiles(installedSkillDirectory)).includes("schemas/workflow-definition.schema.json"), false);
   assert.equal((await listRegularFiles(installedSkillDirectory)).includes(removedRulesRelativePath), false);

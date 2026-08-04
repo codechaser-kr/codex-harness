@@ -9,8 +9,8 @@ description: 기능변경 이슈를 기준으로 브랜치/PR 단위별 작업 �
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``기능 변경 계획(`feature-plan`) 출력 판정 규칙`` 섹션만 읽는다.
-- `../github-workflow-engine/references/github-templates.md`
+- `../github-agentic-loop/references/artifact-output-contract.md`에서 ``기능 변경 계획(`feature-plan`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/github-templates.md`
 
 ## 입력
 
@@ -44,7 +44,7 @@ description: 기능변경 이슈를 기준으로 브랜치/PR 단위별 작업 �
 
 ## 사용자 결정
 
-- 제안한 단위와 구현 순서는 후보로만 반환한다. 계획 채택, 이슈 반영, 구현 흐름 진입은 `github-workflow-engine`이 사용자 결정과 전이 규칙으로 처리한다.
+- 제안한 단위와 구현 순서는 후보로만 반환한다. 계획 채택, 이슈 반영, 구현 흐름 진입은 `github-agentic-loop`가 사용자 결정과 전이 규칙으로 처리한다.
 
 ## 중단 조건
 
@@ -53,7 +53,7 @@ description: 기능변경 이슈를 기준으로 브랜치/PR 단위별 작업 �
 
 ## 후속 전이
 
-- 제어와 기존 출력 구조를 `github-workflow-engine`에 반환한다.
+- 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 계획 반영 또는 확정된 브랜치/PR 단위의 다음 작업을 결정한다.
 
 ## 필수 출력 섹션

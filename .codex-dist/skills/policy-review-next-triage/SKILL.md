@@ -9,8 +9,8 @@ description: 정책검토의 설계 문서 반영이 끝난 뒤 기존 기능변
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``정책 검토 후속 분류(`policy-review-next-triage`) 출력 판정 규칙`` 섹션만 읽는다.
-- `../github-workflow-engine/references/github-templates.md`
+- `../github-agentic-loop/references/artifact-output-contract.md`에서 ``정책 검토 후속 분류(`policy-review-next-triage`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/github-templates.md`
 
 ## 입력
 
@@ -49,7 +49,7 @@ description: 정책검토의 설계 문서 반영이 끝난 뒤 기존 기능변
 
 ## 사용자 결정
 
-- 추천 후보를 사용자 결정으로 해석하지 않는다. 기존 이슈 반영 또는 새 이슈 생성의 선택과 실행 요청 확정은 `github-workflow-engine`이 처리한다.
+- 추천 후보를 사용자 결정으로 해석하지 않는다. 기존 이슈 반영 또는 새 이슈 생성의 선택과 실행 요청 확정은 `github-agentic-loop`가 처리한다.
 
 ## 중단 조건
 
@@ -58,7 +58,7 @@ description: 정책검토의 설계 문서 반영이 끝난 뒤 기존 기능변
 
 ## 후속 전이
 
-- 제어와 기존 출력 구조를 `github-workflow-engine`에 반환한다.
+- 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 기존 이슈 반영 또는 새 기능변경 이슈 생성의 다음 작업을 확정한다.
 
 ## 필수 출력 섹션

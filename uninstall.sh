@@ -6,7 +6,8 @@ HARNESS_DEST="${CODEX_HARNESS_DEST:-"$DEST_ROOT/harness"}"
 STATE_HOME="${XDG_STATE_HOME:-"$HOME/.local/state"}"
 BACKUP_ROOT="${CODEX_HARNESS_BACKUP_ROOT:-"$STATE_HOME/codex-harness/backups"}"
 HARNESS_SKILLS="harness"
-WORKFLOW_ENGINE_SKILLS="github-workflow-engine workflow-code-editor github-state-summary github-simple-executor target-harness-code-editor issue-creation feature-proposal-triage policy-plan policy-review-next-triage feature-plan fix-analysis fix-plan branch-proposal commit-plan pr-proposal pr-creation review-comment"
+WORKFLOW_ENGINE_SKILLS="github-agentic-loop workflow-code-editor github-state-summary github-simple-executor target-harness-code-editor issue-creation feature-proposal-triage policy-plan policy-review-next-triage feature-plan fix-analysis fix-plan branch-proposal commit-plan pr-proposal pr-creation review-comment"
+LEGACY_WORKFLOW_ENGINE_SKILL="github-workflow-engine"
 UNINSTALL_TARGET="${1:-all}"
 
 die() {
@@ -20,10 +21,10 @@ select_skills() {
       CODEX_SKILLS="$HARNESS_SKILLS"
       ;;
     workflow-engine)
-      CODEX_SKILLS="$WORKFLOW_ENGINE_SKILLS"
+      CODEX_SKILLS="$WORKFLOW_ENGINE_SKILLS $LEGACY_WORKFLOW_ENGINE_SKILL"
       ;;
     all)
-      CODEX_SKILLS="$HARNESS_SKILLS $WORKFLOW_ENGINE_SKILLS"
+      CODEX_SKILLS="$HARNESS_SKILLS $WORKFLOW_ENGINE_SKILLS $LEGACY_WORKFLOW_ENGINE_SKILL"
       ;;
     *)
       die "제거 대상은 harness, workflow-engine, all 중 하나여야 합니다: $UNINSTALL_TARGET"

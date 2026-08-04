@@ -28,7 +28,7 @@
 - 정책 판단, 설계 변경, 커밋 메시지 확정, PR merge처럼 사용자 결정이 필요한 작업은 사용자 결정을 거친다.
 - 하나의 작업을 끝낸 뒤 사용자 결정, 중단, 오류, 완료 조건 중 하나에 닿을 때까지 다음 작업 판단을 이어간다.
 - 이슈 초안 작성과 실제 GitHub 상태 변경을 분리한다.
-- `github-workflow-engine`은 얇은 오케스트레이터로 유지하고, 생성·분석·제안 책임은 전용 스킬이나 필요한 경우 좁은 서브에이전트 위임으로 분리한다.
+- `github-agentic-loop`는 얇은 오케스트레이터로 유지하고, 생성·분석·제안 책임은 전용 스킬이나 필요한 경우 좁은 서브에이전트 위임으로 분리한다.
 - 경량 모델은 읽기 전용 상태 요약, 후보 분류, 단순 라우팅, 참조문서 추출과 실행 내용이 확정된 단순 상태 변경처럼 실패 비용과 판단 범위가 낮은 작업에만 적용 후보로 둔다.
 - 전이 매칭과 평가는 검증기와 평가기가 담당한다. LLM은 근거에 묶인 의미 사실과 사용자 결정 입력만 구조화해 반환하며 `task_action_id`를 추론하지 않는다.
 - 확정된 단순 상태 변경은 결정론적 실행기를 우선하고, 결정론적 실행이 불가능할 때만 제한된 저비용 서브에이전트에 맡긴다.
@@ -235,7 +235,7 @@ Workflow Engine이 사용자 결정을 요청할 때는 결정 대상과 선택 
 6. `사후조건 검증`은 실행 주체의 반환 결과와 다시 관찰한 상태가 완료 조건을 만족하는지 확인한 뒤 다음 전이를 평가한다.
 
 현재 런타임은 다섯 Workflow Definition과 각 state adapter를 사용하고, validator와 evaluator가 전이
-매칭과 평가를 결정론적으로 수행한다. `github-workflow-engine`은 기준 대상을 관찰하고 정규화·평가·
+매칭과 평가를 결정론적으로 수행한다. `github-agentic-loop`는 기준 대상을 관찰하고 정규화·평가·
 실행·사후조건 검증을 연결하는 얇은 오케스트레이터이며 전이를 자연어로 선택하지 않는다.
 
 ### 명시적 검증 모드
@@ -478,7 +478,7 @@ Workflow Engine은 현재 커밋 단위의 구현 범위와 검증 기준을 확
 
 Workflow Engine은 GitHub와 코드 상태를 읽고 규칙에 따라 현재 작업을 정하며, 사용자 결정을 받은 뒤 허용된 실행 요청을 확정한다. 전용 스킬은 현재 작업에 필요한 후보, 초안 또는 분석 결과만 만들고 상태를 확정하거나 GitHub를 직접 변경하지 않는다.
 
-`github-workflow-engine`의 핵심 책임은 기준 대상 식별, 관찰·정규화 결과 연결, 전이 평가 결과 처리, 사용자 결정 관리, 실행 범위 확정, 상태 변경 경계 통제다. 선언형 워크플로우 정의가 적용되면 전이 조건의 매칭과 평가는 검증기와 평가기가 담당하고, Workflow Engine은 그 결과를 받아 현재 작업과 실행 여부를 조율한다. 이 분리는 `github-workflow-engine`을 제거하거나 최종 실행 권한을 전용 스킬에 넘긴다는 뜻이 아니다. 상태 읽기 보조, 전이 후보 분류, 리뷰 실행 모드 검사, 로그 기록 준비처럼 분리 가능한 책임은 참조문서나 전용 스킬로 옮길 수 있지만, 사용자에게 제시할 현재 작업과 GitHub 상태 변경 여부는 Workflow Engine이 확정한다.
+`github-agentic-loop`의 핵심 책임은 기준 대상 식별, 관찰·정규화 결과 연결, 전이 평가 결과 처리, 사용자 결정 관리, 실행 범위 확정, 상태 변경 경계 통제다. 선언형 워크플로우 정의가 적용되면 전이 조건의 매칭과 평가는 검증기와 평가기가 담당하고, Workflow Engine은 그 결과를 받아 현재 작업과 실행 여부를 조율한다. 이 분리는 `github-agentic-loop`를 제거하거나 최종 실행 권한을 전용 스킬에 넘긴다는 뜻이 아니다. 상태 읽기 보조, 전이 후보 분류, 리뷰 실행 모드 검사, 로그 기록 준비처럼 분리 가능한 책임은 참조문서나 전용 스킬로 옮길 수 있지만, 사용자에게 제시할 현재 작업과 GitHub 상태 변경 여부는 Workflow Engine이 확정한다.
 
 하위 작업은 단순 스킬 호출과 서브에이전트 위임을 구분한다. 단순 스킬 호출은 현재 메인 모델이 수행하며, 스킬 자체가 모델을 바꾸지는 않는다. 별도 서브에이전트 위임은 입력과 산출이 좁고 독립적인 읽기 전용 요약, 후보 분류, 단순 라우팅, 참조문서 추출 또는 확정된 실행 요청 처리에만 적용 후보로 둔다. 서브에이전트 결과는 최종 결정이 아니라 메인 Workflow Engine의 입력이다.
 
@@ -551,7 +551,7 @@ Workflow Engine이 리뷰 설정을 최초로 필요로 할 때는 사용 가능
 }
 ```
 
-- 저장 위치는 타겟 레포의 `.workflow-engine/settings.json`이며 Workflow Engine만 필요한 시점에 필요한 필드를 생성하거나 보완한다.
+- 저장 위치는 타겟 레포의 `.github-agentic-loop/settings.json`이며 Workflow Engine만 필요한 시점에 필요한 필드를 생성하거나 보완한다.
 - `review.defaultMode` 값은 `claude/code-review`, `claude/awesome-code-review`, `codex/awesome-code-review` 중 하나여야 한다.
 - 지원 모드의 번호 또는 선택지 문구가 입력되면 리뷰 실행 모드 검사로 전이한다.
 - `기타 의견 입력`은 사용자 결정 규칙에 따라 처리하며, 리뷰 실행 모드가 확정된 경우에만 리뷰 실행 모드 검사로 전이한다.
@@ -865,7 +865,18 @@ Workflow Engine은 Commit Plan의 커밋 단위 ID와 작업 범위로 체크항
 
 ### 실행 로그
 
-Workflow Engine은 작업에 진입하거나 중단 또는 재개 상태를 기록해야 할 때 타겟 저장소의 `.harness/logs/github-workflow-log.md`에 보조 로그를 남긴다. 실행 로그는 빠른 맥락 복원과 재개 조건 확인을 돕는 보조 근거이며, GitHub 실행 상태를 대체하지 않는다.
+Workflow Engine은 작업에 진입하거나 중단 또는 재개 상태를 기록해야 할 때 타겟 저장소의
+`.github-agentic-loop/logs/github-workflow-log-YYYY-MM-DD.md`에 보조 로그를 남긴다. 파일명의
+`YYYY-MM-DD`는 기록 시점의 실행 환경 현재 날짜다. 같은 날짜의 사건은 같은 파일에 추가하고 날짜가
+바뀌면 새 날짜 파일을 선택한다. Workflow Engine은 Harness 소유의 `.harness/logs/`에 실행 로그를
+기록하지 않는다. 실행 로그는 빠른 맥락 복원과 재개 조건 확인을 돕는 보조 근거이며, GitHub 실행 상태를
+대체하지 않는다.
+
+날짜 경계를 넘긴 재개 요청에서는 현재 실행 환경 날짜 파일을 먼저 읽는다. 현재 날짜 파일이 없거나 같은
+기준 이슈 또는 PR과 워크플로에 해당하는 `request_id`, `task_action_id`, 재개 조건이 없으면 로그 파일명을
+날짜 내림차순으로 확인하고 최신 관련 이전 날짜 파일부터 필요한 근거가 복원될 때까지만 최소 범위로
+읽는다. 관련 이전 날짜 파일에서도 재개 근거를 찾지 못하면 값을 추론하지 않고 중단하며, 로그가 GitHub
+완료·미완료 근거와 충돌하면 GitHub 실행 상태를 우선한다.
 
 로그 항목은 다음을 포함한다.
 
@@ -891,7 +902,7 @@ Workflow Engine은 작업에 진입하거나 중단 또는 재개 상태를 기�
 
 멈출 때는 현재 이슈 또는 PR, 현재 `workflow_id`와 `task_action_id`, 진행 판단, 중단 사유 또는 완료 근거, 사용자 결정 질문 또는 재개 조건을 제시한다. 사용자 결정 선택지가 있으면 현재 작업의 `user_decision_options`만 번호 목록으로 제시한다.
 
-재개할 때는 GitHub 실행 상태와 현재 코드 상태를 다시 읽고 state adapter 정규화와 evaluator 평가를 다시 적용한다. 실행 로그는 보조 근거로만 사용하며, 실행 로그와 GitHub 상태가 충돌하면 GitHub 상태를 우선한다. 종료 이슈에 후속 흐름 전환이 체크되어 있지만 대응하는 후속 대상이 없으면 해당 종료 이슈를 전환 출발점으로 사용한다.
+재개할 때는 GitHub 실행 상태와 현재 코드 상태를 다시 읽고 state adapter 정규화와 evaluator 평가를 다시 적용한다. 날짜별 실행 로그는 위의 최신 관련 파일 선택 규칙에 따라 보조 근거로만 사용하며, 실행 로그와 GitHub 상태가 충돌하면 GitHub 상태를 우선한다. 종료 이슈에 후속 흐름 전환이 체크되어 있지만 대응하는 후속 대상이 없으면 해당 종료 이슈를 전환 출발점으로 사용한다.
 
 중단된 흐름을 재개할 때 사용자 요청이 직전 응답에서 제시한 번호, 선택지 문구, 허용된 `기타 의견 입력` 형식과 일치하지 않으면 Workflow Engine은 현재 워크플로우 상태를 요약하고, 현재 `task_action_id`의 `user_decision_options`를 번호 목록으로 다시 제시한다. 이때 번호 입력, 선택지 문구 입력, `기타 의견 입력` 형식의 입력 예시를 함께 제시한다.
 
@@ -929,7 +940,7 @@ codex-harness/
 ├── .codex-dist/
 │   └── skills/
 │       ├── harness/
-│       ├── github-workflow-engine/
+│       ├── github-agentic-loop/
 │       ├── workflow-code-editor/
 │       ├── issue-creation/
 │       ├── feature-proposal-triage/
@@ -951,10 +962,14 @@ codex-harness/
 
 편의 설치·제거 스크립트의 기본 사용자 스킬 루트는 `$HOME/.agents/skills`다. `CODEX_HOME`은 이 루트를 변경하지 않으며 `$CODEX_HOME/skills`는 설치, 탐지, 이전, 제거하지 않는다. 명시적 설치 위치가 필요하면 `CODEX_HARNESS_DEST_ROOT` 또는 Harness 전용 `CODEX_HARNESS_DEST`를 사용한다. 재설치와 제거로 보존되는 기존 디렉터리는 스킬 탐색 범위 밖의 `${XDG_STATE_HOME:-$HOME/.local/state}/codex-harness/backups`에 저장하고, `CODEX_HARNESS_BACKUP_ROOT`로 이 위치를 재정의할 수 있다.
 
+Workflow Engine 배포 스킬 식별자는 `github-agentic-loop`다. 설치 시 레거시 `github-workflow-engine` 디렉터리가 사용자 스킬 루트에 남아 있으면 먼저 같은 백업 정책으로 이동해 두 식별자가 동시에 활성화되지 않게 한다. `workflow-engine` 제거는 새 이름과 레거시 이름을 모두 검사하고 발견한 디렉터리를 각각 복구 가능한 백업으로 이동한다.
+
 ```text
 target-repo/
-├── .workflow-engine/
-│   └── settings.json
+├── .github-agentic-loop/
+│   ├── settings.json
+│   └── logs/
+│       └── github-workflow-log-YYYY-MM-DD.md
 ├── .codex/
 │   ├── config.toml
 │   └── agents/
@@ -975,10 +990,11 @@ target-repo/
     │   ├── team-spec.md
     │   └── orchestration-plan.md
     └── logs/
-        └── github-workflow-log.md
+        ├── session-log.md
+        └── latest-session-summary.md
 ```
 
-`.codex/agents/*`, `.agents/skills/*`, `.harness/docs/*`는 Harness를 별도로 구성한 프로젝트에만 존재하며 일반 코드 변경 경로의 선행 조건이 아니다. `.workflow-engine/settings.json`은 Workflow Engine이 독점적으로 생성·해석하는 타겟별 런타임 설정으로 `dependencies.commit.available`, 리뷰 실행 모드 사용 가능 상태와 사용자가 선택한 기본 모드를 필요할 때 저장한다. Harness는 이 파일을 생성하거나 읽거나 보완하지 않는다. `.harness/logs/github-workflow-log.md`는 Workflow Engine 실행 로그를 저장한다. `.harness`의 운영 파일은 보조 운영 자산이며, 현재 작업 상태의 기준 원천은 GitHub 실행 상태다.
+`.codex/agents/*`, `.agents/skills/*`, `.harness/docs/*`는 Harness를 별도로 구성한 프로젝트에만 존재하며 일반 코드 변경 경로의 선행 조건이 아니다. `.github-agentic-loop/settings.json`은 Workflow Engine이 독점적으로 생성·해석하는 타겟별 런타임 설정으로 `dependencies.commit.available`, 리뷰 실행 모드 사용 가능 상태와 사용자가 선택한 기본 모드를 필요할 때 저장한다. `.github-agentic-loop/logs/github-workflow-log-YYYY-MM-DD.md`는 Workflow Engine의 날짜별 실행 로그를 저장한다. Harness는 이 설정과 로그를 생성하거나 읽거나 보완하지 않으며 자체 운영 로그는 `.harness/logs/`에 저장한다. 두 런타임의 운영 파일은 보조 운영 자산이며, 현재 작업 상태의 기준 원천은 GitHub 실행 상태다.
 
 ### 템플릿 정합성 검사
 
@@ -1003,7 +1019,7 @@ Workflow Engine이 이슈 또는 PR 템플릿을 최초로 요구할 때 해당 
 
 - 이슈와 PR 본문에는 사용자가 확인할 작업 내용, 판단 근거, 완료 기준만 남긴다. Workflow Engine 규칙 자체는 설계 문서와 전역 스킬 배포본에서 관리한다.
 - 새 요청이나 다음 계획 요청을 받으면 열린 PR과 이슈에서 이어갈 작업을 먼저 확인한다. 이어갈 작업이 없을 때만 새 기능제안 후보를 검토한다.
-- 계획, 진행 상태, 완료 기준처럼 후속 전이 판단에 쓰이는 정보는 이슈 또는 PR 본문에 반영한다. 리뷰 결과, 실행 로그, merge 알림처럼 본문 상태가 아닌 기록은 댓글이나 `.harness/logs/github-workflow-log.md`에 남긴다.
+- 계획, 진행 상태, 완료 기준처럼 후속 전이 판단에 쓰이는 정보는 이슈 또는 PR 본문에 반영한다. 리뷰 결과, 실행 로그, merge 알림처럼 본문 상태가 아닌 기록은 댓글이나 `.github-agentic-loop/logs/github-workflow-log-YYYY-MM-DD.md`에 남긴다.
 - 기능결함 구현 중 확인된 설계 문서, 규칙 문서, 코드, 템플릿, 스킬 변경은 결함 해결 계획의 해결 단위로 반영한다.
 - 리뷰 피드백은 자동 수정 명령이 아니라 사용자 결정 대상이다. 대응 방향과 해결 여부 결정은 리뷰 피드백 처리 규칙을 따른다.
 - PR merge는 사람이 수행한다. Workflow Engine은 merge 이후 GitHub 실행 상태를 다시 읽고 연결 이슈의 완료 기준과 후속 작업 갱신 요청을 확정한다. 실제 GitHub 변경은 단순 상태 변경 실행 절차를 따른다.

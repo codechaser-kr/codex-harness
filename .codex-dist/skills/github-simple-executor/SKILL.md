@@ -5,12 +5,12 @@ description: 완전하고 변경 불가능한 구조화 실행 요청의 단일 
 
 # GitHub Simple Executor
 
-이 스킬은 결정론적 실행 경로가 없는 경우에만 `github-workflow-engine`이 확정한 단일 비파일 단순 상태 변경을 수행한다. 요청값과 실행 범위는 변경 불가능하며, 최종 판단은 Workflow Engine에 남는다.
+이 스킬은 결정론적 실행 경로가 없는 경우에만 `github-agentic-loop`가 확정한 단일 비파일 단순 상태 변경을 수행한다. 요청값과 실행 범위는 변경 불가능하며, 최종 판단은 Workflow Engine에 남는다.
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/structured-execution-contract.md`에서 `구조화 실행 요청 판정 규칙`, `구조화 실행 결과와 요청-결과 상관관계 판정 규칙`, `구조화 실행 성공과 중단 판정 규칙`, `실행 주체 선택 판정 규칙` 섹션만 읽는다.
-- 실제 명령의 권한 경로를 판정하고 실행 직전에 재판정할 때 `../github-workflow-engine/references/command-execution-path-contract.md`를 읽는다.
+- `../github-agentic-loop/references/structured-execution-contract.md`에서 `구조화 실행 요청 판정 규칙`, `구조화 실행 결과와 요청-결과 상관관계 판정 규칙`, `구조화 실행 성공과 중단 판정 규칙`, `실행 주체 선택 판정 규칙` 섹션만 읽는다.
+- 실제 명령의 권한 경로를 판정하고 실행 직전에 재판정할 때 `../github-agentic-loop/references/command-execution-path-contract.md`를 읽는다.
 
 ## 입력
 
@@ -43,7 +43,7 @@ description: 완전하고 변경 불가능한 구조화 실행 요청의 단일 
 ## 사용자 결정
 
 - 요청에 없는 사용자 의도, 일반 진행 표현, 오류 복구 선택을 확정으로 해석하지 않는다.
-- 사용자 결정이 필요하거나 요청값이 불완전하면 실행하지 않고 `github-workflow-engine`에 중단 결과를 반환한다.
+- 사용자 결정이 필요하거나 요청값이 불완전하면 실행하지 않고 `github-agentic-loop`에 중단 결과를 반환한다.
 
 ## 중단 조건
 
@@ -53,5 +53,5 @@ description: 완전하고 변경 불가능한 구조화 실행 요청의 단일 
 
 ## 후속 전이
 
-- 일반 구조화 실행 결과만 `github-workflow-engine`에 반환한다.
+- 일반 구조화 실행 결과만 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 요청-결과 상관관계, 실행 범위, 성공 또는 중단을 판정하고 다음 전이를 확정한다.

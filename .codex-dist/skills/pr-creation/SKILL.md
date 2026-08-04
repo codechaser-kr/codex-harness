@@ -9,8 +9,8 @@ description: PR 제목과 본문, base branch, 원격 head branch를 기준으�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 `PR 제목 판정 규칙`과 ``PR 생성(`pr-creation`) 출력 판정 규칙`` 섹션만 읽는다.
-- `../github-workflow-engine/references/github-templates.md`
+- `../github-agentic-loop/references/artifact-output-contract.md`에서 `PR 제목 판정 규칙`과 ``PR 생성(`pr-creation`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/github-templates.md`
 
 ## 입력
 
@@ -42,7 +42,7 @@ description: PR 제목과 본문, base branch, 원격 head branch를 기준으�
 
 ## 사용자 결정
 
-- 검증 결과와 `blocking_questions`를 사용자 결정으로 해석하지 않는다. PR 생성 요청값의 확정과 실행 요청 구성은 `github-workflow-engine`이 처리한다.
+- 검증 결과와 `blocking_questions`를 사용자 결정으로 해석하지 않는다. PR 생성 요청값의 확정과 실행 요청 구성은 `github-agentic-loop`가 처리한다.
 
 ## 중단 조건
 
@@ -51,7 +51,7 @@ description: PR 제목과 본문, base branch, 원격 head branch를 기준으�
 
 ## 후속 전이
 
-- 제어와 기존 출력 구조를 `github-workflow-engine`에 반환한다.
+- 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 실제 PR 생성의 구조화 실행 요청 또는 중단을 확정한다.
 
 ## 필수 출력

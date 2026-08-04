@@ -9,8 +9,8 @@ description: Workflow Engine 구현 흐름에서 기준 이슈, 변경 요약, �
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/github-templates.md`
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 `PR 제목 판정 규칙`과 ``PR 제안(`pr-proposal`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/github-templates.md`
+- `../github-agentic-loop/references/artifact-output-contract.md`에서 `PR 제목 판정 규칙`과 ``PR 제안(`pr-proposal`) 출력 판정 규칙`` 섹션만 읽는다.
 
 ## 입력
 
@@ -45,7 +45,7 @@ description: Workflow Engine 구현 흐름에서 기준 이슈, 변경 요약, �
 
 ## 사용자 결정
 
-- 제목 후보와 본문 초안을 사용자 결정으로 해석하지 않는다. 제목·본문의 선택과 `pr-creation` 입력 확정은 `github-workflow-engine`이 처리한다.
+- 제목 후보와 본문 초안을 사용자 결정으로 해석하지 않는다. 제목·본문의 선택과 `pr-creation` 입력 확정은 `github-agentic-loop`가 처리한다.
 
 ## 중단 조건
 
@@ -54,7 +54,7 @@ description: Workflow Engine 구현 흐름에서 기준 이슈, 변경 요약, �
 
 ## 후속 전이
 
-- 제어와 기존 출력 구조를 `github-workflow-engine`에 반환한다.
+- 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 `pr-creation`에 전달할 확정 입력 또는 중단을 결정한다.
 
 ## 필수 출력 섹션

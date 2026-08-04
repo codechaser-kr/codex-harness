@@ -1,5 +1,5 @@
 ---
-name: github-workflow-engine
+name: github-agentic-loop
 description: GitHub 이슈와 PR의 관측 상태를 선언형 워크플로 정의에 적용해 현재 작업이나 다음 작업을 계산하고, 사용자 결정과 확정 실행을 조율합니다. 사용자가 `워크플로우 흐름으로 진행`, `계속 진행`, `다음 피드백`, `머지했습니다`처럼 기존 이슈·PR 흐름의 시작이나 재개를 요청할 때 사용합니다. 단일 코드 수정, 단순 리뷰, 커밋 메시지 작성은 각각 독립 작업 흐름으로 처리합니다.
 ---
 
@@ -56,7 +56,11 @@ description: GitHub 이슈와 PR의 관측 상태를 선언형 워크플로 정�
 - 이 스킬이 서브에이전트를 직접 생성하거나 하위 실행 주체의 정리 근거를 검증할 때 `references/agent-lifecycle-contract.md`
 - 이슈 또는 PR 템플릿, 제목, 라벨, 연관 이슈 계약이 필요할 때 `references/github-templates.md`와 `references/workflow-engine-template-compatibility-contract.md`
 
-필요한 경우 대상 저장소의 `.harness/logs/github-workflow-log.md`를 보조 근거로 읽는다.
+필요한 경우 대상 저장소의 `.github-agentic-loop/logs/github-workflow-log-YYYY-MM-DD.md` 중 현재
+실행 환경 날짜 파일을 먼저 보조 근거로 읽는다. 날짜 경계를 넘긴 재개 요청에서 현재 날짜 파일에 관련
+`request_id`, `task_action_id` 또는 재개 조건이 없으면 파일명을 날짜 내림차순으로 확인하고, 같은 기준
+대상과 워크플로에 해당하는 최신 이전 날짜 파일을 필요한 근거가 복원될 때까지만 최소 범위로 읽는다.
+날짜별 로그는 GitHub 실행 상태를 대체하지 않으며 충돌하면 GitHub 상태를 우선한다.
 런타임 입력은 위 계약과 실행 코드로 한정한다. `docs/github-workflow-engine.md`는 설계 문서로 취급한다.
 
 ## 타겟 런타임 지연 초기화
@@ -65,7 +69,7 @@ Workflow Engine 설치는 타겟 저장소의 설정, 템플릿 또는 GitHub �
 해당 항목을 최초로 요구할 때만 `target-runtime-bootstrap-contract.md`로 누락 상태를 확인하고 필요한
 범위만 준비한다.
 
-- `.workflow-engine/settings.json`은 Workflow Engine만 생성·해석하며 필요한 설정 필드만 보완하고
+- `.github-agentic-loop/settings.json`은 Workflow Engine만 생성·해석하며 필요한 설정 필드만 보완하고
   기존 유효 값을 보존한다. 파일·필드 부재는 지연 초기화하고 인식할 수 없는 타입·값은 자동 교정이나
   fallback 없이 원래 작업을 중단한다.
 - 사용자 선호가 필요한 설정은 임의 기본값을 만들지 않고 사용 가능한 선택지를 제시해 확정받는다.
@@ -193,9 +197,12 @@ ID, 현재 정규화 상태와 불일치하는 ID, 누락된 재개 ID가 발견
 ## 로그와 출력
 
 작업 진입, 계산 결과, 사용자 결정, 구조화 실행 요청·결과, 중단과 재개를 대상 저장소의
-`.harness/logs/github-workflow-log.md`에 기록한다. `request_id`, 기준 상태 묶음, `workflow_id`,
-`task_action_id`, 상태 변환기의 정규화 결과와 근거, 사용자 결정, 실행 범위, 실행 주체와 세션 관계,
-실행 후 조건, 검증 결과, 남은 위험 또는 재개 조건을 추적할 수 있어야 한다.
+`.github-agentic-loop/logs/github-workflow-log-YYYY-MM-DD.md`에 기록한다. `YYYY-MM-DD`는
+기록 시점의 실행 환경 현재 날짜이며, 같은 날짜의 사건은 같은 파일에 추가하고 날짜가 바뀌면 새 날짜
+파일을 선택한다. Workflow Engine은 `.harness/logs/`에 실행 로그를 기록하지 않는다. 각 날짜 파일에서
+`request_id`, 기준 상태 묶음, `workflow_id`, `task_action_id`, 상태 변환기의 정규화 결과와 근거,
+사용자 결정, 실행 범위, 실행 주체와 세션 관계, 실행 후 조건, 검증 결과, 남은 위험 또는 재개 조건을
+추적할 수 있어야 한다.
 
 사용자 결정, 중단 또는 완료로 멈출 때는 현재 이슈 또는 PR, `workflow_id`, `task_action_id`, 진행 판단,
 중단 사유·완료 근거·결정 질문을 제시한다. 선택지가 있으면 번호 목록과 입력 예시를 함께 제시한다.

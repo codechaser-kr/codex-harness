@@ -9,8 +9,8 @@ description: 정책검토 이슈를 기준으로 변경하거나 적용할 정�
 
 ## 먼저 읽을 문서
 
-- `../github-workflow-engine/references/artifact-output-contract.md`에서 ``정책 계획(`policy-plan`) 출력 판정 규칙`` 섹션만 읽는다.
-- `../github-workflow-engine/references/github-templates.md`
+- `../github-agentic-loop/references/artifact-output-contract.md`에서 ``정책 계획(`policy-plan`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/github-templates.md`
 
 ## 입력
 
@@ -47,7 +47,7 @@ description: 정책검토 이슈를 기준으로 변경하거나 적용할 정�
 
 ## 사용자 결정
 
-- 추천 설계는 결정 후보일 뿐이다. 정책 확정, 설계 문서 반영 요청, 기능변경 전환의 사용자 결정과 실행 요청 확정은 `github-workflow-engine`이 맡는다.
+- 추천 설계는 결정 후보일 뿐이다. 정책 확정, 설계 문서 반영 요청, 기능변경 전환의 사용자 결정과 실행 요청 확정은 `github-agentic-loop`가 맡는다.
 
 ## 중단 조건
 
@@ -56,7 +56,7 @@ description: 정책검토 이슈를 기준으로 변경하거나 적용할 정�
 
 ## 후속 전이
 
-- 제어와 기존 출력 구조를 `github-workflow-engine`에 반환한다.
+- 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 정책 확정, 설계 반영, 기능변경 전환의 다음 작업을 확정한다.
 
 ## 필수 출력 섹션

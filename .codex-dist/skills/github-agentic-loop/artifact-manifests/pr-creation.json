@@ -1,0 +1,15 @@
+{
+  "artifact_type": "pr-creation",
+  "manifest_version": 1,
+  "producer_skill": "pr-creation",
+  "contract_section": "PR 생성(`pr-creation`) 출력 판정 규칙",
+  "fields": [
+    { "field_id": "title", "required": true, "render_label": "title", "shape": { "type": "string", "min_length": 1 } },
+    { "field_id": "body", "required": true, "render_label": "body", "shape": { "type": "string", "min_length": 1 } },
+    { "field_id": "base_branch", "required": true, "render_label": "base_branch", "shape": { "type": "string", "min_length": 1 } },
+    { "field_id": "head_branch", "required": true, "render_label": "head_branch", "shape": { "type": "string", "min_length": 1 } },
+    { "field_id": "blocking_questions", "required": true, "render_label": "blocking_questions", "shape": { "type": "array", "items": { "type": "string", "min_length": 1 } } }
+  ],
+  "rules": [],
+  "render": { "section_order": ["title", "body", "base_branch", "head_branch", "blocking_questions"] }
+}

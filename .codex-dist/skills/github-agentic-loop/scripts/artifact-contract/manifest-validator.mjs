@@ -15,7 +15,8 @@ const ROOT_FIELDS = [
   "render",
 ];
 const FIELD_DESCRIPTOR_FIELDS = ["field_id", "required", "render_label", "shape"];
-const RULE_FIELDS = ["rule_id", "rule_type", "source_path", "target_path"];
+const RULE_FIELDS = ["rule_id", "rule_type", "source_path", "target_path", "allow_empty"];
+const REQUIRED_RULE_FIELDS = ["rule_id", "rule_type", "source_path", "target_path"];
 
 function isPlainObject(value) {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
@@ -161,7 +162,7 @@ function validateRules(value, path, errors) {
   const seen = new Set();
   for (const [index, rule] of value.entries()) {
     const rulePath = pointer(path, index);
-    if (!validateClosedObject(rule, rulePath, RULE_FIELDS, RULE_FIELDS, errors, "manifest.rule")) continue;
+    if (!validateClosedObject(rule, rulePath, RULE_FIELDS, REQUIRED_RULE_FIELDS, errors, "manifest.rule")) continue;
     if (validateIdentifier(rule.rule_id, `${rulePath}/rule_id`, errors, "manifest.rule.rule_id.invalid")) {
       if (seen.has(rule.rule_id)) {
         addError(errors, "manifest.rule.rule_id.duplicate", `${rulePath}/rule_id`, `Duplicate rule_id: ${rule.rule_id}.`);
@@ -171,6 +172,12 @@ function validateRules(value, path, errors) {
     }
     if (!RULE_TYPES.has(rule.rule_type)) {
       addError(errors, "manifest.rule.rule_type.unsupported", `${rulePath}/rule_type`, "rule_type is not supported.");
+    }
+    if (Object.hasOwn(rule, "allow_empty") && typeof rule.allow_empty !== "boolean") {
+      addError(errors, "manifest.rule.allow_empty.type", `${rulePath}/allow_empty`, "allow_empty must be boolean.");
+    }
+    if (rule.allow_empty === true && rule.rule_type !== "references") {
+      addError(errors, "manifest.rule.allow_empty.unsupported", `${rulePath}/allow_empty`, "allow_empty is supported only for references rules.");
     }
     for (const field of ["source_path", "target_path"]) {
       if (typeof rule[field] !== "string" || !rule[field].startsWith("/")) {

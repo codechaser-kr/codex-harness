@@ -31,7 +31,7 @@ field descriptor는 `field_id`, `required`, `render_label`, `shape`만 갖는다
 - `object`: 비어 있지 않은 `fields`와 `additional_properties: false`를 갖는다.
 - `array`: `items` shape와 선택적인 음이 아닌 integer `min_items`를 갖는다.
 
-rule descriptor는 `rule_id`, `rule_type`, `source_path`, `target_path`만 갖는다. 현재 `rule_type`은 `unique_by`, `references`, `covers_exactly`를 허용하고 path는 `/`로 시작하는 JSON Pointer 형태다. manifest 구조 검증기는 rule 선언의 구조만 검증하고 실제 artifact에 대한 cross-field rule 실행은 artifact validator가 담당한다.
+rule descriptor는 `rule_id`, `rule_type`, `source_path`, `target_path`와 선택적인 `allow_empty`를 갖는다. 현재 `rule_type`은 `unique_by`, `references`, `covers_exactly`를 허용하고 path는 `/`로 시작하는 JSON Pointer 형태다. `allow_empty: true`는 비어 있는 추천 ID를 허용하는 `references`에만 사용한다. manifest 구조 검증기는 rule 선언의 구조만 검증하고 실제 artifact에 대한 cross-field rule 실행은 artifact validator가 담당한다.
 
 `render.section_order`는 최상위 `field_id`를 중복 없이 정확히 한 번씩 포함해야 한다. 이 순서는 artifact 의미를 검증하지 않으며 renderer가 검증 완료 artifact를 표시할 때만 사용한다.
 

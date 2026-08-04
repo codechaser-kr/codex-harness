@@ -1,0 +1,40 @@
+{
+  "artifact_type": "fix-analysis",
+  "manifest_version": 1,
+  "producer_skill": "fix-analysis",
+  "contract_section": "결함 원인 분석(`fix-analysis`) 출력 판정 규칙",
+  "fields": [
+    { "field_id": "base_issue", "required": true, "render_label": "기준 이슈", "shape": { "type": "string", "min_length": 1 } },
+    { "field_id": "problem_summary", "required": true, "render_label": "문제 요약", "shape": { "type": "string", "min_length": 1 } },
+    { "field_id": "reproduction_result", "required": true, "render_label": "재현 또는 확인 결과", "shape": { "type": "string", "min_length": 1 } },
+    {
+      "field_id": "cause_candidates",
+      "required": true,
+      "render_label": "원인 후보",
+      "shape": {
+        "type": "array",
+        "min_items": 1,
+        "items": {
+          "type": "object",
+          "additional_properties": false,
+          "fields": [
+            { "field_id": "candidate_id", "required": true, "render_label": "후보 ID", "shape": { "type": "string", "min_length": 1 } },
+            { "field_id": "cause", "required": true, "render_label": "원인", "shape": { "type": "string", "min_length": 1 } },
+            { "field_id": "evidence", "required": true, "render_label": "근거", "shape": { "type": "string", "min_length": 1 } },
+            { "field_id": "confirmation_level", "required": true, "render_label": "확인 수준", "shape": { "type": "string", "enum_values": ["확인됨", "유력", "가설"] } },
+            { "field_id": "impact_scope", "required": true, "render_label": "영향 범위", "shape": { "type": "string", "min_length": 1 } },
+            { "field_id": "disproof_condition", "required": true, "render_label": "반증 조건", "shape": { "type": "string", "min_length": 1 } }
+          ]
+        }
+      }
+    },
+    { "field_id": "recommended_cause", "required": true, "render_label": "추천 원인", "shape": { "type": "string" } },
+    { "field_id": "provisional_solution_direction", "required": true, "render_label": "잠정 해결 방향", "shape": { "type": "string", "min_length": 1 } },
+    { "field_id": "blocking_questions", "required": true, "render_label": "보류 질문", "shape": { "type": "array", "items": { "type": "string", "min_length": 1 } } }
+  ],
+  "rules": [
+    { "rule_id": "cause-candidate-id-unique", "rule_type": "unique_by", "source_path": "/cause_candidates", "target_path": "/candidate_id" },
+    { "rule_id": "recommended-cause-reference", "rule_type": "references", "source_path": "/recommended_cause", "target_path": "/cause_candidates/*/candidate_id", "allow_empty": true }
+  ],
+  "render": { "section_order": ["base_issue", "problem_summary", "reproduction_result", "cause_candidates", "recommended_cause", "provisional_solution_direction", "blocking_questions"] }
+}

@@ -6,8 +6,12 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
+import { compileWorkflowDefinition } from "../../scripts/workflow-definition/compiler.mjs";
+
 import "./structural-validation.test.mjs";
 import "./semantic-validation.test.mjs";
+import "./compiled-definition.test.mjs";
+import "./compiled-runtime.test.mjs";
 import "./evaluator.test.mjs";
 import "./feature-proposal.test.mjs";
 import "./normalized-fact-adapter.test.mjs";
@@ -71,6 +75,9 @@ const requiredArtifacts = [
   "scripts/workflow-definition/parser.mjs",
   "scripts/workflow-definition/expression.mjs",
   "scripts/workflow-definition/validator.mjs",
+  "scripts/workflow-definition/compiler.mjs",
+  "scripts/workflow-definition/compiled-definition-loader.mjs",
+  "scripts/workflow-definition/runtime-definition.mjs",
   "scripts/workflow-definition/evaluator.mjs",
   "scripts/workflow-definition/normalized-fact-adapter.mjs",
   "scripts/workflow-definition/workflow-state-adapter.mjs",
@@ -82,6 +89,8 @@ const requiredArtifacts = [
   "scripts/workflow-definition/cli.mjs",
   "tests/workflow-definition/structural-validation.test.mjs",
   "tests/workflow-definition/semantic-validation.test.mjs",
+  "tests/workflow-definition/compiled-definition.test.mjs",
+  "tests/workflow-definition/compiled-runtime.test.mjs",
   "tests/workflow-definition/evaluator.test.mjs",
   "tests/workflow-definition/feature-proposal.test.mjs",
   "tests/workflow-definition/normalized-fact-adapter.test.mjs",
@@ -438,16 +447,34 @@ test("installer preserves the github-agentic-loop distribution", async (t) => {
   const statePath = join(temporaryRoot, "state.json");
   const cycleDefinitionPath = join(temporaryRoot, "cycle-definition.json");
   const cycleStatePath = join(temporaryRoot, "cycle-state.json");
+  const compiledDefinitionPath = join(temporaryRoot, "compiled-definition.json");
   await writeFile(definitionPath, JSON.stringify(evaluationCases.definitions.terminal_completed));
   await writeFile(statePath, JSON.stringify(evaluationCases.states.done));
   await writeFile(cycleDefinitionPath, JSON.stringify(evaluationCases.definitions.fixed_state_cycle));
   await writeFile(cycleStatePath, JSON.stringify(evaluationCases.states.cycle));
+  await writeFile(
+    compiledDefinitionPath,
+    JSON.stringify(compileWorkflowDefinition(evaluationCases.definitions.terminal_completed).compiled_definition),
+  );
 
   const sourceCli = join(sourceSkillDirectory, "scripts/workflow-definition/cli.mjs");
   const installedCli = join(installedSkillDirectory, "scripts/workflow-definition/cli.mjs");
   const commands = [
     { argumentsList: ["validate", "--definition", definitionPath], exitCode: 0 },
+    { argumentsList: ["compile", "--definition", definitionPath], exitCode: 0 },
     { argumentsList: ["evaluate", "--definition", definitionPath, "--state", statePath], exitCode: 0 },
+    {
+      argumentsList: [
+        "evaluate",
+        "--definition",
+        definitionPath,
+        "--compiled-definition",
+        compiledDefinitionPath,
+        "--state",
+        statePath,
+      ],
+      exitCode: 0,
+    },
     { argumentsList: ["evaluate", "--definition", cycleDefinitionPath, "--state", cycleStatePath], exitCode: 1 },
   ];
   for (const command of commands) {

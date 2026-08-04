@@ -1,8 +1,12 @@
 import {
   isPlainObject,
-  normalizeFactCandidates,
+  normalizePreparedFactCandidates,
   pointer,
 } from "./normalized-fact-adapter.mjs";
+import {
+  isCompiledDefinitionCandidate,
+  prepareWorkflowDefinition,
+} from "./runtime-definition.mjs";
 
 const OBSERVATION_FIELDS = ["fact_id", "value", "source_kind", "source_reference", "field_reference"];
 
@@ -116,25 +120,46 @@ function validateObservations(observations, sourceContracts) {
 }
 
 export function normalizeWorkflowObservations(definition, observations, { workflowId, sourceContracts }) {
-  if (definition?.workflow_id !== workflowId) {
-    return stopped("workflow_id_mismatch", definition?.workflow_id, [{
+  let prepared;
+  let sourceDefinition = definition;
+  if (isCompiledDefinitionCandidate(definition)) {
+    prepared = prepareWorkflowDefinition(definition);
+    if (prepared.status === "stopped") {
+      return stopped(
+        prepared.reason,
+        definition?.source_definition?.workflow_id,
+        prepared.errors,
+      );
+    }
+    sourceDefinition = prepared.source_definition;
+  }
+
+  if (sourceDefinition?.workflow_id !== workflowId) {
+    return stopped("workflow_id_mismatch", sourceDefinition?.workflow_id, [{
       code: "workflow_id.mismatch",
       path: "/workflow_id",
       message: `Expected workflow_id ${workflowId}.`,
     }]);
   }
 
-  const sourceContractErrors = validateSourceContracts(definition, sourceContracts);
+  const sourceContractErrors = validateSourceContracts(sourceDefinition, sourceContracts);
   if (sourceContractErrors.length > 0) {
-    return stopped("source_contract_mismatch", definition.workflow_id, sourceContractErrors);
+    return stopped("source_contract_mismatch", sourceDefinition.workflow_id, sourceContractErrors);
+  }
+
+  if (prepared === undefined) {
+    prepared = prepareWorkflowDefinition(sourceDefinition);
+    if (prepared.status === "stopped") {
+      return stopped(prepared.reason, sourceDefinition.workflow_id, prepared.errors);
+    }
   }
 
   const observationErrors = validateObservations(observations, sourceContracts);
   if (observationErrors.length > 0) {
-    return stopped("invalid_observations", definition.workflow_id, observationErrors);
+    return stopped("invalid_observations", sourceDefinition.workflow_id, observationErrors);
   }
 
-  return normalizeFactCandidates(definition, observations.map((observation) => ({
+  return normalizePreparedFactCandidates(prepared, observations.map((observation) => ({
     fact_id: observation.fact_id,
     value: observation.value,
     evidence: [{

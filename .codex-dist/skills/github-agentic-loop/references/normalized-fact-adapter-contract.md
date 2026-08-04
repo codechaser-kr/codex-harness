@@ -6,8 +6,10 @@
 candidate를 Definition의 `facts` 도메인에 맞춰 정규화한다. 외부 IO, LLM, GitHub API와 파일
 변경을 호출하지 않는 순수 함수이며 입력을 변경하지 않는다.
 
-Definition 전체 구조와 의미는 `validator.mjs`로 먼저 검증한다. Adapter가 별도의 축약 구조
-검증을 구현하지 않는다.
+Raw Definition 전체 구조와 의미는 준비 단계에서 `validator.mjs`로 한 번 검증한다. Adapter는
+`compiled_definition.fact_metadata`를 사용하고 별도의 축약 구조 검증을 구현하지 않는다. Raw 입력 API는
+호환성을 위해 유지하며 내부에서 compiled representation을 준비한다. 이미 준비된 representation을
+전달하면 source 전체 검증을 반복하지 않는다.
 
 ## 입력
 
@@ -48,7 +50,8 @@ LLM의 자유 형식 설명을 fact 값으로 직접 사용하지 않는다. 의
 성공 결과의 `normalized_fact_state`와 `evidence_by_fact` key는 candidate 입력 순서가 아니라
 Definition `facts`의 비정수 key 선언 순서를 보존한다. 누락된 fact는 두 객체 모두에 넣지 않는다.
 
-Definition이 잘못되면 `invalid_definition`, candidate 또는 evidence가 잘못되면
+Raw Definition이 잘못되면 `invalid_definition`, compiled representation이 호환되지 않으면
+`invalid_compiled_definition`, candidate 또는 evidence가 잘못되면
 `invalid_fact_candidates`로 중단한다. 오류가 하나라도 있으면 부분 결과를 채택하지 않고 두 결과
 객체를 모두 비운다.
 

@@ -23,6 +23,7 @@ import "../validation-mode/validation-mode-contract.test.mjs";
 import "../validation-mode/agent-lifecycle-contract.test.mjs";
 import "../skill-quality/skill-structure-contract.test.mjs";
 import "../skill-quality/reference-boundary-contract.test.mjs";
+import "../artifact-contract/compiled-manifest.test.mjs";
 
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -33,6 +34,7 @@ const removedRulesRelativePath = ["references/workflow-engine", "rules.md"].join
 const removedRulesFilenamePattern = new RegExp(["workflow-engine", "rules\\.md"].join("-"));
 
 const jsonArtifacts = [
+  "artifact-manifests/branch-proposal.json",
   "definitions/feature-proposal.json",
   "definitions/policy-review.json",
   "definitions/feature-change.json",
@@ -48,6 +50,7 @@ const jsonArtifacts = [
   "tests/workflow-definition/fixtures/feature-change-states.json",
   "tests/workflow-definition/fixtures/feature-fix-states.json",
   "tests/workflow-definition/fixtures/implementation-states.json",
+  "tests/artifact-contract/fixtures/manifest-validation-cases.json",
 ];
 
 const requiredArtifacts = [
@@ -56,6 +59,7 @@ const requiredArtifacts = [
   "references/agent-lifecycle-contract.md",
   "references/normalized-fact-adapter-contract.md",
   "references/artifact-output-contract.md",
+  "references/artifact-manifest-contract.md",
   "references/github-templates.md",
   "references/target-runtime-bootstrap-contract.md",
   "references/workflow-engine-template-compatibility-contract.md",
@@ -87,6 +91,9 @@ const requiredArtifacts = [
   "scripts/workflow-definition/feature-fix-state-adapter.mjs",
   "scripts/workflow-definition/implementation-state-adapter.mjs",
   "scripts/workflow-definition/cli.mjs",
+  "scripts/artifact-contract/manifest-validator.mjs",
+  "scripts/artifact-contract/manifest-compiler.mjs",
+  "scripts/artifact-contract/compiled-manifest-loader.mjs",
   "tests/workflow-definition/structural-validation.test.mjs",
   "tests/workflow-definition/semantic-validation.test.mjs",
   "tests/workflow-definition/compiled-definition.test.mjs",
@@ -113,6 +120,9 @@ const requiredArtifacts = [
   "tests/validation-mode/agent-lifecycle-contract.test.mjs",
   "tests/skill-quality/skill-structure-contract.test.mjs",
   "tests/skill-quality/reference-boundary-contract.test.mjs",
+  "artifact-manifests/branch-proposal.json",
+  "tests/artifact-contract/compiled-manifest.test.mjs",
+  "tests/artifact-contract/fixtures/manifest-validation-cases.json",
 ];
 
 async function parseJsonArtifacts(root) {

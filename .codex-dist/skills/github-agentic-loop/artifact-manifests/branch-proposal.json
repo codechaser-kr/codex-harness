@@ -1,0 +1,89 @@
+{
+  "artifact_type": "branch-proposal",
+  "manifest_version": 1,
+  "producer_skill": "branch-proposal",
+  "contract_section": "브랜치 제안(`branch-proposal`) 출력 판정 규칙",
+  "fields": [
+    {
+      "field_id": "base_issue",
+      "required": true,
+      "render_label": "기준 이슈",
+      "shape": { "type": "string", "min_length": 1 }
+    },
+    {
+      "field_id": "implementation_unit",
+      "required": true,
+      "render_label": "구현 단위",
+      "shape": { "type": "string", "min_length": 1 }
+    },
+    {
+      "field_id": "branch_naming_rule",
+      "required": true,
+      "render_label": "확인한 브랜치 이름 규칙",
+      "shape": { "type": "string", "min_length": 1 }
+    },
+    {
+      "field_id": "branch_candidates",
+      "required": true,
+      "render_label": "브랜치 이름 후보",
+      "shape": {
+        "type": "array",
+        "min_items": 1,
+        "items": {
+          "type": "object",
+          "additional_properties": false,
+          "fields": [
+            {
+              "field_id": "branch_name",
+              "required": true,
+              "render_label": "브랜치 이름",
+              "shape": { "type": "string", "min_length": 1 }
+            },
+            {
+              "field_id": "rationale",
+              "required": true,
+              "render_label": "제안 근거와 범위",
+              "shape": { "type": "string", "min_length": 1 }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "field_id": "recommended_branch",
+      "required": true,
+      "render_label": "추천 브랜치",
+      "shape": { "type": "string", "min_length": 1 }
+    },
+    {
+      "field_id": "blocking_questions",
+      "required": true,
+      "render_label": "보류 질문",
+      "shape": { "type": "array", "items": { "type": "string", "min_length": 1 } }
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "branch-candidate-name-unique",
+      "rule_type": "unique_by",
+      "source_path": "/branch_candidates",
+      "target_path": "/branch_name"
+    },
+    {
+      "rule_id": "recommended-branch-reference",
+      "rule_type": "references",
+      "source_path": "/recommended_branch",
+      "target_path": "/branch_candidates/*/branch_name"
+    }
+  ],
+  "render": {
+    "section_order": [
+      "base_issue",
+      "implementation_unit",
+      "branch_naming_rule",
+      "branch_candidates",
+      "recommended_branch",
+      "blocking_questions"
+    ]
+  }
+}

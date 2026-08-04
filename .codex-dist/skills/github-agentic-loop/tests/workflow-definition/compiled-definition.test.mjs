@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   COMPILED_WORKFLOW_DEFINITION_ARTIFACT_TYPE,
   compileWorkflowDefinition,
+  computeCompiledWorkflowDefinitionDigest,
   WORKFLOW_DEFINITION_COMPILER_FORMAT_VERSION,
 } from "../../scripts/workflow-definition/compiler.mjs";
 import { loadCompiledWorkflowDefinition } from "../../scripts/workflow-definition/compiled-definition-loader.mjs";
@@ -128,6 +129,18 @@ test("fails closed for source validator format and representation mismatches", a
   const digestMismatch = loadCompiledWorkflowDefinition(definition, { compiledDefinition: tampered });
   assert.equal(digestMismatch.status, "stopped");
   assert.equal(hasError(digestMismatch, "compiled.compiled_digest.mismatch", "/compiled_digest"), true);
+
+  const selfConsistentTamper = JSON.parse(JSON.stringify(compiled));
+  selfConsistentTamper.fact_metadata.by_id.issue_open.allowed_values = [false, true];
+  selfConsistentTamper.compiled_digest = computeCompiledWorkflowDefinitionDigest(selfConsistentTamper);
+  const representationMismatch = loadCompiledWorkflowDefinition(definition, {
+    compiledDefinition: selfConsistentTamper,
+  });
+  assert.equal(hasError(
+    representationMismatch,
+    "compiled.representation.mismatch",
+    "/compiled_digest",
+  ), true);
 });
 
 test("rejects unrecognized compiled shapes with stable code and path", async () => {

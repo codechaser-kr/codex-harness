@@ -15,7 +15,7 @@ description: GitHub 이슈와 PR의 관측 상태를 선언형 워크플로 정�
 - `definitions/*.json`은 작업과 전이 조건을 담은 데이터다.
 - `scripts/workflow-definition/*.mjs`는 정의 검증, 상태 정규화, 작업 계산을 수행하는 실행 코드다.
 - `references/*.md`는 아래 조건에 따라 읽는 참조문서이며, 전이는 `definitions/*.json`과 실행 코드의 결과로 결정한다.
-- 일반 실행은 관측, 한 번의 정규화, 한 번의 `evaluateWorkflowDefinition` 호출이라는 단일 경로를 따른다.
+- 일반 실행은 Definition 한 번 준비, 관측, 한 번의 정규화, 한 번의 `evaluateWorkflowDefinition` 호출이라는 단일 경로를 따른다.
 - 사용자 결정은 사용자가 확정하고, 실행 주체는 확정된 범위만 수행한다. 규칙 불일치나 계약 실패가 발생하면 계약이 제시한 사유와 재개 조건으로 중단한다.
 
 ## 사용 범위 예시
@@ -103,20 +103,22 @@ Workflow Engine 설치는 타겟 저장소의 설정, 템플릿 또는 GitHub �
 
 모든 일반 실행은 다음 단일 경로로 수행한다.
 
-1. 기준 이슈 또는 PR과 GitHub·로컬·사용자·스킬의 원본 상태를 특정 시점의 읽기 전용 상태 묶음으로
+1. 선택한 raw Workflow Definition을 `prepareWorkflowDefinition`으로 한 번 검증·compile한다. 이후 같은
+   compiled representation을 상태 변환기와 evaluator에 전달한다.
+2. 기준 이슈 또는 PR과 GitHub·로컬·사용자·스킬의 원본 상태를 특정 시점의 읽기 전용 상태 묶음으로
    수집한다.
-2. 선택한 상태 변환기로 관측값을 정확히 한 번 정규화한다.
-3. 정규화한 사실을 `evaluateWorkflowDefinition`에 정확히 한 번 전달한다. 이 함수는 워크플로 정의의
-   규칙을 적용해 현재 또는 다음 작업을 계산한다. 워크플로 정의 검증은 이 함수 내부의 단일 검증
-   경로를 사용한다.
-4. 최초 진입이면 `definition.entry_task_action_id`, 재개 또는 반복이면 이전 계산 결과가 반환한
+3. 선택한 상태 변환기로 관측값을 정확히 한 번 정규화한다. Candidate와 evidence는 compiled metadata를
+   사용하더라도 매 실행 검증한다.
+4. 정규화한 사실을 `evaluateWorkflowDefinition`에 정확히 한 번 전달한다. 이 함수는 compiled transition
+   lookup으로 현재 또는 다음 작업을 계산하고 normalized state와 현재 작업 입력을 매 실행 검증한다.
+5. 최초 진입이면 `definition.entry_task_action_id`, 재개 또는 반복이면 이전 계산 결과가 반환한
    `task_action_id`를 `currentTaskActionId`로 전달한다.
-5. `action_required`가 반환한 단일 `task_action_id`, `user_decision_options`, `executor_reference`,
+6. `action_required`가 반환한 단일 `task_action_id`, `user_decision_options`, `executor_reference`,
    `completion_predicate`를 현재 작업의 실행 입력으로 사용한다.
-6. 작업 완료 뒤 상태를 다시 관측·정규화하고 같은 `task_action_id`를 `currentTaskActionId`로 전달한다.
+7. 작업 완료 뒤 상태를 다시 관측·정규화하고 같은 `task_action_id`를 `currentTaskActionId`로 전달한다.
    워크플로 정의의 `next_transition_rules`와 `evaluateWorkflowDefinition`이 다음 단일 작업 또는 완료를
    결정한다.
-7. `completed`면 흐름을 완료한다. 상태 변환기 또는 워크플로 정의 검증이 실패하거나
+8. `completed`면 흐름을 완료한다. 상태 변환기 또는 워크플로 정의 검증이 실패하거나
    `evaluateWorkflowDefinition`이 `stopped`를 반환하면 중단한다. 일치하는 규칙이 없거나 여러
    개인 경우와 오류가 발생한 경우도 중단 조건으로 처리한다.
 

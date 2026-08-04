@@ -7,6 +7,7 @@ import {
 
 export const COMPILED_WORKFLOW_DEFINITION_ARTIFACT_TYPE = "compiled_workflow_definition";
 export const WORKFLOW_DEFINITION_COMPILER_FORMAT_VERSION = "1";
+const trustedCompiledDefinitions = new WeakSet();
 
 function digest(value) {
   return `sha256:${createHash("sha256").update(JSON.stringify(value)).digest("hex")}`;
@@ -24,6 +25,17 @@ export function deepFreeze(value) {
     deepFreeze(child);
   }
   return Object.freeze(value);
+}
+
+export function markTrustedCompiledWorkflowDefinition(compiledDefinition) {
+  trustedCompiledDefinitions.add(compiledDefinition);
+  return compiledDefinition;
+}
+
+export function isTrustedCompiledWorkflowDefinition(compiledDefinition) {
+  return typeof compiledDefinition === "object"
+    && compiledDefinition !== null
+    && trustedCompiledDefinitions.has(compiledDefinition);
 }
 
 function factValueType(value) {
@@ -115,9 +127,11 @@ export function compileWorkflowDefinition(definition) {
   };
   compiledDefinition.compiled_digest = computeCompiledWorkflowDefinitionDigest(compiledDefinition);
 
+  const frozenCompiledDefinition = deepFreeze(compiledDefinition);
+  markTrustedCompiledWorkflowDefinition(frozenCompiledDefinition);
   return {
     status: "compiled",
-    compiled_definition: deepFreeze(compiledDefinition),
+    compiled_definition: frozenCompiledDefinition,
     errors: [],
   };
 }

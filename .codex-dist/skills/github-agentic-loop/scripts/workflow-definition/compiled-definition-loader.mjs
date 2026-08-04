@@ -4,6 +4,8 @@ import {
   computeCompiledWorkflowDefinitionDigest,
   computeWorkflowDefinitionSourceDigest,
   deepFreeze,
+  isTrustedCompiledWorkflowDefinition,
+  markTrustedCompiledWorkflowDefinition,
   WORKFLOW_DEFINITION_COMPILER_FORMAT_VERSION,
 } from "./compiler.mjs";
 import { WORKFLOW_DEFINITION_VALIDATOR_VERSION } from "./validator.mjs";
@@ -188,14 +190,39 @@ export function loadCompiledWorkflowDefinition(definition, { compiledDefinition 
     };
   }
 
+  if (isTrustedCompiledWorkflowDefinition(compiledDefinition)
+    && definition === compiledDefinition.source_definition) {
+    return {
+      status: "loaded",
+      preparation: "reused",
+      compiled_definition: compiledDefinition,
+      errors: [],
+    };
+  }
+
   const errors = validateCompatibility(definition, compiledDefinition);
+  if (errors.length === 0) {
+    const expected = compileWorkflowDefinition(definition);
+    if (expected.status === "stopped") {
+      errors.push(...expected.errors);
+    } else if (expected.compiled_definition.compiled_digest !== compiledDefinition.compiled_digest) {
+      addError(
+        errors,
+        "compiled.representation.mismatch",
+        "/compiled_digest",
+        "Compiled representation does not match the deterministic representation of its source.",
+      );
+    }
+  }
   if (errors.length > 0) {
     return stopped(errors);
   }
+  const reusedCompiledDefinition = deepFreeze(cloneJson(compiledDefinition));
+  markTrustedCompiledWorkflowDefinition(reusedCompiledDefinition);
   return {
     status: "loaded",
     preparation: "reused",
-    compiled_definition: deepFreeze(cloneJson(compiledDefinition)),
+    compiled_definition: reusedCompiledDefinition,
     errors: [],
   };
 }

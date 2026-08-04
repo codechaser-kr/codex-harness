@@ -234,8 +234,10 @@ Workflow Engine이 사용자 결정을 요청할 때는 결정 대상과 선택 
 5. `구조화 실행`은 확정된 작업/동작 ID, 실행 범위, 직접 실행 대상 참조, 전제조건과 예상 사후조건을 담은 요청만 선택된 실행 주체에 전달한다.
 6. `사후조건 검증`은 실행 주체의 반환 결과와 다시 관찰한 상태가 완료 조건을 만족하는지 확인한 뒤 다음 전이를 평가한다.
 
-현재 런타임은 다섯 Workflow Definition과 각 state adapter를 사용하고, validator와 evaluator가 전이
-매칭과 평가를 결정론적으로 수행한다. `github-agentic-loop`는 기준 대상을 관찰하고 정규화·평가·
+현재 런타임은 다섯 Workflow Definition을 준비 단계에서 한 번 검증·compile하고 같은 immutable compiled
+representation을 각 state adapter와 evaluator에 전달한다. Adapter는 compiled fact metadata를,
+evaluator는 compiled transition lookup을 사용하며 candidate·evidence·normalized state·현재 작업 입력은
+매 실행 검증한다. `github-agentic-loop`는 기준 대상을 관찰하고 정규화·평가·
 실행·사후조건 검증을 연결하는 얇은 오케스트레이터이며 전이를 자연어로 선택하지 않는다.
 
 ### 명시적 검증 모드
@@ -271,7 +273,9 @@ Workflow Engine이 사용자 결정을 요청할 때는 결정 대상과 선택 
 | 기능결함 | `definitions/feature-fix.json` | `feature-fix-state-adapter.mjs` |
 | 구현흐름 | `definitions/implementation.json` | `implementation-state-adapter.mjs` |
 
-모든 조합은 adapter 정규화와 `evaluateWorkflowDefinition`의 단일 경로를 사용한다. 새 fact, 파싱,
+모든 조합은 한 번 준비한 compiled representation을 공유하는 adapter 정규화와
+`evaluateWorkflowDefinition`의 단일 경로를 사용한다. Raw Definition을 직접 받는 API와 CLI는 호환성을
+유지하며 내부 준비 경로를 사용한다. 새 fact, 파싱,
 정규화 또는 실행 동작이 필요하면 Definition만 바꾸지 않고 대응 adapter·계약·시험 사례를 함께
 변경한다. 자연어 전이 경로나 전이 결과 비교 경로는 두지 않는다.
 

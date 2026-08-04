@@ -33,8 +33,16 @@ Compiled representation은 정확히 다음 필드를 가진다.
 `compileWorkflowDefinition`은 source를 한 번 전체 검증한 뒤 compiled representation을 재귀적으로
 freeze한다. `loadCompiledWorkflowDefinition`은 compiled candidate가 없으면 source를 검증·compile하고,
 candidate가 있으면 source digest, embedded source, validator version, compiler format version와 compiled
-digest를 확인한다. 명시적으로 전달된 candidate가 불일치하거나 인식 불가능하면 자동 재compile하지 않고
+digest를 확인하고 serialized candidate가 source의 deterministic compile 결과와 같은지 대조한다. 같은
+프로세스의 compiler 또는 loader가 반환한 immutable representation은 신뢰 표식으로 전체 source 검증 없이
+재사용한다. 명시적으로 전달된 candidate가 불일치하거나 인식 불가능하면 새 compile 결과로 대체하지 않고
 `invalid_compiled_definition`과 안정적인 error code·path로 fail-closed 중단한다.
+
+`prepareWorkflowDefinition`은 raw source 또는 compiled representation을 공통 런타임 입력으로 바꾼다.
+오케스트레이터는 선택한 Definition을 준비 단계에서 한 번 compile한 뒤 같은 compiled representation을
+state adapter와 evaluator에 전달한다. Adapter와 evaluator는 fact metadata와 transition lookup을 사용하며
+source 전체 의미 검증을 반복하지 않는다. serialized compiled candidate는 사용 전에 loader의 digest와
+version 호환성 검사를 통과해야 한다.
 
 ## 루트 구조
 
@@ -134,11 +142,15 @@ Validator는 다음을 결정적으로 검증한다.
 ## 평가 API
 
 `evaluateWorkflowDefinition(definition, normalizedFactState, options)`는 외부 IO와 상태 변경이 없는
-Node.js API다. `options.currentTaskActionId`가 없으면 `entry_task_action_id`에서 시작한다.
+Node.js API다. `definition`은 raw source 또는 compiled representation이며, raw source와 별도 compiled
+candidate를 사용할 때는 `options.compiledDefinition`으로 전달한다. `options.currentTaskActionId`가 없으면
+`entry_task_action_id`에서 시작한다.
 
 완료되지 않은 작업은 `action_required`와 단일 `task_action_id`, `user_decision_options`,
 `executor_reference`, `completion_predicate`를 반환한다. 완료된 terminal 작업은 `completed`와
 단일 `task_action_id`를 반환한다. 중단 결과도 가능한 경우 `task_action_id`를 포함하며
 `transition_id`를 반환하지 않는다.
 
-CLI의 재개 옵션은 `--current-task-action-id`다.
+CLI는 `validate`, `compile`, `evaluate` 명령을 제공한다. `compile --definition`은 직렬화 가능한 compiled
+representation을 반환한다. `evaluate`의 재개 옵션은 `--current-task-action-id`, 준비된 표현 재사용 옵션은
+`--compiled-definition`이다.

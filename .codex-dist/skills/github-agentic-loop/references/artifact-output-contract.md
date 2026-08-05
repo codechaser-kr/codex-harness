@@ -88,7 +88,7 @@ compiled artifact 소비 경로에서는 `artifact-consumer-contract.md`에 따�
 
 | 판정 상태              | 판정 기준                                                                                                                                                                                                                                                                                                                                                                                         |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PR 생성 요청 사용 가능 | `title`, `body`, `base_branch`, `head_branch`, `blocking_questions` 필드가 있고, 원격 head branch가 존재하며, 제목이 PR 제목 판정 규칙을 통과하고, 본문이 PR 템플릿과 연관 이슈 계약을 통과하며, `blocking_questions`가 비어 있다. |
+| PR 생성 요청 사용 가능 | `title`, `body`, `base_branch`, `head_branch`, `blocking_questions` 필드가 있고, 네 생성 값과 별도 `input_digest`가 `pull-request-input-contract.md`의 immutable input identity와 exact equality이며, fresh live preflight가 remote base/head 존재·head OID freshness·same-head 기존 PR 부재를 통과하고, `blocking_questions`가 비어 있다. 제목 형식·본문 template·연관 이슈 의미는 `pr-proposal` 사용자 확정 전에 판정하며 여기서 반복하지 않는다. |
 
 ### 리뷰 코멘트 출력 판정 규칙 (`review-comment`)
 

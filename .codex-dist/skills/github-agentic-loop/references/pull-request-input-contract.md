@@ -77,3 +77,31 @@ type/version/digest의 변경, 필드 누락·추가, 직렬화 결과 대신 st
 
 기존 `pr-proposal`과 `pr-creation` artifact manifest의 public field와 renderer output은 이 계약을
 추가했다는 이유로 변경하지 않는다.
+
+## Live preflight 소비
+
+`runPullRequestLivePreflight(pullRequestInput, creationRequest, observation)`은 준비된 immutable input을
+검증한 뒤 다음 두 닫힌 객체를 대조한다.
+
+- `creationRequest`: `input_digest`, `title`, `body`, `base_branch`, `head_branch`. 모든 값은 immutable
+  input과 exact equality여야 한다.
+- `observation`: exact query 대상 `base_branch`·`head_branch`, 각 remote branch 존재 여부,
+  `expected_head_oid`, `remote_head_oid`, exact head branch의 `existing_pull_request_number` 또는 `null`.
+
+성공은 `status=ready`, immutable `input_digest`, deep-frozen `live_observation`을 반환한다. 다음 조건은
+`status=stopped`, `reason=pull_request_live_preflight_failed`와 stable code/path로 PR 생성 실행을 차단한다.
+
+- 생성 요청 digest/title/body/base/head가 immutable input과 다름:
+  `pull_request_preflight.identity.<field>.mismatch`
+- 관측한 base/head 이름이 immutable input과 다름:
+  `pull_request_preflight.observation.<branch>.mismatch`
+- remote base/head가 없음: `pull_request_preflight.remote_base.missing`,
+  `pull_request_preflight.remote_head.missing`
+- remote head OID가 expected local head OID와 다름:
+  `pull_request_preflight.remote_head_oid.stale`
+- exact head branch의 open PR이 이미 있음:
+  `pull_request_preflight.same_head_pull_request.conflict`
+
+Live preflight는 title 형식, template section, `Refs #번호` 또는 본문 의미를 판정하지 않는다. 이 기준은
+사용자가 초안을 확정하기 전에 `pr-proposal`이 완료한다. Preflight 관측은 PR 생성 실행 직전의 새 상태
+묶음이어야 하며 과거 관측을 immutable input 일부로 저장하지 않는다.

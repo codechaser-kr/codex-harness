@@ -8,6 +8,19 @@
 - 실행 범위에는 변경할 수 있는 GitHub 상태, 파일 또는 디렉터리, 댓글 또는 review thread, 브랜치, 커밋, PR 생성 여부를 포함한다.
 - 사용자 결정 필요 여부는 현재 task의 `user_decision_options`가 비어 있는지로 판정한다. 값이 있으면 사용자 결정을 기다리고, 빈 배열이면 사용자 결정 없이 실행을 계속한다.
 
+### PR 생성 immutable input과 live preflight
+
+PR 생성 구조화 실행 요청은 사용자가 확정한 immutable `pull_request_input`의 `input_digest`, title, body,
+base branch와 head branch를 변경 불가능한 `confirmed_request_values`로 기록한다. `pr-creation` public
+artifact의 기존 title/body/base/head/blocking field는 유지하되, 실행 요청은 별도 immutable identity와
+`pull-request-input-contract.md`의 `status=ready` live preflight 결과를 선행조건으로 사용한다.
+
+실행 직전에는 `state-observation-contract.md`로 exact remote base/head 존재, expected local head와 remote
+head OID 일치, same-head open PR 부재만 새로 관측한다. 생성 요청의 digest/title/body/base/head가 immutable
+input과 다르거나 live preflight가 stopped이면 `gh pr create`를 호출하지 않고 구조화 실행 중단으로
+반환한다. 이 단계에서 제목 형식, 본문 template와 연관 이슈 의미를 다시 판정하거나 renderer Markdown을
+parse하지 않는다.
+
 ### Claude 리뷰 실행 요청 고정값
 
 `FI-15`와 `FI-16`의 논리 실행 모드와 정확한 호출값은

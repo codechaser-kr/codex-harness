@@ -31,6 +31,7 @@ import "../artifact-contract/artifact-runtime.test.mjs";
 import "../artifact-contract/producer-handoff.test.mjs";
 import "../artifact-contract/artifact-consumer.test.mjs";
 import "../pull-request/pr-input.test.mjs";
+import "../pull-request/live-preflight.test.mjs";
 
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -122,6 +123,7 @@ const requiredArtifacts = [
   "scripts/artifact-contract/artifact-runtime.mjs",
   "scripts/artifact-contract/artifact-consumer.mjs",
   "scripts/pull-request/pr-input.mjs",
+  "scripts/pull-request/live-preflight.mjs",
   "tests/workflow-definition/structural-validation.test.mjs",
   "tests/workflow-definition/semantic-validation.test.mjs",
   "tests/workflow-definition/compiled-definition.test.mjs",
@@ -168,6 +170,7 @@ const requiredArtifacts = [
   "tests/artifact-contract/producer-handoff.test.mjs",
   "tests/artifact-contract/artifact-consumer.test.mjs",
   "tests/pull-request/pr-input.test.mjs",
+  "tests/pull-request/live-preflight.test.mjs",
   "tests/artifact-contract/fixtures/manifest-validation-cases.json",
   "tests/artifact-contract/fixtures/artifact-validation-cases.json",
 ];

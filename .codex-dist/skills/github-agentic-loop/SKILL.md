@@ -169,6 +169,11 @@ producer identity·digest mismatch 또는 stale compiled manifest이면 의미 �
 renderer Markdown에서 생성 입력을 다시 추출하지 않으며, field·type·version·digest mismatch에서 PR 생성
 실행을 시작하지 않는다. 기존 두 전용 스킬의 public artifact field와 renderer output은 유지한다.
 
+`pr-creation`은 immutable identity와 exact creation request equality를 먼저 확인한 뒤 실행 직전 remote
+base/head 존재, expected local head와 remote head OID 일치, same-head open PR 부재만 fresh live preflight로
+검증한다. stopped preflight에서는 PR 생성 구조화 실행을 호출하지 않는다. 제목 형식과 body template·연관
+이슈 의미는 `pr-proposal` 사용자 확정 전에 끝내며 live preflight에서 반복하지 않는다.
+
 ## 자동 실행
 
 `action_required.executor_reference`가 있고 사용자 결정이 모두 반영된 작업을 자동 실행 후보로 삼는다.

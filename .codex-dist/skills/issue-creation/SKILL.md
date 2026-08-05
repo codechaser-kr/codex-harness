@@ -11,6 +11,8 @@ description: 기능제안, 정책검토, 기능변경, 기능결함 GitHub 이�
 
 - `../github-agentic-loop/references/github-templates.md`
 - `../github-agentic-loop/references/artifact-output-contract.md`에서 ``이슈 생성(`issue-creation`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/artifact-handoff-contract.md`
+- `../github-agentic-loop/artifact-manifests/issue-creation.json`
 
 대상 저장소에 `.github/ISSUE_TEMPLATE/*.md`가 있으면 해당 파일을 실제 본문 형식의 단일 원천으로 먼저 읽는다. `github-templates.md`는 본문 복제본이 아니라 title prefix, label, 필수 섹션, 연결 규칙을 검증하는 계약 문서로 사용한다.
 
@@ -33,8 +35,9 @@ description: 기능제안, 정책검토, 기능변경, 기능결함 GitHub 이�
 
 ## 출력
 
-- 기존 `필수 출력 섹션`의 `이슈 유형`, `제목`, `라벨`, `본문 초안`, `생성 전 확인해야 할 위험 또는 보류 질문`만 반환한다.
-- 반환값은 GitHub 이슈 생성 요청이 아닌 사용자 검토용 초안이다.
+- 공통 handoff 계약의 닫힌 envelope만 반환한다.
+- `artifact_type: issue-creation`을 사용하고 `artifact`는 `issue-creation.json` manifest에 맞춰 구성한다.
+- 반환값은 GitHub 이슈 생성 요청이 아닌 사용자 검토용 초안이다. Markdown 표시는 runtime renderer가 담당한다.
 
 ## 하지 않는 일
 
@@ -85,12 +88,6 @@ description: 기능제안, 정책검토, 기능변경, 기능결함 GitHub 이�
 - 정책검토 이슈는 `정책 검토 결과 확정`, `결정된 정책을 관련 설계 문서에 반영`, `기능 변경 이슈로 전환` 항목을 기본 후속 작업으로 둔다.
 - 후속 작업 체크항목에는 해당 후속 작업의 완료 산출물인 이슈 번호 또는 PR 번호를 `(#번호)` 형식으로 붙일 수 있다.
 
-## 필수 출력 섹션
+## Structured artifact handoff
 
-초안을 제시할 때는 다음 섹션을 순서대로 함께 보여준다.
-
-- 이슈 유형
-- 제목
-- 라벨
-- 본문 초안
-- 생성 전 확인해야 할 위험 또는 보류 질문
+의미 내용은 위 분류·템플릿 검증 기준에 따라 작성하고, 기계 구조는 `issue-creation.json`만 따른다. envelope 밖의 설명이나 직접 조립한 Markdown을 반환하지 않는다.

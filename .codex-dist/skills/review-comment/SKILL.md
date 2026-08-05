@@ -11,6 +11,8 @@ description: PR Review Template 출력을 GitHub PR review thread 게시 초안�
 
 - `../github-agentic-loop/references/review-runtime-contract.md`에서 `PR Review Template 판정 규칙`과 `리뷰 게시 위치 판정 규칙` 섹션만 읽는다.
 - `../github-agentic-loop/references/artifact-output-contract.md`에서 ``리뷰 코멘트 출력 판정 규칙 (`review-comment`)`` 섹션만 읽는다.
+- `../github-agentic-loop/references/artifact-handoff-contract.md`
+- `../github-agentic-loop/artifact-manifests/review-comment.json`
 
 ## 입력
 
@@ -30,8 +32,9 @@ description: PR Review Template 출력을 GitHub PR review thread 게시 초안�
 
 ## 출력
 
-- 기존 `필수 출력`의 `pr_number`, `inline_review_threads`, `questions`만 반환한다.
-- `inline_review_threads`는 게시 가능한 review thread 초안이며 실제 게시 요청, 피드백 대응 방향, 해결 여부 또는 PR 상태의 확정값이 아니다.
+- 공통 handoff 계약의 닫힌 envelope만 반환한다.
+- `artifact_type: review-comment`를 사용하고 `artifact`는 `review-comment.json` manifest에 맞춰 구성한다.
+- `inline_review_threads`는 게시 가능한 review thread 초안이며 실제 게시 요청, 피드백 대응 방향, 해결 여부 또는 PR 상태의 확정값이 아니다. Markdown 표시는 runtime renderer가 담당한다.
 
 ## 하지 않는 일
 
@@ -60,12 +63,6 @@ description: PR Review Template 출력을 GitHub PR review thread 게시 초안�
 
 Workflow Engine이 `review thread 게시 위치 재지정`을 확정하면 새 `file`과 `line`으로 diff position 매핑을 다시 시도한다. `피드백 철회`를 확정하면 해당 피드백을 게시 초안에서 제외한다. 중요도 라벨은 모든 피드백에 필요한 `file`, `line`, diff position 근거와 함께 기록한다. 게시 요청은 위치 매핑 보류 해소 또는 피드백 철회가 완료된 피드백으로 구성한다.
 
-## 필수 출력
+## Structured artifact handoff
 
-리뷰 코멘트 게시 초안은 다음 필드를 빠짐없이 채운다. 해당 게시 대상이 없으면 빈 배열 또는 `N/A`를 명시한다.
-
-- `pr_number`
-- `inline_review_threads`: review thread 게시 대상으로 판정된 피드백의 게시 초안
-- `questions`: Workflow Engine이 확인할 보류 질문
-
-새 review thread 게시 초안은 모든 피드백의 `file`, `line`, diff position 근거로 구성한다.
+의미 내용은 위 diff position·중복·게시 위치 판단 기준에 따라 작성하고, 기계 구조는 `review-comment.json`만 따른다. envelope 밖의 설명이나 직접 조립한 Markdown을 반환하지 않는다.

@@ -10,6 +10,8 @@ description: Workflow Engine 구현 흐름에서 기준 이슈와 구현 계획�
 ## 먼저 읽을 문서
 
 - `../github-agentic-loop/references/artifact-output-contract.md`에서 ``브랜치 제안(`branch-proposal`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/artifact-handoff-contract.md`
+- `../github-agentic-loop/artifact-manifests/branch-proposal.json`
 
 ## 입력
 
@@ -37,8 +39,9 @@ description: Workflow Engine 구현 흐름에서 기준 이슈와 구현 계획�
 
 ## 출력
 
-- `## 필수 출력 섹션`에 정의된 전체 항목과 하위 항목을 순서대로 빠짐없이 반환한다.
-- 추천 브랜치는 사용자 검토용 후보이며 실제 작업 브랜치나 현재 Workflow 상태의 확정값이 아니다.
+- 공통 handoff 계약의 닫힌 envelope만 반환한다.
+- `artifact_type: branch-proposal`을 사용하고 `artifact`는 `branch-proposal.json` manifest에 맞춰 구성한다.
+- 추천 브랜치는 사용자 검토용 후보이며 실제 작업 브랜치나 현재 Workflow 상태의 확정값이 아니다. Markdown 표시는 runtime renderer가 담당한다.
 
 ## 하지 않는 일
 
@@ -72,15 +75,6 @@ docs/issue-<번호>-<topic>
 
 정책검토 설계 반영은 `docs/issue-<번호>-<topic>`, 기능변경은 `feat/issue-<번호>-<topic>`, 기능결함은 `fix/issue-<번호>-<topic>`을 우선 검토한다.
 
-## 필수 출력 섹션
+## Structured artifact handoff
 
-브랜치 이름 후보는 다음 섹션과 항목을 순서대로 빠짐없이 채운다. 필수 내용을 채울 수 없으면 후보를 확정하지 말고 `보류 질문`에 확인할 내용을 기록한다.
-
-- `기준 이슈`
-- `구현 단위`
-- `확인한 브랜치 이름 규칙`
-- `브랜치 이름 후보`
-  - `브랜치 이름`
-  - `제안 근거와 범위`
-- `추천 브랜치`
-- `보류 질문`
+의미 내용은 위 책임과 브랜치 이름 기준으로 작성하고, 기계 구조는 `branch-proposal.json`만 따른다. envelope 밖의 설명이나 직접 조립한 Markdown을 반환하지 않는다.

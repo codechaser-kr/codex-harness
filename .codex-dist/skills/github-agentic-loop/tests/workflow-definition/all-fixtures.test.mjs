@@ -28,6 +28,7 @@ import "../artifact-contract/validator.test.mjs";
 import "../artifact-contract/renderer.test.mjs";
 import "../artifact-contract/drift.test.mjs";
 import "../artifact-contract/artifact-runtime.test.mjs";
+import "../artifact-contract/producer-handoff.test.mjs";
 
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -76,6 +77,7 @@ const requiredArtifacts = [
   "references/normalized-fact-adapter-contract.md",
   "references/artifact-output-contract.md",
   "references/artifact-manifest-contract.md",
+  "references/artifact-handoff-contract.md",
   "references/github-templates.md",
   "references/target-runtime-bootstrap-contract.md",
   "references/workflow-engine-template-compatibility-contract.md",
@@ -157,6 +159,7 @@ const requiredArtifacts = [
   "tests/artifact-contract/renderer.test.mjs",
   "tests/artifact-contract/drift.test.mjs",
   "tests/artifact-contract/artifact-runtime.test.mjs",
+  "tests/artifact-contract/producer-handoff.test.mjs",
   "tests/artifact-contract/fixtures/manifest-validation-cases.json",
   "tests/artifact-contract/fixtures/artifact-validation-cases.json",
 ];

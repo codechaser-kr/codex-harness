@@ -11,7 +11,7 @@ async function readJson(url) {
   return JSON.parse(await readFile(url, "utf8"));
 }
 
-test("keeps manifests contract headings producer skills and render labels aligned", async () => {
+test("keeps manifests contract headings producer references and render order aligned", async () => {
   const artifactOutput = await readFile(artifactOutputUrl, "utf8");
   const manifestFiles = (await readdir(manifestsUrl)).filter((name) => name.endsWith(".json")).sort();
   const manifests = await Promise.all(manifestFiles.map((name) => readJson(new URL(name, manifestsUrl))));
@@ -30,13 +30,15 @@ test("keeps manifests contract headings producer skills and render labels aligne
     assert.equal(manifest.producer_skill, filename);
     assert.match(artifactOutput, new RegExp(`^### ${manifest.contract_section.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "m"));
 
-    const consumer = await readFile(new URL(`../../../${manifest.producer_skill}/SKILL.md`, import.meta.url), "utf8");
-    assert.match(consumer, /artifact-output-contract\.md/, manifest.producer_skill);
-    assert.equal(consumer.includes(manifest.contract_section), true, manifest.producer_skill);
+    const producer = await readFile(new URL(`../../../${manifest.producer_skill}/SKILL.md`, import.meta.url), "utf8");
+    assert.match(producer, /artifact-output-contract\.md/, manifest.producer_skill);
+    assert.match(producer, /artifact-handoff-contract\.md/, manifest.producer_skill);
+    assert.ok(producer.includes(`artifact-manifests/${manifestFiles[index]}`), manifest.producer_skill);
+    assert.ok(producer.includes(`\`artifact_type: ${manifest.artifact_type}\``), manifest.producer_skill);
+    assert.equal(producer.includes(manifest.contract_section), true, manifest.producer_skill);
     for (const fieldId of manifest.render.section_order) {
       const field = manifest.fields.find((candidate) => candidate.field_id === fieldId);
       assert.ok(field, `${manifest.artifact_type} missing rendered field ${fieldId}`);
-      assert.equal(consumer.includes(field.render_label), true, `${manifest.producer_skill}: ${field.render_label}`);
     }
   }
 });

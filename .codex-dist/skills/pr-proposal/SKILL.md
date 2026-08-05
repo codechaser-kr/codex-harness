@@ -11,6 +11,8 @@ description: Workflow Engine 구현 흐름에서 기준 이슈, 변경 요약, �
 
 - `../github-agentic-loop/references/github-templates.md`
 - `../github-agentic-loop/references/artifact-output-contract.md`에서 `PR 제목 판정 규칙`과 ``PR 제안(`pr-proposal`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/artifact-handoff-contract.md`
+- `../github-agentic-loop/artifact-manifests/pr-proposal.json`
 
 ## 입력
 
@@ -34,8 +36,9 @@ description: Workflow Engine 구현 흐름에서 기준 이슈, 변경 요약, �
 
 ## 출력
 
-- 기존 `필수 출력 섹션`의 제목 후보, 본문 초안, `보류 질문`만 반환한다.
-- 제목과 본문은 사용자 검토용 초안이며 PR 생성 입력이나 현재 PR 상태의 확정값이 아니다.
+- 공통 handoff 계약의 닫힌 envelope만 반환한다.
+- `artifact_type: pr-proposal`을 사용하고 `artifact`는 `pr-proposal.json` manifest에 맞춰 구성한다.
+- 제목과 본문은 사용자 검토용 초안이며 PR 생성 입력이나 현재 PR 상태의 확정값이 아니다. Markdown 표시는 runtime renderer가 담당한다.
 
 ## 하지 않는 일
 
@@ -57,10 +60,6 @@ description: Workflow Engine 구현 흐름에서 기준 이슈, 변경 요약, �
 - 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 `pr-creation`에 전달할 확정 입력 또는 중단을 결정한다.
 
-## 필수 출력 섹션
+## Structured artifact handoff
 
-PR 초안은 다음 섹션을 순서대로 빠짐없이 채운다. 제목 또는 본문 계약을 충족하지 못하면 PR 초안을 확정하지 말고 `보류 질문`에 확인할 내용을 기록한다.
-
-- `제목 후보`
-- `본문 초안`
-- `보류 질문`
+의미 내용은 위 PR 템플릿·제목 판단 기준에 따라 작성하고, 기계 구조는 `pr-proposal.json`만 따른다. envelope 밖의 설명이나 직접 조립한 Markdown을 반환하지 않는다.

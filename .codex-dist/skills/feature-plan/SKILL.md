@@ -10,6 +10,8 @@ description: 기능변경 이슈를 기준으로 브랜치/PR 단위별 작업 �
 ## 먼저 읽을 문서
 
 - `../github-agentic-loop/references/artifact-output-contract.md`에서 ``기능 변경 계획(`feature-plan`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/artifact-handoff-contract.md`
+- `../github-agentic-loop/artifact-manifests/feature-plan.json`
 - `../github-agentic-loop/references/github-templates.md`
 
 ## 입력
@@ -33,8 +35,9 @@ description: 기능변경 이슈를 기준으로 브랜치/PR 단위별 작업 �
 
 ## 출력
 
-- 기존 `필수 출력 섹션`의 브랜치/PR 단위 계획, 구현 순서, `보류 질문`만 반환한다.
-- 계획은 사용자 검토용 초안이며 구현 단위, 브랜치, PR 또는 현재 Workflow 상태의 확정값이 아니다.
+- 공통 handoff 계약의 닫힌 envelope만 반환한다.
+- `artifact_type: feature-plan`을 사용하고 `artifact`는 `feature-plan.json` manifest에 맞춰 구성한다.
+- 계획은 사용자 검토용 초안이며 구현 단위, 브랜치, PR 또는 현재 Workflow 상태의 확정값이 아니다. Markdown 표시는 runtime renderer가 담당한다.
 
 ## 하지 않는 일
 
@@ -56,18 +59,6 @@ description: 기능변경 이슈를 기준으로 브랜치/PR 단위별 작업 �
 - 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 계획 반영 또는 확정된 브랜치/PR 단위의 다음 작업을 결정한다.
 
-## 필수 출력 섹션
+## Structured artifact handoff
 
-변경 계획 초안은 다음 섹션과 항목을 순서대로 빠짐없이 채운다. 필수 내용을 채울 수 없으면 계획을 확정하지 말고 `보류 질문`에 확인할 내용을 기록한다.
-
-- `기준 이슈`
-- `계획 근거`: 현재 상태, 참조한 설계 문서와 연관 이슈, 이미 충족된 PR 또는 완료 기준
-- `브랜치/PR 단위`
-  - `단위 ID`
-  - `작업 내용`
-  - `선행 조건`
-  - `검증 기준`
-- `구현 순서`: 모든 브랜치/PR 단위 ID를 한 번씩 포함한다.
-- `보류 질문`: Workflow Engine이 확인할 내용
-
-`브랜치/PR 단위`의 `단위 ID`는 계획 안에서 고유하고 구현 순서가 바뀌어도 유지되는 식별자를 사용한다.
+의미 내용은 위 책임과 PR 전체 계획 기준으로 작성하고, 기계 구조는 `feature-plan.json`만 따른다. envelope 밖의 설명이나 직접 조립한 Markdown을 반환하지 않는다.

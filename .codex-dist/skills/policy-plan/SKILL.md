@@ -10,6 +10,8 @@ description: 정책검토 이슈를 기준으로 변경하거나 적용할 정�
 ## 먼저 읽을 문서
 
 - `../github-agentic-loop/references/artifact-output-contract.md`에서 ``정책 계획(`policy-plan`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/artifact-handoff-contract.md`
+- `../github-agentic-loop/artifact-manifests/policy-plan.json`
 - `../github-agentic-loop/references/github-templates.md`
 
 ## 입력
@@ -36,8 +38,9 @@ description: 정책검토 이슈를 기준으로 변경하거나 적용할 정�
 
 ## 출력
 
-- 기존 `필수 출력 섹션`의 정책 설계 후보, 추천 설계, 설계 문서 반영·기능변경 전환 범위, `보류 질문`만 반환한다.
-- 설계는 사용자 검토용 후보이며 정책검토 이슈의 `검토 결과`나 설계 문서에 반영할 확정값이 아니다.
+- 공통 handoff 계약의 닫힌 envelope만 반환한다.
+- `artifact_type: policy-plan`을 사용하고 `artifact`는 `policy-plan.json` manifest에 맞춰 구성한다.
+- 설계는 사용자 검토용 후보이며 정책검토 이슈의 `검토 결과`나 설계 문서에 반영할 확정값이 아니다. Markdown 표시는 runtime renderer가 담당한다.
 
 ## 하지 않는 일
 
@@ -59,19 +62,6 @@ description: 정책검토 이슈를 기준으로 변경하거나 적용할 정�
 - 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 정책 확정, 설계 반영, 기능변경 전환의 다음 작업을 확정한다.
 
-## 필수 출력 섹션
+## Structured artifact handoff
 
-정책 설계 계획은 다음 한글 섹션과 항목을 순서대로 빠짐없이 채운다. 필수 내용을 채울 수 없으면 정책 설계를 확정하지 말고 `보류 질문`에 확인할 내용을 기록한다.
-
-- `기준 이슈`
-- `결정 맥락`: 결정 질문, 현재 상태, 참조한 설계 문서와 연관 이슈
-- `정책 설계 후보`
-  - `후보 ID`
-  - `정책 설계`: 적용 범위와 상세 설계를 포함한다.
-  - `판단 근거와 위험`
-  - `설계 문서 반영 대상`
-  - `설계 문서 반영 단위`
-  - `검증 기준`
-  - `설계 반영 후 기능변경 전환 범위`
-- `추천 설계`
-- `보류 질문`: Workflow Engine이 확인할 보류 질문
+의미 내용은 위 정책·설계 문서 판단에 따라 작성하고, 기계 구조는 `policy-plan.json`만 따른다. envelope 밖의 설명이나 직접 조립한 Markdown을 반환하지 않는다.

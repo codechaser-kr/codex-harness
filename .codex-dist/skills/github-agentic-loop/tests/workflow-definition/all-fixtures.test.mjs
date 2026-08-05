@@ -27,6 +27,9 @@ import "../artifact-contract/compiled-manifest.test.mjs";
 import "../artifact-contract/validator.test.mjs";
 import "../artifact-contract/renderer.test.mjs";
 import "../artifact-contract/drift.test.mjs";
+import "../artifact-contract/artifact-runtime.test.mjs";
+import "../artifact-contract/producer-handoff.test.mjs";
+import "../artifact-contract/artifact-consumer.test.mjs";
 
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -75,6 +78,8 @@ const requiredArtifacts = [
   "references/normalized-fact-adapter-contract.md",
   "references/artifact-output-contract.md",
   "references/artifact-manifest-contract.md",
+  "references/artifact-handoff-contract.md",
+  "references/artifact-consumer-contract.md",
   "references/github-templates.md",
   "references/target-runtime-bootstrap-contract.md",
   "references/workflow-engine-template-compatibility-contract.md",
@@ -111,6 +116,9 @@ const requiredArtifacts = [
   "scripts/artifact-contract/compiled-manifest-loader.mjs",
   "scripts/artifact-contract/validator.mjs",
   "scripts/artifact-contract/renderer.mjs",
+  "scripts/artifact-contract/artifact-registry.mjs",
+  "scripts/artifact-contract/artifact-runtime.mjs",
+  "scripts/artifact-contract/artifact-consumer.mjs",
   "tests/workflow-definition/structural-validation.test.mjs",
   "tests/workflow-definition/semantic-validation.test.mjs",
   "tests/workflow-definition/compiled-definition.test.mjs",
@@ -153,6 +161,9 @@ const requiredArtifacts = [
   "tests/artifact-contract/validator.test.mjs",
   "tests/artifact-contract/renderer.test.mjs",
   "tests/artifact-contract/drift.test.mjs",
+  "tests/artifact-contract/artifact-runtime.test.mjs",
+  "tests/artifact-contract/producer-handoff.test.mjs",
+  "tests/artifact-contract/artifact-consumer.test.mjs",
   "tests/artifact-contract/fixtures/manifest-validation-cases.json",
   "tests/artifact-contract/fixtures/artifact-validation-cases.json",
 ];

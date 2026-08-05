@@ -2,7 +2,7 @@
 
 이 문서는 전용 제안·분석 스킬이 만든 초안, 후보, 분석 결과의 설명과 의미적 사용 가능 기준을 정의한다. 필드 구조, 필수 여부, enum, ID·참조·순서 규칙과 표시 순서는 `artifact-manifests/*.json` 및 `artifact-manifest-contract.md`가 machine-readable 단일 원천으로 소유한다. 이 문서의 필드·섹션 명시는 사람이 읽는 설명이며 manifest와의 drift를 회귀 테스트로 차단한다. 정책 후보의 타당성, 원인 확인 수준, 계획의 범위 적합성, PR 제목·템플릿 같은 의미 판단은 이 문서와 관련 runtime 계약에 남는다.
 
-compiled artifact 소비 경로에서는 validator의 구조 검증 성공 뒤에만 이 문서의 의미 기준을 판정하거나 renderer 출력을 사용자에게 제시한다. renderer는 manifest의 순서와 표시 이름을 적용할 뿐 값을 보완하거나 의미 판단을 수행하지 않는다. 작업 전이, 현재 작업, 다음 작업 산출은 `definitions/*.json`, 각 state adapter, `evaluator.mjs`가 계산한다. PR 제목 판정과 각 산출물의 `... 사용 가능` 또는 `... 제시 가능` 기준을 모두 충족하면 산출물을 사용할 수 있다. 보류 판정은 미충족 기준을 산출한다. PR 제목의 세부 긍정 판정 기준은 최종 판정 근거로 각각 유지한다.
+compiled artifact 소비 경로에서는 `artifact-consumer-contract.md`에 따라 runtime gate의 accepted receipt 뒤에서만 이 문서의 의미 기준을 판정하거나 renderer 출력을 사용자에게 제시한다. renderer는 manifest의 순서와 표시 이름을 적용할 뿐 값을 보완하거나 의미 판단을 수행하지 않는다. 작업 전이, 현재 작업, 다음 작업 산출은 `definitions/*.json`, 각 state adapter, `evaluator.mjs`가 계산한다. PR 제목 판정과 각 산출물의 `... 사용 가능` 또는 `... 제시 가능` 기준을 모두 충족하면 산출물을 사용할 수 있다. 보류 판정은 미충족 기준을 산출한다. PR 제목의 세부 긍정 판정 기준은 최종 판정 근거로 각각 유지한다.
 
 이슈와 PR 본문 형식은 타겟 레포의 `.github/ISSUE_TEMPLATE/*.md`와 `.github/pull_request_template.md`를 기준으로 판정하고, 이슈 title prefix, label, 필수 섹션, 연결 규칙은 `github-templates.md`로 판정한다. 필요한 타겟 템플릿이나 라벨이 없으면 산출물을 판정하기 전에 `target-runtime-bootstrap-contract.md`와 `workflow-engine-template-compatibility-contract.md`로 현재 작업에 필요한 범위만 초기화한다.
 

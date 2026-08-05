@@ -10,6 +10,8 @@ description: PR 제목과 본문, base branch, 원격 head branch를 기준으�
 ## 먼저 읽을 문서
 
 - `../github-agentic-loop/references/artifact-output-contract.md`에서 `PR 제목 판정 규칙`과 ``PR 생성(`pr-creation`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/artifact-handoff-contract.md`
+- `../github-agentic-loop/artifact-manifests/pr-creation.json`
 - `../github-agentic-loop/references/github-templates.md`
 
 ## 입력
@@ -31,8 +33,9 @@ description: PR 제목과 본문, base branch, 원격 head branch를 기준으�
 
 ## 출력
 
-- 기존 `필수 출력`의 `title`, `body`, `base_branch`, `head_branch`, `blocking_questions`만 반환한다.
-- 반환값은 검증된 PR 생성 요청 초안이며 실제 GitHub PR 생성 요청이나 현재 PR 상태의 확정값이 아니다.
+- 공통 handoff 계약의 닫힌 envelope만 반환한다.
+- `artifact_type: pr-creation`을 사용하고 `artifact`는 `pr-creation.json` manifest에 맞춰 구성한다.
+- 반환값은 검증된 PR 생성 요청 초안이며 실제 GitHub PR 생성 요청이나 현재 PR 상태의 확정값이 아니다. Markdown 표시는 runtime renderer가 담당한다.
 
 ## 하지 않는 일
 
@@ -54,12 +57,6 @@ description: PR 제목과 본문, base branch, 원격 head branch를 기준으�
 - 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 실제 PR 생성의 구조화 실행 요청 또는 중단을 확정한다.
 
-## 필수 출력
+## Structured artifact handoff
 
-PR 생성 요청 초안은 다음 필드를 빠짐없이 채운다. 필수 필드를 채울 수 없으면 생성 요청을 확정하지 말고 `blocking_questions`에 보류 질문을 기록한다.
-
-- `title`
-- `body`
-- `base_branch`
-- `head_branch`
-- `blocking_questions`
+의미 내용은 위 PR 제목·본문 검증 기준에 따라 작성하고, 기계 구조는 `pr-creation.json`만 따른다. envelope 밖의 설명이나 직접 조립한 Markdown을 반환하지 않는다.

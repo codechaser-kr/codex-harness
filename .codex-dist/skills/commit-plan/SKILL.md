@@ -10,6 +10,8 @@ description: Workflow Engine 구현 흐름에서 작업 브랜치 전환이 완�
 ## 먼저 읽을 문서
 
 - `../github-agentic-loop/references/artifact-output-contract.md`에서 ``커밋 계획(`commit-plan`) 출력 판정 규칙`` 섹션만 읽는다.
+- `../github-agentic-loop/references/artifact-handoff-contract.md`
+- `../github-agentic-loop/artifact-manifests/commit-plan.json`
 
 ## 입력
 
@@ -32,8 +34,9 @@ description: Workflow Engine 구현 흐름에서 작업 브랜치 전환이 완�
 
 ## 출력
 
-- 기존 `필수 출력 섹션`의 커밋 단위 후보, 구현 순서, `보류 질문`만 반환한다.
-- 계획은 사용자 검토용 후보이며 현재 커밋 단위, 커밋 메시지, 커밋 생성 또는 작업 범위의 확정값이 아니다.
+- 공통 handoff 계약의 닫힌 envelope만 반환한다.
+- `artifact_type: commit-plan`을 사용하고 `artifact`는 `commit-plan.json` manifest에 맞춰 구성한다.
+- 계획은 사용자 검토용 후보이며 현재 커밋 단위, 커밋 메시지, 커밋 생성 또는 작업 범위의 확정값이 아니다. Markdown 표시는 runtime renderer가 담당한다.
 
 ## 하지 않는 일
 
@@ -55,24 +58,6 @@ description: Workflow Engine 구현 흐름에서 작업 브랜치 전환이 완�
 - 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 현재 커밋 단위와 확정된 구현 요청을 결정한다.
 
-## 필수 출력 섹션
+## Structured artifact handoff
 
-커밋 계획은 다음 섹션과 항목을 순서대로 빠짐없이 채운다.
-
-- `기준 이슈`
-- `현재 브랜치/PR 단위`
-  - `단위 ID`
-  - `작업 내용`
-  - `선행 조건`
-  - `PR 단위 검증 기준`
-- `현재 작업 브랜치`
-- `계획 근거`: 확인한 코드 상태와 저장소 관례
-- `커밋 단위`
-  - `단위 ID`
-  - `작업 범위`
-  - `수정 대상`
-  - `검증 기준`
-- `구현 순서`
-- `보류 질문`
-
-`커밋 단위`의 `단위 ID`는 계획 안에서 고유해야 한다. `구현 순서`는 모든 커밋 단위 ID를 한 번씩 포함해야 한다.
+의미 내용은 위 책임과 상위 계획 기준으로 작성하고, 기계 구조는 `commit-plan.json`만 따른다. envelope 밖의 설명이나 직접 조립한 Markdown을 반환하지 않는다.

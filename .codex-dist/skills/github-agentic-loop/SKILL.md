@@ -42,7 +42,7 @@ description: GitHub 이슈와 PR의 관측 상태를 선언형 워크플로 정�
 현재 작업에 해당하는 계약을 다음 기준으로 추가로 읽는다.
 
 - GitHub·로컬 원본 상태를 수집하거나 관측 근거를 분류할 때 `references/state-observation-contract.md`
-- 전용 제안·분석 스킬의 결과를 사용할 때 `references/artifact-output-contract.md`
+- 전용 제안·분석 스킬의 결과를 사용할 때 `references/artifact-handoff-contract.md`, `references/artifact-consumer-contract.md`, `references/artifact-output-contract.md`
 - 현재 작업에 사용자 선택지가 있거나 재개 요청의 사용자 입력을 해석할 때 `references/user-decision-contract.md`
 - 리뷰를 실행·정규화·게시·대응할 때 `references/review-runtime-contract.md`
 - 선택한 리뷰 실행 모드가 `claude/*`일 때 `references/claude-review-executor-contract.md`
@@ -150,9 +150,17 @@ ID, 현재 정규화 상태와 불일치하는 ID, 누락된 재개 ID가 발견
 | PR 생성 요청값 | `pr-creation` |
 | 리뷰 코멘트 게시 초안 | `review-comment` |
 
-전용 스킬은 후보, 초안 또는 분석 결과만 반환한다. 결과는
-`artifact-output-contract.md`의 요구사항을 충족한 경우에만 다음 관측 상태 묶음에 포함한다.
-보류 결과는 보류 상태로 유지한다.
+전용 스킬은 후보, 초안 또는 분석 결과를 `artifact-handoff-contract.md`의 닫힌 envelope로만 반환한다.
+Workflow Engine은 호출한 스킬과 같은 expected artifact type 및 현재 registry compiled manifest의
+`contract_digest`를 고정해 `consumeArtifactHandoff`에 전달한다. raw handoff나 직접 작성된 Markdown은
+상태 관측 입력으로 사용하지 않는다.
+
+consumer는 공통 gate가 반환한 accepted immutable receipt만 `artifact-output-contract.md`의 의미 판정,
+상태 관측 정규화, 다음 Workflow 계산 순서로 전달한다. 다음 fact 관측에는 receipt와
+`contract_digest` 근거만 포함하고 renderer Markdown을 다시 parse하지 않는다. invalid envelope·artifact,
+producer identity·digest mismatch 또는 stale compiled manifest이면 의미 판정, 상태 변환기, evaluator와
+후속 실행을 시작하지 않고 중단한다. 의미 기준을 충족하지 못한 결과는 보류 상태로 유지하며 정규화와
+후속 실행을 호출하지 않는다.
 
 ## 자동 실행
 

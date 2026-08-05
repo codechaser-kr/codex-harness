@@ -2,6 +2,12 @@
 
 이 문서는 GitHub와 로컬 상태를 읽고, 읽기 전용 상태 요약의 사용 가능 여부를 판정하며, 관측 필드와 상태 근거를 분류하는 기준만 정의한다. 작업 전이와 현재 작업 선택은 이 문서의 책임이 아니며 `definitions/*.json`, 각 state adapter, `evaluator.mjs`가 담당한다. 구조화 실행 요청과 실행 주체 판정은 `structured-execution-contract.md`, 리뷰 런타임 판정은 `review-runtime-contract.md`를 따른다.
 
+## 전용 스킬 artifact 관측
+
+thin 스킬의 raw handoff는 관측 상태가 아니다. `artifact-consumer-contract.md`의 공통 gate가 accepted한 immutable receipt에 대해 의미 사용 가능 판정까지 통과한 경우에만 다음 fact 후보를 만들 수 있다. 이 후보의 근거에는 `artifact_type`, `contract_digest`, receipt와 receipt에서 산출한 의미 판정 결과를 기록하며, raw `artifact`나 renderer Markdown을 별도 원천으로 복제하지 않는다.
+
+invalid handoff·artifact, producer identity·digest mismatch, stale compiled manifest 또는 의미 사용 불가 결과는 상태 변환기에 전달하지 않는다. 이때 누락 fact를 추론하거나 raw 결과로 fallback하지 않고 consumer의 stopped 결과를 중단 또는 보류 근거로 기록한다.
+
 ## 상태 읽기 규칙
 
 - 기준 대상은 열린 PR에서 먼저 찾고, 이어갈 PR 후보가 비어 있으면 열린 이슈에서 찾는다.

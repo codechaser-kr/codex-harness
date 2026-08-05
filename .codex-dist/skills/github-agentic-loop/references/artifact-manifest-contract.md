@@ -65,4 +65,8 @@ canonical 직렬화는 객체 key를 정렬하고 배열 순서를 보존한다.
 
 ## 런타임 책임 경계
 
-manifest compiler와 loader는 변하지 않는 계약 준비만 담당한다. artifact 값의 타입·필수 필드·enum과 cross-field rule 검증, 검증 receipt, renderer 호출은 후속 artifact runtime이 담당한다. compiled manifest는 의미 판단 결과나 GitHub 상태 변경 권한을 포함하지 않는다.
+manifest compiler와 loader는 변하지 않는 계약 준비만 담당한다. artifact validator는 artifact 값의 타입·필수 필드·enum과 cross-field rule을 검사하고 같은 입력에 같은 순서의 `code`, `path`, `message`를 반환한다. 구조 오류가 하나라도 있으면 의미 판단과 renderer 호출을 진행하지 않는다.
+
+renderer는 validator가 성공한 structured artifact만 입력으로 받고 `render.section_order`와 각 field의 `render_label`에 따라 Markdown을 만든다. 빈 배열은 `없음`, 빈 string은 `N/A`로 표시하고, 배열·객체는 manifest field 순서를 보존한 목록으로 표시한다. renderer는 누락값을 생성하거나 값을 바꾸거나 정책·원인·범위의 의미를 판단하지 않는다. 같은 manifest와 artifact는 byte-stable Markdown을 반환한다.
+
+compiled manifest는 의미 판단 결과나 GitHub 상태 변경 권한을 포함하지 않는다. `artifact-manifests/*.json`이 기계 규칙의 단일 원천이고 `artifact-output-contract.md`는 사용자 설명과 의미 판정을 소유한다. manifest의 `contract_section`, `producer_skill`, 최상위 `render_label`은 Markdown heading과 consumer skill 출력 이름에 대응하며, 회귀 테스트가 이 대응과 설치 tree 동일성을 검증한다.

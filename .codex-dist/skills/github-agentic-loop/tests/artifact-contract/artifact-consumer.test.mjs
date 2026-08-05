@@ -112,6 +112,33 @@ test("blocks every digest mismatch before any consumer callback", async () => {
   }
 });
 
+test("blocks malformed injected registry entries before any consumer callback", async () => {
+  const fixtures = await readJson(fixturesUrl);
+  const prepared = await getArtifactRegistry();
+  const fixture = fixtures.cases[0];
+  const entry = prepared.registry.by_type[fixture.artifact_type];
+  const { calls, handlers } = instrumentedHandlers(fixture.artifact_type);
+  const result = await consumeArtifactHandoff({
+    expectedArtifactType: fixture.artifact_type,
+    expectedContractDigest: entry.compiled_manifest.contract_digest,
+    handoff: { artifact_type: fixture.artifact_type, artifact: fixture.valid_artifact },
+    handlers,
+    registry: {
+      artifact_types: prepared.registry.artifact_types,
+      by_type: { ...prepared.registry.by_type, [fixture.artifact_type]: null },
+    },
+  });
+
+  assert.equal(result.status, "stopped");
+  assert.equal(result.reason, "invalid_artifact_registry");
+  assert.equal(result.receipt, null);
+  assert.equal(result.errors.some((error) => (
+    error.code === "artifact_runtime.registry.entry.invalid"
+    && error.path === `/registry/by_type/${fixture.artifact_type}`
+  )), true);
+  assert.deepEqual(calls, { meaning: 0, normalization: 0, continuation: 0 });
+});
+
 test("rejects open or mismatched handoffs and stops after an unusable meaning result", async () => {
   const fixtures = await readJson(fixturesUrl);
   const prepared = await getArtifactRegistry();

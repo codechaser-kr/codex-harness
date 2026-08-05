@@ -17,6 +17,12 @@ function stopped(reason, artifactType, contractDigest, errors) {
   });
 }
 
+function isPlainObject(value) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
 function validRegistry(registry) {
   return typeof registry === "object"
     && registry !== null
@@ -55,6 +61,17 @@ export async function acceptArtifact(
   }
 
   const entry = resolvedRegistry.by_type[artifactType];
+  if (
+    !isPlainObject(entry)
+    || !isPlainObject(entry.manifest)
+    || !isPlainObject(entry.compiled_manifest)
+  ) {
+    return stopped("invalid_artifact_registry", artifactType, null, [{
+      code: "artifact_runtime.registry.entry.invalid",
+      path: `/registry/by_type/${artifactType}`,
+      message: `Artifact registry entry is invalid: ${artifactType}.`,
+    }]);
+  }
   const rendered = renderArtifact(entry.manifest, artifact, {
     compiledManifest: compiledManifest ?? entry.compiled_manifest,
   });

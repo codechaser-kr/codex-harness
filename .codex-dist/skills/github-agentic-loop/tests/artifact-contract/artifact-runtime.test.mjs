@@ -113,4 +113,33 @@ test("rejects incomplete and mismatched registry inputs deterministically", asyn
     { code: "artifact_registry.manifest.missing", path: `/manifests/${ARTIFACT_TYPES[0]}` },
     { code: "artifact_registry.artifact_type.mismatch", path: `/manifests/${ARTIFACT_TYPES[1]}/artifact_type` },
   ]);
+
+  const fixtures = await readJson(fixturesUrl);
+  const fixture = fixtures.cases[0];
+  const validEntry = prepared.registry.by_type[fixture.artifact_type];
+  for (const malformedEntry of [
+    null,
+    {},
+    { manifest: null, compiled_manifest: validEntry.compiled_manifest },
+    { manifest: validEntry.manifest, compiled_manifest: null },
+  ]) {
+    const injectedRegistry = {
+      artifact_types: prepared.registry.artifact_types,
+      by_type: { ...prepared.registry.by_type, [fixture.artifact_type]: malformedEntry },
+    };
+    const rejected = await acceptArtifact(fixture.artifact_type, fixture.valid_artifact, {
+      registry: injectedRegistry,
+    });
+    assert.equal(rejected.status, "stopped");
+    assert.equal(rejected.reason, "invalid_artifact_registry");
+    assert.equal(rejected.receipt, null);
+    assert.equal(rejected.contract_digest, null);
+    assert.equal(Object.isFrozen(rejected), true);
+    assert.equal(Object.isFrozen(rejected.errors), true);
+    assert.equal(hasError(
+      rejected,
+      "artifact_runtime.registry.entry.invalid",
+      `/registry/by_type/${fixture.artifact_type}`,
+    ), true);
+  }
 });

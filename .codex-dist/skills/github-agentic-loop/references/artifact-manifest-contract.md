@@ -69,4 +69,8 @@ manifest compiler와 loader는 변하지 않는 계약 준비만 담당한다. a
 
 renderer는 validator가 성공한 structured artifact만 입력으로 받고 `render.section_order`와 각 field의 `render_label`에 따라 Markdown을 만든다. 빈 배열은 `없음`, 빈 string은 `N/A`로 표시하고, 배열·객체는 manifest field 순서를 보존한 목록으로 표시한다. renderer는 누락값을 생성하거나 값을 바꾸거나 정책·원인·범위의 의미를 판단하지 않는다. 같은 manifest와 artifact는 byte-stable Markdown을 반환한다.
 
+artifact registry는 지원하는 12개 `artifact_type`의 manifest를 한 번 load·compile하고 process 안에서 immutable compiled manifest를 재사용한다. 누락·추가 manifest, 파일명과 `artifact_type` 불일치, parse·compile 오류가 있으면 registry 전체를 fail closed하며 일부 registry로 실행하지 않는다.
+
+artifact runtime gate는 registry의 compiled manifest로 구조 검증과 renderer를 순서대로 실행한다. 성공 결과만 `artifact_type`, `contract_digest`, 입력의 immutable 독립 복제본 `value`, `rendered.content_type`, `rendered.output`을 가진 receipt로 반환한다. receipt는 현재 실행의 producer/consumer handoff이며 저장하거나 장기 재사용하는 receipt가 아니다. unknown artifact type, 구조 오류, stale compiled manifest에서는 `receipt: null`과 stable error를 반환하고 의미 판단이나 후속 소비를 호출하지 않는다.
+
 compiled manifest는 의미 판단 결과나 GitHub 상태 변경 권한을 포함하지 않는다. `artifact-manifests/*.json`이 기계 규칙의 단일 원천이고 `artifact-output-contract.md`는 사용자 설명과 의미 판정을 소유한다. manifest의 `contract_section`, `producer_skill`, 최상위 `render_label`은 Markdown heading과 consumer skill 출력 이름에 대응하며, 회귀 테스트가 이 대응과 설치 tree 동일성을 검증한다.

@@ -71,6 +71,6 @@ renderer는 validator가 성공한 structured artifact만 입력으로 받고 `r
 
 artifact registry는 지원하는 12개 `artifact_type`의 manifest를 한 번 load·compile하고 process 안에서 immutable compiled manifest를 재사용한다. 누락·추가 manifest, 파일명과 `artifact_type` 불일치, parse·compile 오류가 있으면 registry 전체를 fail closed하며 일부 registry로 실행하지 않는다.
 
-artifact runtime gate는 registry의 compiled manifest로 구조 검증과 renderer를 순서대로 실행한다. 성공 결과만 `artifact_type`, `contract_digest`, 입력의 immutable 독립 복제본 `value`, `rendered.content_type`, `rendered.output`을 가진 receipt로 반환한다. receipt는 현재 실행의 producer/consumer handoff이며 저장하거나 장기 재사용하는 receipt가 아니다. unknown artifact type, 구조 오류, stale compiled manifest에서는 `receipt: null`과 stable error를 반환하고 의미 판단이나 후속 소비를 호출하지 않는다.
+artifact runtime gate는 registry의 compiled manifest로 구조 검증과 renderer를 순서대로 실행한다. 성공 결과만 `artifact_type`, `contract_digest`, 입력의 immutable 독립 복제본 `value`, `rendered.content_type`, `rendered.output`을 가진 receipt로 반환한다. receipt는 현재 실행의 producer/consumer handoff이며 저장하거나 장기 재사용하는 receipt가 아니다. unknown artifact type, 구조 오류, stale compiled manifest에서는 `receipt: null`과 stable error를 반환하고 의미 판단이나 후속 소비를 호출하지 않는다. Workflow Engine의 expected producer·digest 대조와 accepted receipt 이후 callback 순서는 `artifact-consumer-contract.md`가 소유한다.
 
 compiled manifest는 의미 판단 결과나 GitHub 상태 변경 권한을 포함하지 않는다. `artifact-manifests/*.json`이 기계 규칙의 단일 원천이고 `artifact-output-contract.md`는 사용자 설명과 의미 판정을 소유한다. manifest의 `contract_section`, `producer_skill`, 최상위 `render_label`은 Markdown heading과 consumer skill 출력 이름에 대응하며, 회귀 테스트가 이 대응과 설치 tree 동일성을 검증한다.

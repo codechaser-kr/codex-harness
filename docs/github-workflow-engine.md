@@ -121,7 +121,9 @@ Workflow Engine이 전이를 평가할 때는 관찰된 사실과 의미 해석 
 
 thin 스킬의 structured artifact는 `artifact-manifests/*.json`을 기계 구조의 단일 원천으로 사용한다. manifest는 artifact type별 닫힌 필드 구조, 필수 여부, enum, ID·참조·구현 순서 rule, renderer section 순서를 선언하고 compiler가 source·contract·compiled digest와 immutable lookup을 준비한다. artifact validator는 같은 입력에 안정적인 error code와 JSON Pointer path를 반환하며 구조 오류가 있으면 의미 판정과 후속 실행을 fail closed한다.
 
-`artifact-output-contract.md`는 manifest 구조를 다시 실행하지 않고 사용자 설명과 정책 후보의 타당성, 원인 확인 수준, 계획 범위 적합성, PR template 같은 의미 판정을 소유한다. manifest가 가진 contract section·producer skill·render label과 Markdown·thin skill의 대응은 drift test로 검증한다. renderer는 구조 검증이 성공한 artifact만 manifest 순서대로 Markdown에 표시하며 값을 생성·수정하거나 의미를 판단하지 않는다. thin skill과 Workflow Engine이 이 compiled artifact를 실제 생산·소비하는 전환은 별도 구현 경계로 유지한다.
+`artifact-output-contract.md`는 manifest 구조를 다시 실행하지 않고 사용자 설명과 정책 후보의 타당성, 원인 확인 수준, 계획 범위 적합성, PR template 같은 의미 판정을 소유한다. manifest가 가진 contract section·producer skill·render label과 Markdown·thin skill의 대응은 drift test로 검증한다. renderer는 구조 검증이 성공한 artifact만 manifest 순서대로 Markdown에 표시하며 값을 생성·수정하거나 의미를 판단하지 않는다.
+
+thin skill은 `artifact_type`과 manifest field object만 가진 닫힌 handoff를 생산한다. Workflow Engine의 artifact consumer는 호출한 producer identity와 active compiled manifest의 `contract_digest`를 expected 값으로 고정하고, runtime gate가 승인한 immutable receipt만 의미 판정과 상태 관측에 전달한다. 다음 fact 근거는 receipt와 digest에 연결하며 renderer Markdown을 parse하지 않는다. 구조 오류, stale contract 또는 digest mismatch에서는 의미 판정·상태 정규화·후속 Workflow 계산을 호출하지 않는 fail-closed 경계를 사용한다.
 
 ### 이슈 유형
 

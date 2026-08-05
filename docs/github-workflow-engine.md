@@ -125,6 +125,20 @@ thin 스킬의 structured artifact는 `artifact-manifests/*.json`을 기계 구�
 
 thin skill은 `artifact_type`과 manifest field object만 가진 닫힌 handoff를 생산한다. Workflow Engine의 artifact consumer는 호출한 producer identity와 active compiled manifest의 `contract_digest`를 expected 값으로 고정하고, runtime gate가 승인한 immutable receipt만 의미 판정과 상태 관측에 전달한다. 다음 fact 근거는 receipt와 digest에 연결하며 renderer Markdown을 parse하지 않는다. 구조 오류, stale contract 또는 digest mismatch에서는 의미 판정·상태 정규화·후속 Workflow 계산을 호출하지 않는 fail-closed 경계를 사용한다.
 
+### Immutable PR input과 live preflight
+
+`pr-proposal`이 제목 형식, 본문 template와 연관 이슈 의미를 만족하는 초안을 만들고 사용자가 확정하면,
+Workflow Engine은 exact title/body와 base/head/related issue를 닫힌 immutable PR input으로 준비한다. 입력은
+type/version과 결정론적 SHA-256 `input_digest`를 가지며 deep-freeze된다. raw artifact나 renderer Markdown을
+다시 parse해 PR 생성값을 만들지 않고, serialized input의 shape·digest·현재 확정 원본 mismatch를
+fail closed한다.
+
+`pr-creation`은 immutable input identity와 생성 요청의 digest/title/body/base/head exact equality를 확인한
+뒤, 실행 직전 remote base/head 존재, expected local head와 remote head OID 일치, same-head open PR 부재만
+fresh live preflight로 검증한다. 제목과 본문 의미는 이 단계에서 재판정하지 않는다. 기존 `pr-proposal`과
+`pr-creation` artifact public field와 renderer output은 유지하며, identity 또는 live observation mismatch면
+PR 생성 실행을 시작하지 않는다.
+
 ### 이슈 유형
 
 | 유형       | 목적                                                                                         | 가능한 다음 흐름                            |

@@ -53,6 +53,25 @@ routing check 입력에는 현재 사용자 요청 식별자, 선택된 상위 �
 fact와 evidence를 같은 상태 묶음에 포함한 뒤
 `normalizeFeatureChangeFacts`를 정확히 한 번 호출한다.
 
+## PR 생성 live preflight 관측 규칙
+
+PR 생성 실행 직전에 `pull-request-input-contract.md`로 검증된 immutable input의 exact base/head branch를
+대상으로 하나의 새 remote observation을 수집한다. 관측은 다음 값을 모두 원본 GitHub·local state에
+연결한다.
+
+| 관측값 | 원본과 판정 기준 |
+| --- | --- |
+| `base_branch`, `base_exists` | immutable input의 exact base 이름과 remote branch 조회 결과 |
+| `head_branch`, `head_exists` | immutable input의 exact head 이름과 remote branch 조회 결과 |
+| `expected_head_oid` | PR 생성 대상 local worktree 또는 push 완료 상태에서 확정한 full head OID |
+| `remote_head_oid` | exact remote head ref의 full OID. head가 없을 때만 `null` |
+| `existing_pull_request_number` | exact head branch로 조회한 open PR 번호. 없으면 `null`이고 둘 이상이면 충돌로 중단 |
+
+관측한 base/head 이름은 immutable input과 같아야 하며 remote head OID는 expected local head OID와 같아야
+한다. remote base/head 부재, stale OID, same-head 기존 PR은 `ready` 관측으로 보정하지 않는다. title,
+body, template와 연관 이슈 의미는 live state가 아니므로 관측하거나 재판정하지 않는다. 이전 PR 초안 또는
+push 전 상태에서 얻은 observation을 재사용하지 않으며 mismatch 뒤 재개에는 새 observation이 필요하다.
+
 ## 상태 요약 출력 사용 가능 판정 규칙
 
 | 판정 상태 | 판정 기준 |

@@ -16,7 +16,7 @@ const semanticMarkers = new Map([
   ["issue-creation", "템플릿"],
   ["policy-plan", "설계 문서"],
   ["policy-review-next-triage", "기능변경"],
-  ["pr-creation", "PR 제목"],
+  ["pr-creation", "immutable identity"],
   ["pr-proposal", "PR 템플릿"],
   ["review-comment", "diff position"],
 ]);

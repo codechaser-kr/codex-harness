@@ -1,0 +1,39 @@
+{
+  "artifact_type": "policy-plan",
+  "manifest_version": 1,
+  "producer_skill": "policy-plan",
+  "contract_section": "정책 계획(`policy-plan`) 출력 판정 규칙",
+  "fields": [
+    { "field_id": "base_issue", "required": true, "render_label": "기준 이슈", "shape": { "type": "string", "min_length": 1 } },
+    { "field_id": "decision_context", "required": true, "render_label": "결정 맥락", "shape": { "type": "string", "min_length": 1 } },
+    {
+      "field_id": "design_candidates",
+      "required": true,
+      "render_label": "정책 설계 후보",
+      "shape": {
+        "type": "array",
+        "min_items": 1,
+        "items": {
+          "type": "object",
+          "additional_properties": false,
+          "fields": [
+            { "field_id": "candidate_id", "required": true, "render_label": "후보 ID", "shape": { "type": "string", "min_length": 1 } },
+            { "field_id": "policy_design", "required": true, "render_label": "정책 설계", "shape": { "type": "string", "min_length": 1 } },
+            { "field_id": "rationale_and_risk", "required": true, "render_label": "판단 근거와 위험", "shape": { "type": "string", "min_length": 1 } },
+            { "field_id": "design_document_targets", "required": true, "render_label": "설계 문서 반영 대상", "shape": { "type": "array", "min_items": 1, "items": { "type": "string", "min_length": 1 } } },
+            { "field_id": "design_document_unit", "required": true, "render_label": "설계 문서 반영 단위", "shape": { "type": "string", "min_length": 1 } },
+            { "field_id": "validation_criteria", "required": true, "render_label": "검증 기준", "shape": { "type": "array", "min_items": 1, "items": { "type": "string", "min_length": 1 } } },
+            { "field_id": "feature_change_transition_scope", "required": true, "render_label": "설계 반영 후 기능변경 전환 범위", "shape": { "type": "string", "min_length": 1 } }
+          ]
+        }
+      }
+    },
+    { "field_id": "recommended_design", "required": true, "render_label": "추천 설계", "shape": { "type": "string" } },
+    { "field_id": "blocking_questions", "required": true, "render_label": "보류 질문", "shape": { "type": "array", "items": { "type": "string", "min_length": 1 } } }
+  ],
+  "rules": [
+    { "rule_id": "design-candidate-id-unique", "rule_type": "unique_by", "source_path": "/design_candidates", "target_path": "/candidate_id" },
+    { "rule_id": "recommended-design-reference", "rule_type": "references", "source_path": "/recommended_design", "target_path": "/design_candidates/*/candidate_id", "allow_empty": true }
+  ],
+  "render": { "section_order": ["base_issue", "decision_context", "design_candidates", "recommended_design", "blocking_questions"] }
+}

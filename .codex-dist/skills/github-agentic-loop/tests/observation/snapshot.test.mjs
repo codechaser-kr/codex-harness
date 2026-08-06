@@ -160,6 +160,27 @@ test("rejects malformed closed inputs and source-specific baseline mismatches", 
   ), true);
 });
 
+test("rejects UTC timestamps that Date.parse normalizes to a different calendar instant", () => {
+  const capturedAt = validInput();
+  capturedAt.captured_at = "2026-02-31T00:00:00Z";
+  const capturedAtResult = prepareObservationSnapshot(capturedAt);
+  assert.equal(hasError(
+    capturedAtResult,
+    "observation_snapshot_input.captured_at.invalid",
+    "/captured_at",
+  ), true);
+
+  const updatedAt = validInput();
+  updatedAt.sources[0].github_updated_at = "2026-02-31T00:00:00Z";
+  updatedAt.sources[0].observed_value.updatedAt = "2026-02-31T00:00:00Z";
+  const updatedAtResult = prepareObservationSnapshot(updatedAt);
+  assert.equal(hasError(
+    updatedAtResult,
+    "observation_snapshot_input.source.github_updated_at.invalid",
+    "/sources/0/github_updated_at",
+  ), true);
+});
+
 test("rejects unsafe or non-JSON observed values", () => {
   const forbidden = validInput();
   forbidden.sources[0].observed_value = JSON.parse('{"__proto__":{"polluted":true}}');

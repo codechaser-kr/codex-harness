@@ -81,9 +81,15 @@ function validateClosedObject(value, fields, context, path, errors) {
 }
 
 function validTimestamp(value) {
-  return typeof value === "string"
-    && ISO_UTC_TIMESTAMP.test(value)
-    && !Number.isNaN(Date.parse(value));
+  if (typeof value !== "string" || !ISO_UTC_TIMESTAMP.test(value)) return false;
+
+  const timestamp = Date.parse(value);
+  if (Number.isNaN(timestamp)) return false;
+
+  const canonicalValue = value.includes(".")
+    ? value
+    : `${value.slice(0, -1)}.000Z`;
+  return new Date(timestamp).toISOString() === canonicalValue;
 }
 
 function validateNonBlankString(value, code, path, label, errors) {

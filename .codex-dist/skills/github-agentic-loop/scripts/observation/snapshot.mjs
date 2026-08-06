@@ -384,6 +384,11 @@ function validatePreparedInput(value) {
   return errors;
 }
 
+function compareUtf16CodeUnits(left, right) {
+  if (left === right) return 0;
+  return left < right ? -1 : 1;
+}
+
 function canonicalSources(sources) {
   return sources
     .map((source, index) => ({
@@ -396,8 +401,8 @@ function canonicalSources(sources) {
       worktree_state_digest: source.worktree_state_digest,
       observed_value: canonicalizeJson(source.observed_value, `/sources/${index}/observed_value`, []),
     }))
-    .sort((left, right) => left.source_type.localeCompare(right.source_type)
-      || left.source_identifier.localeCompare(right.source_identifier));
+    .sort((left, right) => compareUtf16CodeUnits(left.source_type, right.source_type)
+      || compareUtf16CodeUnits(left.source_identifier, right.source_identifier));
 }
 
 function digestPayload(input) {

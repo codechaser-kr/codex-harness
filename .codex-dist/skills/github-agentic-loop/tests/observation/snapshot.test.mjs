@@ -125,6 +125,26 @@ test("prepares a canonical byte-stable deep-frozen observation snapshot", () => 
   }, TypeError);
 });
 
+test("sorts source identities by locale-independent UTF-16 code units", () => {
+  const input = validInput();
+  input.sources.push(
+    source({ source_identifier: "issue:ä" }),
+    source({ source_identifier: "issue:z" }),
+  );
+  const reversed = { ...input, sources: [...input.sources].reverse() };
+
+  const first = prepareObservationSnapshot(input);
+  const second = prepareObservationSnapshot(reversed);
+
+  assert.deepEqual(second, first);
+  assert.deepEqual(
+    first.observation_snapshot.sources
+      .filter(({ source_type: sourceType }) => sourceType === "github_issue")
+      .map(({ source_identifier: sourceIdentifier }) => sourceIdentifier),
+    ["issue:129", "issue:z", "issue:ä"],
+  );
+});
+
 test("rejects malformed closed inputs and source-specific baseline mismatches", () => {
   const input = validInput();
   input.repository = "   ";

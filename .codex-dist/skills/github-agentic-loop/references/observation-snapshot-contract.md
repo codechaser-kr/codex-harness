@@ -1,9 +1,9 @@
 # Observation Snapshot 계약
 
 이 문서는 한 Workflow 평가 주기에서 GitHub·local 원본 관측을 공유하기 위한 content-addressed immutable
-snapshot의 구조, identity와 직렬화 경계를 정의한다. Markdown derived index, review diff position map,
-repository profile과 평가 주기 cache는 별도 후속 계층이며 이 계약은 그 입력이 되는 raw observation만
-소유한다.
+snapshot의 구조, identity와 직렬화 경계를 정의한다. `snapshot-runtime.mjs`는 이 snapshot을 현재
+`request_id`의 평가 주기에만 공유한다. Markdown derived index, review diff position map과 repository
+profile은 별도 후속 계층이며 이 계약은 그 입력이 되는 raw observation만 소유한다.
 
 ## 원본 입력
 
@@ -80,3 +80,22 @@ snapshot은 닫힌 구조, type/version, digest 형식, embedded 내용 digest�
 - GitHub live state가 snapshot, profile 또는 로그와 충돌하면 GitHub live state가 우선한다.
 - Markdown parsing, diff mapping, repository convention과 artifact·decision receipt 저장·재사용은 이
   계약에 포함하지 않는다.
+
+## 평가 주기 runtime과 consumer 입력
+
+`scripts/observation/snapshot-runtime.mjs`는 `request_id`와 `observation_input`으로 runtime을 한 번
+준비한다. 같은 `request_id`, repository, source identity와 `input_snapshot_digest`가 모두 같은 동안에만
+`preparation=reused`로 같은 immutable source object를 state adapter 입력 준비와 thin skill 입력에
+공유한다.
+
+새 재개 요청의 `request_id`가 들어오면 이전 cycle identity를 폐기하고 `request_changed`로 새 runtime을
+준비한다. 같은 요청에서도 GitHub `updatedAt`·body digest·PR base/head SHA 또는 local HEAD·worktree digest,
+조회 시점이 달라지면 `source_changed`로 새 snapshot을 준비한다. cached runtime의 닫힌 구조, version,
+embedded snapshot 또는 digest가 손상되면 새 값으로 보정하지 않고
+`invalid_cached_observation_snapshot_runtime`으로 fail-closed 중단한다.
+
+consumer에는 `observation_snapshot_consumer_input`만 전달한다. 이 입력은 exact `request_id`, repository,
+`input_snapshot_digest`와 요청한 source identity의 immutable raw source만 포함한다. 의미 판단 결과,
+artifact receipt, renderer Markdown, 사용자 결정과 Workflow 전이는 consumer input이나 runtime에 넣지
+않는다. snapshot은 실행 직전 live preflight를 대체하지 않으며 GitHub live state와 충돌하면 GitHub가
+우선한다.

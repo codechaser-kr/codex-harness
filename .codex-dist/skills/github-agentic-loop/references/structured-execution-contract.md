@@ -8,6 +8,18 @@
 - 실행 범위에는 변경할 수 있는 GitHub 상태, 파일 또는 디렉터리, 댓글 또는 review thread, 브랜치, 커밋, PR 생성 여부를 포함한다.
 - 사용자 결정 필요 여부는 현재 task의 `user_decision_options`가 비어 있는지로 판정한다. 값이 있으면 사용자 결정을 기다리고, 빈 배열이면 사용자 결정 없이 실행을 계속한다.
 
+### Observation snapshot과 실행 시점 상태
+
+구조화 실행 요청이 raw GitHub·local 관측을 근거로 할 때 current evaluation-cycle의 exact
+`input_snapshot_digest`를 `target_baseline` 보조 identity로 기록할 수 있다. 이 digest는 요청이 사용한
+raw source 묶음을 추적할 뿐 GitHub 완료 상태, 권한, 원격 branch, review thread 또는 local worktree의
+실행 시점 상태를 확정하지 않는다.
+
+요청 계약이 live preflight나 실행 직전 재검증을 요구하면 snapshot cache hit 여부와 관계없이 새 상태를
+관측한다. live GitHub state가 snapshot과 충돌하면 GitHub를 우선하고, baseline mismatch는 stale snapshot을
+보정해 실행하지 않고 중단 또는 새 관측 요청으로 처리한다. 구조화 실행 결과, 의미 판단, artifact receipt와
+사용자 결정은 observation snapshot runtime에 cache하지 않는다.
+
 ### PR 생성 immutable input과 live preflight
 
 PR 생성 구조화 실행 요청은 사용자가 확정한 immutable `pull_request_input`의 `input_digest`, title, body,

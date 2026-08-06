@@ -75,6 +75,22 @@ const runtimeInput = (requestId, observationInput = sourceInput()) => ({
   observation_input: observationInput,
 });
 
+function instrumentedSourceInput() {
+  const input = sourceInput();
+  let observedValueReads = 0;
+  Object.defineProperty(input.sources[0].observed_value, "instrumented", {
+    enumerable: true,
+    get() {
+      observedValueReads += 1;
+      return { stable: true };
+    },
+  });
+  return {
+    input,
+    observedValueReads: () => observedValueReads,
+  };
+}
+
 const identities = (...sourceTypes) => sourceTypes.map(([source_type, source_identifier]) => ({
   source_type,
   source_identifier,
@@ -119,6 +135,22 @@ test("exact request and source snapshot is reused after JSON round-trip", () => 
   assert.equal(loaded.preparation, "reused");
   assert.equal(loaded.runtime.input_snapshot_digest, initial.runtime.input_snapshot_digest);
   assert.equal(Object.isFrozen(loaded.runtime.observation_snapshot), true);
+});
+
+test("cache hit prepares current observation values only once", () => {
+  const initialInput = instrumentedSourceInput();
+  const initial = prepareObservationSnapshotRuntime(runtimeInput("issue-129-cycle-1", initialInput.input));
+  const readsForOnePreparation = initialInput.observedValueReads();
+  const currentInput = instrumentedSourceInput();
+
+  const loaded = loadObservationSnapshotRuntime(runtimeInput("issue-129-cycle-1", currentInput.input), {
+    cachedRuntime: initial.runtime,
+  });
+
+  assert.equal(loaded.status, "loaded");
+  assert.equal(loaded.preparation, "reused");
+  assert.ok(readsForOnePreparation > 0);
+  assert.equal(currentInput.observedValueReads(), readsForOnePreparation);
 });
 
 test("a new resume request invalidates a valid cached cycle without reusing its request identity", () => {

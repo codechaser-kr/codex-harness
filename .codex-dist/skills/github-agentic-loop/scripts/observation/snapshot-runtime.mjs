@@ -116,16 +116,44 @@ function buildRuntime(requestId, observationSnapshot) {
   });
 }
 
+function preparedSnapshotResult(requestId, observationSnapshot, preparation) {
+  return deepFreeze({
+    status: "prepared",
+    reason: null,
+    preparation,
+    runtime: buildRuntime(requestId, observationSnapshot),
+    errors: [],
+  });
+}
+
 function preparedResult(requestId, observationInput, preparation) {
   const prepared = prepareObservationSnapshot(observationInput);
   if (prepared.status === "stopped") {
     return stopped(prepared.reason, prepared.errors);
   }
+  return preparedSnapshotResult(requestId, prepared.observation_snapshot, preparation);
+}
+
+function loadPreparedCurrentSnapshot(currentSnapshot, cachedSnapshot) {
+  if (cachedSnapshot.input_snapshot_digest !== currentSnapshot.input_snapshot_digest) {
+    return deepFreeze({
+      status: "stopped",
+      reason: "invalid_prepared_observation_snapshot",
+      preparation: null,
+      observation_snapshot: null,
+      errors: [{
+        code: "prepared_observation_snapshot.source_digest.mismatch",
+        path: "/input_snapshot_digest",
+        message: "Prepared observation snapshot does not match the current source input.",
+      }],
+    });
+  }
+
   return deepFreeze({
-    status: "prepared",
+    status: "loaded",
     reason: null,
-    preparation,
-    runtime: buildRuntime(requestId, prepared.observation_snapshot),
+    preparation: "reused",
+    observation_snapshot: currentSnapshot,
     errors: [],
   });
 }
@@ -245,12 +273,13 @@ export function loadObservationSnapshotRuntime(
   }
 
   if (cachedRuntime.request_id !== requestId) {
-    return preparedResult(requestId, observationInput, "request_changed");
+    return preparedSnapshotResult(requestId, current.runtime.observation_snapshot, "request_changed");
   }
 
-  const loaded = loadObservationSnapshot(observationInput, {
-    preparedSnapshot: cachedRuntime.observation_snapshot,
-  });
+  const loaded = loadPreparedCurrentSnapshot(
+    current.runtime.observation_snapshot,
+    cachedRuntime.observation_snapshot,
+  );
   if (loaded.status === "loaded") {
     return deepFreeze({
       status: "loaded",
@@ -264,7 +293,9 @@ export function loadObservationSnapshotRuntime(
   const sourceChanged = loaded.reason === "invalid_prepared_observation_snapshot"
     && loaded.errors.length === 1
     && loaded.errors[0].code === "prepared_observation_snapshot.source_digest.mismatch";
-  if (sourceChanged) return preparedResult(requestId, observationInput, "source_changed");
+  if (sourceChanged) {
+    return preparedSnapshotResult(requestId, current.runtime.observation_snapshot, "source_changed");
+  }
   return stopped("invalid_cached_observation_snapshot_runtime", prefixErrors(loaded.errors, "/observation_snapshot"));
 }
 

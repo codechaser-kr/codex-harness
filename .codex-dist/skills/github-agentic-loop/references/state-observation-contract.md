@@ -8,6 +8,24 @@ thin 스킬의 raw handoff는 관측 상태가 아니다. `artifact-consumer-con
 
 invalid handoff·artifact, producer identity·digest mismatch, stale compiled manifest 또는 의미 사용 불가 결과는 상태 변환기에 전달하지 않는다. 이때 누락 fact를 추론하거나 raw 결과로 fallback하지 않고 consumer의 stopped 결과를 중단 또는 보류 근거로 기록한다.
 
+## 평가 주기 observation snapshot
+
+GitHub·local raw source를 처음 수집한 호출은 `observation-snapshot-contract.md` 형식의
+`observation_input`을 만들고 `scripts/observation/snapshot-runtime.mjs`로 현재 `request_id`의 runtime을
+한 번 준비한다. 이후 같은 평가 주기에서 state adapter용 관측을 만들거나 thin skill을 호출할 때는 raw
+GitHub/local source를 다시 조회하지 않고 exact repository·source identity·`input_snapshot_digest`가 있는
+`observation_snapshot_consumer_input`을 사용한다.
+
+새 재개 `request_id`는 이전 evaluation-cycle runtime을 재사용하지 않는다. 같은 요청에서도 GitHub
+`updatedAt`·body digest·PR base/head SHA 또는 local HEAD·worktree digest가 바뀌면 current raw source로
+새 snapshot을 준비한다. cached runtime의 shape·version·embedded digest가 손상되면 부분 source나 이전
+snapshot으로 fallback하지 않고 fail-closed 중단한다.
+
+Snapshot은 원본 읽기의 특정 시점 baseline이며 완료 근거 또는 실행 직전 상태를 고정하지 않는다. GitHub
+상태가 snapshot·로그·local profile과 충돌하면 GitHub 실행 상태를 우선하고, PR 생성·review 게시·merge,
+remote branch·권한·thread freshness처럼 계약이 요구한 live preflight는 항상 새로 관측한다. 의미 판단,
+artifact receipt, renderer 결과, 사용자 결정과 Workflow 전이는 snapshot runtime에 cache하지 않는다.
+
 ## 상태 읽기 규칙
 
 - 기준 대상은 열린 PR에서 먼저 찾고, 이어갈 PR 후보가 비어 있으면 열린 이슈에서 찾는다.

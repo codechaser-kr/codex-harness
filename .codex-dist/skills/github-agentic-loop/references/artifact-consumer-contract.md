@@ -12,6 +12,12 @@ Workflow Engine은 호출한 thin 스킬에서 다음 값을 고정한다.
 
 consumer는 envelope 밖의 설명, 직접 작성된 Markdown 또는 이전 실행의 receipt를 입력으로 사용하지 않는다. expected artifact type이나 digest를 producer 결과로 보완하거나 다시 계산하지 않는다.
 
+Producer가 GitHub·local raw source를 필요로 하면 Workflow Engine은 현재 `request_id`의
+`observation_snapshot_consumer_input`을 producer 입력 경계로 전달한다. exact repository·source identity와
+`input_snapshot_digest`가 일치하는 immutable raw source만 사용할 수 있고, 같은 평가 주기의 source를
+producer가 다시 조회하거나 이전 request의 snapshot으로 보완하지 않는다. Snapshot runtime은 raw input만
+공유하며 의미 판단, artifact handoff·receipt, renderer 결과와 사용자 결정을 cache하지 않는다.
+
 ## 단일 소비 순서
 
 `scripts/artifact-contract/artifact-consumer.mjs`의 `consumeArtifactHandoff`는 다음 순서를 한 번씩 수행한다.

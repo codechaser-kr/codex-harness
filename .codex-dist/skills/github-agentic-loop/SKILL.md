@@ -41,7 +41,7 @@ description: GitHub 이슈와 PR의 관측 상태를 선언형 워크플로 정�
 
 현재 작업에 해당하는 계약을 다음 기준으로 추가로 읽는다.
 
-- GitHub·로컬 원본 상태를 수집하거나 관측 근거를 분류할 때 `references/state-observation-contract.md`
+- GitHub·로컬 원본 상태를 수집하거나 관측 근거를 분류할 때 `references/state-observation-contract.md`와 `references/observation-snapshot-contract.md`
 - 전용 제안·분석 스킬의 결과를 사용할 때 `references/artifact-handoff-contract.md`, `references/artifact-consumer-contract.md`, `references/artifact-output-contract.md`
 - 사용자가 PR 제목·본문 초안을 확정했거나 `pr-creation` 입력을 준비·재사용할 때 `references/pull-request-input-contract.md`
 - 현재 작업에 사용자 선택지가 있거나 재개 요청의 사용자 입력을 해석할 때 `references/user-decision-contract.md`
@@ -107,7 +107,8 @@ Workflow Engine 설치는 타겟 저장소의 설정, 템플릿 또는 GitHub �
 1. 선택한 raw Workflow Definition을 `prepareWorkflowDefinition`으로 한 번 검증·compile한다. 이후 같은
    compiled representation을 상태 변환기와 evaluator에 전달한다.
 2. 기준 이슈 또는 PR과 GitHub·로컬·사용자·스킬의 원본 상태를 특정 시점의 읽기 전용 상태 묶음으로
-   수집한다.
+   수집한다. GitHub·로컬 raw source는 `request_id`에 연결된 `snapshot-runtime.mjs`로 한 번 준비하고,
+   같은 평가 주기의 state adapter와 thin skill에는 exact `input_snapshot_digest`의 consumer input을 공유한다.
 3. 선택한 상태 변환기로 관측값을 정확히 한 번 정규화한다. Candidate와 evidence는 compiled metadata를
    사용하더라도 매 실행 검증한다.
 4. 정규화한 사실을 `evaluateWorkflowDefinition`에 정확히 한 번 전달한다. 이 함수는 compiled transition
@@ -117,6 +118,8 @@ Workflow Engine 설치는 타겟 저장소의 설정, 템플릿 또는 GitHub �
 6. `action_required`가 반환한 단일 `task_action_id`, `user_decision_options`, `executor_reference`,
    `completion_predicate`를 현재 작업의 실행 입력으로 사용한다.
 7. 작업 완료 뒤 상태를 다시 관측·정규화하고 같은 `task_action_id`를 `currentTaskActionId`로 전달한다.
+   새 재개 `request_id` 또는 GitHub·local source baseline 변화는 이전 snapshot을 무효화하고 새 snapshot을
+   준비한다.
    워크플로 정의의 `next_transition_rules`와 `evaluateWorkflowDefinition`이 다음 단일 작업 또는 완료를
    결정한다.
 8. `completed`면 흐름을 완료한다. 상태 변환기 또는 워크플로 정의 검증이 실패하거나
@@ -173,6 +176,11 @@ renderer Markdown에서 생성 입력을 다시 추출하지 않으며, field·t
 base/head 존재, expected local head와 remote head OID 일치, same-head open PR 부재만 fresh live preflight로
 검증한다. stopped preflight에서는 PR 생성 구조화 실행을 호출하지 않는다. 제목 형식과 body template·연관
 이슈 의미는 `pr-proposal` 사용자 확정 전에 끝내며 live preflight에서 반복하지 않는다.
+
+Observation snapshot은 raw 관측의 평가 주기 identity일 뿐 live preflight가 아니다. GitHub live state,
+원격 branch, review thread, 권한과 local worktree의 실행 직전 재검증을 생략하지 않으며 snapshot 또는
+로그와 GitHub state가 충돌하면 GitHub를 우선한다. 의미 판단, artifact receipt, renderer 결과와 사용자
+결정은 snapshot runtime에 cache하지 않는다.
 
 ## 자동 실행
 

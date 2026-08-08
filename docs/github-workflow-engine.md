@@ -78,6 +78,25 @@ Workflow Engine이 전이를 평가할 때는 관찰된 사실과 의미 해석 
 
 선언형 전이 설계에서 정규화는 결정론적 사실을 표준 필드로 바꾸고, 필요한 의미 사실을 근거에 연결된 구조화 결과로 바꾸는 단계다. 전이 조건은 정규화된 사실만 읽으며, 자연어 설명이나 LLM의 자유 형식 판단을 직접 읽지 않는다.
 
+### Evaluation-cycle observation snapshot
+
+Workflow Engine은 한 평가 주기에서 같은 GitHub Issue·PR과 local repository 원본을 state adapter와 thin
+skill이 각각 다시 조회하지 않도록 content-addressed observation snapshot을 준비한다. Snapshot identity는
+repository, 조회 시점, source type·identifier, GitHub `updatedAt`·body digest·PR base/head SHA와 local
+HEAD·worktree digest를 포함하며 `input_snapshot_digest`로 식별한다.
+
+`snapshot-runtime.mjs`는 현재 `request_id` 안에서 exact source identity와 digest가 같은 immutable raw
+source만 공유한다. 같은 cycle의 state adapter와 thin skill은 `observation_snapshot_consumer_input`을 받아
+같은 source object를 사용한다. 새 재개 request, GitHub body·head 변화, local HEAD·worktree 변화는 이전
+runtime을 무효화하고 새 snapshot을 준비한다. 닫힌 runtime이나 embedded digest가 손상되면 이전 source를
+부분 사용하거나 재계산으로 보정하지 않고 fail-closed 중단한다.
+
+Snapshot은 특정 시점의 raw 관측 baseline이지 Workflow 실행 결과 cache가 아니다. 의미 판단, artifact
+handoff·receipt, renderer 결과, 사용자 결정과 다음 작업은 저장하거나 재사용하지 않는다. PR 생성,
+review thread 게시, merge, 권한과 remote branch처럼 실행 계약이 요구한 live preflight 또는 실행 직전
+재검증은 snapshot hit와 관계없이 새로 수행한다. GitHub live state가 snapshot·로그·repository profile과
+충돌하면 GitHub 실행 상태를 우선한다.
+
 ### 워크플로우 정의 계약
 
 워크플로우 정의는 이슈 유형별 흐름과 전이를 선언하는 구조화 계약이다. 루트는 정확히 다음 필드를 가진다.

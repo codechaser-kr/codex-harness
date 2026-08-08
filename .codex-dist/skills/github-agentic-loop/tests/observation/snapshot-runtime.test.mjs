@@ -200,6 +200,30 @@ test("GitHub body or head and local worktree changes invalidate the cached sourc
   }
 });
 
+test("source changes are classified explicitly after cached runtime integrity succeeds", () => {
+  const initialInput = sourceInput();
+  const initial = prepareObservationSnapshotRuntime(runtimeInput("issue-129-cycle-1", initialInput));
+  const changedInput = sourceInput();
+  const local = changedInput.sources[2];
+  local.observed_value.worktree = "clean";
+  local.worktree_state_digest = digest(local.observed_value.worktree);
+
+  const changed = loadObservationSnapshotRuntime(runtimeInput("issue-129-cycle-1", changedInput), {
+    cachedRuntime: initial.runtime,
+  });
+  assert.equal(changed.status, "prepared");
+  assert.equal(changed.preparation, "source_changed");
+  assert.deepEqual(changed.errors, []);
+
+  const corruptCachedRuntime = JSON.parse(JSON.stringify(initial.runtime));
+  corruptCachedRuntime.observation_snapshot.sources[0].unexpected = true;
+  const corrupt = loadObservationSnapshotRuntime(runtimeInput("issue-129-cycle-1", changedInput), {
+    cachedRuntime: corruptCachedRuntime,
+  });
+  assert.equal(corrupt.status, "stopped");
+  assert.equal(corrupt.reason, "invalid_cached_observation_snapshot_runtime");
+});
+
 test("corrupt cached runtime fails closed before request or source invalidation", () => {
   const initial = prepareObservationSnapshotRuntime(runtimeInput("issue-129-cycle-1"));
   const digestTamper = JSON.parse(JSON.stringify(initial.runtime));

@@ -34,6 +34,7 @@ import "../pull-request/pr-input.test.mjs";
 import "../pull-request/live-preflight.test.mjs";
 import "../observation/snapshot.test.mjs";
 import "../observation/snapshot-runtime.test.mjs";
+import "../observation/markdown-derived-index.test.mjs";
 
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -86,6 +87,7 @@ const requiredArtifacts = [
   "references/artifact-consumer-contract.md",
   "references/pull-request-input-contract.md",
   "references/observation-snapshot-contract.md",
+  "references/markdown-derived-index-contract.md",
   "references/github-templates.md",
   "references/target-runtime-bootstrap-contract.md",
   "references/workflow-engine-template-compatibility-contract.md",
@@ -130,6 +132,7 @@ const requiredArtifacts = [
   "scripts/observation/validation.mjs",
   "scripts/observation/snapshot.mjs",
   "scripts/observation/snapshot-runtime.mjs",
+  "scripts/observation/markdown-derived-index.mjs",
   "tests/workflow-definition/structural-validation.test.mjs",
   "tests/workflow-definition/semantic-validation.test.mjs",
   "tests/workflow-definition/compiled-definition.test.mjs",
@@ -179,6 +182,7 @@ const requiredArtifacts = [
   "tests/pull-request/live-preflight.test.mjs",
   "tests/observation/snapshot.test.mjs",
   "tests/observation/snapshot-runtime.test.mjs",
+  "tests/observation/markdown-derived-index.test.mjs",
   "tests/artifact-contract/fixtures/manifest-validation-cases.json",
   "tests/artifact-contract/fixtures/artifact-validation-cases.json",
 ];

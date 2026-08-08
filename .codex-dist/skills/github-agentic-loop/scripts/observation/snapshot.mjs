@@ -1,5 +1,15 @@
 import { createHash } from "node:crypto";
 
+import {
+  addError,
+  deepFreeze,
+  isForbiddenJsonKey,
+  isPlainObject,
+  pointerSegment,
+  validateClosedObject,
+  validateNonBlankString,
+} from "./validation.mjs";
+
 export const OBSERVATION_SNAPSHOT_TYPE = "content_addressed_observation_snapshot";
 export const OBSERVATION_SNAPSHOT_FORMAT_VERSION = "1";
 export const OBSERVATION_SOURCE_TYPES = Object.freeze([
@@ -28,57 +38,6 @@ const SOURCE_FIELDS = [
 const SHA256_DIGEST = /^sha256:[0-9a-f]{64}$/;
 const GIT_OBJECT_ID = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
 const ISO_UTC_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
-const FORBIDDEN_JSON_KEYS = new Set(["__proto__", "constructor", "prototype"]);
-
-function isPlainObject(value) {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
-  const prototype = Object.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
-}
-
-function pointerSegment(value) {
-  return String(value).replaceAll("~", "~0").replaceAll("/", "~1");
-}
-
-function addError(errors, code, path, message) {
-  errors.push({ code, path, message });
-}
-
-function deepFreeze(value) {
-  if (typeof value !== "object" || value === null || Object.isFrozen(value)) return value;
-  for (const child of Object.values(value)) deepFreeze(child);
-  return Object.freeze(value);
-}
-
-function validateClosedObject(value, fields, context, path, errors) {
-  if (!isPlainObject(value)) {
-    addError(errors, `${context}.type`, path, `${context} must be a plain object.`);
-    return false;
-  }
-
-  const allowed = new Set(fields);
-  for (const key of Object.keys(value).sort()) {
-    if (!allowed.has(key)) {
-      addError(
-        errors,
-        `${context}.additional_property`,
-        `${path}/${pointerSegment(key)}`,
-        `Unexpected ${context} property: ${key}.`,
-      );
-    }
-  }
-  for (const field of fields) {
-    if (!Object.hasOwn(value, field)) {
-      addError(
-        errors,
-        `${context}.required`,
-        `${path}/${field}`,
-        `Missing ${context} property: ${field}.`,
-      );
-    }
-  }
-  return true;
-}
 
 function validTimestamp(value) {
   if (typeof value !== "string" || !ISO_UTC_TIMESTAMP.test(value)) return false;
@@ -90,14 +49,6 @@ function validTimestamp(value) {
     ? value
     : `${value.slice(0, -1)}.000Z`;
   return new Date(timestamp).toISOString() === canonicalValue;
-}
-
-function validateNonBlankString(value, code, path, label, errors) {
-  if (typeof value !== "string") {
-    addError(errors, `${code}.type`, path, `${label} must be a string.`);
-  } else if (value.trim().length === 0) {
-    addError(errors, `${code}.empty`, path, `${label} must not be blank.`);
-  }
 }
 
 function validateNullable(value, predicate, code, path, message, errors) {
@@ -141,7 +92,7 @@ function canonicalizeJson(value, path, errors, seen = new WeakSet()) {
   const result = {};
   for (const key of Object.keys(value).sort()) {
     const childPath = `${path}/${pointerSegment(key)}`;
-    if (FORBIDDEN_JSON_KEYS.has(key)) {
+    if (isForbiddenJsonKey(key)) {
       addError(errors, "observation_snapshot.observed_value.key.forbidden", childPath, `Observed JSON key is not allowed: ${key}.`);
       continue;
     }

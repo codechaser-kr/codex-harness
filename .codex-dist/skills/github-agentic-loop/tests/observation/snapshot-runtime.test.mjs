@@ -282,3 +282,27 @@ test("runtime boundaries preserve live preflight, GitHub precedence, and non-cac
   assert.match(summarySkill, /observation_snapshot_consumer_input/);
   assert.match(summarySkill, new RegExp("같은 source[\\s\\S]*다시 조회하지 않는다"));
 });
+
+test("snapshot modules share one observation validation implementation", async () => {
+  const [snapshot, runtime, validation] = await Promise.all([
+    readFile(new URL("../../scripts/observation/snapshot.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../../scripts/observation/snapshot-runtime.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../../scripts/observation/validation.mjs", import.meta.url), "utf8"),
+  ]);
+
+  for (const source of [snapshot, runtime]) {
+    assert.match(source, /from "\.\/validation\.mjs"/);
+    for (const helper of [
+      "isPlainObject",
+      "pointerSegment",
+      "addError",
+      "deepFreeze",
+      "validateClosedObject",
+      "validateNonBlankString",
+    ]) {
+      assert.doesNotMatch(source, new RegExp(`function ${helper}\\(`));
+      assert.match(validation, new RegExp(`export function ${helper}\\(`));
+    }
+  }
+  assert.match(validation, /export function isForbiddenJsonKey\(/);
+});

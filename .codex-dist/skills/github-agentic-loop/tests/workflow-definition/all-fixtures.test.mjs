@@ -127,6 +127,7 @@ const requiredArtifacts = [
   "scripts/artifact-contract/artifact-consumer.mjs",
   "scripts/pull-request/pr-input.mjs",
   "scripts/pull-request/live-preflight.mjs",
+  "scripts/observation/validation.mjs",
   "scripts/observation/snapshot.mjs",
   "scripts/observation/snapshot-runtime.mjs",
   "tests/workflow-definition/structural-validation.test.mjs",

@@ -109,6 +109,9 @@ Workflow Engine 설치는 타겟 저장소의 설정, 템플릿 또는 GitHub �
 2. 기준 이슈 또는 PR과 GitHub·로컬·사용자·스킬의 원본 상태를 특정 시점의 읽기 전용 상태 묶음으로
    수집한다. GitHub·로컬 raw source는 `request_id`에 연결된 `snapshot-runtime.mjs`로 한 번 준비하고,
    같은 평가 주기의 state adapter와 thin skill에는 exact `input_snapshot_digest`의 consumer input을 공유한다.
+   Issue·PR Markdown 구조가 필요하면 `markdown-derived-index-runtime.mjs`가 snapshot consumer의 body를
+   `body_digest`·`parser_version`에 연결해 한 번 parse하고 exact identity의
+   `markdown_derived_index_consumer_input`을 state observation과 thin skill에 함께 전달한다.
 3. 선택한 상태 변환기로 관측값을 정확히 한 번 정규화한다. Candidate와 evidence는 compiled metadata를
    사용하더라도 매 실행 검증한다.
 4. 정규화한 사실을 `evaluateWorkflowDefinition`에 정확히 한 번 전달한다. 이 함수는 compiled transition
@@ -181,6 +184,13 @@ Observation snapshot은 raw 관측의 평가 주기 identity일 뿐 live preflig
 원격 branch, review thread, 권한과 local worktree의 실행 직전 재검증을 생략하지 않으며 snapshot 또는
 로그와 GitHub state가 충돌하면 GitHub를 우선한다. 의미 판단, artifact receipt, renderer 결과와 사용자
 결정은 snapshot runtime에 cache하지 않는다.
+
+Markdown derived index도 raw body의 정책 의미나 Workflow 결과 cache가 아니다. request, source identity,
+`input_snapshot_digest`, `body_digest`, `parser_version`, `index_digest`가 모두 같은 runtime만 재사용한다.
+cache 손상은 invalidation보다 먼저 fail-closed로 차단하고 request·body/source·parser 변화에서는 새 index를
+준비한다. state adapter와 thin skill은 `markdown_derived_index_consumer_input`의 동일 frozen index를
+사용하며 section 의미, checkbox 완료 판단, artifact와 사용자 결정은 cache하지 않는다. GitHub live
+preflight와 실행 직전 재검증 및 GitHub 상태 우선순위는 그대로 유지한다.
 
 ## 자동 실행
 

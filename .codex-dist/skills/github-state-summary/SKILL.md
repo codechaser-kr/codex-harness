@@ -17,18 +17,19 @@ description: GitHub와 로컬의 지정된 상태를 읽기 전용으로 수집�
 - 원 요청의 `request_id`, 기준 이슈 또는 PR, 조회 대상 식별자와 `target_baseline`
 - 필요한 관측 사실과 허용된 읽기 전용 GitHub 또는 로컬 조회 범위
 - 이미 준비된 source를 소비하는 호출이면 current request의 `observation_snapshot_consumer_input`; 같은 source identity와 `input_snapshot_digest`가 있으면 다시 조회하지 않는다.
+- Issue·PR Markdown 구조가 이미 준비됐으면 exact request·source·`input_snapshot_digest`·`index_digest`의 `markdown_derived_index_consumer_input`; 같은 `body_digest`·`parser_version` index가 있으면 raw body를 다시 parse하지 않는다.
 - `planned_model_identifier`와 `planned_config_identifier`가 실행 환경에서 확인 가능한 저비용 실행 설정을 가리키고, 실제 실행 주체, 권한, 도구, 세션을 기록할 수 있는 실행 맥락
 
 ## 책임
 
-1. current `observation_snapshot_consumer_input`에 요청한 source가 모두 있으면 같은 source를 다시 조회하지 않는다. 최초 수집 또는 누락 source만 허용된 범위에서 `gh issue view`, `gh pr view`, `gh pr checks`, `gh api` GET, `git status`, `git diff`, `git log`, `git show`, `rg`, `sed`, `ls`, `find`, `wc` 등 읽기 전용 명령 또는 도구로 관측한다. `sed`는 출력 또는 파이프 변환용 읽기 형태만 허용하고 `sed -i`는 금지한다. `find`는 탐색 전용만 허용하고 `find -delete` 및 파일 변경 목적의 `find -exec`는 금지한다.
+1. current `observation_snapshot_consumer_input`에 요청한 source가 모두 있으면 같은 source를 다시 조회하지 않는다. `markdown_derived_index_consumer_input`이 exact identity로 준비됐으면 heading·section·checkbox·reference는 동일 frozen index에서 읽고 raw body를 다시 parse하지 않는다. 최초 수집 또는 누락 source만 허용된 범위에서 `gh issue view`, `gh pr view`, `gh pr checks`, `gh api` GET, `git status`, `git diff`, `git log`, `git show`, `rg`, `sed`, `ls`, `find`, `wc` 등 읽기 전용 명령 또는 도구로 관측한다. `sed`는 출력 또는 파이프 변환용 읽기 형태만 허용하고 `sed -i`는 금지한다. `find`는 탐색 전용만 허용하고 `find -delete` 및 파일 변경 목적의 `find -exec`는 금지한다.
 2. 각 관측 사실에 출처 식별자와 조회 시점을 연결하고, 확인하지 못한 사실은 누락 또는 충돌로 분리한다.
 3. 실제 executor, model, skill, config, orchestration session, execution session, permission, tool, command path 정보를 관측 결과에 기록한다.
 4. 수행한 읽기 동작, 빈 `changed_files`, 빈 `github_state_changes`, 검증 결과, 사후조건, 남은 위험을 반환한다.
 
 ## 출력
 
-- `request_id`, `target_baseline`, `source_identifiers`, 사용한 `input_snapshot_digest` 또는 최초 수집한 `observation_input`, `observed_facts`, `missing_or_conflicting_facts`
+- `request_id`, `target_baseline`, `source_identifiers`, 사용한 `input_snapshot_digest`와 Markdown 구조를 소비했다면 `body_digest`·`parser_version`·`index_digest`, 또는 최초 수집한 `observation_input`, `observed_facts`, `missing_or_conflicting_facts`
 - `actual_executor_type`, `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`, `actual_orchestration_session_id`, `actual_execution_session_id`, `actual_session_relation`
 - `actual_permission_conditions`, `actual_available_tool_conditions`, `actual_command_execution_path`, `execution_path_recheck_result`, `performed_actions`, 빈 `changed_files`, 빈 `github_state_changes`, `verification_results`, `postconditions_satisfied`, `residual_risks_or_failure_reasons`
 
@@ -39,6 +40,7 @@ description: GitHub와 로컬의 지정된 상태를 읽기 전용으로 수집�
 - GitHub, 파일, 브랜치, 커밋, PR, 댓글, review thread, 라벨, 체크리스트 또는 로그를 변경하지 않는다.
 - 현재 작업, 사용자 결정, 상태 전이, 실행 범위, 완료 또는 중단을 확정하지 않는다.
 - 의미 판단, artifact receipt, renderer 결과 또는 사용자 결정을 observation snapshot에 추가하거나 cache하지 않는다.
+- Markdown index의 section·checkbox·reference를 정책 의미, 완료 fact 또는 연결 대상 존재로 확정하거나 derived runtime에 Workflow 전이를 cache하지 않는다.
 - 쓰기 명령, 권한 상승, 원격 변경, 파괴적 작업 또는 범위 밖 조회를 수행하지 않는다.
 
 ## 사용자 결정

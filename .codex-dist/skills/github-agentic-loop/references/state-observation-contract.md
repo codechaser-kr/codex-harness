@@ -26,6 +26,25 @@ Snapshot은 원본 읽기의 특정 시점 baseline이며 완료 근거 또는 �
 remote branch·권한·thread freshness처럼 계약이 요구한 live preflight는 항상 새로 관측한다. 의미 판단,
 artifact receipt, renderer 결과, 사용자 결정과 Workflow 전이는 snapshot runtime에 cache하지 않는다.
 
+### Markdown derived index
+
+Issue·PR body의 heading, section, checkbox와 reference가 필요하면 snapshot consumer의 exact GitHub source를
+`scripts/observation/markdown-derived-index-runtime.mjs`에 전달한다. Runtime은 source body를
+`body_digest`·`parser_version`에 연결해 한 번 parse하고, state observation과 thin skill에는 request,
+source identity, `input_snapshot_digest`, `index_digest`가 일치하는
+`markdown_derived_index_consumer_input`을 공유한다. Consumer는 동일한 frozen index를 사용하고 raw body를
+다시 parse하지 않는다.
+
+새 request, body/source snapshot 또는 parser version 변화는 cached index를 무효화한다. cached runtime의
+shape·nested snapshot·runtime/index digest나 current body-derived content가 손상되면 변화 판정보다 먼저
+fail-closed 중단하며 raw body나 부분 index로 fallback하지 않는다. Index의 section value와 checkbox는
+구조 관측일 뿐 의미 fact가 아니므로 state adapter가 Definition fact와 evidence로 별도 정규화한다.
+
+Markdown index hit는 GitHub live state나 실행 직전 상태를 고정하지 않는다. PR 생성·review 게시·merge,
+remote branch·권한·thread freshness의 live preflight와 실행 직전 재검증을 그대로 수행하며 index,
+snapshot 또는 로그와 충돌하면 GitHub 실행 상태를 우선한다. 의미 판단, artifact receipt, renderer 결과,
+사용자 결정과 Workflow 전이는 derived runtime에 cache하지 않는다.
+
 ## 상태 읽기 규칙
 
 - 기준 대상은 열린 PR에서 먼저 찾고, 이어갈 PR 후보가 비어 있으면 열린 이슈에서 찾는다.

@@ -97,6 +97,25 @@ review thread 게시, merge, 권한과 remote branch처럼 실행 계약이 요�
 재검증은 snapshot hit와 관계없이 새로 수행한다. GitHub live state가 snapshot·로그·repository profile과
 충돌하면 GitHub 실행 상태를 우선한다.
 
+### Evaluation-cycle Markdown derived index
+
+Issue·PR body의 구조는 `markdown-derived-index-runtime.mjs`가 snapshot consumer의 exact source에서 한 번
+파싱한다. Index는 `body_digest`와 `parser_version`에 heading, section value, checkbox, issue/PR reference와
+`Refs #번호`를 연결하며 `index_digest`로 식별한다. 같은 request·source identity·
+`input_snapshot_digest`·parser/index identity를 쓰는 state observation과 thin skill은
+`markdown_derived_index_consumer_input`의 동일 frozen index를 공유하고 raw body를 다시 parse하지 않는다.
+
+새 request, body/source snapshot 또는 parser version은 각각 cache invalidation을 일으킨다. Runtime은 cached
+shape, nested observation snapshot과 runtime/index digest를 변화 판정보다 먼저 검증한다. JSON round-trip
+cache는 지원 중인 parser의 body-derived content까지 최초 load에서 검증하고, runtime이 직접 발급한 같은
+평가 주기의 trusted frozen 값은 body를 다시 parse하지 않는다. 손상된 cache는 fail-closed로 차단한다.
+Index는 Markdown 구조만 제공하고 section의 정책 의미, checkbox 완료 fact, reference 대상 존재, artifact
+receipt, 사용자 결정과 Workflow 전이는 cache하지 않는다.
+
+Derived index는 live preflight가 아니다. PR 생성, review thread 게시, merge, remote branch, 권한과 thread
+freshness의 실행 직전 재검증은 cache hit와 무관하게 새로 수행하고 index·snapshot·로그와 GitHub live
+state가 충돌하면 GitHub 실행 상태를 우선한다.
+
 ### 워크플로우 정의 계약
 
 워크플로우 정의는 이슈 유형별 흐름과 전이를 선언하는 구조화 계약이다. 루트는 정확히 다음 필드를 가진다.

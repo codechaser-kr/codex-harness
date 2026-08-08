@@ -332,7 +332,7 @@ function validateObjectArray(value, fields, context, path, errors, validateItem)
   });
 }
 
-function validatePreparedIndex(value) {
+function validatePreparedIndex(value, { allowUnsupportedParser = false } = {}) {
   const errors = [];
   if (!validateClosedObject(value, INDEX_FIELDS, "prepared_markdown_derived_index", "", errors)) {
     return errors;
@@ -355,7 +355,8 @@ function validatePreparedIndex(value) {
     "parser_version",
     errors,
   );
-  if (typeof value.parser_version === "string"
+  if (!allowUnsupportedParser
+    && typeof value.parser_version === "string"
     && value.parser_version !== MARKDOWN_DERIVED_INDEX_PARSER_VERSION) {
     addError(
       errors,
@@ -403,6 +404,29 @@ function validatePreparedIndex(value) {
   return errors;
 }
 
+export function validateMarkdownDerivedIndexIntegrity(
+  value,
+  { allowUnsupportedParser = false } = {},
+) {
+  const errors = validatePreparedIndex(value, { allowUnsupportedParser });
+  if (errors.length === 0) {
+    const embeddedDigest = computeMarkdownDerivedIndexDigest(value);
+    if (value.index_digest !== embeddedDigest) {
+      addError(
+        errors,
+        "prepared_markdown_derived_index.embedded_digest.mismatch",
+        "/index_digest",
+        "Prepared Markdown index does not match its embedded digest.",
+      );
+    }
+  }
+  return deepFreeze({
+    status: errors.length === 0 ? "valid" : "stopped",
+    reason: errors.length === 0 ? null : "invalid_prepared_markdown_derived_index",
+    errors,
+  });
+}
+
 export function prepareMarkdownDerivedIndex(input) {
   const errors = validateInput(input);
   if (errors.length > 0) return stopped("invalid_markdown_derived_index_input", errors);
@@ -420,18 +444,9 @@ export function loadMarkdownDerivedIndex(input, { preparedIndex } = {}) {
   if (expected.status === "stopped") return expected;
   if (preparedIndex === undefined) return expected;
 
-  const errors = validatePreparedIndex(preparedIndex);
+  const integrity = validateMarkdownDerivedIndexIntegrity(preparedIndex);
+  const errors = [...integrity.errors];
   if (errors.length > 0) return stopped("invalid_prepared_markdown_derived_index", errors);
-
-  const embeddedDigest = computeMarkdownDerivedIndexDigest(preparedIndex);
-  if (preparedIndex.index_digest !== embeddedDigest) {
-    addError(
-      errors,
-      "prepared_markdown_derived_index.embedded_digest.mismatch",
-      "/index_digest",
-      "Prepared Markdown index does not match its embedded digest.",
-    );
-  }
   if (preparedIndex.index_digest !== expected.markdown_index.index_digest) {
     addError(
       errors,

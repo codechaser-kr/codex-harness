@@ -35,6 +35,7 @@ import "../pull-request/live-preflight.test.mjs";
 import "../observation/snapshot.test.mjs";
 import "../observation/snapshot-runtime.test.mjs";
 import "../observation/markdown-derived-index.test.mjs";
+import "../observation/markdown-derived-index-runtime.test.mjs";
 
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -133,6 +134,7 @@ const requiredArtifacts = [
   "scripts/observation/snapshot.mjs",
   "scripts/observation/snapshot-runtime.mjs",
   "scripts/observation/markdown-derived-index.mjs",
+  "scripts/observation/markdown-derived-index-runtime.mjs",
   "tests/workflow-definition/structural-validation.test.mjs",
   "tests/workflow-definition/semantic-validation.test.mjs",
   "tests/workflow-definition/compiled-definition.test.mjs",
@@ -183,6 +185,7 @@ const requiredArtifacts = [
   "tests/observation/snapshot.test.mjs",
   "tests/observation/snapshot-runtime.test.mjs",
   "tests/observation/markdown-derived-index.test.mjs",
+  "tests/observation/markdown-derived-index-runtime.test.mjs",
   "tests/artifact-contract/fixtures/manifest-validation-cases.json",
   "tests/artifact-contract/fixtures/artifact-validation-cases.json",
 ];

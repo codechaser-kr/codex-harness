@@ -76,12 +76,37 @@ nested shape, type/version, digest 형식, embedded digest와 현재 input diges
 오류가 하나라도 있으면 일부 section, 이전 index 또는 raw 자유 형식 fallback을 사용하지 않는다.
 self-consistent tampering도 current input으로 다시 준비한 identity와 다르면 거부한다.
 
+## 평가 주기 runtime과 consumer
+
+`scripts/observation/markdown-derived-index-runtime.mjs`는 current `request_id`의 검증된
+`observation_snapshot_runtime`에서 exact GitHub Issue·PR source를
+`createObservationSnapshotConsumerInput`으로 선택한다. 선택한 source의 raw body와 `body_digest`, current
+`parser_version`으로 index를 한 번 준비하고 다음 identity를 가진 runtime으로 공유한다.
+
+- snapshot의 `input_snapshot_digest`
+- `source_type`과 `source_identifier`
+- body에 연결된 `body_digest`
+- runtime의 `parser_version`과 index의 `index_digest`
+
+state observation과 thin skill은 runtime을 직접 해석하지 않고 exact request·source·snapshot digest·index
+digest를 요구하는 `markdown_derived_index_consumer_input`을 받는다. 같은 runtime에서 만든 consumer들은
+동일한 deep-frozen `markdown_index` object를 공유하며 raw body를 다시 parse하지 않는다.
+
+`loadMarkdownDerivedIndexRuntime`은 cached runtime의 닫힌 shape, runtime digest, nested observation snapshot과
+index embedded digest를 먼저 검증한다. JSON round-trip처럼 runtime 밖에서 다시 들어온 cache는 current
+parser에서 body-derived content까지 한 번 검증해 trusted frozen runtime으로 바꾸고, 같은 평가 주기에서
+runtime이 직접 발급한 trusted 값은 body를 다시 parse하지 않는다. 손상이 있으면 request나 source 변화보다
+먼저 `invalid_cached_markdown_derived_index_runtime`으로 중단한다. 유효한 cache에서 새 요청은
+`request_changed`, snapshot body/source identity 변화는 `source_changed`, parser version 변화는
+`parser_changed`로 새 index를 준비한다. exact identity hit만 `preparation=reused`다.
+
 ## 책임 경계
 
 - index는 raw GitHub body의 파생 구조이며 observation snapshot의 `input_snapshot_digest`나 live state를
   대체하지 않는다.
-- C1 core는 단일 body의 prepare/load와 parsing만 소유한다. evaluation-cycle cache와 state adapter·thin
-  skill consumer 공유는 `FE129-2-C2` runtime이 소유한다.
+- C1 core는 단일 body의 prepare/load와 parsing을 소유한다. C2 runtime은 evaluation-cycle cache와 state
+  observation·thin skill consumer 공유, request·source·parser invalidation과 corrupt cache 차단을 소유한다.
 - section value의 정책 의미, checkbox 완료 fact, reference 연결 대상, 사용자 결정과 Workflow 전이는
   index에 저장하지 않는다.
-- GitHub live state가 index, snapshot 또는 로그와 충돌하면 GitHub live state가 우선한다.
+- GitHub live state가 index, snapshot 또는 로그와 충돌하면 GitHub live state가 우선한다. PR 생성, review
+  게시, merge, 권한과 thread freshness의 live preflight 및 실행 직전 재검증은 index hit로 생략하지 않는다.

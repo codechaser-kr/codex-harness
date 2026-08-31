@@ -423,7 +423,9 @@ export function loadMarkdownDerivedIndexRuntime(input = {}, { cachedRuntime } = 
 }
 
 export function createMarkdownDerivedIndexConsumerInput(runtime, selector = {}) {
-  const integrity = validateRuntimeIntegrity(runtime, { verifySemanticIndex: false });
+  const integrity = validateRuntimeIntegrity(runtime, {
+    verifySemanticIndex: !trustedRuntimes.has(runtime),
+  });
   const errors = [...integrity.errors];
   if (!validateClosedObject(
     selector,

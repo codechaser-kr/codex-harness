@@ -225,6 +225,31 @@ test("consumer requires exact request, source, snapshot digest, and index digest
   }
 });
 
+test("consumer semantically verifies untrusted runtimes while preserving trusted same-cycle reuse", () => {
+  const prepared = prepareMarkdownDerivedIndexRuntime(runtimeInput("issue-129-cycle-1"));
+  const trusted = createMarkdownDerivedIndexConsumerInput(
+    prepared.runtime,
+    selector(prepared.runtime),
+  );
+  assert.equal(trusted.status, "ready");
+
+  const untrusted = JSON.parse(JSON.stringify(prepared.runtime));
+  untrusted.markdown_index.references = [];
+  untrusted.markdown_index.index_digest = computeMarkdownDerivedIndexDigest(
+    untrusted.markdown_index,
+  );
+  untrusted.runtime_digest = computeMarkdownDerivedIndexRuntimeDigest(untrusted);
+
+  const rejected = createMarkdownDerivedIndexConsumerInput(untrusted, selector(untrusted));
+  assert.equal(rejected.status, "stopped");
+  assert.equal(rejected.reason, "invalid_markdown_derived_index_consumer_input");
+  assert.equal(rejected.consumer_input, null);
+  assert.equal(rejected.errors.some((error) => (
+    error.code === "prepared_markdown_derived_index.source_digest.mismatch"
+      && error.path === "/markdown_index/index_digest"
+  )), true);
+});
+
 test("non-GitHub body sources and malformed runtime inputs stop without fallback", () => {
   const localSnapshot = snapshotRuntime("issue-129-cycle-1", observationInput({ localOnly: true }));
   const local = prepareMarkdownDerivedIndexRuntime(runtimeInput(
@@ -252,7 +277,6 @@ test("runtime and consumer documentation preserve sharing, invalidation, and liv
   ]);
 
   assert.match(runtime, /createObservationSnapshotConsumerInput/);
-  assert.match(runtime, /verifySemanticIndex: !trustedRuntimes\.has\(cachedRuntime\)/);
   for (const source of [contract, skill, state, summary, design]) {
     assert.match(source, /markdown_derived_index_consumer_input/);
     assert.match(source, /body digest|body_digest/);

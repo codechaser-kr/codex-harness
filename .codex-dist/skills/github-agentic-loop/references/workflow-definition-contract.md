@@ -2,47 +2,9 @@
 
 ## 실행 계약
 
-Workflow Definition source는 JSON 문서이며 `scripts/workflow-definition/validator.mjs`가 source의 유일한
-실행 검증 계약이다. 별도의 JSON Schema 파일이나 이중 source 구조 검증은 사용하지 않는다. 모든 source
-객체는 명시된 필드만 허용하는 닫힌 객체이며 `priority`와 임의 확장 필드는 허용하지 않는다.
-
-`compiler.mjs`는 검증된 source를 변경 불가능한 compiled representation으로 준비하고,
-`compiled-definition-loader.mjs`는 현재 source·validator·compiler format과 정확히 일치하는 representation만
-재사용한다. source가 없거나 유효하지 않은 상태를 compiled representation으로 보완하지 않는다.
-
-## Source·compiled·runtime 책임 경계
-
-- raw source contract: 이 문서의 루트·fact·표현식·작업 구조와 `validator.mjs`가 소유한다.
-- compiled contract: source 전체 검증 성공 뒤 source digest, validator version, compiler format version,
-  compiled digest, fact metadata와 transition lookup을 준비한다.
-- runtime input validation: fact candidate, evidence, normalized state와 현재 `task_action_id`는 compiled
-  representation 유무와 관계없이 매 실행 검증한다.
-- compiled representation은 GitHub·로컬·사용자 상태나 실행 결과를 포함하거나 장기 캐시하지 않는다.
-
-Compiled representation은 정확히 다음 필드를 가진다.
-
-- `artifact_type`: `compiled_workflow_definition`
-- `compiler_format_version`: 현재 compiler format version
-- `validator_version`: source를 검증한 validator version
-- `source_digest`: source JSON 의미 순서를 포함해 계산한 SHA-256 digest
-- `compiled_digest`: 나머지 compiled 필드 전체의 SHA-256 digest
-- `source_definition`: 검증된 raw source의 격리된 복제본
-- `fact_metadata`: Definition 선언 순서와 fact별 value type·allowed values lookup
-- `transition_lookup`: 작업 선언 순서와 `task_action_id`별 transition lookup
-
-`compileWorkflowDefinition`은 source를 한 번 전체 검증한 뒤 compiled representation을 재귀적으로
-freeze한다. `loadCompiledWorkflowDefinition`은 compiled candidate가 없으면 source를 검증·compile하고,
-candidate가 있으면 source digest, embedded source, validator version, compiler format version와 compiled
-digest를 확인하고 serialized candidate가 source의 deterministic compile 결과와 같은지 대조한다. 같은
-프로세스의 compiler 또는 loader가 반환한 immutable representation은 신뢰 표식으로 전체 source 검증 없이
-재사용한다. 명시적으로 전달된 candidate가 불일치하거나 인식 불가능하면 새 compile 결과로 대체하지 않고
-`invalid_compiled_definition`과 안정적인 error code·path로 fail-closed 중단한다.
-
-`prepareWorkflowDefinition`은 raw source 또는 compiled representation을 공통 런타임 입력으로 바꾼다.
-오케스트레이터는 선택한 Definition을 준비 단계에서 한 번 compile한 뒤 같은 compiled representation을
-state adapter와 evaluator에 전달한다. Adapter와 evaluator는 fact metadata와 transition lookup을 사용하며
-source 전체 의미 검증을 반복하지 않는다. serialized compiled candidate는 사용 전에 loader의 digest와
-version 호환성 검사를 통과해야 한다.
+Workflow Definition은 JSON 문서이며 `scripts/workflow-definition/validator.mjs`가 유일한 실행
+검증 계약이다. 별도의 JSON Schema 파일이나 이중 구조 검증은 사용하지 않는다. 모든 객체는
+명시된 필드만 허용하는 닫힌 객체이며 `priority`와 임의 확장 필드는 허용하지 않는다.
 
 ## 루트 구조
 
@@ -142,15 +104,11 @@ Validator는 다음을 결정적으로 검증한다.
 ## 평가 API
 
 `evaluateWorkflowDefinition(definition, normalizedFactState, options)`는 외부 IO와 상태 변경이 없는
-Node.js API다. `definition`은 raw source 또는 compiled representation이며, raw source와 별도 compiled
-candidate를 사용할 때는 `options.compiledDefinition`으로 전달한다. `options.currentTaskActionId`가 없으면
-`entry_task_action_id`에서 시작한다.
+Node.js API다. `options.currentTaskActionId`가 없으면 `entry_task_action_id`에서 시작한다.
 
 완료되지 않은 작업은 `action_required`와 단일 `task_action_id`, `user_decision_options`,
 `executor_reference`, `completion_predicate`를 반환한다. 완료된 terminal 작업은 `completed`와
 단일 `task_action_id`를 반환한다. 중단 결과도 가능한 경우 `task_action_id`를 포함하며
 `transition_id`를 반환하지 않는다.
 
-CLI는 `validate`, `compile`, `evaluate` 명령을 제공한다. `compile --definition`은 직렬화 가능한 compiled
-representation을 반환한다. `evaluate`의 재개 옵션은 `--current-task-action-id`, 준비된 표현 재사용 옵션은
-`--compiled-definition`이다.
+CLI의 재개 옵션은 `--current-task-action-id`다.

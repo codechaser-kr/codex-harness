@@ -1,14 +1,8 @@
 import { parseJsonFile } from "./parser.mjs";
-import { compileWorkflowDefinition } from "./compiler.mjs";
 import { evaluateWorkflowDefinition } from "./evaluator.mjs";
 import { validateWorkflowDefinition } from "./validator.mjs";
 
-const registeredOptions = new Set([
-  "--definition",
-  "--state",
-  "--current-task-action-id",
-  "--compiled-definition",
-]);
+const registeredOptions = new Set(["--definition", "--state", "--current-task-action-id"]);
 
 function usage(message) {
   return {
@@ -30,8 +24,8 @@ function invalidInput(reason, error) {
 
 function parseOptions(argumentsList) {
   const [command, ...tokens] = argumentsList;
-  if (command !== "validate" && command !== "compile" && command !== "evaluate") {
-    return { error: "Expected command validate, compile, or evaluate." };
+  if (command !== "validate" && command !== "evaluate") {
+    return { error: "Expected command validate or evaluate." };
   }
   const values = {};
   for (let index = 0; index < tokens.length; index += 1) {
@@ -55,9 +49,8 @@ function parseOptions(argumentsList) {
   if (!values["--definition"]) {
     return { error: "--definition is required." };
   }
-  if ((command === "validate" || command === "compile")
-    && (values["--state"] || values["--current-task-action-id"] || values["--compiled-definition"])) {
-    return { error: `${command} accepts only --definition.` };
+  if (command === "validate" && (values["--state"] || values["--current-task-action-id"])) {
+    return { error: "validate accepts only --definition." };
   }
   if (command === "evaluate" && !values["--state"]) {
     return { error: "evaluate requires --state." };
@@ -82,26 +75,13 @@ export async function runWorkflowDefinitionCli(argumentsList) {
     }
     return { exitCode: 1, result: { status: "stopped", reason: "invalid_definition", errors: validation.errors } };
   }
-  if (parsedArguments.command === "compile") {
-    const result = compileWorkflowDefinition(definitionResult.value);
-    return { exitCode: result.status === "compiled" ? 0 : 1, result };
-  }
 
   const stateResult = await parseJsonFile(parsedArguments.values["--state"]);
   if (!stateResult.ok) {
     return invalidInput("invalid_state", stateResult.error);
   }
-  let compiledDefinition;
-  if (parsedArguments.values["--compiled-definition"]) {
-    const compiledResult = await parseJsonFile(parsedArguments.values["--compiled-definition"]);
-    if (!compiledResult.ok) {
-      return invalidInput("invalid_compiled_definition", compiledResult.error);
-    }
-    compiledDefinition = compiledResult.value;
-  }
   const result = evaluateWorkflowDefinition(definitionResult.value, stateResult.value, {
     currentTaskActionId: parsedArguments.values["--current-task-action-id"],
-    compiledDefinition,
   });
   return {
     exitCode: result.status === "action_required" || result.status === "completed" ? 0 : 1,

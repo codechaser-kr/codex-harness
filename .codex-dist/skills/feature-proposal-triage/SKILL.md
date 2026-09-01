@@ -10,8 +10,6 @@ description: 기능제안 이슈를 기준으로 진행하지 않음, 정책 검
 ## 먼저 읽을 문서
 
 - `../github-agentic-loop/references/artifact-output-contract.md`에서 ``기능 제안 분류(`feature-proposal-triage`) 출력 판정 규칙`` 섹션만 읽는다.
-- `../github-agentic-loop/references/artifact-handoff-contract.md`
-- `../github-agentic-loop/artifact-manifests/feature-proposal-triage.json`
 - `../github-agentic-loop/references/github-templates.md`
 
 ## 입력
@@ -35,9 +33,8 @@ description: 기능제안 이슈를 기준으로 진행하지 않음, 정책 검
 
 ## 출력
 
-- 공통 handoff 계약의 닫힌 envelope만 반환한다.
-- `artifact_type: feature-proposal-triage`를 사용하고 `artifact`는 `feature-proposal-triage.json` manifest에 맞춰 구성한다.
-- 추천 방향은 사용자 검토용 후보이며 기능제안 이슈의 상태 변경이나 후속 이슈 전환 요청이 아니다. Markdown 표시는 runtime renderer가 담당한다.
+- 기존 `필수 출력 섹션`의 진행 방향 후보, 추천 방향, `보류 질문`만 반환한다.
+- 추천 방향은 사용자 검토용 후보이며 기능제안 이슈의 상태 변경이나 후속 이슈 전환 요청이 아니다.
 
 ## 하지 않는 일
 
@@ -66,6 +63,14 @@ description: 기능제안 이슈를 기준으로 진행하지 않음, 정책 검
 
 두 방향 이상이 가능하면 자동으로 하나를 확정하지 말고 각 방향의 근거와 위험을 비교해 제시한다.
 
-## Structured artifact handoff
+## 필수 출력 섹션
 
-의미 내용은 위 판단 기준과 판단 근거와 위험을 따라 작성하고, 기계 구조는 `feature-proposal-triage.json`만 따른다. envelope 밖의 설명이나 직접 조립한 Markdown을 반환하지 않는다.
+기능제안 진행 방향 판단 결과는 다음 섹션과 항목을 순서대로 빠짐없이 채운다. 필수 내용을 채울 수 없으면 진행 방향을 확정하지 말고 `보류 질문`에 확인할 내용을 기록한다.
+
+- `기준 이슈`
+- `판단 맥락`: 현재 상태와 참조한 설계 문서, 코드 위치, 연관 이슈
+- `진행 방향 후보`
+  - `진행 방향`: `진행하지 않음`, `정책 검토 필요`, `기능 변경 필요` 중 하나
+  - `판단 근거와 위험`
+- `추천 방향`
+- `보류 질문`: Workflow Engine이 확인할 내용

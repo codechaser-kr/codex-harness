@@ -6,12 +6,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { compileWorkflowDefinition } from "../../scripts/workflow-definition/compiler.mjs";
-
 import "./structural-validation.test.mjs";
 import "./semantic-validation.test.mjs";
-import "./compiled-definition.test.mjs";
-import "./compiled-runtime.test.mjs";
 import "./evaluator.test.mjs";
 import "./feature-proposal.test.mjs";
 import "./normalized-fact-adapter.test.mjs";
@@ -23,17 +19,6 @@ import "../validation-mode/validation-mode-contract.test.mjs";
 import "../validation-mode/agent-lifecycle-contract.test.mjs";
 import "../skill-quality/skill-structure-contract.test.mjs";
 import "../skill-quality/reference-boundary-contract.test.mjs";
-import "../artifact-contract/compiled-manifest.test.mjs";
-import "../artifact-contract/validator.test.mjs";
-import "../artifact-contract/renderer.test.mjs";
-import "../artifact-contract/drift.test.mjs";
-import "../artifact-contract/artifact-runtime.test.mjs";
-import "../artifact-contract/producer-handoff.test.mjs";
-import "../artifact-contract/artifact-consumer.test.mjs";
-import "../pull-request/pr-input.test.mjs";
-import "../pull-request/live-preflight.test.mjs";
-import "../observation/snapshot.test.mjs";
-import "../observation/snapshot-runtime.test.mjs";
 
 const sourceSkillDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
@@ -44,18 +29,6 @@ const removedRulesRelativePath = ["references/workflow-engine", "rules.md"].join
 const removedRulesFilenamePattern = new RegExp(["workflow-engine", "rules\\.md"].join("-"));
 
 const jsonArtifacts = [
-  "artifact-manifests/branch-proposal.json",
-  "artifact-manifests/commit-plan.json",
-  "artifact-manifests/feature-plan.json",
-  "artifact-manifests/feature-proposal-triage.json",
-  "artifact-manifests/fix-analysis.json",
-  "artifact-manifests/fix-plan.json",
-  "artifact-manifests/issue-creation.json",
-  "artifact-manifests/policy-plan.json",
-  "artifact-manifests/policy-review-next-triage.json",
-  "artifact-manifests/pr-creation.json",
-  "artifact-manifests/pr-proposal.json",
-  "artifact-manifests/review-comment.json",
   "definitions/feature-proposal.json",
   "definitions/policy-review.json",
   "definitions/feature-change.json",
@@ -71,8 +44,6 @@ const jsonArtifacts = [
   "tests/workflow-definition/fixtures/feature-change-states.json",
   "tests/workflow-definition/fixtures/feature-fix-states.json",
   "tests/workflow-definition/fixtures/implementation-states.json",
-  "tests/artifact-contract/fixtures/manifest-validation-cases.json",
-  "tests/artifact-contract/fixtures/artifact-validation-cases.json",
 ];
 
 const requiredArtifacts = [
@@ -81,11 +52,6 @@ const requiredArtifacts = [
   "references/agent-lifecycle-contract.md",
   "references/normalized-fact-adapter-contract.md",
   "references/artifact-output-contract.md",
-  "references/artifact-manifest-contract.md",
-  "references/artifact-handoff-contract.md",
-  "references/artifact-consumer-contract.md",
-  "references/pull-request-input-contract.md",
-  "references/observation-snapshot-contract.md",
   "references/github-templates.md",
   "references/target-runtime-bootstrap-contract.md",
   "references/workflow-engine-template-compatibility-contract.md",
@@ -105,9 +71,6 @@ const requiredArtifacts = [
   "scripts/workflow-definition/parser.mjs",
   "scripts/workflow-definition/expression.mjs",
   "scripts/workflow-definition/validator.mjs",
-  "scripts/workflow-definition/compiler.mjs",
-  "scripts/workflow-definition/compiled-definition-loader.mjs",
-  "scripts/workflow-definition/runtime-definition.mjs",
   "scripts/workflow-definition/evaluator.mjs",
   "scripts/workflow-definition/normalized-fact-adapter.mjs",
   "scripts/workflow-definition/workflow-state-adapter.mjs",
@@ -117,23 +80,8 @@ const requiredArtifacts = [
   "scripts/workflow-definition/feature-fix-state-adapter.mjs",
   "scripts/workflow-definition/implementation-state-adapter.mjs",
   "scripts/workflow-definition/cli.mjs",
-  "scripts/artifact-contract/manifest-validator.mjs",
-  "scripts/artifact-contract/manifest-compiler.mjs",
-  "scripts/artifact-contract/compiled-manifest-loader.mjs",
-  "scripts/artifact-contract/validator.mjs",
-  "scripts/artifact-contract/renderer.mjs",
-  "scripts/artifact-contract/artifact-registry.mjs",
-  "scripts/artifact-contract/artifact-runtime.mjs",
-  "scripts/artifact-contract/artifact-consumer.mjs",
-  "scripts/pull-request/pr-input.mjs",
-  "scripts/pull-request/live-preflight.mjs",
-  "scripts/observation/validation.mjs",
-  "scripts/observation/snapshot.mjs",
-  "scripts/observation/snapshot-runtime.mjs",
   "tests/workflow-definition/structural-validation.test.mjs",
   "tests/workflow-definition/semantic-validation.test.mjs",
-  "tests/workflow-definition/compiled-definition.test.mjs",
-  "tests/workflow-definition/compiled-runtime.test.mjs",
   "tests/workflow-definition/evaluator.test.mjs",
   "tests/workflow-definition/feature-proposal.test.mjs",
   "tests/workflow-definition/normalized-fact-adapter.test.mjs",
@@ -156,31 +104,6 @@ const requiredArtifacts = [
   "tests/validation-mode/agent-lifecycle-contract.test.mjs",
   "tests/skill-quality/skill-structure-contract.test.mjs",
   "tests/skill-quality/reference-boundary-contract.test.mjs",
-  "artifact-manifests/branch-proposal.json",
-  "artifact-manifests/commit-plan.json",
-  "artifact-manifests/feature-plan.json",
-  "artifact-manifests/feature-proposal-triage.json",
-  "artifact-manifests/fix-analysis.json",
-  "artifact-manifests/fix-plan.json",
-  "artifact-manifests/issue-creation.json",
-  "artifact-manifests/policy-plan.json",
-  "artifact-manifests/policy-review-next-triage.json",
-  "artifact-manifests/pr-creation.json",
-  "artifact-manifests/pr-proposal.json",
-  "artifact-manifests/review-comment.json",
-  "tests/artifact-contract/compiled-manifest.test.mjs",
-  "tests/artifact-contract/validator.test.mjs",
-  "tests/artifact-contract/renderer.test.mjs",
-  "tests/artifact-contract/drift.test.mjs",
-  "tests/artifact-contract/artifact-runtime.test.mjs",
-  "tests/artifact-contract/producer-handoff.test.mjs",
-  "tests/artifact-contract/artifact-consumer.test.mjs",
-  "tests/pull-request/pr-input.test.mjs",
-  "tests/pull-request/live-preflight.test.mjs",
-  "tests/observation/snapshot.test.mjs",
-  "tests/observation/snapshot-runtime.test.mjs",
-  "tests/artifact-contract/fixtures/manifest-validation-cases.json",
-  "tests/artifact-contract/fixtures/artifact-validation-cases.json",
 ];
 
 async function parseJsonArtifacts(root) {
@@ -515,34 +438,16 @@ test("installer preserves the github-agentic-loop distribution", async (t) => {
   const statePath = join(temporaryRoot, "state.json");
   const cycleDefinitionPath = join(temporaryRoot, "cycle-definition.json");
   const cycleStatePath = join(temporaryRoot, "cycle-state.json");
-  const compiledDefinitionPath = join(temporaryRoot, "compiled-definition.json");
   await writeFile(definitionPath, JSON.stringify(evaluationCases.definitions.terminal_completed));
   await writeFile(statePath, JSON.stringify(evaluationCases.states.done));
   await writeFile(cycleDefinitionPath, JSON.stringify(evaluationCases.definitions.fixed_state_cycle));
   await writeFile(cycleStatePath, JSON.stringify(evaluationCases.states.cycle));
-  await writeFile(
-    compiledDefinitionPath,
-    JSON.stringify(compileWorkflowDefinition(evaluationCases.definitions.terminal_completed).compiled_definition),
-  );
 
   const sourceCli = join(sourceSkillDirectory, "scripts/workflow-definition/cli.mjs");
   const installedCli = join(installedSkillDirectory, "scripts/workflow-definition/cli.mjs");
   const commands = [
     { argumentsList: ["validate", "--definition", definitionPath], exitCode: 0 },
-    { argumentsList: ["compile", "--definition", definitionPath], exitCode: 0 },
     { argumentsList: ["evaluate", "--definition", definitionPath, "--state", statePath], exitCode: 0 },
-    {
-      argumentsList: [
-        "evaluate",
-        "--definition",
-        definitionPath,
-        "--compiled-definition",
-        compiledDefinitionPath,
-        "--state",
-        statePath,
-      ],
-      exitCode: 0,
-    },
     { argumentsList: ["evaluate", "--definition", cycleDefinitionPath, "--state", cycleStatePath], exitCode: 1 },
   ];
   for (const command of commands) {

@@ -2,30 +2,6 @@
 
 이 문서는 GitHub와 로컬 상태를 읽고, 읽기 전용 상태 요약의 사용 가능 여부를 판정하며, 관측 필드와 상태 근거를 분류하는 기준만 정의한다. 작업 전이와 현재 작업 선택은 이 문서의 책임이 아니며 `definitions/*.json`, 각 state adapter, `evaluator.mjs`가 담당한다. 구조화 실행 요청과 실행 주체 판정은 `structured-execution-contract.md`, 리뷰 런타임 판정은 `review-runtime-contract.md`를 따른다.
 
-## 전용 스킬 artifact 관측
-
-thin 스킬의 raw handoff는 관측 상태가 아니다. `artifact-consumer-contract.md`의 공통 gate가 accepted한 immutable receipt에 대해 의미 사용 가능 판정까지 통과한 경우에만 다음 fact 후보를 만들 수 있다. 이 후보의 근거에는 `artifact_type`, `contract_digest`, receipt와 receipt에서 산출한 의미 판정 결과를 기록하며, raw `artifact`나 renderer Markdown을 별도 원천으로 복제하지 않는다.
-
-invalid handoff·artifact, producer identity·digest mismatch, stale compiled manifest 또는 의미 사용 불가 결과는 상태 변환기에 전달하지 않는다. 이때 누락 fact를 추론하거나 raw 결과로 fallback하지 않고 consumer의 stopped 결과를 중단 또는 보류 근거로 기록한다.
-
-## 평가 주기 observation snapshot
-
-GitHub·local raw source를 처음 수집한 호출은 `observation-snapshot-contract.md` 형식의
-`observation_input`을 만들고 `scripts/observation/snapshot-runtime.mjs`로 현재 `request_id`의 runtime을
-한 번 준비한다. 이후 같은 평가 주기에서 state adapter용 관측을 만들거나 thin skill을 호출할 때는 raw
-GitHub/local source를 다시 조회하지 않고 exact repository·source identity·`input_snapshot_digest`가 있는
-`observation_snapshot_consumer_input`을 사용한다.
-
-새 재개 `request_id`는 이전 evaluation-cycle runtime을 재사용하지 않는다. 같은 요청에서도 GitHub
-`updatedAt`·body digest·PR base/head SHA 또는 local HEAD·worktree digest가 바뀌면 current raw source로
-새 snapshot을 준비한다. cached runtime의 shape·version·embedded digest가 손상되면 부분 source나 이전
-snapshot으로 fallback하지 않고 fail-closed 중단한다.
-
-Snapshot은 원본 읽기의 특정 시점 baseline이며 완료 근거 또는 실행 직전 상태를 고정하지 않는다. GitHub
-상태가 snapshot·로그·local profile과 충돌하면 GitHub 실행 상태를 우선하고, PR 생성·review 게시·merge,
-remote branch·권한·thread freshness처럼 계약이 요구한 live preflight는 항상 새로 관측한다. 의미 판단,
-artifact receipt, renderer 결과, 사용자 결정과 Workflow 전이는 snapshot runtime에 cache하지 않는다.
-
 ## 상태 읽기 규칙
 
 - 기준 대상은 열린 PR에서 먼저 찾고, 이어갈 PR 후보가 비어 있으면 열린 이슈에서 찾는다.
@@ -70,25 +46,6 @@ routing check 입력에는 현재 사용자 요청 식별자, 선택된 상위 �
 그리고 기준 이슈가 있으면 이슈 번호 및 판정에 사용한 본문 heading을 기록한다. 현재 진입에 필요한
 fact와 evidence를 같은 상태 묶음에 포함한 뒤
 `normalizeFeatureChangeFacts`를 정확히 한 번 호출한다.
-
-## PR 생성 live preflight 관측 규칙
-
-PR 생성 실행 직전에 `pull-request-input-contract.md`로 검증된 immutable input의 exact base/head branch를
-대상으로 하나의 새 remote observation을 수집한다. 관측은 다음 값을 모두 원본 GitHub·local state에
-연결한다.
-
-| 관측값 | 원본과 판정 기준 |
-| --- | --- |
-| `base_branch`, `base_exists` | immutable input의 exact base 이름과 remote branch 조회 결과 |
-| `head_branch`, `head_exists` | immutable input의 exact head 이름과 remote branch 조회 결과 |
-| `expected_head_oid` | PR 생성 대상 local worktree 또는 push 완료 상태에서 확정한 full head OID |
-| `remote_head_oid` | exact remote head ref의 full OID. head가 없을 때만 `null` |
-| `existing_pull_request_number` | exact head branch로 조회한 open PR 번호. 없으면 `null`이고 둘 이상이면 충돌로 중단 |
-
-관측한 base/head 이름은 immutable input과 같아야 하며 remote head OID는 expected local head OID와 같아야
-한다. remote base/head 부재, stale OID, same-head 기존 PR은 `ready` 관측으로 보정하지 않는다. title,
-body, template와 연관 이슈 의미는 live state가 아니므로 관측하거나 재판정하지 않는다. 이전 PR 초안 또는
-push 전 상태에서 얻은 observation을 재사용하지 않으며 mismatch 뒤 재개에는 새 observation이 필요하다.
 
 ## 상태 요약 출력 사용 가능 판정 규칙
 

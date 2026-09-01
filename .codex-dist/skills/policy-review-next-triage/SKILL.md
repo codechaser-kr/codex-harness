@@ -10,8 +10,6 @@ description: 정책검토의 설계 문서 반영이 끝난 뒤 기존 기능변
 ## 먼저 읽을 문서
 
 - `../github-agentic-loop/references/artifact-output-contract.md`에서 ``정책 검토 후속 분류(`policy-review-next-triage`) 출력 판정 규칙`` 섹션만 읽는다.
-- `../github-agentic-loop/references/artifact-handoff-contract.md`
-- `../github-agentic-loop/artifact-manifests/policy-review-next-triage.json`
 - `../github-agentic-loop/references/github-templates.md`
 
 ## 입력
@@ -40,9 +38,8 @@ description: 정책검토의 설계 문서 반영이 끝난 뒤 기존 기능변
 
 ## 출력
 
-- 공통 handoff 계약의 닫힌 envelope만 반환한다.
-- `artifact_type: policy-review-next-triage`를 사용하고 `artifact`는 `policy-review-next-triage.json` manifest에 맞춰 구성한다.
-- 기존 이슈 반영 또는 새 이슈 생성은 후보 비교 결과이며 이슈 갱신·생성 요청의 확정값이 아니다. Markdown 표시는 runtime renderer가 담당한다.
+- 기존 `필수 출력 섹션`의 전환 후보, 추천 후보, `보류 질문`만 반환한다.
+- 기존 이슈 반영 또는 새 이슈 생성은 후보 비교 결과이며 이슈 갱신·생성 요청의 확정값이 아니다.
 
 ## 하지 않는 일
 
@@ -64,6 +61,20 @@ description: 정책검토의 설계 문서 반영이 끝난 뒤 기존 기능변
 - 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 기존 이슈 반영 또는 새 기능변경 이슈 생성의 다음 작업을 확정한다.
 
-## Structured artifact handoff
+## 필수 출력 섹션
 
-의미 내용은 위 판단 기준과 기능변경 범위 비교에 따라 작성하고, 기계 구조는 `policy-review-next-triage.json`만 따른다. envelope 밖의 설명이나 직접 조립한 Markdown을 반환하지 않는다.
+다음 섹션과 항목을 순서대로 빠짐없이 채운다. 필수 내용을 채울 수 없으면 후보를 강제로 추천하지 말고 `보류 질문`에 확인할 내용을 기록한다.
+
+- `기준 정책검토 이슈`
+- `기능변경 전환 범위`: 정책검토 결과에서 추출한 기능변경 목표와 범위
+- `탐색 결과`: 확인한 열린 기능변경 이슈와 제외 근거
+- `전환 후보`
+  - `후보 ID`
+  - `진행 방향`: `기존 기능변경 이슈 반영` 또는 `새 기능변경 이슈 생성`
+  - `대상 이슈`: 기존 이슈 반영 후보의 이슈 번호. 새 이슈 생성 후보이면 비워 둔다.
+  - `반영 범위`
+  - `판단 근거와 위험`
+- `추천 후보`: `전환 후보`의 `후보 ID` 또는 빈 값
+- `보류 질문`
+
+적합한 기존 후보가 없으면 제외 근거와 새 기능변경 이슈 생성 후보를 제시한다.

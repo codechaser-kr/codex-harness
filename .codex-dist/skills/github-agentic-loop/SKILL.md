@@ -15,7 +15,7 @@ description: GitHub 이슈와 PR의 관측 상태를 선언형 워크플로 정�
 - `definitions/*.json`은 작업과 전이 조건을 담은 데이터다.
 - `scripts/workflow-definition/*.mjs`는 정의 검증, 상태 정규화, 작업 계산을 수행하는 실행 코드다.
 - `references/*.md`는 아래 조건에 따라 읽는 참조문서이며, 전이는 `definitions/*.json`과 실행 코드의 결과로 결정한다.
-- 일반 실행은 Definition 한 번 준비, 관측, 한 번의 정규화, 한 번의 `evaluateWorkflowDefinition` 호출이라는 단일 경로를 따른다.
+- 일반 실행은 관측, 한 번의 정규화, 한 번의 `evaluateWorkflowDefinition` 호출이라는 단일 경로를 따른다.
 - 사용자 결정은 사용자가 확정하고, 실행 주체는 확정된 범위만 수행한다. 규칙 불일치나 계약 실패가 발생하면 계약이 제시한 사유와 재개 조건으로 중단한다.
 
 ## 사용 범위 예시
@@ -41,9 +41,8 @@ description: GitHub 이슈와 PR의 관측 상태를 선언형 워크플로 정�
 
 현재 작업에 해당하는 계약을 다음 기준으로 추가로 읽는다.
 
-- GitHub·로컬 원본 상태를 수집하거나 관측 근거를 분류할 때 `references/state-observation-contract.md`와 `references/observation-snapshot-contract.md`
-- 전용 제안·분석 스킬의 결과를 사용할 때 `references/artifact-handoff-contract.md`, `references/artifact-consumer-contract.md`, `references/artifact-output-contract.md`
-- 사용자가 PR 제목·본문 초안을 확정했거나 `pr-creation` 입력을 준비·재사용할 때 `references/pull-request-input-contract.md`
+- GitHub·로컬 원본 상태를 수집하거나 관측 근거를 분류할 때 `references/state-observation-contract.md`
+- 전용 제안·분석 스킬의 결과를 사용할 때 `references/artifact-output-contract.md`
 - 현재 작업에 사용자 선택지가 있거나 재개 요청의 사용자 입력을 해석할 때 `references/user-decision-contract.md`
 - 리뷰를 실행·정규화·게시·대응할 때 `references/review-runtime-contract.md`
 - 선택한 리뷰 실행 모드가 `claude/*`일 때 `references/claude-review-executor-contract.md`
@@ -104,25 +103,20 @@ Workflow Engine 설치는 타겟 저장소의 설정, 템플릿 또는 GitHub �
 
 모든 일반 실행은 다음 단일 경로로 수행한다.
 
-1. 선택한 raw Workflow Definition을 `prepareWorkflowDefinition`으로 한 번 검증·compile한다. 이후 같은
-   compiled representation을 상태 변환기와 evaluator에 전달한다.
-2. 기준 이슈 또는 PR과 GitHub·로컬·사용자·스킬의 원본 상태를 특정 시점의 읽기 전용 상태 묶음으로
-   수집한다. GitHub·로컬 raw source는 `request_id`에 연결된 `snapshot-runtime.mjs`로 한 번 준비하고,
-   같은 평가 주기의 state adapter와 thin skill에는 exact `input_snapshot_digest`의 consumer input을 공유한다.
-3. 선택한 상태 변환기로 관측값을 정확히 한 번 정규화한다. Candidate와 evidence는 compiled metadata를
-   사용하더라도 매 실행 검증한다.
-4. 정규화한 사실을 `evaluateWorkflowDefinition`에 정확히 한 번 전달한다. 이 함수는 compiled transition
-   lookup으로 현재 또는 다음 작업을 계산하고 normalized state와 현재 작업 입력을 매 실행 검증한다.
-5. 최초 진입이면 `definition.entry_task_action_id`, 재개 또는 반복이면 이전 계산 결과가 반환한
+1. 기준 이슈 또는 PR과 GitHub·로컬·사용자·스킬의 원본 상태를 특정 시점의 읽기 전용 상태 묶음으로
+   수집한다.
+2. 선택한 상태 변환기로 관측값을 정확히 한 번 정규화한다.
+3. 정규화한 사실을 `evaluateWorkflowDefinition`에 정확히 한 번 전달한다. 이 함수는 워크플로 정의의
+   규칙을 적용해 현재 또는 다음 작업을 계산한다. 워크플로 정의 검증은 이 함수 내부의 단일 검증
+   경로를 사용한다.
+4. 최초 진입이면 `definition.entry_task_action_id`, 재개 또는 반복이면 이전 계산 결과가 반환한
    `task_action_id`를 `currentTaskActionId`로 전달한다.
-6. `action_required`가 반환한 단일 `task_action_id`, `user_decision_options`, `executor_reference`,
+5. `action_required`가 반환한 단일 `task_action_id`, `user_decision_options`, `executor_reference`,
    `completion_predicate`를 현재 작업의 실행 입력으로 사용한다.
-7. 작업 완료 뒤 상태를 다시 관측·정규화하고 같은 `task_action_id`를 `currentTaskActionId`로 전달한다.
-   새 재개 `request_id` 또는 GitHub·local source baseline 변화는 이전 snapshot을 무효화하고 새 snapshot을
-   준비한다.
+6. 작업 완료 뒤 상태를 다시 관측·정규화하고 같은 `task_action_id`를 `currentTaskActionId`로 전달한다.
    워크플로 정의의 `next_transition_rules`와 `evaluateWorkflowDefinition`이 다음 단일 작업 또는 완료를
    결정한다.
-8. `completed`면 흐름을 완료한다. 상태 변환기 또는 워크플로 정의 검증이 실패하거나
+7. `completed`면 흐름을 완료한다. 상태 변환기 또는 워크플로 정의 검증이 실패하거나
    `evaluateWorkflowDefinition`이 `stopped`를 반환하면 중단한다. 일치하는 규칙이 없거나 여러
    개인 경우와 오류가 발생한 경우도 중단 조건으로 처리한다.
 
@@ -154,33 +148,9 @@ ID, 현재 정규화 상태와 불일치하는 ID, 누락된 재개 ID가 발견
 | PR 생성 요청값 | `pr-creation` |
 | 리뷰 코멘트 게시 초안 | `review-comment` |
 
-전용 스킬은 후보, 초안 또는 분석 결과를 `artifact-handoff-contract.md`의 닫힌 envelope로만 반환한다.
-Workflow Engine은 호출한 스킬과 같은 expected artifact type 및 현재 registry compiled manifest의
-`contract_digest`를 고정해 `consumeArtifactHandoff`에 전달한다. raw handoff나 직접 작성된 Markdown은
-상태 관측 입력으로 사용하지 않는다.
-
-consumer는 공통 gate가 반환한 accepted immutable receipt만 `artifact-output-contract.md`의 의미 판정,
-상태 관측 정규화, 다음 Workflow 계산 순서로 전달한다. 다음 fact 관측에는 receipt와
-`contract_digest` 근거만 포함하고 renderer Markdown을 다시 parse하지 않는다. invalid envelope·artifact,
-producer identity·digest mismatch 또는 stale compiled manifest이면 의미 판정, 상태 변환기, evaluator와
-후속 실행을 시작하지 않고 중단한다. 의미 기준을 충족하지 못한 결과는 보류 상태로 유지하며 정규화와
-후속 실행을 호출하지 않는다.
-
-`pr-proposal`의 제목과 본문을 사용자가 확정하면 exact title/body와 확정 base/head branch, related issue를
-`preparePullRequestInput` 또는 `loadPullRequestInput`으로 immutable input에 고정한다. `pr-creation`에는
-검증에 성공한 `pull_request_input`과 그 `input_digest` identity만 전달한다. raw `pr-proposal` handoff나
-renderer Markdown에서 생성 입력을 다시 추출하지 않으며, field·type·version·digest mismatch에서 PR 생성
-실행을 시작하지 않는다. 기존 두 전용 스킬의 public artifact field와 renderer output은 유지한다.
-
-`pr-creation`은 immutable identity와 exact creation request equality를 먼저 확인한 뒤 실행 직전 remote
-base/head 존재, expected local head와 remote head OID 일치, same-head open PR 부재만 fresh live preflight로
-검증한다. stopped preflight에서는 PR 생성 구조화 실행을 호출하지 않는다. 제목 형식과 body template·연관
-이슈 의미는 `pr-proposal` 사용자 확정 전에 끝내며 live preflight에서 반복하지 않는다.
-
-Observation snapshot은 raw 관측의 평가 주기 identity일 뿐 live preflight가 아니다. GitHub live state,
-원격 branch, review thread, 권한과 local worktree의 실행 직전 재검증을 생략하지 않으며 snapshot 또는
-로그와 GitHub state가 충돌하면 GitHub를 우선한다. 의미 판단, artifact receipt, renderer 결과와 사용자
-결정은 snapshot runtime에 cache하지 않는다.
+전용 스킬은 후보, 초안 또는 분석 결과만 반환한다. 결과는
+`artifact-output-contract.md`의 요구사항을 충족한 경우에만 다음 관측 상태 묶음에 포함한다.
+보류 결과는 보류 상태로 유지한다.
 
 ## 자동 실행
 

@@ -31,7 +31,6 @@ const urls = {
   reviewRuntime: new URL("../../references/review-runtime-contract.md", import.meta.url),
   claudeReview: new URL("../../references/claude-review-executor-contract.md", import.meta.url),
   artifactOutput: new URL("../../references/artifact-output-contract.md", import.meta.url),
-  pullRequestInput: new URL("../../references/pull-request-input-contract.md", import.meta.url),
   stateObservation: new URL("../../references/state-observation-contract.md", import.meta.url),
   githubTemplates: new URL("../../references/github-templates.md", import.meta.url),
   targetRuntimeBootstrap: new URL(
@@ -51,9 +50,6 @@ const urls = {
   simpleExecutor: new URL("../../../github-simple-executor/SKILL.md", import.meta.url),
   workflowEditor: new URL("../../../workflow-code-editor/SKILL.md", import.meta.url),
   reviewComment: new URL("../../../review-comment/SKILL.md", import.meta.url),
-  prProposal: new URL("../../../pr-proposal/SKILL.md", import.meta.url),
-  prCreation: new URL("../../../pr-creation/SKILL.md", import.meta.url),
-  livePreflight: new URL("../../scripts/pull-request/live-preflight.mjs", import.meta.url),
   harnessRoot: new URL("../../../harness/", import.meta.url),
   harness: new URL("../../../harness/SKILL.md", import.meta.url),
   harnessTemplateCompatibility: new URL(
@@ -687,44 +683,4 @@ test("artifact output consumers reference existing named sections", async () => 
       assert.ok(artifactHeadings.has(`### ${sectionName}`), `${name} references missing artifact output section: ${sectionName}`);
     }
   }
-});
-
-test("immutable PR input and live preflight keep proposal and creation responsibilities separate", async () => {
-  const [
-    skill,
-    pullRequestInput,
-    artifactOutput,
-    stateObservation,
-    structured,
-    prProposal,
-    prCreation,
-    livePreflight,
-    workflowDoc,
-  ] = await Promise.all([
-    read("skill"),
-    read("pullRequestInput"),
-    read("artifactOutput"),
-    read("stateObservation"),
-    read("structured"),
-    read("prProposal"),
-    read("prCreation"),
-    read("livePreflight"),
-    read("workflowDoc"),
-  ]);
-
-  assert.match(pullRequestInput, /`input_digest`[\s\S]*SHA-256/);
-  assert.match(pullRequestInput, /^## Live preflight 소비$/m);
-  assert.match(skill, /`pr-proposal`[\s\S]*immutable input[\s\S]*`pr-creation`/);
-  assert.match(prProposal, /제목[\s\S]*본문[\s\S]*사용자[\s\S]*확정/);
-  assert.match(prProposal, /원격 branch와 기존 PR을 조회하거나[\s\S]*않는다/);
-  assert.match(prCreation, /pull-request-input-contract\.md/);
-  assert.match(prCreation, /identity[\s\S]*live preflight/);
-  assert.doesNotMatch(prCreation, /`PR 제목 판정 규칙`/);
-  assert.match(artifactOutput, /PR 생성 요청 사용 가능[\s\S]*immutable input identity[\s\S]*fresh live preflight/);
-  assert.match(stateObservation, /^## PR 생성 live preflight 관측 규칙$/m);
-  assert.match(structured, /^### PR 생성 immutable input과 live preflight$/m);
-  assert.match(livePreflight, /identity\.[^`\n]*\.mismatch/);
-  assert.match(livePreflight, /remote_head_oid\.stale/);
-  assert.match(livePreflight, /same_head_pull_request\.conflict/);
-  assert.match(workflowDoc, /^### Immutable PR input과 live preflight$/m);
 });

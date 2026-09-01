@@ -11,9 +11,6 @@ description: Workflow Engine 구현 흐름에서 기준 이슈, 변경 요약, �
 
 - `../github-agentic-loop/references/github-templates.md`
 - `../github-agentic-loop/references/artifact-output-contract.md`에서 `PR 제목 판정 규칙`과 ``PR 제안(`pr-proposal`) 출력 판정 규칙`` 섹션만 읽는다.
-- `../github-agentic-loop/references/artifact-handoff-contract.md`
-- `../github-agentic-loop/artifact-manifests/pr-proposal.json`
-- 사용자 확정 뒤 책임 경계를 확인할 때 `../github-agentic-loop/references/pull-request-input-contract.md`
 
 ## 입력
 
@@ -34,21 +31,17 @@ description: Workflow Engine 구현 흐름에서 기준 이슈, 변경 요약, �
 5. Workflow Engine 관리 이슈는 `연관 이슈` 섹션에 `Refs #번호` 형식으로 연결한다.
 6. PR 제목 후보는 `artifact-output-contract.md`의 PR 제목 판정 규칙을 적용해 제안한다.
 7. 실제 PR 생성은 Workflow Engine이 확정한 구조화 실행 요청을 선택된 실행 주체가 수행한다.
-8. 원격 branch 존재·OID freshness·same-head 기존 PR은 판단하지 않고 `pr-creation`의 live preflight에 남긴다.
 
 ## 출력
 
-- 공통 handoff 계약의 닫힌 envelope만 반환한다.
-- `artifact_type: pr-proposal`을 사용하고 `artifact`는 `pr-proposal.json` manifest에 맞춰 구성한다.
-- 제목과 본문은 사용자 검토용 초안이며 PR 생성 입력이나 현재 PR 상태의 확정값이 아니다. Markdown 표시는 runtime renderer가 담당한다.
-- 사용자 확정 뒤 Workflow Engine이 exact title/body와 base/head/related issue를 immutable input으로 준비하며, 이 스킬은 digest나 live observation을 만들지 않는다.
+- 기존 `필수 출력 섹션`의 제목 후보, 본문 초안, `보류 질문`만 반환한다.
+- 제목과 본문은 사용자 검토용 초안이며 PR 생성 입력이나 현재 PR 상태의 확정값이 아니다.
 
 ## 하지 않는 일
 
 - PR 제목·본문, 사용자 결정, PR 생성 여부, 현재 Workflow 상태를 확정하지 않는다.
 - PR을 생성·갱신하거나 파일·브랜치·이슈·댓글 등 GitHub와 작업트리 상태를 변경하지 않는다.
 - 기준 이슈, 구현 단위, 작업 브랜치, 전달된 변경 요약과 검증 결과의 범위를 넘어 PR 내용을 추가하지 않는다.
-- 원격 branch와 기존 PR을 조회하거나 실행 시점 preflight 결과를 예측하지 않는다.
 
 ## 사용자 결정
 
@@ -64,6 +57,10 @@ description: Workflow Engine 구현 흐름에서 기준 이슈, 변경 요약, �
 - 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 `pr-creation`에 전달할 확정 입력 또는 중단을 결정한다.
 
-## Structured artifact handoff
+## 필수 출력 섹션
 
-의미 내용은 위 PR 템플릿·제목 판단 기준에 따라 작성하고, 기계 구조는 `pr-proposal.json`만 따른다. envelope 밖의 설명이나 직접 조립한 Markdown을 반환하지 않는다.
+PR 초안은 다음 섹션을 순서대로 빠짐없이 채운다. 제목 또는 본문 계약을 충족하지 못하면 PR 초안을 확정하지 말고 `보류 질문`에 확인할 내용을 기록한다.
+
+- `제목 후보`
+- `본문 초안`
+- `보류 질문`

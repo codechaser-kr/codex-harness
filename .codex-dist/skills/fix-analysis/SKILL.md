@@ -10,8 +10,6 @@ description: 기능결함 이슈의 현상과 확인 위치를 기준으로 근�
 ## 먼저 읽을 문서
 
 - `../github-agentic-loop/references/artifact-output-contract.md`에서 ``결함 원인 분석(`fix-analysis`) 출력 판정 규칙`` 섹션만 읽는다.
-- `../github-agentic-loop/references/artifact-handoff-contract.md`
-- `../github-agentic-loop/artifact-manifests/fix-analysis.json`
 - `../github-agentic-loop/references/github-templates.md`
 
 ## 입력
@@ -44,9 +42,8 @@ description: 기능결함 이슈의 현상과 확인 위치를 기준으로 근�
 
 ## 출력
 
-- 공통 handoff 계약의 닫힌 envelope만 반환한다.
-- `artifact_type: fix-analysis`를 사용하고 `artifact`는 `fix-analysis.json` manifest에 맞춰 구성한다.
-- 추천 원인과 해결 방향은 사용자 검토용 분석이며 기능결함 이슈에 반영할 확정 원인이나 수정 지시가 아니다. Markdown 표시는 runtime renderer가 담당한다.
+- 기존 `필수 출력 섹션`의 관찰 결과, 원인 후보, 추천 원인, 잠정 해결 방향, `보류 질문`만 반환한다.
+- 추천 원인과 해결 방향은 사용자 검토용 분석이며 기능결함 이슈에 반영할 확정 원인이나 수정 지시가 아니다.
 
 ## 하지 않는 일
 
@@ -68,6 +65,20 @@ description: 기능결함 이슈의 현상과 확인 위치를 기준으로 근�
 - 제어와 기존 출력 구조를 `github-agentic-loop`에 반환한다.
 - Workflow Engine이 산출물 판정과 사용자 결정을 거쳐 원인 조사 결과 확정 또는 `fix-plan` 호출 여부를 결정한다.
 
-## Structured artifact handoff
+## 필수 출력 섹션
 
-의미 내용은 위 조사 기준과 확인 수준에 따라 작성하고, 기계 구조는 `fix-analysis.json`만 따른다. envelope 밖의 설명이나 직접 조립한 Markdown을 반환하지 않는다.
+원인 조사 결과는 다음 섹션과 항목을 순서대로 빠짐없이 채운다. 필수 내용을 채울 수 없으면 `보류 질문`에 확인할 내용을 기록한다.
+
+- `기준 이슈`
+- `문제 요약`
+- `재현 또는 확인 결과`
+- `원인 후보`
+  - `후보 ID`
+  - `원인`
+  - `근거`
+  - `확인 수준`: `확인됨`, `유력`, `가설` 중 하나
+  - `영향 범위`
+  - `반증 조건`
+- `추천 원인`: `원인 후보`의 `후보 ID` 또는 빈 값
+- `잠정 해결 방향`
+- `보류 질문`

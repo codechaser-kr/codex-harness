@@ -1,5 +1,5 @@
 import { matchesExpressionState } from "./expression.mjs";
-import { prepareWorkflowDefinition } from "./runtime-definition.mjs";
+import { validateWorkflowDefinition } from "./validator.mjs";
 
 function escapePointerSegment(segment) {
   return String(segment).replaceAll("~", "~0").replaceAll("/", "~1");
@@ -19,7 +19,7 @@ function factValueType(value) {
   return Number.isInteger(value) ? "integer" : undefined;
 }
 
-function validateNormalizedFactState(factMetadata, state) {
+function validateNormalizedFactState(definition, state) {
   const errors = [];
   if (!isPlainObject(state)) {
     return [{
@@ -29,9 +29,11 @@ function validateNormalizedFactState(factMetadata, state) {
     }];
   }
 
+  const facts = new Map(Object.entries(definition.facts));
   for (const [factId, value] of Object.entries(state)) {
     const path = `/${escapePointerSegment(factId)}`;
-    if (!Object.hasOwn(factMetadata.by_id, factId)) {
+    const fact = facts.get(factId);
+    if (!fact) {
       errors.push({
         code: "state.fact.unknown",
         path,
@@ -39,8 +41,7 @@ function validateNormalizedFactState(factMetadata, state) {
       });
       continue;
     }
-    const fact = factMetadata.by_id[factId];
-    const valueType = fact.value_type;
+    const valueType = factValueType(fact[0]);
     if (factValueType(value) !== valueType) {
       errors.push({
         code: "state.value.type_mismatch",
@@ -49,7 +50,7 @@ function validateNormalizedFactState(factMetadata, state) {
       });
       continue;
     }
-    if (!fact.allowed_values.some((allowedValue) => allowedValue === value)) {
+    if (!fact.some((allowedValue) => allowedValue === value)) {
       errors.push({
         code: "state.value.not_allowed",
         path,
@@ -75,29 +76,23 @@ function stopped(reason, taskActionId, errors) {
 /**
  * Evaluates one workflow definition against an immutable normalized fact state.
  */
-export function evaluateWorkflowDefinition(
-  definition,
-  normalizedFactState,
-  { currentTaskActionId, compiledDefinition } = {},
-) {
-  const prepared = prepareWorkflowDefinition(definition, { compiledDefinition });
-  if (prepared.status === "stopped") {
-    return stopped(prepared.reason, null, prepared.errors);
+export function evaluateWorkflowDefinition(definition, normalizedFactState, { currentTaskActionId } = {}) {
+  const validation = validateWorkflowDefinition(definition);
+  if (!validation.valid) {
+    return stopped("invalid_definition", null, validation.errors);
   }
 
-  const compiled = prepared.compiled_definition;
-  const source = compiled.source_definition;
-  const stateErrors = validateNormalizedFactState(compiled.fact_metadata, normalizedFactState);
+  const stateErrors = validateNormalizedFactState(definition, normalizedFactState);
   if (stateErrors.length > 0) {
     return stopped("invalid_state", null, stateErrors);
   }
 
-  const transitions = compiled.transition_lookup.by_task_action_id;
-  let taskActionId = currentTaskActionId ?? source.entry_task_action_id;
+  const transitions = new Map(definition.transitions.map((transition) => [transition.task_action_id, transition]));
+  let taskActionId = currentTaskActionId ?? definition.entry_task_action_id;
   const visited = new Set();
 
   while (true) {
-    if (!Object.hasOwn(transitions, taskActionId)) {
+    if (!transitions.has(taskActionId)) {
       return stopped("current_task_action_not_found", taskActionId);
     }
     if (visited.has(taskActionId)) {
@@ -105,7 +100,7 @@ export function evaluateWorkflowDefinition(
     }
     visited.add(taskActionId);
 
-    const transition = transitions[taskActionId];
+    const transition = transitions.get(taskActionId);
     if (!matchesExpressionState(transition.normalized_fact_conditions, normalizedFactState)) {
       return stopped("current_task_action_condition_not_met", taskActionId);
     }

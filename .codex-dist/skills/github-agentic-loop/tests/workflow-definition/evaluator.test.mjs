@@ -178,7 +178,6 @@ test("CLI returns JSON-serializable results and specified exit codes", async (t)
   const definitionPath = `${directory}/definition.json`;
   const statePath = `${directory}/state.json`;
   const cyclePath = `${directory}/cycle.json`;
-  const compiledPath = `${directory}/compiled.json`;
   const leadingDefinitionPath = `${directory}/--definition.json`;
   const leadingStatePath = `${directory}/--state.json`;
   await writeFile(definitionPath, JSON.stringify(fixture.definitions.terminal_completed));
@@ -191,24 +190,9 @@ test("CLI returns JSON-serializable results and specified exit codes", async (t)
   assert.equal(validate.exitCode, 0);
   assert.deepEqual(JSON.parse(JSON.stringify(validate.result)), { status: "valid", errors: [] });
 
-  const compile = await runWorkflowDefinitionCli(["compile", "--definition", definitionPath]);
-  assert.equal(compile.exitCode, 0);
-  assert.equal(compile.result.status, "compiled");
-  await writeFile(compiledPath, JSON.stringify(compile.result.compiled_definition));
-
   const evaluate = await runWorkflowDefinitionCli(["evaluate", "--definition", definitionPath, "--state", statePath]);
   assert.equal(evaluate.exitCode, 0);
   assert.equal(JSON.parse(JSON.stringify(evaluate.result)).status, "completed");
-  const compiledEvaluate = await runWorkflowDefinitionCli([
-    "evaluate",
-    "--definition",
-    definitionPath,
-    "--compiled-definition",
-    compiledPath,
-    "--state",
-    statePath,
-  ]);
-  assert.deepEqual(compiledEvaluate, evaluate);
 
   await writeFile(statePath, JSON.stringify(fixture.states.cycle));
   const stopped = await runWorkflowDefinitionCli(["evaluate", "--definition", cyclePath, "--state", statePath]);
@@ -221,9 +205,7 @@ test("CLI returns JSON-serializable results and specified exit codes", async (t)
 
   const emptyValueArguments = [
     ["validate", "--definition", ""],
-    ["compile", "--definition", ""],
     ["evaluate", "--definition", definitionPath, "--state", ""],
-    ["evaluate", "--definition", definitionPath, "--compiled-definition", "", "--state", statePath],
     ["evaluate", "--definition", definitionPath, "--state", statePath, "--current-task-action-id", ""],
   ];
   for (const argumentsList of emptyValueArguments) {
@@ -253,11 +235,6 @@ test("CLI returns JSON-serializable results and specified exit codes", async (t)
     assert.equal(validateProcess.status, 0);
     assert.deepEqual(parseSingleJsonLine(validateProcess), { status: "valid", errors: [] });
 
-    const compileProcess = runCliProcess(["compile", "--definition", definitionPath]);
-    assert.equal(compileProcess.error, undefined, compileProcess.error?.message);
-    assert.equal(compileProcess.status, 0);
-    assert.equal(parseSingleJsonLine(compileProcess).status, "compiled");
-
     const leadingValidateProcess = runCliProcess(
       ["validate", "--definition", "--definition.json"],
       directory,
@@ -271,22 +248,6 @@ test("CLI returns JSON-serializable results and specified exit codes", async (t)
     assert.equal(evaluateProcess.error, undefined, evaluateProcess.error?.message);
     assert.equal(evaluateProcess.status, 0);
     assert.deepEqual(parseSingleJsonLine(evaluateProcess), { status: "completed", task_action_id: "FI-1" });
-
-    const compiledEvaluateProcess = runCliProcess([
-      "evaluate",
-      "--definition",
-      definitionPath,
-      "--compiled-definition",
-      compiledPath,
-      "--state",
-      statePath,
-    ]);
-    assert.equal(compiledEvaluateProcess.error, undefined, compiledEvaluateProcess.error?.message);
-    assert.equal(compiledEvaluateProcess.status, 0);
-    assert.deepEqual(parseSingleJsonLine(compiledEvaluateProcess), {
-      status: "completed",
-      task_action_id: "FI-1",
-    });
 
     const leadingEvaluateProcess = runCliProcess(
       ["evaluate", "--definition", "--definition.json", "--state", "--state.json"],

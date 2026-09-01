@@ -78,25 +78,6 @@ Workflow Engine이 전이를 평가할 때는 관찰된 사실과 의미 해석 
 
 선언형 전이 설계에서 정규화는 결정론적 사실을 표준 필드로 바꾸고, 필요한 의미 사실을 근거에 연결된 구조화 결과로 바꾸는 단계다. 전이 조건은 정규화된 사실만 읽으며, 자연어 설명이나 LLM의 자유 형식 판단을 직접 읽지 않는다.
 
-### Evaluation-cycle observation snapshot
-
-Workflow Engine은 한 평가 주기에서 같은 GitHub Issue·PR과 local repository 원본을 state adapter와 thin
-skill이 각각 다시 조회하지 않도록 content-addressed observation snapshot을 준비한다. Snapshot identity는
-repository, 조회 시점, source type·identifier, GitHub `updatedAt`·body digest·PR base/head SHA와 local
-HEAD·worktree digest를 포함하며 `input_snapshot_digest`로 식별한다.
-
-`snapshot-runtime.mjs`는 현재 `request_id` 안에서 exact source identity와 digest가 같은 immutable raw
-source만 공유한다. 같은 cycle의 state adapter와 thin skill은 `observation_snapshot_consumer_input`을 받아
-같은 source object를 사용한다. 새 재개 request, GitHub body·head 변화, local HEAD·worktree 변화는 이전
-runtime을 무효화하고 새 snapshot을 준비한다. 닫힌 runtime이나 embedded digest가 손상되면 이전 source를
-부분 사용하거나 재계산으로 보정하지 않고 fail-closed 중단한다.
-
-Snapshot은 특정 시점의 raw 관측 baseline이지 Workflow 실행 결과 cache가 아니다. 의미 판단, artifact
-handoff·receipt, renderer 결과, 사용자 결정과 다음 작업은 저장하거나 재사용하지 않는다. PR 생성,
-review thread 게시, merge, 권한과 remote branch처럼 실행 계약이 요구한 live preflight 또는 실행 직전
-재검증은 snapshot hit와 관계없이 새로 수행한다. GitHub live state가 snapshot·로그·repository profile과
-충돌하면 GitHub 실행 상태를 우선한다.
-
 ### 워크플로우 정의 계약
 
 워크플로우 정의는 이슈 유형별 흐름과 전이를 선언하는 구조화 계약이다. 루트는 정확히 다음 필드를 가진다.
@@ -135,28 +116,6 @@ review thread 게시, merge, 권한과 remote branch처럼 실행 계약이 요�
 명시적으로 선언한 리뷰 및 커밋 반복 흐름은 순환 자체만으로 무효로 보지 않는다. `completion_predicate`와 도달 가능한 종료 전이가 있으면 유효할 수 있으며, 검증기와 평가기가 종료 가능성과 사후조건을 검증해야 한다.
 
 정의, 정규화 결과 또는 평가 결과가 유효하지 않거나 모호하면 Workflow Engine은 사용자 결정 또는 `중단`을 산출한다. LLM이 전이를 임의로 고르거나 다수결로 보정하지 않는다.
-
-### Artifact manifest와 renderer
-
-thin 스킬의 structured artifact는 `artifact-manifests/*.json`을 기계 구조의 단일 원천으로 사용한다. manifest는 artifact type별 닫힌 필드 구조, 필수 여부, enum, ID·참조·구현 순서 rule, renderer section 순서를 선언하고 compiler가 source·contract·compiled digest와 immutable lookup을 준비한다. artifact validator는 같은 입력에 안정적인 error code와 JSON Pointer path를 반환하며 구조 오류가 있으면 의미 판정과 후속 실행을 fail closed한다.
-
-`artifact-output-contract.md`는 manifest 구조를 다시 실행하지 않고 사용자 설명과 정책 후보의 타당성, 원인 확인 수준, 계획 범위 적합성, PR template 같은 의미 판정을 소유한다. manifest가 가진 contract section·producer skill·render label과 Markdown·thin skill의 대응은 drift test로 검증한다. renderer는 구조 검증이 성공한 artifact만 manifest 순서대로 Markdown에 표시하며 값을 생성·수정하거나 의미를 판단하지 않는다.
-
-thin skill은 `artifact_type`과 manifest field object만 가진 닫힌 handoff를 생산한다. Workflow Engine의 artifact consumer는 호출한 producer identity와 active compiled manifest의 `contract_digest`를 expected 값으로 고정하고, runtime gate가 승인한 immutable receipt만 의미 판정과 상태 관측에 전달한다. 다음 fact 근거는 receipt와 digest에 연결하며 renderer Markdown을 parse하지 않는다. 구조 오류, stale contract 또는 digest mismatch에서는 의미 판정·상태 정규화·후속 Workflow 계산을 호출하지 않는 fail-closed 경계를 사용한다.
-
-### Immutable PR input과 live preflight
-
-`pr-proposal`이 제목 형식, 본문 template와 연관 이슈 의미를 만족하는 초안을 만들고 사용자가 확정하면,
-Workflow Engine은 exact title/body와 base/head/related issue를 닫힌 immutable PR input으로 준비한다. 입력은
-type/version과 결정론적 SHA-256 `input_digest`를 가지며 deep-freeze된다. raw artifact나 renderer Markdown을
-다시 parse해 PR 생성값을 만들지 않고, serialized input의 shape·digest·현재 확정 원본 mismatch를
-fail closed한다.
-
-`pr-creation`은 immutable input identity와 생성 요청의 digest/title/body/base/head exact equality를 확인한
-뒤, 실행 직전 remote base/head 존재, expected local head와 remote head OID 일치, same-head open PR 부재만
-fresh live preflight로 검증한다. 제목과 본문 의미는 이 단계에서 재판정하지 않는다. 기존 `pr-proposal`과
-`pr-creation` artifact public field와 renderer output은 유지하며, identity 또는 live observation mismatch면
-PR 생성 실행을 시작하지 않는다.
 
 ### 이슈 유형
 
@@ -275,10 +234,8 @@ Workflow Engine이 사용자 결정을 요청할 때는 결정 대상과 선택 
 5. `구조화 실행`은 확정된 작업/동작 ID, 실행 범위, 직접 실행 대상 참조, 전제조건과 예상 사후조건을 담은 요청만 선택된 실행 주체에 전달한다.
 6. `사후조건 검증`은 실행 주체의 반환 결과와 다시 관찰한 상태가 완료 조건을 만족하는지 확인한 뒤 다음 전이를 평가한다.
 
-현재 런타임은 다섯 Workflow Definition을 준비 단계에서 한 번 검증·compile하고 같은 immutable compiled
-representation을 각 state adapter와 evaluator에 전달한다. Adapter는 compiled fact metadata를,
-evaluator는 compiled transition lookup을 사용하며 candidate·evidence·normalized state·현재 작업 입력은
-매 실행 검증한다. `github-agentic-loop`는 기준 대상을 관찰하고 정규화·평가·
+현재 런타임은 다섯 Workflow Definition과 각 state adapter를 사용하고, validator와 evaluator가 전이
+매칭과 평가를 결정론적으로 수행한다. `github-agentic-loop`는 기준 대상을 관찰하고 정규화·평가·
 실행·사후조건 검증을 연결하는 얇은 오케스트레이터이며 전이를 자연어로 선택하지 않는다.
 
 ### 명시적 검증 모드
@@ -314,9 +271,7 @@ evaluator는 compiled transition lookup을 사용하며 candidate·evidence·nor
 | 기능결함 | `definitions/feature-fix.json` | `feature-fix-state-adapter.mjs` |
 | 구현흐름 | `definitions/implementation.json` | `implementation-state-adapter.mjs` |
 
-모든 조합은 한 번 준비한 compiled representation을 공유하는 adapter 정규화와
-`evaluateWorkflowDefinition`의 단일 경로를 사용한다. Raw Definition을 직접 받는 API와 CLI는 호환성을
-유지하며 내부 준비 경로를 사용한다. 새 fact, 파싱,
+모든 조합은 adapter 정규화와 `evaluateWorkflowDefinition`의 단일 경로를 사용한다. 새 fact, 파싱,
 정규화 또는 실행 동작이 필요하면 Definition만 바꾸지 않고 대응 adapter·계약·시험 사례를 함께
 변경한다. 자연어 전이 경로나 전이 결과 비교 경로는 두지 않는다.
 

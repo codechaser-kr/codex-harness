@@ -23,7 +23,6 @@ const WORKFLOW_PREFIXES = {
 };
 const TASK_ACTION_ID = /^(FP|PR|FC|FF|FI)-[1-9][0-9]*$/;
 export const DEFAULT_MAX_CONDITION_STATES = 10_000;
-export const WORKFLOW_DEFINITION_VALIDATOR_VERSION = "1";
 
 function pointer(path, segment) {
   return `${path}/${String(segment).replaceAll("~", "~0").replaceAll("/", "~1")}`;

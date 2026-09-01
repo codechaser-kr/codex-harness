@@ -1,4 +1,4 @@
-import { prepareWorkflowDefinition } from "./runtime-definition.mjs";
+import { validateWorkflowDefinition } from "./validator.mjs";
 
 const CANDIDATE_FIELDS = ["fact_id", "value", "evidence"];
 const EVIDENCE_FIELDS = ["source_kind", "source_reference", "field_reference"];
@@ -56,15 +56,16 @@ function factValueType(value) {
   return Number.isInteger(value) ? "integer" : undefined;
 }
 
-function factsFromCompiledDefinition(compiledDefinition) {
-  return compiledDefinition.fact_metadata.order.map((factId) => {
-    const metadata = compiledDefinition.fact_metadata.by_id[factId];
-    return {
+function validateDefinition(definition) {
+  const validation = validateWorkflowDefinition(definition);
+  const facts = validation.valid
+    ? Object.entries(definition.facts).map(([factId, allowedValues]) => ({
       factId,
-      allowedValues: metadata.allowed_values,
-      valueType: metadata.value_type,
-    };
-  });
+      allowedValues,
+      valueType: factValueType(allowedValues[0]),
+    }))
+    : [];
+  return { errors: validation.errors, facts };
 }
 
 function validateEvidence(value, path, errors) {
@@ -161,18 +162,20 @@ function stopped(reason, workflowId, errors) {
 /**
  * Normalizes already collected fact candidates without external IO or mutation.
  */
-export function normalizePreparedFactCandidates(prepared, candidates) {
-  const compiled = prepared.compiled_definition;
-  const definition = compiled.source_definition;
-  const facts = factsFromCompiledDefinition(compiled);
-  const candidateValidation = validateCandidates(candidates, facts);
+export function normalizeFactCandidates(definition, candidates) {
+  const definitionValidation = validateDefinition(definition);
+  if (definitionValidation.errors.length > 0) {
+    return stopped("invalid_definition", definition?.workflow_id, definitionValidation.errors);
+  }
+
+  const candidateValidation = validateCandidates(candidates, definitionValidation.facts);
   if (candidateValidation.errors.length > 0) {
     return stopped("invalid_fact_candidates", definition.workflow_id, candidateValidation.errors);
   }
 
   const normalizedFactState = {};
   const evidenceByFact = {};
-  for (const fact of facts) {
+  for (const fact of definitionValidation.facts) {
     const candidate = candidateValidation.candidatesByFact.get(fact.factId);
     if (!candidate) {
       continue;
@@ -192,19 +195,4 @@ export function normalizePreparedFactCandidates(prepared, candidates) {
     evidence_by_fact: evidenceByFact,
     errors: [],
   };
-}
-
-/**
- * Prepares a raw or compiled Definition, then normalizes already collected fact candidates.
- */
-export function normalizeFactCandidates(definition, candidates) {
-  const prepared = prepareWorkflowDefinition(definition);
-  if (prepared.status === "stopped") {
-    return stopped(
-      prepared.reason,
-      definition?.workflow_id ?? definition?.source_definition?.workflow_id,
-      prepared.errors,
-    );
-  }
-  return normalizePreparedFactCandidates(prepared, candidates);
 }

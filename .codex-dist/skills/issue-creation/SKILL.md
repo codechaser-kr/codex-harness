@@ -12,7 +12,7 @@ description: 기능제안, 정책검토, 기능변경, 기능결함 GitHub 이�
 - `../github-agentic-loop/references/github-templates.md`
 - `../github-agentic-loop/references/artifact-output-contract.md`에서 ``이슈 생성(`issue-creation`) 출력 판정 규칙`` 섹션만 읽는다.
 
-대상 저장소에 `.github/ISSUE_TEMPLATE/*.md`가 있으면 해당 파일을 실제 본문 형식의 단일 원천으로 먼저 읽는다. `github-templates.md`는 본문 복제본이 아니라 title prefix, label, 필수 섹션, 연결 규칙을 검증하는 계약 문서로 사용한다.
+대상 저장소에 `.github/ISSUE_TEMPLATE/*.md`가 있으면 해당 파일을 실제 본문 형식의 단일 원천으로 먼저 읽는다. `github-templates.md`는 본문 복제본이 아니라 label, 필수 섹션, 연결 규칙을 검증하는 계약 문서로 사용한다. 제목은 작업 내용을 설명하도록 제안하며, 제목 prefix를 읽거나 추가·제거·보존·검증하지 않는다.
 
 ## 입력
 
@@ -25,8 +25,8 @@ description: 기능제안, 정책검토, 기능변경, 기능결함 GitHub 이�
 
 1. 요청을 `기능제안`, `정책검토`, `기능변경`, `기능결함` 중 하나로 분류한다.
 2. 대상 저장소의 실제 `.github` 이슈 템플릿 형식에 맞춰 본문 초안을 작성한다.
-3. 제목 prefix, 이슈 유형별 라벨, 필수 섹션, 완료 기준, 연관 이슈를 `github-templates.md` 계약으로 검증한다.
-4. 원본 이슈가 있으면 원본 이슈 본문을 후속 이슈 초안 작성 근거로 사용하고, 새 이슈의 `연관 이슈`에 원본 번호를 기록한다.
+3. 이슈 유형별 라벨, 필수 섹션, 완료 기준, 연관 이슈를 `github-templates.md` 계약으로 검증한다.
+4. 원본 이슈가 있으면 원본 이슈 본문을 후속 이슈 초안 작성 근거로 사용하고, 새 이슈 본문의 `연관 이슈`에는 사람이 읽을 설명으로 원본 번호를 적는다. 대상 식별과 Workflow 전환은 GitHub related-issue 관계를 사용하며, 실제 관계 기록은 Workflow Engine이 맡는다.
 5. 정책검토 이슈는 정책 확정, 설계 문서 반영, 기능변경 전환 후속 작업을 기본 체크리스트로 작성한다.
 6. 계약을 충족하지 못하면 생성 전 위험과 보류 질문을 정리한다.
 7. 실제 GitHub 이슈 생성은 Workflow Engine이 확정한 구조화 실행 요청을 선택된 실행 주체가 수행한다.

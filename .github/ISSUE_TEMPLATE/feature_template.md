@@ -1,7 +1,6 @@
 ---
 name: 기능 변경
 about: 기능 추가 또는 기존 기능 수정을 추적할 때 사용해 주세요.
-title: "[기능변경] "
 labels: 기능변경
 assignees: ""
 ---

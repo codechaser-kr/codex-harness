@@ -7,6 +7,7 @@
 - 실행 범위는 `evaluateWorkflowDefinition`이 반환한 `task_action_id`, `executor_reference`, `completion_predicate`, 확정된 사용자 결정, 기준 snapshot, 연결 이슈와 확정 계획에 기록된 허용 범위로 산출한다.
 - 실행 범위에는 변경할 수 있는 GitHub 상태, 파일 또는 디렉터리, 댓글 또는 review thread, 브랜치, 커밋, PR 생성 여부를 포함한다.
 - 사용자 결정 필요 여부는 현재 task의 `user_decision_options`가 비어 있는지로 판정한다. 값이 있으면 사용자 결정을 기다리고, 빈 배열이면 사용자 결정 없이 실행을 계속한다.
+- 기능변경·기능결함 계획은 구현 단위와 `실행 그룹`, `실행 그룹 순서`를 포함하고 사용자가 계획을 승인할 때 확정한다. 같은 그룹의 단위는 병렬로 시작하고, 다음 그룹은 현재 그룹의 모든 단위가 완료된 뒤 시작한다. 전부 순차 실행하는 계획은 단위마다 그룹 하나를 둔다. 오케스트레이션은 승인된 단위, 선행 조건, 그룹 순서를 실행하며 임의 분할·병합·재배치를 하지 않는다. 계획 승인은 포함된 구현을 시작할 권한도 제공하므로 각 구현 시작 때 별도 확인을 요구하지 않는다. 오케스트레이션은 구현 요청을 정확한 부모 Workflow, 원본 이슈, 승인된 구현 단위에 묶는다. 각 구현 흐름이 원본 이슈에 결과를 반영하고 완료되면 오케스트레이션은 그 부모 Workflow를 Definition 시작점부터 다시 평가하고, 부모 task가 자체 완료 predicate를 판단한다. 이 부모-자식 실행 연결을 실제로 만드는 host producer는 별도로 확인되어야 한다.
 
 ### Claude 리뷰 실행 요청 고정값
 
@@ -37,11 +38,10 @@ Workflow Engine은 해당 표의 `task_action_id`, 논리 실행 모드와 실�
 
 재개 규칙:
 
-- 재개할 때는 GitHub 실행 상태와 현재 코드 상태를 다시 관측하고, 선택된 Workflow Definition의 state adapter로 fact와 근거를 정규화한 뒤, 재개 전과 같은 `currentTaskActionId`로 `evaluateWorkflowDefinition`을 다시 평가한다.
+- 중단 후 재개할 때는 GitHub 실행 상태와 현재 코드 상태를 다시 관측하고, 선택된 Workflow Definition의 state adapter로 fact와 근거를 정규화한 뒤, `entry_task_action_id`부터 `evaluateWorkflowDefinition`을 다시 평가한다. 중단 전 `task_action_id`와 로그는 진행 이력용 보조 근거이며 현재 task를 고르는 기준으로 쓰지 않는다.
 - 실행 로그는 GitHub 실행 상태 밖의 중간 실행 상태를 확인할 때 보조 근거로 사용한다.
 - 실행 로그와 GitHub 실행 상태가 충돌하면 GitHub 실행 상태를 우선한다.
 - 재개 요청에 사용자 입력이 있으면 `user-decision-contract.md`의 사용자 입력 판정 규칙을 적용한다.
-- 종료된 이슈에 체크된 후속 흐름 전환이 있지만 대응하는 후속 대상이 확인되지 않으면 해당 종료 이슈를 전환 출발점으로 사용한다.
 
 ## 종료 후 이슈 유형 전환 순서
 
@@ -52,16 +52,45 @@ Workflow Engine은 해당 표의 `task_action_id`, 논리 실행 모드와 실�
 - 기능제안 → 기능변경
 - 정책검토 → 기능변경
 
-세 경로의 실행 순서는 항상 `reflect → close → transition`이다. Workflow Engine은 먼저 원본 이슈에
+세 경로의 기본 실행 순서는 `reflect → close → transition`이다. Workflow Engine은 먼저 원본 이슈에
 확정된 방향과 범위를 반영하고, 원본 이슈가 종료됐다는 GitHub fact를 관측한 뒤에만 후속 이슈를
-생성하거나 갱신한다. 후속 전환 완료 fact가 먼저 관측됐더라도 원본 이슈가 열려 있으면
-`transition` 작업을 시작하거나 완료된 것으로 판정하지 않는다.
+생성하거나 갱신한다. 정책검토에서 기존 기능변경 이슈를 갱신하는 경로는 정확한 대상을 보존해야 하므로
+`reflect → 대상 관계 기록 → close → transition` 순서다. 후속 전환 완료 fact가 먼저 관측됐더라도 원본 이슈가
+열려 있으면 `transition` 작업을 시작하거나 완료된 것으로 판정하지 않는다.
 
-후속 `transition` 작업의 `normalized_fact_conditions`가 앞선 반영·종료 fact를 반복하는 것은
-`currentTaskActionId`로 해당 작업에 직접 재개할 때 close-first 선행조건을 다시 검증하기 위한
-의도적인 방어 조건이다. 순차 평가에서 이미 확인했다는 이유로 이 조건을 제거하지 않는다.
-후속 이슈 번호를 닫힌 원본 이슈에 사후 기록하는 작업은 `transition` 결과 반영이며 원본 이슈
-종료의 선행조건이 아니다.
+기능제안에서 정책검토 또는 기능변경으로 가는 1:1 경로와 정책검토에서 새 기능변경 Workflow로 가는 경로는
+원본 Workflow가 방향 반영 및 원본 이슈 종료를 확인해 `completed`를 반환한 뒤 orchestration이 후속 Workflow를
+시작한다. 새 이슈 생성은 후속 Workflow가 맡는다. 정책검토에서 기존 기능변경 이슈를 갱신하는 경로는 원본 종료 후
+선택 대상 이슈를 갱신하고 정책검토 Workflow를 완료한다. 그 대상은 원본 정책검토 이슈의 GitHub related-issue 관계에서
+읽으며, 기존 기능변경 Workflow를 자동 재개하지 않는다.
+
+기존 대상 경로의 `PR-9` 관계 기록 요청은 `target_ids_or_files`에 사용자가 선택한 정확한 기능변경 이슈 ID를 넣는다.
+관계가 아직 없는 최초 실행에서는 이 선택 ID를 기준으로 GitHub related-issue 관계를 기록한다. 대상이 열린 기능변경 이슈인지,
+원본에 상충·복수 관계가 없는지 확인해 실행한다. 이미 다른 대상·복수 대상·종료된 대상·유형 불일치가 있으면 추가 관계를
+기록하지 않고 중단한다. 사후조건은 원본과 정확히 하나의 선택된 열린 기능변경 이슈 사이에 관계가 존재하는 것이다.
+
+기존 대상 갱신을 위한 `PR-11` 구조화 실행 요청의 `target_ids_or_files`에는 사용자가 선택하고 원본 정책검토 이슈와 연결된
+정확한 기능변경 이슈 ID를 넣는다. 이 ID를 관계 관측에서 확인하지 못하거나 대상이 여러 개·종료 상태·유형 불일치이면
+요청을 만들거나 실행하지 않고 중단한다. 선택 기록이 이미 존재해야 하는 재개에서는 사용자의 재선택을 대신 요구하지 않고
+관계의 기록·조회 원인을 바로잡는다.
+
+기존 기능변경 대상을 선택한 경로의 `PR-9`는 `target_ids_or_files`의 Issue ID로 GitHub related-issue 관계를 기록하고,
+`feature_change_transition_target_related=true`가 관측될 때만 완료한다. 이 작업은 원본 정책검토 이슈 종료 작업인 `PR-10`보다
+먼저 수행한다. `PR-10`은 이 관계 fact를 선행조건으로 요구하고, `PR-11`은 같은 관계에서 확인한 ID를 사용해 기존 이슈를
+갱신한다. 관계 fact는 선택한 대상과 실제 관계의 일치, 대상의 열린 상태와 기능변경 유형을 확인한 관측 결과이지, 대상 ID
+자체를 담는 별도 ID fact는 아니다. 사용자가 선택한 ID와 관계 관측·실행 요청을 연결하는 실제 host producer는 별도로 확인되어야 한다.
+
+최초 `PR-7` 선택은 정확한 Issue ID를 함께 받아 `feature_change_transition_target_issue_selected=true` (`user_input`)로
+기록해야 완료된다. Fact에는 ID 값이 없으므로 `PR-9` 실행 요청의 대상은 같은 사용자 입력에서 받은 Issue ID여야 한다. 선택 fact가
+true여도 요청 대상이 없거나 다르면 `PR-9`를 실행하지 않는다. 재개에서는 이미 기록된 `feature_change_transition_target_related=true`
+관계가 선택 identity를 보존하므로 원래 user-input fact를 다시 요구하지 않는다. 관계 기록 전 재개라면 같은 요청의 원래 사용자
+입력 또는 구조화 실행 요청에서 Issue ID를 복원해야 하며, 그 근거가 없으면 사용자에게 재선택을 요구하지 않고 중단한다.
+
+후속 `transition` 작업의 `normalized_fact_conditions`가 앞선 반영·종료 fact를 반복하는 것은 evaluator가
+그 작업을 계산할 때 close-first 선행조건을 다시 확인하기 위한 방어 조건이다. 순차 평가에서 이미 확인했다는 이유로
+이 조건을 제거하지 않는다. 원본 이슈 종료 뒤 기존 대상 관계가 없거나 불일치하면 다른 대상으로 추측하거나 다시 선택하게
+하지 않고 관계 기록·조회 원인을 바로잡을 때까지 중단한다. 새 이슈 번호를 닫힌 원본 이슈에 독립된 완료 fact로 기록하지 않는다.
+후속 관계는 GitHub related-issue 관계에서 읽는다.
 
 ## 구조화 실행 요청 판정 규칙
 

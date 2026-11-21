@@ -11,7 +11,6 @@
   "new_issue_from_feature_proposal": {
     "feature_change_requested": false,
     "feature_change_entry_source": "feature_proposal",
-    "feature_proposal_feature_change_transition_completed": true,
     "feature_change_draft_confirmed": false
   },
   "confirmed_draft": {
@@ -36,14 +35,11 @@
     "feature_plan_proposal_usable": false,
     "feature_plan_confirmed": false
   },
-  "updated_open_issue_from_policy_review": {
+  "new_issue_from_policy_review": {
     "feature_change_requested": false,
     "feature_change_entry_source": "policy_review",
-    "policy_review_feature_change_transition_completed": true,
-    "feature_change_draft_confirmed": true,
-    "feature_change_issue_created": true,
-    "feature_plan_proposal_usable": false,
-    "feature_plan_confirmed": false
+    "feature_change_draft_confirmed": false,
+    "feature_change_issue_created": false
   },
   "plan_proposal_waiting_for_confirmation": {
     "feature_change_requested": true,

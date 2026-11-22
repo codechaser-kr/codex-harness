@@ -15,13 +15,15 @@ const NORMALIZERS = new Map([
   ["implementation", normalizeImplementationFacts],
 ]);
 
-// Only facts owned by request.source_issue_id belong here. Created-target and cross-entity facts use their own identities.
+// Match issue-owned facts when the active issue ID is available; cross-entity facts retain their own identities.
 const ACTIVE_SOURCE_ISSUE_FACTS = new Map([
   ["feature-proposal", new Set([
+    "feature_proposal_issue_created",
     "feature_proposal_direction_reflected",
     "feature_proposal_issue_closed",
   ])],
   ["policy-review", new Set([
+    "policy_review_issue_created",
     "policy_design_reflected",
     "design_document_result_reflected",
     "feature_change_transition_reflected",
@@ -29,12 +31,14 @@ const ACTIVE_SOURCE_ISSUE_FACTS = new Map([
     "policy_review_issue_closed",
   ])],
   ["feature-change", new Set([
+    "feature_change_issue_created",
     "feature_plan_reflected",
     "all_planned_work_units_merged",
     "all_completion_items_reflected",
     "feature_change_issue_closed",
   ])],
   ["feature-fix", new Set([
+    "feature_fix_issue_created",
     "feature_fix_plan_reflected",
     "all_planned_work_units_merged",
     "all_completion_items_reflected",

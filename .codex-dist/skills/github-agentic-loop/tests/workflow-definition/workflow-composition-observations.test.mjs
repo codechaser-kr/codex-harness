@@ -447,6 +447,10 @@ test("runtime rejects active-source issue facts attributed to another or multipl
 
 test("runtime checks active-source issue provenance for every workflow", async (t) => {
   for (const [workflowId, taskActionId, factId] of [
+    ["feature-proposal", "FP-3", "feature_proposal_issue_created"],
+    ["policy-review", "PR-3", "policy_review_issue_created"],
+    ["feature-change", "FC-3", "feature_change_issue_created"],
+    ["feature-fix", "FF-3", "feature_fix_issue_created"],
     ["feature-proposal", "FP-6", "feature_proposal_issue_closed"],
     ["policy-review", "PR-12", "policy_design_reflected"],
     ["feature-change", "FC-7", "feature_plan_reflected"],
@@ -460,6 +464,7 @@ test("runtime checks active-source issue provenance for every workflow", async (
         issueId: 203,
         github: [observed(factId, true, "github_state", "issue #999")],
         log: [],
+        githubResultOverrides: { source_identifiers: ["issue #203", "issue #999"] },
       });
 
       assert.equal(result.status, "stopped");

@@ -110,16 +110,17 @@ GitHub 관측이므로 각 fact의 `source_reference`에도 동일한 이슈 번
 
 | Workflow | 활성 원본 이슈 출처와 대조하는 fact |
 | --- | --- |
-| `feature-proposal` | `feature_proposal_direction_reflected`, `feature_proposal_issue_closed` |
-| `policy-review` | `policy_design_reflected`, `design_document_result_reflected`, `feature_change_transition_reflected`, `feature_change_transition_target_related`, `policy_review_issue_closed` |
-| `feature-change` | `feature_plan_reflected`, `all_planned_work_units_merged`, `all_completion_items_reflected`, `feature_change_issue_closed` |
-| `feature-fix` | `feature_fix_plan_reflected`, `all_planned_work_units_merged`, `all_completion_items_reflected`, `feature_fix_issue_closed` |
+| `feature-proposal` | `feature_proposal_issue_created`, `feature_proposal_direction_reflected`, `feature_proposal_issue_closed` |
+| `policy-review` | `policy_review_issue_created`, `policy_design_reflected`, `design_document_result_reflected`, `feature_change_transition_reflected`, `feature_change_transition_target_related`, `policy_review_issue_closed` |
+| `feature-change` | `feature_change_issue_created`, `feature_plan_reflected`, `all_planned_work_units_merged`, `all_completion_items_reflected`, `feature_change_issue_closed` |
+| `feature-fix` | `feature_fix_issue_created`, `feature_fix_plan_reflected`, `all_planned_work_units_merged`, `all_completion_items_reflected`, `feature_fix_issue_closed` |
 | `implementation` | `implementation_plan_reflected` |
 
-이 목록 밖의 GitHub fact가 활성 원본 이슈를 소유한다고 추정하지 않는다. `*_issue_created` fact는 새로 생성한
-대상을 나타내고, 그 결과와 현재 source issue를 연결하는 producer 계약은 별도다. 예를 들어 `policy-review`의
-`design_document_pr_merged`는 PR을, `feature_change_transition_result`는 선택된 기능변경 대상 이슈를 가리킨다.
-후자는 `PR-11`에서 원본 이슈의 관계 fact와 갱신 결과의 대상 ID를 별도로 대조한다. 따라서
+`*_issue_created` fact는 새 Workflow의 Issue를 가리킨다. 최초 생성 요청에는 `source_issue_id`가 없을 수 있어 이때는
+원본 이슈 대조를 수행하지 않는다. 생성된 Issue ID가 다음 관측 요청의 `source_issue_id`로 전달된 뒤에는 이 fact도
+활성 이슈와 대조한다. 목록 밖의 GitHub fact가 활성 원본 이슈를 소유한다고 추정하지 않는다. 예를 들어
+`policy-review`의 `design_document_pr_merged`는 PR을, `feature_change_transition_result`는 선택된 기능변경 대상 이슈를
+가리킨다. 후자는 `PR-11`에서 원본 이슈의 관계 fact와 갱신 결과의 대상 ID를 별도로 대조한다. 따라서
 `source_identifiers`에 활성 이슈가 포함됐다는 이유만으로 다른 fact의 출처를 허용하지 않으며, 모든 fact의
 `source_reference`를 활성 이슈로 일괄 치환하지도 않는다.
 `feature_change_transition_target_related`도 원본 정책검토 이슈에 기록된 관계다. `PR-11`에서는 기존 handoff 검사가

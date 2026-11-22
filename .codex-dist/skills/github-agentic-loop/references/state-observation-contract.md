@@ -4,9 +4,37 @@
 
 ## 상태 읽기 규칙
 
+- 모든 관측 요청에는 `request_id`와 `target_baseline`이 필요하다. 첫 GitHub 이슈가 생성되기 전에는 `source_issue_id`가 없을 수 있으며,
+  해당 단계는 `FP-1/FP-2`, `PR-1/PR-2`, `FC-1/FC-2`, `FF-1/FF-2`로 한정한다. Workflow 평가가 다른 작업 단계를 선택하면
+  요청에 현재 원본 이슈의 `source_issue_id`가 있어야 한다. 이슈 생성 뒤 오케스트레이션은 반환된 이슈 ID를 다음 관측 요청에 전달한다.
+- 구현 자식 실행 요청에는 시작 시 보존한 `parent_workflow_id`와 해당 `implementation_unit_id`를 전달한다. `FI-36` 완료 뒤
+  부모 재평가로 돌아갈 때는 로그의 `parent_workflow_context.workflow_id`, `source_issue_id`, `implementation_unit_id`가
+  활성 요청의 대응 값과 모두 같아야 한다. 활성 요청 값 또는 로그 컨텍스트가 없거나 값이 다르면 부모 재평가 handoff를 만들지 않고
+  `unresolved`로 중단한다. 양쪽에 부모 컨텍스트가 모두 없을 때만 `no_parent_workflow_context`로 종료한다.
 - 기준 대상은 열린 PR에서 먼저 찾고, 이어갈 PR 후보가 비어 있으면 열린 이슈에서 찾는다.
 - 열린 PR 중 unresolved review thread, merge 대기 상태가 있으면 새 이슈보다 먼저 처리한다.
-- 기능제안 전환 완료 직후 같은 자동 실행 루프에서는 종료된 기능제안 이슈를 후속 정책검토 또는 기능변경 흐름의 연관 이슈로 참조한다.
+- 기능제안 Workflow가 방향 반영 및 원본 이슈 종료 후 `completed`를 반환하면, orchestration은 사용자 선택 방향으로 후속
+  `policy-review` 또는 `feature-change`를 시작한다. 새 Workflow는 원본 기능제안 이슈를 GitHub 이슈 관계로 참조한다.
+- 정책검토에서 기존 기능변경 이슈를 사용자가 정확히 선택하면, 선택된 Issue ID를 원본 정책검토 이슈와 그 대상 사이의
+  GitHub related-issue 관계로 `PR-9`에서 원본 정책검토 이슈를 닫기 전에 기록한다. `feature_change_transition_target_related=true`는
+  원본 이슈가 사용자가 선택한 정확한 Issue ID와 연결되고 대상이 열린 기능변경 이슈임을 GitHub 관계에서 확인한 경우에만
+  관측한다. 첫 `PR-9` 실행에서 관계가 없는 것은 예상 상태이며, 선택된 Issue ID로 관계를 기록한다. 기존 관계가 다른 대상,
+  여러 대상, 종료된 대상 또는 기능변경 유형이 아닌 대상으로 충돌하면 새 관계를 더하지 말고 중단해 기록을 바로잡는다.
+  관계 fact의 provenance는 `field_reference=related_issues[issue #<ID>]` 형식으로 정확한 대상 ID를 보존한다.
+  `PR-11`에서는 relation evidence의 `source_reference`가 현재 원본 `source_issue_id`와 일치하는지 먼저 확인하고,
+  relation ID와 `feature_change_transition_result` evidence의 `source_reference=issue #<ID>`가 같은 갱신 대상인지
+  교차 검증한다. 출처나 대상 ID가 다르거나 하나라도 누락·모호하면 update 완료를 확정하지 않고 handoff를 미해결로 반환한다.
+  Composition runtime은 두 검사를 모두 통과할 때만 `PR-11` 종료 결과에 대상 ID를 포함한다.
+  `PR-9` 완료 뒤 재개 때는 같은 관계를 읽어 해당 Issue ID를 대상 ID로 사용한다. 완료된 관계가 이후 없거나 모순이면 제목,
+  본문 언급 또는 단순 관련성으로 추측하지 않고 중단한다. 이미 선택한 대상 관계가 없을 때는 재선택을 요구하지 않는다.
+- 사용자가 기존 대상 방향은 선택했으나 대상 이슈 번호를 명시하지 않았거나 후보를 구별할 수 없으면, PR-7의 사용자 결정 단계에서
+  정확한 이슈 번호가 선택될 때까지 확인한다. `feature_change_transition_target_issue_selected=true`는 해당 결정에서 정확한 Issue ID를
+  명시한 경우에만 `user_input`으로 관측한다. 최초 선택에서 이 fact가 없거나 false이면 PR-7을 완료하지 않는다. 재개에서는
+  이미 기록된 정확한 GitHub 관계가 선택 identity를 보존하므로 선택 fact가 없어도 그 관계로 선택을 복구한다. 관계를 아직
+  기록하지 않은 상태로 재개하면 같은 `request_id`의 원래 사용자 입력 또는 구조화 실행 요청에서 선택된 Issue ID를 복구한다.
+  과거 선택 기록은 있지만 그 입력·요청 근거를 복구하지 못하면 사용자에게 재선택을 요구하지 않고 관측을 중단해 기록 근거를
+  복원한다. 이 Boolean fact는 Issue ID를 담지 않으므로 실행 요청과 이후 관계가 identity를 보존한다. 원래 선택과 관계가
+  충돌하거나 이미 기록한 관계가 재개에서 사라진 경우는 새 사용자 선택 단계가 아니라 기록·조회 오류다.
 - PR 연결 이슈는 PR 본문의 `연관 이슈 (optional)` 섹션에서 `Refs #번호` 형식으로 판단한다.
 - Workflow Engine 관리 이슈는 PR 본문에 `Refs #번호`로 연결한다.
 - Pull Request review threads는 diff가 있는 피드백과 resolved/unresolved 상태를 리뷰 피드백 상태 원천으로 읽는다.
@@ -21,13 +49,22 @@
 
 ## 기능변경 진입 local_state 관측 규칙
 
-Workflow Engine은 단독 요청과 상위 워크플로 전환을 포함한 기능변경 최초 상태 묶음을 수집할 때
-`feature_change_entry_source`를 직접 산출한다. 값은 현재 요청이 직접 기능변경 요청이면
-`direct_request`, 기능제안 전환이면 `feature_proposal`, 정책검토 전환이면 `policy_review`다.
-과거에 같은 기능변경 이슈로 완료된 전환 fact가 둘 다 `true`여도 현재 요청을 시작한 전환 하나를
-선택하며, 누적 완료 fact 자체로 현재 출처를 추론하지 않는다. 단독 요청이면 나머지 네 routing fact도
-함께 산출한다. `github-state-summary`와 state adapter는 이 판단을 대신하지 않는다. state adapter는
-산출된 관측값의 `source_kind=local_state` 계약만 검증한다.
+Workflow Engine은 현재 시작 요청의 출처로 기능변경 최초 상태 묶음의
+`feature_change_entry_source`를 직접 산출한다. 값은 직접 기능변경 요청이면 `direct_request`, 완료된 기능제안이
+후속 흐름으로 선택되면 `feature_proposal`, 완료된 정책검토가 후속 흐름으로 선택되면 `policy_review`다.
+누적된 완료 fact나 제목으로 현재 출처를 추론하지 않는다. 단독 요청이면 나머지 네 routing fact도 함께 산출한다.
+`github-state-summary`와 state adapter는 이 판단을 대신하지 않는다. state adapter는 산출된 관측값의
+`source_kind=local_state` 계약만 검증한다.
+
+기능제안에서 시작된 정책검토는 `policy_review_entry_source=feature_proposal`을 local state로 전달한다.
+직접 시작된 정책검토는 `policy_review_requested=true` user input으로 진입한다. 두 입력 모두 이전 Workflow의 완료 뒤
+orchestration이 새 Workflow의 entry facts로 구성한다.
+
+`policy_review_entry_source`는 새 정책검토 시작 요청의 `request_id`를 `source_reference`로 사용하고
+`routing_check.policy_review_entry_source`를 `field_reference`로 사용한다. 값의 근거는 완료된 기능제안의 방향 및
+원본 이슈 상태이며, 새 Workflow를 시작한 orchestration이 구성한다. 이 사실은 이전 Workflow의 완료 fact 자체가 아니며,
+`policy_review_requested`와 동시에 true로 두지 않는다. 원본 기능제안과 정책검토 이슈의 GitHub related-issue 관계도 함께
+기록해 재개 시 원본을 식별한다.
 
 각 산출 fact는 현재 요청을 식별하는 `request_id`를 `source_reference`로 사용하고, 아래
 `field_reference`가 가리키는 routing check 결과와 그 입력이 실행 로그에서 원본 사용자 요청 또는
@@ -51,10 +88,64 @@ fact와 evidence를 같은 상태 묶음에 포함한 뒤
 
 | 판정 상태 | 판정 기준 |
 | --- | --- |
-| 상태 요약 출력 사용 가능 | `github-state-summary` 결과에 `request_id`, `target_baseline`, `source_identifiers`, `observed_facts`, `missing_or_conflicting_facts`, 실제 실행 식별자와 세션, 읽기 전용 `performed_actions`, 빈 `changed_files`, 빈 `github_state_changes`, `verification_results`, `postconditions_satisfied`, `residual_risks_or_failure_reasons`가 있다. `request_id`, `target_baseline`, 조회 대상 식별자는 원 요청과 각각 일치한다. 모든 관측 사실은 출처 식별자로 추적 가능하고, 쓰기 또는 상태 전이 판단이 없다. |
+| 상태 요약 출력 사용 가능 | `github-state-summary` 결과에 `request_id`, `target_baseline`, `source_identifiers`, `observed_facts`, `missing_or_conflicting_facts`, 실제 실행 식별자와 세션, 읽기 전용 `performed_actions`, `execution_path_recheck_result="satisfied"`, 빈 `changed_files`, 빈 `github_state_changes`, `verification_results`, `postconditions_satisfied=true`, `residual_risks_or_failure_reasons`가 있다. `request_id`, `target_baseline`, 조회 대상 식별자는 원 요청과 각각 일치한다. 요청에 `source_issue_id`가 있으면 provider 입력과 `source_identifiers`에 같은 `issue #<ID>`가 있어야 한다. 모든 관측 사실은 출처 식별자로 추적 가능하고, 쓰기 또는 상태 전이 판단이 없다. |
 
 - 누락 또는 충돌 사실은 관측값으로 유지하며 현재 작업, 사용자 결정, 실행 범위, 상태 전이를 확정하는 근거로 자동 보완하지 않는다.
+- `execution_path_recheck_result`는 정확히 `satisfied`일 때만 성공이다. 다른 값, 누락 또는 인식할 수 없는 값이면 상태 요약을 사용할 수 없다.
+- `postconditions_satisfied`는 boolean `true`일 때만 성공이다. Provider는 요청·baseline·조회 대상 correlation, 읽기 전용 실행 경계, 출처가 있는 관측값, 빈 `changed_files`와 `github_state_changes` 등 이 계약의 사후조건이 모두 만족된 경우에만 `true`를 반환한다.
 - `상태 요약 출력 사용 가능`은 Workflow Engine이 다시 적용할 수 있는 읽기 전용 입력 조건일 뿐 최종 판단이 아니다.
+
+## Runtime observation 입력 경계
+
+`scripts/workflow-definition/composition-runtime.mjs`의 `runWorkflowObservationCycle`은 주입된
+`observeGithubState` 및 `observeWorkflowLog` 결과를 현재 정규화·평가 경로의 입력으로 사용한다. 두 결과는 같은
+`request_id`와 `target_baseline`을 가져야 하고, `source_identifiers`, `observed_facts`,
+`missing_or_conflicting_facts`를 포함해야 한다. GitHub 상태 요약은 읽기 전용 결과여야 하며
+요청에 `source_issue_id`가 있으면 composition runtime은 해당 ID를 GitHub provider에 전달하고, 반환된
+`source_identifiers`에 같은 `issue #<ID>`가 있는지 확인한다.
+이 확인만으로는 개별 fact의 출처가 보장되지 않는다. 다음 Workflow/fact는 활성 `source_issue_id`가 소유하는
+GitHub 관측이므로 각 fact의 `source_reference`에도 동일한 이슈 번호가 정확히 하나 식별되어야 한다.
+다른 이슈를 가리키거나 이슈 번호가 없거나 여러 이슈 번호가 식별되면 adapter/evaluator 전에
+`observation_source_invalid`로 중단한다.
+
+| Workflow | 활성 원본 이슈 출처와 대조하는 fact |
+| --- | --- |
+| `feature-proposal` | `feature_proposal_issue_created`, `feature_proposal_direction_reflected`, `feature_proposal_issue_closed` |
+| `policy-review` | `policy_review_issue_created`, `policy_design_reflected`, `design_document_result_reflected`, `feature_change_transition_reflected`, `feature_change_transition_target_related`, `policy_review_issue_closed` |
+| `feature-change` | `feature_change_issue_created`, `feature_plan_reflected`, `all_planned_work_units_merged`, `all_completion_items_reflected`, `feature_change_issue_closed` |
+| `feature-fix` | `feature_fix_issue_created`, `feature_fix_plan_reflected`, `all_planned_work_units_merged`, `all_completion_items_reflected`, `feature_fix_issue_closed` |
+| `implementation` | `implementation_plan_reflected` |
+
+`*_issue_created` fact는 새 Workflow의 Issue를 가리킨다. 최초 생성 요청에는 `source_issue_id`가 없을 수 있어 이때는
+원본 이슈 대조를 수행하지 않는다. 생성된 Issue ID가 다음 관측 요청의 `source_issue_id`로 전달된 뒤에는 이 fact도
+활성 이슈와 대조한다. 목록 밖의 GitHub fact가 활성 원본 이슈를 소유한다고 추정하지 않는다. 예를 들어
+`policy-review`의 `design_document_pr_merged`는 PR을, `feature_change_transition_result`는 선택된 기능변경 대상 이슈를
+가리킨다. 후자는 `PR-11`에서 원본 이슈의 관계 fact와 갱신 결과의 대상 ID를 별도로 대조한다. 따라서
+`source_identifiers`에 활성 이슈가 포함됐다는 이유만으로 다른 fact의 출처를 허용하지 않으며, 모든 fact의
+`source_reference`를 활성 이슈로 일괄 치환하지도 않는다.
+`feature_change_transition_target_related`도 원본 정책검토 이슈에 기록된 관계다. 따라서 `PR-9`와 `PR-11` 모두 relation fact를
+adapter/evaluator에 전달하기 전에 활성 원본 이슈와 대조한다. 특히 `PR-11`의 출처 불일치는 작업 실행 후 handoff에서 발견하는
+대신 관측 입력 단계에서 중단해, 잘못된 관계 fact가 기존 기능변경 이슈 갱신의 근거로 사용되지 않도록 한다. 완료 handoff에서는
+이와 별도로 관계 fact의 대상 ID와 갱신 결과의 대상 ID를 대조한다.
+
+실행 주체·session·permission·tool·command path 식별, `performed_actions`, `verification_results`,
+`postconditions_satisfied`, `residual_risks_or_failure_reasons`를 함께 반환해야 한다. `changed_files`와
+`github_state_changes`는 빈 배열이어야 한다. composition runtime은 이 correlation·read-only 결과 필수값을 검사하고
+하나라도 누락되거나 상태 변경이 있으면 adapter/evaluator 전에 중단한다. 관측 결과는
+`execution_path_recheck_result="satisfied"`와 `postconditions_satisfied=true`일 때만 사용할 수 있다.
+실행 경로 재검사가 만족되지 않았거나 사후조건이 `true`가 아니면 반환된 `observed_facts`를 사용하지 않고
+`observation_source_invalid`로 중단한다.
+
+각 `observed_facts` 항목은 state adapter가 요구하는 `fact_id`, `value`, `source_kind`,
+`source_reference`, `field_reference`를 포함한다. Runtime은 같은 `fact_id`에 대해 GitHub 현재 관측과 로그 fact가
+서로 다른 값을 내면 GitHub 현재 값을 정본으로 사용하고, 무시된 로그 값을 `source_conflicts`로 남긴다. 현재 GitHub
+관측끼리 충돌하거나 GitHub 관측이 없는 fact의 나머지 provenance 값들이 충돌하면 adapter가 중단한다. 로그가 현재
+GitHub 관측 없이 `source_kind=github_state`를 주장하면 잘못된 source로 중단한다. 누락 fact를 로그나 추론으로
+채우지 않는다.
+
+이 함수는 source provider를 호출하는 조립 경계이지만 GitHub API, 로컬 파일, 외부 Skill을 직접 실행하지 않는다.
+실제 provider를 연결하는 host는 별도 실행 책임이며, fixture 테스트는 provider 반환값만 모킹하고 이 함수의 조립·정규화·평가
+경로를 실행한다.
 
 ## 필드 판정 규칙
 
@@ -92,3 +183,15 @@ fact와 evidence를 같은 상태 묶음에 포함한 뒤
 - 무효 근거는 배경 설명으로만 참고한다.
 - 현재 작업은 완료 근거, 미완료 근거, 보조 근거만으로 하나의 작업을 산출할 수 있을 때 확정한다.
 - 사용자 결정 없이 작업 전이가 특정 반영 대상, 기존 이슈, 완료 기준 항목 중 하나를 확정해야 하는데 명시 근거가 없거나 후보가 둘 이상이면 추론하지 않고 진행 판단을 `중단`으로 둔다.
+
+## Pull Request review thread 관측 fact
+
+`github_review_threads_observed=true`는 기준 PR의 review thread 조회가 성공해 관측을 마쳤다는 뜻이다. 조회 실패 또는
+관측 상태 불명은 성공한 빈 결과로 취급하지 않는다. 그런 경우에는 `github_review_threads_observed`를 `false`로 두거나
+생략할 수 있지만, 이는 조회 실패·미완료를 뜻하며 피드백이 없다는 뜻은 아니다. 현재 상태를 성공적으로 관측하기 전까지
+`review_feedback_inventory`의 `no_actionable_feedback`도 산출하지 않는다.
+
+성공한 조회 결과에 처리할 피드백이 없으면 `github_review_threads_observed=true`와
+`review_feedback_inventory=no_actionable_feedback`를 함께 둔다. 처리할 피드백이 있으면 관측 성공 fact와
+`actionable_feedback_present`를 함께 둔다. 따라서 implementation의 `FI-24`는 관측 성공과 inventory가 모두 있을 때만
+다음 단계로 나아가며, 실패·미확인 상태에서는 피드백 없음이나 merge 준비 상태로 진행하지 않는다.

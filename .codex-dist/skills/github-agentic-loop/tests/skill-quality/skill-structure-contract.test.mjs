@@ -59,6 +59,8 @@ test("declarative task computation procedure describes the single ordered path",
     source,
     /## 선언형 작업 계산 절차[\s\S]*정규화[\s\S]*evaluateWorkflowDefinition[\s\S]*currentTaskActionId[\s\S]*완료[\s\S]*다시 관측/,
   );
+  assert.match(source, /최초 진입 또는 중단 후 재개이면 `definition\.entry_task_action_id`부터 평가한다/);
+  assert.match(source, /중단 후 재개에는 저장된 작업 ID를 요구하지 않고/);
   // 실행 성공 후 상태를 다시 관측해 같은 절차를 반복한다.
   assert.match(source, /구조화 실행 성공[\s\S]*?상태를 다시 관측[\s\S]*?선언형 작업 계산 절차를 반복/);
 });

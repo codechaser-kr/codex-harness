@@ -93,10 +93,14 @@ Workflow Engine 설치는 타겟 저장소의 설정, 템플릿 또는 GitHub �
 | `implementation` | `definitions/implementation.json` | `scripts/workflow-definition/implementation-state-adapter.mjs` | `normalizeImplementationFacts` |
 
 각 상태 변환기는 워크플로별로 정해진 원본 데이터 계약을 검증한 뒤, 관측값을 공통 사실 형식으로
-정규화한다. 런타임은 정의된 원본 데이터 계약과 상태 변환기의 결과를 사용한다.
+정규화한다. composition runtime은 `scripts/workflow-definition/composition-runtime.mjs`의
+`runWorkflowObservationCycle`이다. 이 함수는 read-only GitHub 상태 요약 및 workflow 로그 observation provider를
+호출하고, 요청·기준선 상관과 source provenance를 확인한 뒤 adapter와 evaluator를 실행한다. provider 연결은 호출
+host가 맡으며 이 함수 자체는 GitHub나 로그를 직접 읽거나 변경하지 않는다.
 
-이슈 유형은 라벨과 제목이 일치해 하나로 확정된 경우 선택한다. 두 값이 충돌하거나 단일 유형 확정
-조건을 충족하지 못하면 중단한다. 공통 구현 흐름에 진입하는 작업이 워크플로 정의에서 반환되면
+이슈 유형은 기준 이슈의 알려진 Workflow 유형 라벨 하나로만 선택한다. 제목의 prefix는 읽거나
+유형 판정·충돌 해소·재개 근거로 사용하지 않고, Workflow 동작에서 추가·제거·보존하지 않는다. 유형 라벨이 없거나 둘 이상이면 제목으로 추측하지 말고
+라벨 상태를 바로잡을 때까지 중단한다. 공통 구현 흐름에 진입하는 작업이 워크플로 정의에서 반환되면
 `implementation`을 선택한다.
 
 ## 선언형 작업 계산 절차
@@ -104,31 +108,77 @@ Workflow Engine 설치는 타겟 저장소의 설정, 템플릿 또는 GitHub �
 모든 일반 실행은 다음 단일 경로로 수행한다.
 
 1. 기준 이슈 또는 PR과 GitHub·로컬·사용자·스킬의 원본 상태를 특정 시점의 읽기 전용 상태 묶음으로
-   수집한다.
-2. 선택한 상태 변환기로 관측값을 정확히 한 번 정규화한다.
-3. 정규화한 사실을 `evaluateWorkflowDefinition`에 정확히 한 번 전달한다. 이 함수는 워크플로 정의의
-   규칙을 적용해 현재 또는 다음 작업을 계산한다. 워크플로 정의 검증은 이 함수 내부의 단일 검증
-   경로를 사용한다.
-4. 최초 진입이면 `definition.entry_task_action_id`, 재개 또는 반복이면 이전 계산 결과가 반환한
-   `task_action_id`를 `currentTaskActionId`로 전달한다.
-5. `action_required`가 반환한 단일 `task_action_id`, `user_decision_options`, `executor_reference`,
+   수집한다. GitHub 상태 요약과 필요한 workflow 로그를 composition runtime provider로 전달한다.
+2. 선택한 Definition, 요청·task ID, read-only 관측 provider를 `runWorkflowObservationCycle`에 전달한다.
+   이 함수는 요청·기준선 correlation과 provenance를 검증하고 선택한 adapter를 정확히 한 번 실행한다.
+3. Composition runtime은 정규화 fact를 `evaluateWorkflowDefinition`에 정확히 한 번 전달한다. Definition 검증은 evaluator
+   내부의 단일 경로를 사용한다. 최초 진입 또는 중단 후 재개이면 `definition.entry_task_action_id`부터 평가한다.
+   재개 시에는 최신 상태를 다시
+   관측·정규화하며, 로그의 작업 ID는 진행 이력 참고용으로만 사용한다.
+4. `action_required`가 반환한 단일 `task_action_id`, `user_decision_options`, `executor_reference`,
    `completion_predicate`를 현재 작업의 실행 입력으로 사용한다.
-6. 작업 완료 뒤 상태를 다시 관측·정규화하고 같은 `task_action_id`를 `currentTaskActionId`로 전달한다.
+5. 작업 완료 뒤 상태를 다시 관측·정규화하고 같은 `task_action_id`를 `currentTaskActionId`로 전달한다.
    워크플로 정의의 `next_transition_rules`와 `evaluateWorkflowDefinition`이 다음 단일 작업 또는 완료를
    결정한다.
-7. `completed`면 흐름을 완료한다. 상태 변환기 또는 워크플로 정의 검증이 실패하거나
-   `evaluateWorkflowDefinition`이 `stopped`를 반환하면 중단한다. 일치하는 규칙이 없거나 여러
-   개인 경우와 오류가 발생한 경우도 중단 조건으로 처리한다.
+6. `completed`면 composition runtime이 선언된 cross-workflow handoff를 반환한다. 호출 host가 반환값에 따라
+   후속 Workflow를 시작하거나 부모 Definition을 다시 평가한다. successor가 없는 terminal이면 현재 흐름을 끝낸다.
+7. 작업 도중 source result 상관, observation 정규화, Definition 검증 또는 evaluator 계산이 실패하면
+   source와 task를 추측하지 않고 중단 사유를 기록한다. `evaluateWorkflowDefinition`이 `stopped`를 반환하면
+   일치하는 규칙이 없거나 여러 개인 경우를 포함해 해당 사유로 중단한다.
 
-현재 또는 다음 `task_action_id`는 evaluator가 반환한 값을 그대로 사용한다. 워크플로 정의에 없는
-ID, 현재 정규화 상태와 불일치하는 ID, 누락된 재개 ID가 발견되면 해당 계산의 사유와 함께 중단한다.
-실패 시 선택된 워크플로 정의의 중단 결과를 반환한다. 전이는 evaluator 호출 결과 한 경로로만 수행한다.
+같은 실행 루프의 다음 `task_action_id`는 evaluator가 반환한 값을 그대로 사용한다. 워크플로 정의에 없는 ID 또는 현재
+정규화 상태와 불일치하는 ID가 전달되면 해당 계산의 사유와 함께 중단한다. 중단 후 재개에는 저장된 작업 ID를 요구하지 않고
+정의의 시작점부터 최신 fact로 다시 평가한다. 실패 시 선택된 워크플로 정의의 중단 결과를 반환한다.
+
+## Workflow 간 전환
+
+`evaluateWorkflowDefinition`은 현재 Definition 안의 작업만 계산한다. `runWorkflowObservationCycle`은 현재
+Definition이 `completed`를 반환한 뒤에만 별도 `workflow_handoff`를 산출한다. 후속 Workflow 시작과 부모 재평가 실행은
+호출 host 책임이다.
+
+- 기존 기능변경 이슈 방향이면 `PR-7`에서 사용자가 고른 정확한 대상 Issue ID까지 입력돼야 선택이 완료된다. 기존 대상 ID 입력이
+  없거나 모호하면 이 사용자 결정 단계에서 다시 묻는다. ID 선택 fact가 true여도 실제 번호가 `PR-9` 실행 요청에 전달되지 않으면
+  실행을 중단한다. `PR-9`에서는 사용자가 고른 정확한 대상 Issue ID를 원본 정책검토 이슈와 GitHub related-issue
+  관계로 먼저 기록한다. 관계가 관측된 뒤 `PR-10`에서 원본을 닫고, `PR-11`에서 같은 기존 대상 이슈를 갱신한다.
+- `policy-review`가 `PR-11`로 완료되고 선택 방향이 기존 기능변경 이슈이면 정책검토를 끝낸다. 기존 대상 이슈를 갱신했더라도
+  기능변경 Workflow를 자동 재개하지 않는다. 기존 대상 방향을 선택할 때 사용자가 정확한 Issue ID도 명시해야 하며, ID가
+  모호하면 해당 사용자 결정 단계에서 다시 묻는다. 확정된 ID는 원본 정책검토 이슈의 GitHub related-issue 관계로 기록하고,
+  재개 때 같은 관계에서 읽는다. 기록된 관계가 누락되거나 모순되면 재선택을 묻지 않고 기록·조회 원인을 바로잡도록 중단한다.
+- `policy-review`가 `PR-12`로 완료되고 선택 방향이 새 기능변경 이슈이면 그때 `feature-change`를 시작한다. 시작 시
+  `feature_change_entry_source=policy_review`를 전달한다. 새 이슈 생성은 `feature-change` Workflow가 맡는다.
+- `feature-proposal`이 선택 방향을 원본 이슈에 반영하고 원본 이슈를 닫아 완료되면, 오케스트레이션은 기록된 방향에 따라
+  `policy-review` 또는 `feature-change` 하나를 시작한다. `policy-review` 진입에는
+  `policy_review_entry_source=feature_proposal`, `feature-change` 진입에는
+  `feature_change_entry_source=feature_proposal`을 전달한다.
+  새 이슈 생성은 선택된 후속 Workflow가 맡으며, 새 이슈는 원본 이슈와 GitHub 이슈 관계로 연결한다.
+- 후속 Workflow는 앞선 Workflow의 완료 전에 시작하지 않는다. 전환 방향과 source 이슈의 현재 상태를 새 Workflow 입력으로
+  구성하며, 후속 Workflow가 이미 시작됐다고 완료 전에 기록하지 않는다.
+
+정책검토에서 기존 기능변경 대상을 선택한 경우 정확한 대상 Issue를 원본 정책검토 Issue와 GitHub 이슈 관계로 기록하고,
+재개 시 이 관계를 읽어 같은 대상을 사용한다. 관계가 없거나 모순되면 제목이나 관련성으로 대상을 추측하지 않고 멈춰 기록·조회
+원인을 바로잡는다.
+
+`feature-change`와 `feature-fix`의 계획은 구현 단위와 병렬 진행 구성을 포함해 사용자 승인을 받은 뒤 실행한다. 오케스트레이션은
+승인된 계획을 그대로 실행하고 구현 단위를 임의로 나누거나 병합하거나 병렬 구성을 바꾸지 않는다. 각 구현 단위 자식 요청에는
+시작 시 보존한 `parent_workflow_id`, 원본 `source_issue_id`, 해당 `implementation_unit_id`를 전달한다. 구현 흐름이 완료되면
+`FI-36`은 활성 요청과 로그의 부모 Workflow·원본 이슈·구현 단위가 모두 일치할 때만 같은 부모 Definition을 시작점부터
+재평가하도록 handoff를 반환한다. 해당 부모 작업 단계가 원본 이슈의 현재 반영 상태와 자체 완료 조건을 판단한다. 공통
+`implementation`을 시작할 때 별도 시작 승인을 추가로 묻지 않는다. 사용자 승인 계획이 정한 구현 단위별 시작 요청은
+`selectNextImplementationGroup`이 승인된 `실행 그룹` 순서에 따라 산출한다. 같은 그룹의 요청은 병렬로 시작하고, 다음 그룹은
+현재 그룹의 모든 단위가 완료된 뒤에만 산출한다. 함수는 side effect 없이 시작 후보를 반환하며, 실제 자식 Workflow 시작 및 결과
+관측 연결은 호출 host 책임이다.
 
 ## 사용자 결정
 
 `action_required.user_decision_options`에 값이 있으면 `user-decision-contract.md`를 읽고 사용자 결정으로
 멈춘다. 결정 대상과 선택지를 번호 목록으로 제시하고 계약이 허용한 입력으로 결정값을 확정한다. 사용자가
 확정한 값은 다음 상태 묶음의 사용자 관측값으로 정규화하고, 실행 주체에는 확정된 결정값만 전달한다.
+
+`policy-review/PR-7`에서 기존 기능변경 이슈를 고를 때는 방향과 정확한 대상 Issue ID를 같은 사용자 결정에 포함한다.
+예를 들어 `기존 기능변경 이슈 반영, 대상 Issue ID: #83`처럼 받는다. ID가 빠졌거나 후보를 구별할 수 없으면 PR-7을 완료하지
+않고 정확한 번호를 다시 요청한다. `feature_change_transition_target_issue_selected=true`는 exact ID가 명시된 경우에만 정규화한다.
+재개할 때는 이미 기록된 GitHub related-issue 관계에서 같은 선택을 복원하며, 관계 기록 전 중단이었다면 같은 요청의 원래 결정 또는
+구조화 실행 요청에서 ID를 복원한다. 이 근거가 누락된 경우 새 선택을 받지 말고 관측 기록을 바로잡는다.
 
 ## 전용 스킬 연결
 

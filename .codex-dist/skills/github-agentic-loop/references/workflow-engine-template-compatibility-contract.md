@@ -6,7 +6,7 @@
 
 템플릿을 적용하거나 감사하기 전에 같은 스킬의 `github-templates.md`를 읽는다.
 
-title prefix, label, 필수 섹션, 이슈 유형별 선택지, 후속 작업, PR 연결 규칙은 `github-templates.md`에서 가져온다. 이 계약은 해당 기준을 타겟 저장소의 템플릿에 적용하고 정합성을 판정하는 절차만 정의한다.
+label, 필수 섹션, 이슈 유형별 선택지, 후속 작업, PR 연결 규칙은 `github-templates.md`에서 가져온다. 이 계약은 해당 기준을 타겟 저장소의 템플릿에 적용하고 정합성을 판정하는 절차만 정의한다. 이슈 제목과 title prefix는 Workflow Engine의 판정·보존 대상이 아니다.
 
 ## 기대 파일과 요구 범위
 
@@ -18,7 +18,7 @@ title prefix, label, 필수 섹션, 이슈 유형별 선택지, 후속 작업, P
 - `.github/ISSUE_TEMPLATE/fix_template.md`
 - `.github/pull_request_template.md`
 
-타겟 저장소가 다른 파일명을 사용하더라도 런타임 원천의 title prefix, label, 필수 섹션, PR 연결 규칙을 만족하는 파일을 매핑 대상으로 정하고 근거를 기록한다. 최초 초기화에서는 현재 작업이 요구하는 이슈 유형 또는 PR 템플릿만 대상으로 삼고 다른 템플릿을 미리 만들지 않는다.
+타겟 저장소가 다른 파일명을 사용하더라도 런타임 원천의 label, 필수 섹션, PR 연결 규칙을 만족하는 파일을 매핑 대상으로 정하고 근거를 기록한다. 최초 초기화에서는 현재 작업이 요구하는 이슈 유형 또는 PR 템플릿만 대상으로 삼고 다른 템플릿을 미리 만들지 않는다.
 
 ## 적용과 갱신
 
@@ -36,7 +36,6 @@ title prefix, label, 필수 섹션, 이슈 유형별 선택지, 후속 작업, P
 
 이슈 템플릿은 다음 항목을 런타임 원천과 대조한다.
 
-- YAML frontmatter의 `title`과 title prefix
 - YAML frontmatter의 `labels`와 유형별 라벨
 - 타겟 GitHub 저장소의 해당 이슈 유형 라벨 존재 여부
 - 런타임 원천에 정의된 필수 섹션

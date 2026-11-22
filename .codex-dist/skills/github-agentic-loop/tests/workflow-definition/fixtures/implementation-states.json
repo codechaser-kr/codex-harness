@@ -691,6 +691,17 @@
       "current_task_action_id": "FI-24"
     },
     {
+      "name": "failed or unknown GitHub observation cannot mean no feedback",
+      "state": {
+        "inline_review_threads_posted": true,
+        "github_review_threads_observed": false,
+        "review_feedback_inventory": "no_actionable_feedback"
+      },
+      "status": "action_required",
+      "task_action_id": "FI-24",
+      "current_task_action_id": "FI-24"
+    },
+    {
       "name": "no actionable feedback proceeds to merge decision",
       "state": {
         "inline_review_threads_posted": true,

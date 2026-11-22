@@ -14,22 +14,23 @@ description: GitHub와 로컬의 지정된 상태를 읽기 전용으로 수집�
 
 ## 입력
 
-- 원 요청의 `request_id`, 기준 이슈 또는 PR, 조회 대상 식별자와 `target_baseline`
+- 원 요청의 `request_id`, 제공된 경우 `source_issue_id`, 기준 이슈 또는 PR, 조회 대상 식별자와 `target_baseline`
 - 필요한 관측 사실과 허용된 읽기 전용 GitHub 또는 로컬 조회 범위
 - `planned_model_identifier`와 `planned_config_identifier`가 실행 환경에서 확인 가능한 저비용 실행 설정을 가리키고, 실제 실행 주체, 권한, 도구, 세션을 기록할 수 있는 실행 맥락
 
 ## 책임
 
 1. 허용된 범위에서 `gh issue view`, `gh pr view`, `gh pr checks`, `gh api` GET, `git status`, `git diff`, `git log`, `git show`, `rg`, `sed`, `ls`, `find`, `wc` 등 읽기 전용 명령 또는 도구만 사용한다. `sed`는 출력 또는 파이프 변환용 읽기 형태만 허용하고 `sed -i`는 금지한다. `find`는 탐색 전용만 허용하고 `find -delete` 및 파일 변경 목적의 `find -exec`는 금지한다.
-2. 각 관측 사실에 출처 식별자와 조회 시점을 연결하고, 확인하지 못한 사실은 누락 또는 충돌로 분리한다.
+2. 요청에 `source_issue_id`가 있으면 해당 이슈를 조회 대상으로 사용하고 결과 `source_identifiers`에 `issue #<ID>`를 포함한다. 각 관측 사실에는 출처 식별자와 조회 시점을 연결하고, 확인하지 못한 사실은 누락 또는 충돌로 분리한다.
 3. 실제 executor, model, skill, config, orchestration session, execution session, permission, tool, command path 정보를 관측 결과에 기록한다.
 4. 수행한 읽기 동작, 빈 `changed_files`, 빈 `github_state_changes`, 검증 결과, 사후조건, 남은 위험을 반환한다.
+5. 실행 경로 재검사가 성공한 경우에만 `execution_path_recheck_result="satisfied"`를 반환한다. 계약의 읽기 전용 관측 사후조건을 모두 만족한 경우에만 `postconditions_satisfied=true`를 반환한다. 둘 중 하나라도 성공하지 않았거나 확인할 수 없으면 실패한 값을 그대로 보고한다. 이 경우 Workflow Engine은 `observed_facts`를 사용하지 않고 `observation_source_invalid`로 중단한다.
 
 ## 출력
 
 - `request_id`, `target_baseline`, `source_identifiers`, `observed_facts`, `missing_or_conflicting_facts`
 - `actual_executor_type`, `actual_agent_or_role`, `actual_model_identifier`, `actual_skill_identifier`, `actual_config_identifier`, `actual_orchestration_session_id`, `actual_execution_session_id`, `actual_session_relation`
-- `actual_permission_conditions`, `actual_available_tool_conditions`, `actual_command_execution_path`, `execution_path_recheck_result`, `performed_actions`, 빈 `changed_files`, 빈 `github_state_changes`, `verification_results`, `postconditions_satisfied`, `residual_risks_or_failure_reasons`
+- `actual_permission_conditions`, `actual_available_tool_conditions`, `actual_command_execution_path`, `execution_path_recheck_result` (`satisfied`일 때만 성공), `performed_actions`, 빈 `changed_files`, 빈 `github_state_changes`, `verification_results`, `postconditions_satisfied` (`true`일 때만 성공), `residual_risks_or_failure_reasons`
 
 관측값은 출처와 함께 반환하고 추론으로 빈칸을 채우지 않는다. 실제 실행 식별자에 적용되지 않는 값은 `not_applicable`과 이유를 기록한다.
 

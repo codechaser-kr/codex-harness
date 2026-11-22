@@ -4,7 +4,7 @@
     "policy_review_draft_confirmed": false
   },
   "completed_feature_proposal_transition": {
-    "feature_proposal_policy_review_transition_completed": true,
+    "policy_review_entry_source": "feature_proposal",
     "policy_review_draft_confirmed": false
   },
   "confirmed_draft": {
@@ -94,7 +94,25 @@
     "design_document_result_reflected": true,
     "feature_change_transition_candidates_usable": true,
     "feature_change_transition_direction": "existing_feature_issue",
+    "feature_change_transition_target_issue_selected": true,
     "feature_change_transition_reflected": false,
+    "policy_review_issue_closed": false
+  },
+  "existing_direction_target_unselected": {
+    "policy_review_requested": true,
+    "policy_review_draft_confirmed": true,
+    "policy_review_issue_created": true,
+    "policy_design_proposal_usable": true,
+    "policy_design_confirmed": true,
+    "policy_design_reflected": true,
+    "design_document_implementation_started": true,
+    "design_document_pr_merged": true,
+    "design_document_result_reflected": true,
+    "feature_change_transition_candidates_usable": true,
+    "feature_change_transition_direction": "existing_feature_issue",
+    "feature_change_transition_target_issue_selected": false,
+    "feature_change_transition_reflected": false,
+    "feature_change_transition_target_related": false,
     "policy_review_issue_closed": false
   },
   "existing_direction_reflected_open": {
@@ -109,7 +127,26 @@
     "design_document_result_reflected": true,
     "feature_change_transition_candidates_usable": true,
     "feature_change_transition_direction": "existing_feature_issue",
+    "feature_change_transition_target_issue_selected": true,
     "feature_change_transition_reflected": true,
+    "feature_change_transition_target_related": false,
+    "policy_review_issue_closed": false
+  },
+  "existing_direction_related_open": {
+    "policy_review_requested": true,
+    "policy_review_draft_confirmed": true,
+    "policy_review_issue_created": true,
+    "policy_design_proposal_usable": true,
+    "policy_design_confirmed": true,
+    "policy_design_reflected": true,
+    "design_document_implementation_started": true,
+    "design_document_pr_merged": true,
+    "design_document_result_reflected": true,
+    "feature_change_transition_candidates_usable": true,
+    "feature_change_transition_direction": "existing_feature_issue",
+    "feature_change_transition_target_issue_selected": true,
+    "feature_change_transition_reflected": true,
+    "feature_change_transition_target_related": true,
     "policy_review_issue_closed": false
   },
   "closed_existing_update_pending": {
@@ -124,11 +161,12 @@
     "design_document_result_reflected": true,
     "feature_change_transition_candidates_usable": true,
     "feature_change_transition_direction": "existing_feature_issue",
+    "feature_change_transition_target_issue_selected": true,
     "feature_change_transition_reflected": true,
-    "policy_review_issue_closed": true,
-    "policy_review_feature_change_transition_completed": false
+    "feature_change_transition_target_related": true,
+    "policy_review_issue_closed": true
   },
-  "closed_new_flow_missing": {
+  "closed_new_flow_ready": {
     "policy_review_requested": true,
     "policy_review_draft_confirmed": true,
     "policy_review_issue_created": true,
@@ -141,8 +179,7 @@
     "feature_change_transition_candidates_usable": true,
     "feature_change_transition_direction": "new_feature_issue",
     "feature_change_transition_reflected": true,
-    "policy_review_issue_closed": true,
-    "policy_review_feature_change_transition_completed": false
+    "policy_review_issue_closed": true
   },
   "completed_existing_issue": {
     "policy_review_requested": true,
@@ -156,9 +193,10 @@
     "design_document_result_reflected": true,
     "feature_change_transition_candidates_usable": true,
     "feature_change_transition_direction": "existing_feature_issue",
+    "feature_change_transition_target_issue_selected": true,
     "feature_change_transition_reflected": true,
+    "feature_change_transition_target_related": true,
     "policy_review_issue_closed": true,
-    "policy_review_feature_change_transition_completed": true,
     "feature_change_transition_result": "existing_issue_updated"
   },
   "completed_new_issue": {
@@ -174,8 +212,6 @@
     "feature_change_transition_candidates_usable": true,
     "feature_change_transition_direction": "new_feature_issue",
     "feature_change_transition_reflected": true,
-    "policy_review_issue_closed": true,
-    "policy_review_feature_change_transition_completed": true,
-    "feature_change_transition_result": "new_issue_flow_started"
+    "policy_review_issue_closed": true
   }
 }

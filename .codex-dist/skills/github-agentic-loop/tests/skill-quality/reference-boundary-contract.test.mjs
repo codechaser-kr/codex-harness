@@ -257,7 +257,7 @@ test("resume activation is covered by the structured execution contract", async 
   );
 });
 
-test("close-first issue transitions are explicit and guarded on direct resume", async () => {
+test("close-first transitions and successor routing are explicit", async () => {
   const structured = await read("structured");
   const transitionSection = structured.match(
     /## 종료 후 이슈 유형 전환 순서\n[\s\S]*?(?=\n## |\n?$)/,
@@ -272,8 +272,9 @@ test("close-first issue transitions are explicit and guarded on direct resume", 
   }
   assert.match(transitionSection, /`reflect → close → transition`/);
   assert.match(transitionSection, /원본 이슈가 종료됐다는 GitHub fact[\s\S]*후속 이슈/);
-  assert.match(transitionSection, /`currentTaskActionId`[\s\S]*close-first 선행조건을 다시 검증/);
-  assert.match(transitionSection, /사후 기록[\s\S]*종료의 선행조건이 아니다/);
+  assert.match(transitionSection, /앞선 반영·종료 fact를 반복[\s\S]*close-first 선행조건을 다시 확인/);
+  assert.match(transitionSection, /GitHub related-issue 관계/);
+  assert.match(transitionSection, /새 이슈 번호를 닫힌 원본 이슈에 독립된 완료 fact로 기록하지 않는다/);
 });
 
 test("feature-change entry routing facts have owned and traceable observation rules", async () => {
@@ -283,7 +284,7 @@ test("feature-change entry routing facts have owned and traceable observation ru
   )?.[0] ?? "";
 
   assert.match(routingSection, /Workflow Engine[\s\S]*최초 상태 묶음[\s\S]*직접 산출/);
-  assert.match(routingSection, /완료된 전환 fact가 둘 다 `true`[\s\S]*현재 요청을 시작한 전환 하나/);
+  assert.match(routingSection, /누적된 완료 fact나 제목으로 현재 출처를 추론하지 않는다/);
   assert.match(routingSection, /`request_id`[\s\S]*`source_reference`/);
   assert.match(routingSection, /`field_reference`[\s\S]*routing check/);
   assert.match(routingSection, /근거가 누락되거나 충돌하면[\s\S]*중단/);

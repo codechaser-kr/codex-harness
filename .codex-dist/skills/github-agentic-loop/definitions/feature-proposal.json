@@ -26,14 +26,6 @@
     "feature_proposal_issue_closed": [
       true,
       false
-    ],
-    "feature_proposal_policy_review_transition_completed": [
-      true,
-      false
-    ],
-    "feature_proposal_feature_change_transition_completed": [
-      true,
-      false
     ]
   },
   "transitions": [
@@ -223,12 +215,7 @@
         "value": true
       },
       "executor_reference": "github-simple-executor",
-      "next_transition_rules": [
-        {
-          "condition": null,
-          "task_action_id": "FP-9"
-        }
-      ]
+      "next_transition_rules": []
     },
     {
       "task_action_id": "FP-7",
@@ -253,225 +240,46 @@
         "value": true
       },
       "executor_reference": "github-simple-executor",
-      "next_transition_rules": [
-        {
-          "condition": null,
-          "task_action_id": "FP-10"
-        }
-      ]
-    },
-    {
-      "task_action_id": "FP-9",
-      "normalized_fact_conditions": {
-        "all": [
-          {
-            "fact_id": "feature_proposal_direction",
-            "operator": "equals",
-            "value": "policy_review"
-          },
-          {
-            "fact_id": "feature_proposal_direction_reflected",
-            "operator": "equals",
-            "value": true
-          },
-          {
-            "fact_id": "feature_proposal_issue_closed",
-            "operator": "equals",
-            "value": true
-          }
-        ]
-      },
-      "user_decision_options": [],
-      "completion_predicate": {
-        "fact_id": "feature_proposal_policy_review_transition_completed",
-        "operator": "equals",
-        "value": true
-      },
-      "executor_reference": "github-simple-executor",
-      "next_transition_rules": [
-        {
-          "condition": null,
-          "task_action_id": "FP-8"
-        }
-      ]
-    },
-    {
-      "task_action_id": "FP-10",
-      "normalized_fact_conditions": {
-        "all": [
-          {
-            "fact_id": "feature_proposal_direction",
-            "operator": "equals",
-            "value": "feature_change"
-          },
-          {
-            "fact_id": "feature_proposal_direction_reflected",
-            "operator": "equals",
-            "value": true
-          },
-          {
-            "fact_id": "feature_proposal_issue_closed",
-            "operator": "equals",
-            "value": true
-          }
-        ]
-      },
-      "user_decision_options": [],
-      "completion_predicate": {
-        "fact_id": "feature_proposal_feature_change_transition_completed",
-        "operator": "equals",
-        "value": true
-      },
-      "executor_reference": "github-simple-executor",
-      "next_transition_rules": [
-        {
-          "condition": null,
-          "task_action_id": "FP-8"
-        }
-      ]
+      "next_transition_rules": []
     },
     {
       "task_action_id": "FP-8",
       "normalized_fact_conditions": {
-        "any": [
+        "all": [
           {
-            "all": [
-              {
-                "fact_id": "feature_proposal_direction",
-                "operator": "equals",
-                "value": "do_not_proceed"
-              },
-              {
-                "fact_id": "feature_proposal_direction_reflected",
-                "operator": "equals",
-                "value": true
-              },
-              {
-                "fact_id": "feature_proposal_issue_closed",
-                "operator": "equals",
-                "value": true
-              }
-            ]
+            "fact_id": "feature_proposal_direction",
+            "operator": "equals",
+            "value": "do_not_proceed"
           },
           {
-            "all": [
-              {
-                "fact_id": "feature_proposal_direction",
-                "operator": "equals",
-                "value": "policy_review"
-              },
-              {
-                "fact_id": "feature_proposal_direction_reflected",
-                "operator": "equals",
-                "value": true
-              },
-              {
-                "fact_id": "feature_proposal_issue_closed",
-                "operator": "equals",
-                "value": true
-              },
-              {
-                "fact_id": "feature_proposal_policy_review_transition_completed",
-                "operator": "equals",
-                "value": true
-              }
-            ]
+            "fact_id": "feature_proposal_direction_reflected",
+            "operator": "equals",
+            "value": true
           },
           {
-            "all": [
-              {
-                "fact_id": "feature_proposal_direction",
-                "operator": "equals",
-                "value": "feature_change"
-              },
-              {
-                "fact_id": "feature_proposal_direction_reflected",
-                "operator": "equals",
-                "value": true
-              },
-              {
-                "fact_id": "feature_proposal_issue_closed",
-                "operator": "equals",
-                "value": true
-              },
-              {
-                "fact_id": "feature_proposal_feature_change_transition_completed",
-                "operator": "equals",
-                "value": true
-              }
-            ]
+            "fact_id": "feature_proposal_issue_closed",
+            "operator": "equals",
+            "value": true
           }
         ]
       },
       "user_decision_options": [],
       "completion_predicate": {
-        "any": [
+        "all": [
           {
-            "all": [
-              {
-                "fact_id": "feature_proposal_direction",
-                "operator": "equals",
-                "value": "do_not_proceed"
-              },
-              {
-                "fact_id": "feature_proposal_direction_reflected",
-                "operator": "equals",
-                "value": true
-              },
-              {
-                "fact_id": "feature_proposal_issue_closed",
-                "operator": "equals",
-                "value": true
-              }
-            ]
+            "fact_id": "feature_proposal_direction",
+            "operator": "equals",
+            "value": "do_not_proceed"
           },
           {
-            "all": [
-              {
-                "fact_id": "feature_proposal_direction",
-                "operator": "equals",
-                "value": "policy_review"
-              },
-              {
-                "fact_id": "feature_proposal_direction_reflected",
-                "operator": "equals",
-                "value": true
-              },
-              {
-                "fact_id": "feature_proposal_issue_closed",
-                "operator": "equals",
-                "value": true
-              },
-              {
-                "fact_id": "feature_proposal_policy_review_transition_completed",
-                "operator": "equals",
-                "value": true
-              }
-            ]
+            "fact_id": "feature_proposal_direction_reflected",
+            "operator": "equals",
+            "value": true
           },
           {
-            "all": [
-              {
-                "fact_id": "feature_proposal_direction",
-                "operator": "equals",
-                "value": "feature_change"
-              },
-              {
-                "fact_id": "feature_proposal_direction_reflected",
-                "operator": "equals",
-                "value": true
-              },
-              {
-                "fact_id": "feature_proposal_issue_closed",
-                "operator": "equals",
-                "value": true
-              },
-              {
-                "fact_id": "feature_proposal_feature_change_transition_completed",
-                "operator": "equals",
-                "value": true
-              }
-            ]
+            "fact_id": "feature_proposal_issue_closed",
+            "operator": "equals",
+            "value": true
           }
         ]
       },

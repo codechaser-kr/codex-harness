@@ -114,15 +114,16 @@ function resolveGithubPrecedence(githubObservations, logObservations) {
   const selectedLogObservations = logObservations.filter((observation) => {
     if (!isRecord(observation) || !githubFacts.has(observation.fact_id)) return true;
     const authoritativeValues = new Set(githubFacts.get(observation.fact_id).map((item) => JSON.stringify(item.value)));
-    if (authoritativeValues.has(JSON.stringify(observation.value))) return true;
-    conflicts.push({
-      fact_id: observation.fact_id,
-      selected_source_kind: "github_state",
-      selected_value: githubFacts.get(observation.fact_id)[0].value,
-      ignored_source_kind: observation.source_kind,
-      ignored_source_reference: observation.source_reference,
-      ignored_value: observation.value,
-    });
+    if (!authoritativeValues.has(JSON.stringify(observation.value))) {
+      conflicts.push({
+        fact_id: observation.fact_id,
+        selected_source_kind: "github_state",
+        selected_value: githubFacts.get(observation.fact_id)[0].value,
+        ignored_source_kind: observation.source_kind,
+        ignored_source_reference: observation.source_reference,
+        ignored_value: observation.value,
+      });
+    }
     return false;
   });
 

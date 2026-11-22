@@ -33,6 +33,11 @@ function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+function hasSourceIssueIdentifier(sourceIdentifiers, sourceIssueId) {
+  const expectedIdentifier = `issue #${sourceIssueId.trim()}`.toLowerCase();
+  return sourceIdentifiers.some((identifier) => identifier.trim().toLowerCase() === expectedIdentifier);
+}
+
 function stopped(workflowId, reason, errors = []) {
   return { status: "stopped", workflow_id: workflowId, reason, errors };
 }
@@ -53,6 +58,16 @@ function validateSourceResult(result, { name, request, requireGithubReadOnly = f
   } else if (result.source_identifiers.some((identifier) => !isNonEmptyString(identifier))
     || (requireGithubReadOnly && result.source_identifiers.length === 0)) {
     errors.push({ code: "source_result.source_identifiers.invalid", path: `/${name}/source_identifiers`, message: `${name} source identifiers must be non-empty strings.` });
+  }
+  if (requireGithubReadOnly && isNonEmptyString(request.source_issue_id)
+    && Array.isArray(result.source_identifiers)
+    && result.source_identifiers.every(isNonEmptyString)
+    && !hasSourceIssueIdentifier(result.source_identifiers, request.source_issue_id)) {
+    errors.push({
+      code: "source_result.source_identifiers.source_issue_id_mismatch",
+      path: `/${name}/source_identifiers`,
+      message: `${name} must identify the requested issue #${request.source_issue_id.trim()}.`,
+    });
   }
   if (!Array.isArray(result.observed_facts)) {
     errors.push({ code: "source_result.observed_facts.invalid", path: `/${name}/observed_facts`, message: `${name} must return observed_facts as an array.` });
@@ -299,7 +314,11 @@ export async function runWorkflowObservationCycle({
   let workflowLogResult;
   try {
     [githubStateResult, workflowLogResult] = await Promise.all([
-      observeGithubState({ request_id: request.request_id, target_baseline: request.target_baseline }),
+      observeGithubState({
+        request_id: request.request_id,
+        ...(isNonEmptyString(request.source_issue_id) ? { source_issue_id: request.source_issue_id } : {}),
+        target_baseline: request.target_baseline,
+      }),
       observeWorkflowLog({ request_id: request.request_id, target_baseline: request.target_baseline }),
     ]);
   } catch (error) {

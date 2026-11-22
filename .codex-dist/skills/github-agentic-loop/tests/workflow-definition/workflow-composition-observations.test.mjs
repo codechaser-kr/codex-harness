@@ -75,7 +75,7 @@ async function runMockedRuntime({ workflowId, taskActionId, issueId, github, log
     },
   });
   assert.deepEqual(calls, [
-    ["github", { request_id: "request-203", target_baseline: { issue_id: String(issueId) } }],
+    ["github", { request_id: "request-203", source_issue_id: String(issueId), target_baseline: { issue_id: String(issueId) } }],
     ["log", { request_id: "request-203", target_baseline: { issue_id: String(issueId) } }],
   ]);
   return result;
@@ -340,6 +340,24 @@ test("runtime refuses a GitHub summary with mismatched request correlation or wr
   assert.equal(result.reason, "observation_source_invalid");
   assert.equal(result.errors.some((error) => error.code === "source_result.request_id.mismatch"), true);
   assert.equal(result.errors.some((error) => error.code === "source_result.read_only_evidence.changed"), true);
+  assert.equal(Object.hasOwn(result, "evaluation"), false);
+});
+
+test("runtime refuses GitHub observations that do not identify the requested source issue", async () => {
+  const wrongIssueSummary = {
+    ...githubResult(999, [observed("feature_proposal_issue_created", true, "github_state", "issue #999", "state")]),
+    target_baseline: { issue_id: "203" },
+  };
+  const result = await runWorkflowObservationCycle({
+    request: request(203),
+    definition: await definition("feature-proposal"),
+    observeGithubState: async () => wrongIssueSummary,
+    observeWorkflowLog: async () => logResult(203, []),
+  });
+
+  assert.equal(result.status, "stopped");
+  assert.equal(result.reason, "observation_source_invalid");
+  assert.equal(result.errors.some((error) => error.code === "source_result.source_identifiers.source_issue_id_mismatch"), true);
   assert.equal(Object.hasOwn(result, "evaluation"), false);
 });
 

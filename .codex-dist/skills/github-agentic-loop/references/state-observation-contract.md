@@ -83,7 +83,7 @@ fact와 evidence를 같은 상태 묶음에 포함한 뒤
 
 | 판정 상태 | 판정 기준 |
 | --- | --- |
-| 상태 요약 출력 사용 가능 | `github-state-summary` 결과에 `request_id`, `target_baseline`, `source_identifiers`, `observed_facts`, `missing_or_conflicting_facts`, 실제 실행 식별자와 세션, 읽기 전용 `performed_actions`, `execution_path_recheck_result="satisfied"`, 빈 `changed_files`, 빈 `github_state_changes`, `verification_results`, `postconditions_satisfied=true`, `residual_risks_or_failure_reasons`가 있다. `request_id`, `target_baseline`, 조회 대상 식별자는 원 요청과 각각 일치한다. 모든 관측 사실은 출처 식별자로 추적 가능하고, 쓰기 또는 상태 전이 판단이 없다. |
+| 상태 요약 출력 사용 가능 | `github-state-summary` 결과에 `request_id`, `target_baseline`, `source_identifiers`, `observed_facts`, `missing_or_conflicting_facts`, 실제 실행 식별자와 세션, 읽기 전용 `performed_actions`, `execution_path_recheck_result="satisfied"`, 빈 `changed_files`, 빈 `github_state_changes`, `verification_results`, `postconditions_satisfied=true`, `residual_risks_or_failure_reasons`가 있다. `request_id`, `target_baseline`, 조회 대상 식별자는 원 요청과 각각 일치한다. 요청에 `source_issue_id`가 있으면 provider 입력과 `source_identifiers`에 같은 `issue #<ID>`가 있어야 한다. 모든 관측 사실은 출처 식별자로 추적 가능하고, 쓰기 또는 상태 전이 판단이 없다. |
 
 - 누락 또는 충돌 사실은 관측값으로 유지하며 현재 작업, 사용자 결정, 실행 범위, 상태 전이를 확정하는 근거로 자동 보완하지 않는다.
 - `execution_path_recheck_result`는 정확히 `satisfied`일 때만 성공이다. 다른 값, 누락 또는 인식할 수 없는 값이면 상태 요약을 사용할 수 없다.
@@ -96,6 +96,8 @@ fact와 evidence를 같은 상태 묶음에 포함한 뒤
 `observeGithubState` 및 `observeWorkflowLog` 결과를 현재 정규화·평가 경로의 입력으로 사용한다. 두 결과는 같은
 `request_id`와 `target_baseline`을 가져야 하고, `source_identifiers`, `observed_facts`,
 `missing_or_conflicting_facts`를 포함해야 한다. GitHub 상태 요약은 읽기 전용 결과여야 하며
+요청에 `source_issue_id`가 있으면 composition runtime은 해당 ID를 GitHub provider에 전달하고, 반환된
+`source_identifiers`에 같은 `issue #<ID>`가 있는지 확인한다.
 실행 주체·session·permission·tool·command path 식별, `performed_actions`, `verification_results`,
 `postconditions_satisfied`, `residual_risks_or_failure_reasons`를 함께 반환해야 한다. `changed_files`와
 `github_state_changes`는 빈 배열이어야 한다. composition runtime은 이 correlation·read-only 결과 필수값을 검사하고

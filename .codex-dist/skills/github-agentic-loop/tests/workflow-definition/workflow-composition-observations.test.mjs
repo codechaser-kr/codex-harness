@@ -265,6 +265,26 @@ test("policy-review existing-target route ends after updating the exact related 
   assert.equal(ambiguous.status, "stopped");
   assert.equal(ambiguous.reason, "invalid_fact_candidates");
   assert.equal(Object.hasOwn(ambiguous, "workflow_handoff"), false);
+
+  const multipleTargetsInOneRelation = await runMockedRuntime({
+    workflowId: "policy-review",
+    taskActionId: "PR-11",
+    issueId: 203,
+    github: github.map((item) => {
+      if (item.fact_id === "feature_change_transition_target_related") {
+        return { ...item, field_reference: "related_issues[issue #118, issue #119]" };
+      }
+      if (item.fact_id === "feature_change_transition_result") {
+        return { ...item, source_reference: "issue #119" };
+      }
+      return item;
+    }),
+    log,
+  });
+  assert.equal(multipleTargetsInOneRelation.status, "completed");
+  assert.equal(multipleTargetsInOneRelation.workflow_handoff.status, "unresolved");
+  assert.equal(multipleTargetsInOneRelation.workflow_handoff.reason, "existing_target_issue_id_missing_or_ambiguous_in_relation_evidence");
+  assert.equal(Object.hasOwn(multipleTargetsInOneRelation.workflow_handoff, "updated_target_issue_id"), false);
 });
 
 test("policy-review new-target route selects feature-change only after source close; successor creates the target", async () => {

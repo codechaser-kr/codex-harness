@@ -167,11 +167,13 @@ function resolveGithubPrecedence(githubObservations, logObservations) {
 }
 
 function issueNumberFromRelationEvidence(evidence = []) {
+  if (!Array.isArray(evidence) || evidence.length === 0) return null;
   const issueNumbers = new Set();
   for (const item of evidence) {
-    if (typeof item?.field_reference !== "string") continue;
-    const match = item.field_reference.match(/related_issues\[[^\]]*#(\d+)\]/i);
-    if (match) issueNumbers.add(Number(match[1]));
+    if (typeof item?.field_reference !== "string") return null;
+    const match = item.field_reference.match(/^related_issues\[issue #(\d+)\]$/);
+    if (!match || match[0] !== item.field_reference) return null;
+    issueNumbers.add(Number(match[1]));
   }
   return issueNumbers.size === 1 ? [...issueNumbers][0] : null;
 }

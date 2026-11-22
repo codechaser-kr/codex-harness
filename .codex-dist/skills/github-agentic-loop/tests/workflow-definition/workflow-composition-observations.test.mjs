@@ -259,6 +259,24 @@ test("policy-review existing-target route ends after updating the exact related 
   assert.equal(mismatchedUpdate.workflow_handoff.observed_update_issue_id, 119);
   assert.equal(Object.hasOwn(mismatchedUpdate.workflow_handoff, "updated_target_issue_id"), false);
 
+  const relationFromDifferentSource = await runMockedRuntime({
+    workflowId: "policy-review",
+    taskActionId: "PR-11",
+    issueId: 203,
+    github: github.map((item) => item.fact_id === "feature_change_transition_target_related"
+      ? { ...item, source_reference: "issue #999" }
+      : item),
+    log,
+  });
+  assert.equal(relationFromDifferentSource.status, "completed");
+  assert.deepEqual(relationFromDifferentSource.workflow_handoff, {
+    status: "unresolved",
+    reason: "existing_target_relation_source_issue_id_mismatch",
+    expected_source_issue_id: "203",
+    observed_relation_source_issue_id: "999",
+  });
+  assert.equal(Object.hasOwn(relationFromDifferentSource.workflow_handoff, "updated_target_issue_id"), false);
+
   const ambiguous = await runMockedRuntime({
     workflowId: "policy-review",
     taskActionId: "PR-11",

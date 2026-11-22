@@ -217,11 +217,22 @@ function selectCompletedWorkflowHandoff({ workflowId, evaluation, factState, nor
   }
 
   if (workflowId === "policy-review" && evaluation.task_action_id === "PR-11") {
-    const targetIssueId = issueNumberFromRelationEvidence(
-      normalized.evidence_by_fact.feature_change_transition_target_related,
-    );
+    const relationEvidence = normalized.evidence_by_fact.feature_change_transition_target_related;
+    const targetIssueId = issueNumberFromRelationEvidence(relationEvidence);
     if (targetIssueId === null) {
       return { status: "unresolved", reason: "existing_target_issue_id_missing_or_ambiguous_in_relation_evidence" };
+    }
+    const relationSourceIssueId = issueNumberFromSourceReference(relationEvidence);
+    if (relationSourceIssueId === null) {
+      return { status: "unresolved", reason: "existing_target_relation_source_issue_id_missing_or_ambiguous" };
+    }
+    if (String(relationSourceIssueId) !== request.source_issue_id.trim()) {
+      return {
+        status: "unresolved",
+        reason: "existing_target_relation_source_issue_id_mismatch",
+        expected_source_issue_id: request.source_issue_id.trim(),
+        observed_relation_source_issue_id: String(relationSourceIssueId),
+      };
     }
     const updatedTargetIssueId = issueNumberFromSourceReference(
       normalized.evidence_by_fact.feature_change_transition_result,

@@ -123,9 +123,10 @@ GitHub 관측이므로 각 fact의 `source_reference`에도 동일한 이슈 번
 가리킨다. 후자는 `PR-11`에서 원본 이슈의 관계 fact와 갱신 결과의 대상 ID를 별도로 대조한다. 따라서
 `source_identifiers`에 활성 이슈가 포함됐다는 이유만으로 다른 fact의 출처를 허용하지 않으며, 모든 fact의
 `source_reference`를 활성 이슈로 일괄 치환하지도 않는다.
-`feature_change_transition_target_related`도 원본 정책검토 이슈에 기록된 관계다. `PR-11`에서는 기존 handoff 검사가
-관계 출처를 확인해 불일치 시 `unresolved`를 반환하므로 그 검사를 유지한다. `PR-9`에서는 relation fact를 evaluator에
-전달하기 전에 같은 원본 이슈 대조를 적용해 잘못된 출처로 원본 이슈를 닫는 전이를 막는다.
+`feature_change_transition_target_related`도 원본 정책검토 이슈에 기록된 관계다. 따라서 `PR-9`와 `PR-11` 모두 relation fact를
+adapter/evaluator에 전달하기 전에 활성 원본 이슈와 대조한다. 특히 `PR-11`의 출처 불일치는 작업 실행 후 handoff에서 발견하는
+대신 관측 입력 단계에서 중단해, 잘못된 관계 fact가 기존 기능변경 이슈 갱신의 근거로 사용되지 않도록 한다. 완료 handoff에서는
+이와 별도로 관계 fact의 대상 ID와 갱신 결과의 대상 ID를 대조한다.
 
 실행 주체·session·permission·tool·command path 식별, `performed_actions`, `verification_results`,
 `postconditions_satisfied`, `residual_risks_or_failure_reasons`를 함께 반환해야 한다. `changed_files`와

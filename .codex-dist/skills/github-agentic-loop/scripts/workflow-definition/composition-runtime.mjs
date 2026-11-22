@@ -80,7 +80,7 @@ function stopped(workflowId, reason, errors = []) {
   return { status: "stopped", workflow_id: workflowId, reason, errors };
 }
 
-function validateSourceResult(result, { name, request, workflowId, taskActionId, requireGithubReadOnly = false }) {
+function validateSourceResult(result, { name, request, workflowId, requireGithubReadOnly = false }) {
   const errors = [];
   if (!isRecord(result)) {
     return [{ code: "source_result.type", path: `/${name}`, message: `${name} must return an object.` }];
@@ -113,13 +113,8 @@ function validateSourceResult(result, { name, request, workflowId, taskActionId,
   if (requireGithubReadOnly && isNonEmptyString(request.source_issue_id) && Array.isArray(result.observed_facts)) {
     const activeSourceIssueFacts = ACTIVE_SOURCE_ISSUE_FACTS.get(workflowId) ?? new Set();
     result.observed_facts.forEach((observation, index) => {
-      // PR-11 returns its established unresolved handoff for relation provenance mismatches; PR-9 must fail before close-first can advance.
-      const pr11RelationHandoffChecksSource = workflowId === "policy-review"
-        && taskActionId === "PR-11"
-        && observation?.fact_id === "feature_change_transition_target_related";
       if (!activeSourceIssueFacts.has(observation?.fact_id)
         || observation?.source_kind !== "github_state"
-        || pr11RelationHandoffChecksSource
         || sourceReferenceMatchesIssue(observation.source_reference, request.source_issue_id)) {
         return;
       }
@@ -280,18 +275,6 @@ function selectCompletedWorkflowHandoff({ workflowId, evaluation, factState, nor
     if (targetIssueId === null) {
       return { status: "unresolved", reason: "existing_target_issue_id_missing_or_ambiguous_in_relation_evidence" };
     }
-    const relationSourceIssueId = issueNumberFromSourceReference(relationEvidence);
-    if (relationSourceIssueId === null) {
-      return { status: "unresolved", reason: "existing_target_relation_source_issue_id_missing_or_ambiguous" };
-    }
-    if (String(relationSourceIssueId) !== request.source_issue_id.trim()) {
-      return {
-        status: "unresolved",
-        reason: "existing_target_relation_source_issue_id_mismatch",
-        expected_source_issue_id: request.source_issue_id.trim(),
-        observed_relation_source_issue_id: String(relationSourceIssueId),
-      };
-    }
     const updatedTargetIssueId = issueNumberFromSourceReference(
       normalized.evidence_by_fact.feature_change_transition_result,
     );
@@ -433,7 +416,6 @@ export async function runWorkflowObservationCycle({
       name: "github_state_summary",
       request,
       workflowId,
-      taskActionId: currentTaskActionId,
       requireGithubReadOnly: true,
     }),
     ...validateSourceResult(workflowLogResult, { name: "workflow_log_observation", request }),

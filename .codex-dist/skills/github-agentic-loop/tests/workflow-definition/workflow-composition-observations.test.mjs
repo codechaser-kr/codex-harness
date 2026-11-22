@@ -10,7 +10,7 @@ const request = (issueId) => ({
   target_baseline: { issue_id: String(issueId) },
 });
 
-function observed(factId, value, sourceKind, sourceReference, fieldReference) {
+function observed(factId, value, sourceKind, sourceReference, fieldReference = `facts.${factId}`) {
   return { fact_id: factId, value, source_kind: sourceKind, source_reference: sourceReference, field_reference: fieldReference };
 }
 
@@ -80,6 +80,117 @@ async function runMockedRuntime({ workflowId, taskActionId, issueId, github, log
   ]);
   return result;
 }
+
+async function runMockedRuntimeWithoutSourceIssueId({ workflowId, github = [], log, currentTaskActionId }) {
+  const requestId = "request-new-issue";
+  const targetBaseline = { request_id: requestId };
+  const calls = [];
+  const result = await runWorkflowObservationCycle({
+    request: { request_id: requestId, target_baseline: targetBaseline },
+    definition: await definition(workflowId),
+    currentTaskActionId,
+    observeGithubState: async (input) => {
+      calls.push(["github", input]);
+      return {
+        ...githubResult(203, github),
+        request_id: requestId,
+        target_baseline: targetBaseline,
+        source_identifiers: ["repository codechaser-kr/codex-harness"],
+      };
+    },
+    observeWorkflowLog: async (input) => {
+      calls.push(["log", input]);
+      return {
+        ...logResult(203, log),
+        request_id: requestId,
+        target_baseline: targetBaseline,
+        source_identifiers: [`workflow-log:${requestId}`],
+      };
+    },
+  });
+  assert.deepEqual(calls, [
+    ["github", { request_id: requestId, target_baseline: targetBaseline }],
+    ["log", { request_id: requestId, target_baseline: targetBaseline }],
+  ]);
+  return result;
+}
+
+test("runtime allows missing source issue IDs only before the first issue exists", async (t) => {
+  const initialCreationStages = [
+    {
+      workflowId: "feature-proposal",
+      taskActionId: "FP-1",
+      log: [observed("feature_proposal_requested", true, "user_input", "request-new-issue")],
+    },
+    {
+      workflowId: "feature-proposal",
+      taskActionId: "FP-2",
+      log: [
+        observed("feature_proposal_requested", true, "user_input", "request-new-issue"),
+        observed("feature_proposal_draft_confirmed", true, "user_input", "request-new-issue"),
+      ],
+    },
+    {
+      workflowId: "policy-review",
+      taskActionId: "PR-1",
+      log: [observed("policy_review_requested", true, "user_input", "request-new-issue")],
+    },
+    {
+      workflowId: "policy-review",
+      taskActionId: "PR-2",
+      log: [
+        observed("policy_review_requested", true, "user_input", "request-new-issue"),
+        observed("policy_review_draft_confirmed", true, "user_input", "request-new-issue"),
+      ],
+    },
+    {
+      workflowId: "feature-change",
+      taskActionId: "FC-1",
+      log: [observed("feature_change_entry_source", "feature_proposal", "local_state", "request-new-issue")],
+    },
+    {
+      workflowId: "feature-change",
+      taskActionId: "FC-2",
+      log: [
+        observed("feature_change_entry_source", "feature_proposal", "local_state", "request-new-issue"),
+        observed("feature_change_draft_confirmed", true, "user_input", "request-new-issue"),
+      ],
+    },
+    {
+      workflowId: "feature-fix",
+      taskActionId: "FF-1",
+      log: [observed("feature_fix_requested", true, "user_input", "request-new-issue")],
+    },
+    {
+      workflowId: "feature-fix",
+      taskActionId: "FF-2",
+      log: [
+        observed("feature_fix_requested", true, "user_input", "request-new-issue"),
+        observed("feature_fix_draft_confirmed", true, "user_input", "request-new-issue"),
+      ],
+    },
+  ];
+
+  for (const stage of initialCreationStages) {
+    await t.test(`${stage.workflowId}/${stage.taskActionId}`, async () => {
+      const result = await runMockedRuntimeWithoutSourceIssueId(stage);
+      assert.equal(result.status, "action_required", JSON.stringify(result));
+      assert.equal(result.evaluation.task_action_id, stage.taskActionId);
+    });
+  }
+
+  const afterCreation = await runMockedRuntimeWithoutSourceIssueId({
+    workflowId: "feature-proposal",
+    github: [observed("feature_proposal_issue_created", true, "github_state", "issue #93", "state")],
+    log: [
+      observed("feature_proposal_requested", true, "user_input", "request-new-issue"),
+      observed("feature_proposal_draft_confirmed", true, "user_input", "request-new-issue"),
+    ],
+  });
+  assert.equal(afterCreation.status, "stopped");
+  assert.equal(afterCreation.reason, "runtime_request_invalid");
+  assert.equal(afterCreation.errors.some((error) => error.code === "runtime_request.source_issue_id.required"), true);
+});
 
 test("feature-proposal completes and selects its serial successor only after GitHub reports the source issue closed", async (t) => {
   for (const [direction, taskActionId, expectedWorkflow, entryFact] of [

@@ -17,6 +17,12 @@ const NORMALIZERS = new Map([
 
 const PARENT_WORKFLOW_IDS = new Set(["policy-review", "feature-change", "feature-fix"]);
 const PLANNED_IMPLEMENTATION_PARENT_IDS = new Set(["feature-change", "feature-fix"]);
+const ISSUE_CREATION_TASKS_WITHOUT_SOURCE_ISSUE_ID = new Map([
+  ["feature-proposal", new Set(["FP-1", "FP-2"])],
+  ["policy-review", new Set(["PR-1", "PR-2"])],
+  ["feature-change", new Set(["FC-1", "FC-2"])],
+  ["feature-fix", new Set(["FF-1", "FF-2"])],
+]);
 const OBSERVATION_FIELDS = ["fact_id", "value", "source_kind", "source_reference", "field_reference"];
 
 function isRecord(value) {
@@ -274,14 +280,15 @@ export async function runWorkflowObservationCycle({
       message: "A supported workflow and both read-only observation providers are required.",
     }]);
   }
+  const sourceIssueIdProvided = request?.source_issue_id !== undefined && request?.source_issue_id !== null;
   if (!isRecord(request)
     || !isNonEmptyString(request.request_id)
-    || !isNonEmptyString(request.source_issue_id)
+    || (sourceIssueIdProvided && !isNonEmptyString(request.source_issue_id))
     || request.target_baseline === undefined) {
     return stopped(workflowId, "runtime_request_invalid", [{
       code: "runtime_request.invalid",
       path: "/request",
-      message: "request_id, source_issue_id, and target_baseline are required.",
+      message: "request_id and target_baseline are required; source_issue_id must be non-empty when provided.",
     }]);
   }
   if (definition.workflow_id !== workflowId) {
@@ -327,6 +334,15 @@ export async function runWorkflowObservationCycle({
   const evaluation = evaluateWorkflowDefinition(definition, normalized.normalized_fact_state, {
     currentTaskActionId,
   });
+  if (["action_required", "completed"].includes(evaluation.status)
+    && !isNonEmptyString(request.source_issue_id)
+    && !ISSUE_CREATION_TASKS_WITHOUT_SOURCE_ISSUE_ID.get(workflowId)?.has(evaluation.task_action_id)) {
+    return stopped(workflowId, "runtime_request_invalid", [{
+      code: "runtime_request.source_issue_id.required",
+      path: "/request/source_issue_id",
+      message: `${workflowId}/${evaluation.task_action_id ?? "unknown task"} requires an existing source issue.`,
+    }]);
+  }
   const handoff = selectCompletedWorkflowHandoff({
     workflowId,
     evaluation,

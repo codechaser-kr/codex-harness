@@ -263,6 +263,14 @@ function selectCompletedWorkflowHandoff({ workflowId, evaluation, factState, nor
       || !isNonEmptyString(parent.implementation_unit_id)) {
       return { status: "unresolved", reason: "invalid_parent_workflow_context" };
     }
+    if (parent.source_issue_id.trim() !== request.source_issue_id.trim()) {
+      return {
+        status: "unresolved",
+        reason: "parent_source_issue_id_mismatch",
+        expected_source_issue_id: request.source_issue_id.trim(),
+        observed_parent_source_issue_id: parent.source_issue_id.trim(),
+      };
+    }
     return {
       status: "re_evaluate_parent",
       workflow_id: parent.workflow_id,

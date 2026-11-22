@@ -415,6 +415,27 @@ test("completed implementation returns to its recorded parent for entry re-evalu
   }
 });
 
+test("completed implementation does not re-evaluate a parent issue different from the active source", async () => {
+  const result = await runMockedRuntime({
+    workflowId: "implementation",
+    taskActionId: "FI-36",
+    issueId: 203,
+    github: [observed("pull_request_merged", true, "github_state", "PR #220", "merged")],
+    log: [
+      observed("post_merge_reflection_completed", true, "local_state", "request-203", "workflow_log.post_merge_reflection_completed"),
+      observed("implementation_completed", true, "local_state", "request-203", "workflow_log.implementation_completed"),
+    ],
+    parentContext: { workflow_id: "feature-change", source_issue_id: "999", implementation_unit_id: "C-1" },
+  });
+
+  assert.deepEqual(result.workflow_handoff, {
+    status: "unresolved",
+    reason: "parent_source_issue_id_mismatch",
+    expected_source_issue_id: "203",
+    observed_parent_source_issue_id: "999",
+  });
+});
+
 test("approved implementation groups fan out in parallel and wait at each sequential group barrier", () => {
   const approvedPlan = {
     approved: true,

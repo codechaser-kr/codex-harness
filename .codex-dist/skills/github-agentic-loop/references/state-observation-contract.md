@@ -14,8 +14,9 @@
   관측한다. 첫 `PR-9` 실행에서 관계가 없는 것은 예상 상태이며, 선택된 Issue ID로 관계를 기록한다. 기존 관계가 다른 대상,
   여러 대상, 종료된 대상 또는 기능변경 유형이 아닌 대상으로 충돌하면 새 관계를 더하지 말고 중단해 기록을 바로잡는다.
   관계 fact의 provenance는 `field_reference=related_issues[issue #<ID>]` 형식으로 정확한 대상 ID를 보존한다.
-  Composition runtime은 `PR-11` 종료 결과에 이 ID를 포함하며, relation evidence에서 ID를 복원할 수 없으면 handoff를
-  확정하지 않는다.
+  `PR-11`에서는 이 relation ID와 `feature_change_transition_result` evidence의 `source_reference=issue #<ID>`가
+  같은 대상인지 교차 검증한다. 결과 ID가 다르거나 하나라도 누락·모호하면 update 완료를 확정하지 않고 handoff를 미해결로
+  반환한다. Composition runtime은 두 ID가 일치할 때만 `PR-11` 종료 결과에 이 ID를 포함한다.
   `PR-9` 완료 뒤 재개 때는 같은 관계를 읽어 해당 Issue ID를 대상 ID로 사용한다. 완료된 관계가 이후 없거나 모순이면 제목,
   본문 언급 또는 단순 관련성으로 추측하지 않고 중단한다. 이미 선택한 대상 관계가 없을 때는 재선택을 요구하지 않는다.
 - 사용자가 기존 대상 방향은 선택했으나 대상 이슈 번호를 명시하지 않았거나 후보를 구별할 수 없으면, PR-7의 사용자 결정 단계에서

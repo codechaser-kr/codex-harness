@@ -155,6 +155,18 @@ function issueNumberFromRelationEvidence(evidence = []) {
   return issueNumbers.size === 1 ? [...issueNumbers][0] : null;
 }
 
+function issueNumberFromSourceReference(evidence = []) {
+  if (!Array.isArray(evidence) || evidence.length === 0) return null;
+  const issueNumbers = new Set();
+  for (const item of evidence) {
+    if (typeof item?.source_reference !== "string") return null;
+    const match = item.source_reference.trim().match(/^issue\s+#(\d+)$/i);
+    if (!match) return null;
+    issueNumbers.add(Number(match[1]));
+  }
+  return issueNumbers.size === 1 ? [...issueNumbers][0] : null;
+}
+
 function selectCompletedWorkflowHandoff({ workflowId, evaluation, factState, normalized, request, workflowLogResult }) {
   if (evaluation.status !== "completed") return null;
 
@@ -187,6 +199,20 @@ function selectCompletedWorkflowHandoff({ workflowId, evaluation, factState, nor
     );
     if (targetIssueId === null) {
       return { status: "unresolved", reason: "existing_target_issue_id_missing_or_ambiguous_in_relation_evidence" };
+    }
+    const updatedTargetIssueId = issueNumberFromSourceReference(
+      normalized.evidence_by_fact.feature_change_transition_result,
+    );
+    if (updatedTargetIssueId === null) {
+      return { status: "unresolved", reason: "updated_target_issue_id_missing_or_ambiguous_in_result_evidence" };
+    }
+    if (updatedTargetIssueId !== targetIssueId) {
+      return {
+        status: "unresolved",
+        reason: "existing_target_issue_id_mismatch_between_relation_and_update_result",
+        expected_target_issue_id: targetIssueId,
+        observed_update_issue_id: updatedTargetIssueId,
+      };
     }
     return {
       status: "workflow_ended",

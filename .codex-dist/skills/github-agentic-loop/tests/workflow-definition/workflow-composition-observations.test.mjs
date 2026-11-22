@@ -277,6 +277,20 @@ test("policy-review existing-target route ends after updating the exact related 
   });
   assert.equal(Object.hasOwn(relationFromDifferentSource.workflow_handoff, "updated_target_issue_id"), false);
 
+  const relationFromDifferentSourceBeforeClose = await runMockedRuntime({
+    workflowId: "policy-review",
+    taskActionId: "PR-9",
+    issueId: 203,
+    github: github.map((item) => item.fact_id === "feature_change_transition_target_related"
+      ? { ...item, source_reference: "issue #999" }
+      : item),
+    log,
+  });
+  assert.equal(relationFromDifferentSourceBeforeClose.status, "stopped");
+  assert.equal(relationFromDifferentSourceBeforeClose.reason, "observation_source_invalid");
+  assert.equal(relationFromDifferentSourceBeforeClose.errors.some((error) => error.code === "source_result.observed_fact.source_issue_id_mismatch"), true);
+  assert.equal(Object.hasOwn(relationFromDifferentSourceBeforeClose, "evaluation"), false);
+
   const ambiguous = await runMockedRuntime({
     workflowId: "policy-review",
     taskActionId: "PR-11",
@@ -401,6 +415,59 @@ test("runtime refuses GitHub observations that do not identify the requested sou
   assert.equal(result.reason, "observation_source_invalid");
   assert.equal(result.errors.some((error) => error.code === "source_result.source_identifiers.source_issue_id_mismatch"), true);
   assert.equal(Object.hasOwn(result, "evaluation"), false);
+});
+
+test("runtime rejects active-source issue facts attributed to another or multiple issues", async (t) => {
+  for (const [name, sourceReference] of [
+    ["another issue", "issue #999"],
+    ["multiple issues", "issue #203 and issue #999"],
+  ]) {
+    await t.test(name, async () => {
+      const result = await runMockedRuntime({
+        workflowId: "feature-proposal",
+        taskActionId: "FP-6",
+        issueId: 203,
+        github: [
+          observed("feature_proposal_direction_reflected", true, "github_state", "issue #203", "body.direction"),
+          observed("feature_proposal_issue_closed", true, "github_state", sourceReference, "state"),
+        ],
+        log: [observed("feature_proposal_direction", "policy_review", "user_input", "request-203", "user_decision.direction")],
+        githubResultOverrides: { source_identifiers: ["issue #203", "issue #999"] },
+      });
+
+      assert.equal(result.status, "stopped");
+      assert.equal(result.reason, "observation_source_invalid");
+      assert.equal(result.errors.some((error) => error.code === "source_result.observed_fact.source_issue_id_mismatch"
+        && error.path === "/github_state_summary/observed_facts/1/source_reference"), true);
+      assert.equal(Object.hasOwn(result, "evaluation"), false);
+      assert.equal(Object.hasOwn(result, "workflow_handoff"), false);
+    });
+  }
+});
+
+test("runtime checks active-source issue provenance for every workflow", async (t) => {
+  for (const [workflowId, taskActionId, factId] of [
+    ["feature-proposal", "FP-6", "feature_proposal_issue_closed"],
+    ["policy-review", "PR-12", "policy_design_reflected"],
+    ["feature-change", "FC-7", "feature_plan_reflected"],
+    ["feature-fix", "FF-8", "feature_fix_plan_reflected"],
+    ["implementation", "FI-33", "implementation_plan_reflected"],
+  ]) {
+    await t.test(`${workflowId}/${factId}`, async () => {
+      const result = await runMockedRuntime({
+        workflowId,
+        taskActionId,
+        issueId: 203,
+        github: [observed(factId, true, "github_state", "issue #999")],
+        log: [],
+      });
+
+      assert.equal(result.status, "stopped");
+      assert.equal(result.reason, "observation_source_invalid");
+      assert.equal(result.errors.some((error) => error.code === "source_result.observed_fact.source_issue_id_mismatch"), true);
+      assert.equal(Object.hasOwn(result, "evaluation"), false);
+    });
+  }
 });
 
 test("runtime refuses GitHub observations unless both read-only postconditions are satisfied", async (t) => {

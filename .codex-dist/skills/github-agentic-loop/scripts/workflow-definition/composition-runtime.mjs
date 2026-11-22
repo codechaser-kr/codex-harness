@@ -15,6 +15,34 @@ const NORMALIZERS = new Map([
   ["implementation", normalizeImplementationFacts],
 ]);
 
+// Only facts owned by request.source_issue_id belong here. Created-target and cross-entity facts use their own identities.
+const ACTIVE_SOURCE_ISSUE_FACTS = new Map([
+  ["feature-proposal", new Set([
+    "feature_proposal_direction_reflected",
+    "feature_proposal_issue_closed",
+  ])],
+  ["policy-review", new Set([
+    "policy_design_reflected",
+    "design_document_result_reflected",
+    "feature_change_transition_reflected",
+    "feature_change_transition_target_related",
+    "policy_review_issue_closed",
+  ])],
+  ["feature-change", new Set([
+    "feature_plan_reflected",
+    "all_planned_work_units_merged",
+    "all_completion_items_reflected",
+    "feature_change_issue_closed",
+  ])],
+  ["feature-fix", new Set([
+    "feature_fix_plan_reflected",
+    "all_planned_work_units_merged",
+    "all_completion_items_reflected",
+    "feature_fix_issue_closed",
+  ])],
+  ["implementation", new Set(["implementation_plan_reflected"])],
+]);
+
 const PARENT_WORKFLOW_IDS = new Set(["policy-review", "feature-change", "feature-fix"]);
 const PLANNED_IMPLEMENTATION_PARENT_IDS = new Set(["feature-change", "feature-fix"]);
 const ISSUE_CREATION_TASKS_WITHOUT_SOURCE_ISSUE_ID = new Map([
@@ -38,11 +66,17 @@ function hasSourceIssueIdentifier(sourceIdentifiers, sourceIssueId) {
   return sourceIdentifiers.some((identifier) => identifier.trim().toLowerCase() === expectedIdentifier);
 }
 
+function sourceReferenceMatchesIssue(sourceReference, sourceIssueId) {
+  if (typeof sourceReference !== "string") return false;
+  const issueIds = [...sourceReference.matchAll(/\bissue\s+#(\d+)\b/gi)].map((match) => match[1]);
+  return issueIds.length === 1 && issueIds[0] === sourceIssueId.trim();
+}
+
 function stopped(workflowId, reason, errors = []) {
   return { status: "stopped", workflow_id: workflowId, reason, errors };
 }
 
-function validateSourceResult(result, { name, request, requireGithubReadOnly = false }) {
+function validateSourceResult(result, { name, request, workflowId, taskActionId, requireGithubReadOnly = false }) {
   const errors = [];
   if (!isRecord(result)) {
     return [{ code: "source_result.type", path: `/${name}`, message: `${name} must return an object.` }];
@@ -71,6 +105,26 @@ function validateSourceResult(result, { name, request, requireGithubReadOnly = f
   }
   if (!Array.isArray(result.observed_facts)) {
     errors.push({ code: "source_result.observed_facts.invalid", path: `/${name}/observed_facts`, message: `${name} must return observed_facts as an array.` });
+  }
+  if (requireGithubReadOnly && isNonEmptyString(request.source_issue_id) && Array.isArray(result.observed_facts)) {
+    const activeSourceIssueFacts = ACTIVE_SOURCE_ISSUE_FACTS.get(workflowId) ?? new Set();
+    result.observed_facts.forEach((observation, index) => {
+      // PR-11 returns its established unresolved handoff for relation provenance mismatches; PR-9 must fail before close-first can advance.
+      const pr11RelationHandoffChecksSource = workflowId === "policy-review"
+        && taskActionId === "PR-11"
+        && observation?.fact_id === "feature_change_transition_target_related";
+      if (!activeSourceIssueFacts.has(observation?.fact_id)
+        || observation?.source_kind !== "github_state"
+        || pr11RelationHandoffChecksSource
+        || sourceReferenceMatchesIssue(observation.source_reference, request.source_issue_id)) {
+        return;
+      }
+      errors.push({
+        code: "source_result.observed_fact.source_issue_id_mismatch",
+        path: `/${name}/observed_facts/${index}/source_reference`,
+        message: `${observation.fact_id} must identify the active source issue #${request.source_issue_id.trim()}.`,
+      });
+    });
   }
   if (!Array.isArray(result.missing_or_conflicting_facts)) {
     errors.push({ code: "source_result.missing_or_conflicting_facts.invalid", path: `/${name}/missing_or_conflicting_facts`, message: `${name} must report missing or conflicting facts as an array.` });
@@ -371,7 +425,13 @@ export async function runWorkflowObservationCycle({
   }
 
   const sourceErrors = [
-    ...validateSourceResult(githubStateResult, { name: "github_state_summary", request, requireGithubReadOnly: true }),
+    ...validateSourceResult(githubStateResult, {
+      name: "github_state_summary",
+      request,
+      workflowId,
+      taskActionId: currentTaskActionId,
+      requireGithubReadOnly: true,
+    }),
     ...validateSourceResult(workflowLogResult, { name: "workflow_log_observation", request }),
   ];
   if (sourceErrors.length > 0) {

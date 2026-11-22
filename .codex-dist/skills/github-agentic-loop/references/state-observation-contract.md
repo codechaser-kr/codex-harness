@@ -103,6 +103,29 @@ fact와 evidence를 같은 상태 묶음에 포함한 뒤
 `missing_or_conflicting_facts`를 포함해야 한다. GitHub 상태 요약은 읽기 전용 결과여야 하며
 요청에 `source_issue_id`가 있으면 composition runtime은 해당 ID를 GitHub provider에 전달하고, 반환된
 `source_identifiers`에 같은 `issue #<ID>`가 있는지 확인한다.
+이 확인만으로는 개별 fact의 출처가 보장되지 않는다. 다음 Workflow/fact는 활성 `source_issue_id`가 소유하는
+GitHub 관측이므로 각 fact의 `source_reference`에도 동일한 이슈 번호가 정확히 하나 식별되어야 한다.
+다른 이슈를 가리키거나 이슈 번호가 없거나 여러 이슈 번호가 식별되면 adapter/evaluator 전에
+`observation_source_invalid`로 중단한다.
+
+| Workflow | 활성 원본 이슈 출처와 대조하는 fact |
+| --- | --- |
+| `feature-proposal` | `feature_proposal_direction_reflected`, `feature_proposal_issue_closed` |
+| `policy-review` | `policy_design_reflected`, `design_document_result_reflected`, `feature_change_transition_reflected`, `feature_change_transition_target_related`, `policy_review_issue_closed` |
+| `feature-change` | `feature_plan_reflected`, `all_planned_work_units_merged`, `all_completion_items_reflected`, `feature_change_issue_closed` |
+| `feature-fix` | `feature_fix_plan_reflected`, `all_planned_work_units_merged`, `all_completion_items_reflected`, `feature_fix_issue_closed` |
+| `implementation` | `implementation_plan_reflected` |
+
+이 목록 밖의 GitHub fact가 활성 원본 이슈를 소유한다고 추정하지 않는다. `*_issue_created` fact는 새로 생성한
+대상을 나타내고, 그 결과와 현재 source issue를 연결하는 producer 계약은 별도다. 예를 들어 `policy-review`의
+`design_document_pr_merged`는 PR을, `feature_change_transition_result`는 선택된 기능변경 대상 이슈를 가리킨다.
+후자는 `PR-11`에서 원본 이슈의 관계 fact와 갱신 결과의 대상 ID를 별도로 대조한다. 따라서
+`source_identifiers`에 활성 이슈가 포함됐다는 이유만으로 다른 fact의 출처를 허용하지 않으며, 모든 fact의
+`source_reference`를 활성 이슈로 일괄 치환하지도 않는다.
+`feature_change_transition_target_related`도 원본 정책검토 이슈에 기록된 관계다. `PR-11`에서는 기존 handoff 검사가
+관계 출처를 확인해 불일치 시 `unresolved`를 반환하므로 그 검사를 유지한다. `PR-9`에서는 relation fact를 evaluator에
+전달하기 전에 같은 원본 이슈 대조를 적용해 잘못된 출처로 원본 이슈를 닫는 전이를 막는다.
+
 실행 주체·session·permission·tool·command path 식별, `performed_actions`, `verification_results`,
 `postconditions_satisfied`, `residual_risks_or_failure_reasons`를 함께 반환해야 한다. `changed_files`와
 `github_state_changes`는 빈 배열이어야 한다. composition runtime은 이 correlation·read-only 결과 필수값을 검사하고

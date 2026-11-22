@@ -80,6 +80,21 @@ function validateSourceResult(result, { name, request, requireGithubReadOnly = f
         errors.push({ code: "source_result.runtime_evidence.missing", path: `/${name}/${field}`, message: `${name} must report ${field}.` });
       }
     }
+    if (Object.hasOwn(result, "execution_path_recheck_result")
+      && result.execution_path_recheck_result !== "satisfied") {
+      errors.push({
+        code: "source_result.execution_path_recheck.unsatisfied",
+        path: `/${name}/execution_path_recheck_result`,
+        message: `${name} execution path recheck must be satisfied before its observations can be used.`,
+      });
+    }
+    if (Object.hasOwn(result, "postconditions_satisfied") && result.postconditions_satisfied !== true) {
+      errors.push({
+        code: "source_result.postconditions.unsatisfied",
+        path: `/${name}/postconditions_satisfied`,
+        message: `${name} postconditions must be satisfied before its observations can be used.`,
+      });
+    }
     for (const field of ["changed_files", "github_state_changes"]) {
       if (!Array.isArray(result[field])) {
         errors.push({ code: "source_result.read_only_evidence.missing", path: `/${name}/${field}`, message: `${name} must report ${field}.` });

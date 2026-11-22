@@ -59,7 +59,7 @@ async function definition(workflowId) {
   return parsed.value;
 }
 
-async function runMockedRuntime({ workflowId, taskActionId, issueId, github, log, parentContext }) {
+async function runMockedRuntime({ workflowId, taskActionId, issueId, github, log, parentContext, githubResultOverrides = {} }) {
   const calls = [];
   const result = await runWorkflowObservationCycle({
     request: request(issueId),
@@ -67,7 +67,7 @@ async function runMockedRuntime({ workflowId, taskActionId, issueId, github, log
     currentTaskActionId: taskActionId,
     observeGithubState: async (input) => {
       calls.push(["github", input]);
-      return githubResult(issueId, github);
+      return { ...githubResult(issueId, github), ...githubResultOverrides };
     },
     observeWorkflowLog: async (input) => {
       calls.push(["log", input]);
@@ -215,6 +215,35 @@ test("runtime refuses a GitHub summary with mismatched request correlation or wr
   assert.equal(result.errors.some((error) => error.code === "source_result.request_id.mismatch"), true);
   assert.equal(result.errors.some((error) => error.code === "source_result.read_only_evidence.changed"), true);
   assert.equal(Object.hasOwn(result, "evaluation"), false);
+});
+
+test("runtime refuses GitHub observations unless both read-only postconditions are satisfied", async (t) => {
+  for (const [name, githubResultOverrides, expectedErrorCode] of [
+    ["failed execution-path recheck", { execution_path_recheck_result: "failed" }, "source_result.execution_path_recheck.unsatisfied"],
+    ["unknown execution-path recheck status", { execution_path_recheck_result: "satisfied_with_warning" }, "source_result.execution_path_recheck.unsatisfied"],
+    ["unsatisfied postconditions", { postconditions_satisfied: false }, "source_result.postconditions.unsatisfied"],
+    ["non-boolean postconditions", { postconditions_satisfied: "true" }, "source_result.postconditions.unsatisfied"],
+  ]) {
+    await t.test(name, async () => {
+      const result = await runMockedRuntime({
+        workflowId: "feature-proposal",
+        taskActionId: "FP-6",
+        issueId: 203,
+        github: [
+          observed("feature_proposal_direction_reflected", true, "github_state", "issue #203", "body.direction"),
+          observed("feature_proposal_issue_closed", true, "github_state", "issue #203", "state"),
+        ],
+        log: [observed("feature_proposal_direction", "policy_review", "user_input", "request-203", "user_decision.direction")],
+        githubResultOverrides,
+      });
+
+      assert.equal(result.status, "stopped");
+      assert.equal(result.reason, "observation_source_invalid");
+      assert.equal(result.errors.some((error) => error.code === expectedErrorCode), true);
+      assert.equal(Object.hasOwn(result, "evaluation"), false);
+      assert.equal(Object.hasOwn(result, "workflow_handoff"), false);
+    });
+  }
 });
 
 test("completed implementation returns to its recorded parent for entry re-evaluation", async () => {

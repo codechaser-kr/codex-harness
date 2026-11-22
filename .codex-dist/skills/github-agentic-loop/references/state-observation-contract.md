@@ -7,8 +7,10 @@
 - 모든 관측 요청에는 `request_id`와 `target_baseline`이 필요하다. 첫 GitHub 이슈가 생성되기 전에는 `source_issue_id`가 없을 수 있으며,
   해당 단계는 `FP-1/FP-2`, `PR-1/PR-2`, `FC-1/FC-2`, `FF-1/FF-2`로 한정한다. Workflow 평가가 다른 작업 단계를 선택하면
   요청에 현재 원본 이슈의 `source_issue_id`가 있어야 한다. 이슈 생성 뒤 오케스트레이션은 반환된 이슈 ID를 다음 관측 요청에 전달한다.
-- 구현 Workflow의 `FI-36` 완료 뒤 부모 재평가로 돌아갈 때는 로그의 `parent_workflow_context.source_issue_id`가 현재 요청의
-  `source_issue_id`와 같아야 한다. 값이 다르면 부모 재평가 handoff를 만들지 않고 `unresolved`로 중단한다.
+- 구현 자식 실행 요청에는 시작 시 보존한 `parent_workflow_id`와 해당 `implementation_unit_id`를 전달한다. `FI-36` 완료 뒤
+  부모 재평가로 돌아갈 때는 로그의 `parent_workflow_context.workflow_id`, `source_issue_id`, `implementation_unit_id`가
+  활성 요청의 대응 값과 모두 같아야 한다. 활성 요청 값 또는 로그 컨텍스트가 없거나 값이 다르면 부모 재평가 handoff를 만들지 않고
+  `unresolved`로 중단한다. 양쪽에 부모 컨텍스트가 모두 없을 때만 `no_parent_workflow_context`로 종료한다.
 - 기준 대상은 열린 PR에서 먼저 찾고, 이어갈 PR 후보가 비어 있으면 열린 이슈에서 찾는다.
 - 열린 PR 중 unresolved review thread, merge 대기 상태가 있으면 새 이슈보다 먼저 처리한다.
 - 기능제안 Workflow가 방향 반영 및 원본 이슈 종료 후 `completed`를 반환하면, orchestration은 사용자 선택 방향으로 후속

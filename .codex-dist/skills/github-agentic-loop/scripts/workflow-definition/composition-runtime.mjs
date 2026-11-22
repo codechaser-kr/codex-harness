@@ -259,7 +259,16 @@ function selectCompletedWorkflowHandoff({ workflowId, evaluation, factState, nor
 
   if (workflowId === "implementation" && evaluation.task_action_id === "FI-36") {
     const parent = workflowLogResult.parent_workflow_context;
-    if (!isRecord(parent)) return { status: "workflow_ended", reason: "no_parent_workflow_context" };
+    if (!isRecord(parent)) {
+      if (request.parent_workflow_id !== undefined || request.implementation_unit_id !== undefined) {
+        return { status: "unresolved", reason: "parent_workflow_context_missing" };
+      }
+      return { status: "workflow_ended", reason: "no_parent_workflow_context" };
+    }
+    if (!PARENT_WORKFLOW_IDS.has(request.parent_workflow_id)
+      || !isNonEmptyString(request.implementation_unit_id)) {
+      return { status: "unresolved", reason: "invalid_active_parent_workflow_context" };
+    }
     if (!PARENT_WORKFLOW_IDS.has(parent.workflow_id)
       || !isNonEmptyString(parent.source_issue_id)
       || !isNonEmptyString(parent.implementation_unit_id)) {
@@ -273,11 +282,22 @@ function selectCompletedWorkflowHandoff({ workflowId, evaluation, factState, nor
         observed_parent_source_issue_id: parent.source_issue_id.trim(),
       };
     }
+    if (parent.workflow_id !== request.parent_workflow_id
+      || parent.implementation_unit_id.trim() !== request.implementation_unit_id.trim()) {
+      return {
+        status: "unresolved",
+        reason: "parent_workflow_context_mismatch",
+        expected_parent_workflow_id: request.parent_workflow_id,
+        observed_parent_workflow_id: parent.workflow_id,
+        expected_implementation_unit_id: request.implementation_unit_id.trim(),
+        observed_implementation_unit_id: parent.implementation_unit_id.trim(),
+      };
+    }
     return {
       status: "re_evaluate_parent",
-      workflow_id: parent.workflow_id,
-      source_issue_id: parent.source_issue_id,
-      implementation_unit_id: parent.implementation_unit_id,
+      workflow_id: request.parent_workflow_id,
+      source_issue_id: request.source_issue_id.trim(),
+      implementation_unit_id: request.implementation_unit_id.trim(),
       resume_from_definition_entry: true,
     };
   }

@@ -59,10 +59,14 @@ async function definition(workflowId) {
   return parsed.value;
 }
 
-async function runMockedRuntime({ workflowId, taskActionId, issueId, github, log, parentContext, githubResultOverrides = {} }) {
+async function runMockedRuntime({ workflowId, taskActionId, issueId, github, log, parentContext, parentWorkflowId, implementationUnitId, githubResultOverrides = {} }) {
   const calls = [];
   const result = await runWorkflowObservationCycle({
-    request: request(issueId),
+    request: {
+      ...request(issueId),
+      ...(parentWorkflowId === undefined ? {} : { parent_workflow_id: parentWorkflowId }),
+      ...(implementationUnitId === undefined ? {} : { implementation_unit_id: implementationUnitId }),
+    },
     definition: await definition(workflowId),
     currentTaskActionId: taskActionId,
     observeGithubState: async (input) => {
@@ -424,6 +428,8 @@ test("completed implementation returns to its recorded parent for entry re-evalu
         observed("implementation_completed", true, "local_state", "request-203", "workflow_log.implementation_completed"),
       ],
       parentContext: { workflow_id: parentWorkflowId, source_issue_id: "203", implementation_unit_id: "C-1" },
+      parentWorkflowId,
+      implementationUnitId: "C-1",
     });
     assert.deepEqual(result.workflow_handoff, {
       status: "re_evaluate_parent",
@@ -446,6 +452,8 @@ test("completed implementation does not re-evaluate a parent issue different fro
       observed("implementation_completed", true, "local_state", "request-203", "workflow_log.implementation_completed"),
     ],
     parentContext: { workflow_id: "feature-change", source_issue_id: "999", implementation_unit_id: "C-1" },
+    parentWorkflowId: "feature-change",
+    implementationUnitId: "C-1",
   });
 
   assert.deepEqual(result.workflow_handoff, {
@@ -453,6 +461,97 @@ test("completed implementation does not re-evaluate a parent issue different fro
     reason: "parent_source_issue_id_mismatch",
     expected_source_issue_id: "203",
     observed_parent_source_issue_id: "999",
+  });
+});
+
+test("completed implementation does not re-evaluate a different parent workflow or implementation unit", async () => {
+  for (const scenario of [
+    {
+      name: "parent workflow mismatch",
+      parentContext: { workflow_id: "feature-fix", source_issue_id: "203", implementation_unit_id: "C-1" },
+      expected: {
+        status: "unresolved",
+        reason: "parent_workflow_context_mismatch",
+        expected_parent_workflow_id: "feature-change",
+        observed_parent_workflow_id: "feature-fix",
+        expected_implementation_unit_id: "C-1",
+        observed_implementation_unit_id: "C-1",
+      },
+    },
+    {
+      name: "implementation unit mismatch",
+      parentContext: { workflow_id: "feature-change", source_issue_id: "203", implementation_unit_id: "C-2" },
+      expected: {
+        status: "unresolved",
+        reason: "parent_workflow_context_mismatch",
+        expected_parent_workflow_id: "feature-change",
+        observed_parent_workflow_id: "feature-change",
+        expected_implementation_unit_id: "C-1",
+        observed_implementation_unit_id: "C-2",
+      },
+    },
+  ]) {
+    const result = await runMockedRuntime({
+      workflowId: "implementation",
+      taskActionId: "FI-36",
+      issueId: 203,
+      github: [observed("pull_request_merged", true, "github_state", "PR #220", "merged")],
+      log: [
+        observed("post_merge_reflection_completed", true, "local_state", "request-203", "workflow_log.post_merge_reflection_completed"),
+        observed("implementation_completed", true, "local_state", "request-203", "workflow_log.implementation_completed"),
+      ],
+      parentContext: scenario.parentContext,
+      parentWorkflowId: "feature-change",
+      implementationUnitId: "C-1",
+    });
+
+    assert.deepEqual(result.workflow_handoff, scenario.expected, scenario.name);
+  }
+});
+
+test("completed child implementation requires its parent context in the active request and log", async () => {
+  const log = [
+    observed("post_merge_reflection_completed", true, "local_state", "request-203", "workflow_log.post_merge_reflection_completed"),
+    observed("implementation_completed", true, "local_state", "request-203", "workflow_log.implementation_completed"),
+  ];
+  const parentContext = { workflow_id: "feature-change", source_issue_id: "203", implementation_unit_id: "C-1" };
+  const withoutActiveRequestContext = await runMockedRuntime({
+    workflowId: "implementation",
+    taskActionId: "FI-36",
+    issueId: 203,
+    github: [observed("pull_request_merged", true, "github_state", "PR #220", "merged")],
+    log,
+    parentContext,
+  });
+  assert.deepEqual(withoutActiveRequestContext.workflow_handoff, {
+    status: "unresolved",
+    reason: "invalid_active_parent_workflow_context",
+  });
+
+  const withoutLogContext = await runMockedRuntime({
+    workflowId: "implementation",
+    taskActionId: "FI-36",
+    issueId: 203,
+    github: [observed("pull_request_merged", true, "github_state", "PR #220", "merged")],
+    log,
+    parentWorkflowId: "feature-change",
+    implementationUnitId: "C-1",
+  });
+  assert.deepEqual(withoutLogContext.workflow_handoff, {
+    status: "unresolved",
+    reason: "parent_workflow_context_missing",
+  });
+
+  const withoutExpectedOrObservedParent = await runMockedRuntime({
+    workflowId: "implementation",
+    taskActionId: "FI-36",
+    issueId: 203,
+    github: [observed("pull_request_merged", true, "github_state", "PR #220", "merged")],
+    log,
+  });
+  assert.deepEqual(withoutExpectedOrObservedParent.workflow_handoff, {
+    status: "workflow_ended",
+    reason: "no_parent_workflow_context",
   });
 });
 

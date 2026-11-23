@@ -10,7 +10,9 @@ BACKUP_ROOT="${CODEX_HARNESS_BACKUP_ROOT:-"$STATE_HOME/codex-harness/backups"}"
 TMP_ROOT="${TMPDIR:-/tmp}/codex-harness-install.$$"
 HARNESS_SKILLS="harness"
 WORKFLOW_ENGINE_SKILL="github-agentic-loop"
-WORKFLOW_ENGINE_SKILLS="$WORKFLOW_ENGINE_SKILL workflow-code-editor github-state-summary github-simple-executor target-harness-code-editor issue-creation feature-proposal-triage policy-plan policy-review-next-triage feature-plan fix-analysis fix-plan branch-proposal commit-plan pr-proposal pr-creation review-comment"
+PR_REQUEST_SKILL="pr-request"
+LEGACY_PR_CREATION_SKILL="pr-creation"
+WORKFLOW_ENGINE_SKILLS="$WORKFLOW_ENGINE_SKILL workflow-code-editor github-state-summary github-simple-executor target-harness-code-editor issue-creation feature-proposal-triage policy-plan policy-review-next-triage feature-plan fix-analysis fix-plan branch-proposal commit-plan pr-proposal $PR_REQUEST_SKILL review-comment"
 LEGACY_WORKFLOW_ENGINE_SKILL="github-workflow-engine"
 INSTALL_TARGET="${1:-all}"
 
@@ -127,6 +129,16 @@ install_skill() {
       legacy_backup=$(next_backup_path "$LEGACY_WORKFLOW_ENGINE_SKILL" backup)
       mv "$legacy_dest" "$legacy_backup"
       printf '%s\n' "기존 $LEGACY_WORKFLOW_ENGINE_SKILL 스킬 백업: $legacy_backup"
+    fi
+  fi
+
+  if [ "$skill" = "$PR_REQUEST_SKILL" ]; then
+    legacy_dest="$DEST_ROOT/$LEGACY_PR_CREATION_SKILL"
+    if [ -e "$legacy_dest" ]; then
+      mkdir -p "$BACKUP_ROOT"
+      legacy_backup=$(next_backup_path "$LEGACY_PR_CREATION_SKILL" backup)
+      mv "$legacy_dest" "$legacy_backup"
+      printf '%s\n' "기존 $LEGACY_PR_CREATION_SKILL 스킬 백업: $legacy_backup"
     fi
   fi
 

@@ -86,6 +86,7 @@ const urls = {
     "../../references/workflow-definition-contract.md",
     import.meta.url,
   ),
+  prRequest: new URL("../../../pr-request/SKILL.md", import.meta.url),
 };
 
 const artifactOutputConsumers = [
@@ -99,7 +100,7 @@ const artifactOutputConsumers = [
   ["commit-plan", new URL("../../../commit-plan/SKILL.md", import.meta.url)],
   ["branch-proposal", new URL("../../../branch-proposal/SKILL.md", import.meta.url)],
   ["pr-proposal", new URL("../../../pr-proposal/SKILL.md", import.meta.url)],
-  ["pr-creation", new URL("../../../pr-creation/SKILL.md", import.meta.url)],
+  ["pr-request", urls.prRequest],
   ["review-comment", new URL("../../../review-comment/SKILL.md", import.meta.url)],
 ];
 
@@ -684,4 +685,11 @@ test("artifact output consumers reference existing named sections", async () => 
       assert.ok(artifactHeadings.has(`### ${sectionName}`), `${name} references missing artifact output section: ${sectionName}`);
     }
   }
+});
+
+test("pr-request uses the renamed identity and returns request values", async () => {
+  const source = await readFile(urls.prRequest, "utf8");
+  assert.match(source, /^name: pr-request$/m);
+  assert.match(source, /^description: .*PR 생성에 필요한.*검증하고 요청값을 반환합니다\.$/m);
+  assert.doesNotMatch(source, /pr-creation|생성 요청 초안을 제안/);
 });

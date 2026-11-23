@@ -241,6 +241,10 @@ test("installer owns the current workflow engine skill identifier in one variabl
   assert.match(source, /^WORKFLOW_ENGINE_SKILLS="\$WORKFLOW_ENGINE_SKILL workflow-code-editor/m);
   assert.match(source, /^      SOURCE_MARKER="\$WORKFLOW_ENGINE_SKILL"$/m);
   assert.match(source, /^  if \[ "\$skill" = "\$WORKFLOW_ENGINE_SKILL" \]; then$/m);
+  assert.match(source, /^PR_REQUEST_SKILL="pr-request"$/m);
+  assert.match(source, /^LEGACY_PR_CREATION_SKILL="pr-creation"$/m);
+  assert.match(source, /^WORKFLOW_ENGINE_SKILLS=.*\$PR_REQUEST_SKILL/m);
+  assert.match(source, /^  if \[ "\$skill" = "\$PR_REQUEST_SKILL" \]; then$/m);
 });
 
 test("install and uninstall scripts have valid shell syntax", (t) => {
@@ -356,6 +360,8 @@ test("installer migrates a legacy workflow engine installation and uninstaller h
   const backupRoot = join(temporaryRoot, "backups");
   const legacySkillDirectory = join(destinationRoot, "github-workflow-engine");
   const currentSkillDirectory = join(destinationRoot, "github-agentic-loop");
+  const legacyPrCreationDirectory = join(destinationRoot, "pr-creation");
+  const currentPrRequestDirectory = join(destinationRoot, "pr-request");
   const environment = {
     ...process.env,
     HOME: join(temporaryRoot, "home"),
@@ -366,6 +372,8 @@ test("installer migrates a legacy workflow engine installation and uninstaller h
 
   await mkdir(legacySkillDirectory, { recursive: true });
   await writeFile(join(legacySkillDirectory, "SKILL.md"), "legacy sentinel\n");
+  await mkdir(legacyPrCreationDirectory, { recursive: true });
+  await writeFile(join(legacyPrCreationDirectory, "SKILL.md"), "legacy PR creation sentinel\n");
 
   const installResult = runProcess("sh", [installScript, "workflow-engine"], { cwd: repositoryRoot, env: environment });
   if (isNestedSpawnDenied(installResult)) {
@@ -374,7 +382,9 @@ test("installer migrates a legacy workflow engine installation and uninstaller h
   }
   assertProcessSucceeded(installResult, "install.sh workflow-engine with legacy installation");
   await access(join(currentSkillDirectory, "SKILL.md"));
+  await access(join(currentPrRequestDirectory, "SKILL.md"));
   await assert.rejects(access(legacySkillDirectory));
+  await assert.rejects(access(legacyPrCreationDirectory));
 
   let backupNames = await readdir(backupRoot);
   const migratedLegacyBackup = backupNames.find((name) => /^github-workflow-engine\.backup\./.test(name));
@@ -383,17 +393,29 @@ test("installer migrates a legacy workflow engine installation and uninstaller h
     await readFile(join(backupRoot, migratedLegacyBackup, "SKILL.md"), "utf8"),
     "legacy sentinel\n",
   );
+  const migratedPrCreationBackup = backupNames.find((name) => /^pr-creation\.backup\./.test(name));
+  assert.ok(migratedPrCreationBackup);
+  assert.equal(
+    await readFile(join(backupRoot, migratedPrCreationBackup, "SKILL.md"), "utf8"),
+    "legacy PR creation sentinel\n",
+  );
 
   await mkdir(legacySkillDirectory, { recursive: true });
   await writeFile(join(legacySkillDirectory, "SKILL.md"), "stale legacy sentinel\n");
+  await mkdir(legacyPrCreationDirectory, { recursive: true });
+  await writeFile(join(legacyPrCreationDirectory, "SKILL.md"), "stale PR creation sentinel\n");
   const uninstallResult = runProcess("sh", [uninstallScript, "workflow-engine"], { cwd: repositoryRoot, env: environment });
   assertProcessSucceeded(uninstallResult, "uninstall.sh workflow-engine with both installation names");
   await assert.rejects(access(currentSkillDirectory));
+  await assert.rejects(access(currentPrRequestDirectory));
   await assert.rejects(access(legacySkillDirectory));
+  await assert.rejects(access(legacyPrCreationDirectory));
 
   backupNames = await readdir(backupRoot);
   assert.equal(backupNames.some((name) => /^github-agentic-loop\.removed\./.test(name)), true);
   assert.equal(backupNames.some((name) => /^github-workflow-engine\.removed\./.test(name)), true);
+  assert.equal(backupNames.some((name) => /^pr-request\.removed\./.test(name)), true);
+  assert.equal(backupNames.some((name) => /^pr-creation\.removed\./.test(name)), true);
 });
 
 test("installer preserves the github-agentic-loop distribution", async (t) => {

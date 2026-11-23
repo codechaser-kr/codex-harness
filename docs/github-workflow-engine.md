@@ -953,7 +953,7 @@ codex-harness/
 │       ├── branch-proposal/
 │       ├── commit-plan/
 │       ├── pr-proposal/
-│       ├── pr-creation/
+│       ├── pr-request/
 │       └── review-comment/
 ```
 
@@ -963,7 +963,7 @@ codex-harness/
 
 편의 설치·제거 스크립트의 기본 사용자 스킬 루트는 `$HOME/.agents/skills`다. `CODEX_HOME`은 이 루트를 변경하지 않으며 `$CODEX_HOME/skills`는 설치, 탐지, 이전, 제거하지 않는다. 명시적 설치 위치가 필요하면 `CODEX_HARNESS_DEST_ROOT` 또는 Harness 전용 `CODEX_HARNESS_DEST`를 사용한다. 재설치와 제거로 보존되는 기존 디렉터리는 스킬 탐색 범위 밖의 `${XDG_STATE_HOME:-$HOME/.local/state}/codex-harness/backups`에 저장하고, `CODEX_HARNESS_BACKUP_ROOT`로 이 위치를 재정의할 수 있다.
 
-Workflow Engine 배포 스킬 식별자는 `github-agentic-loop`다. 설치 시 레거시 `github-workflow-engine` 디렉터리가 사용자 스킬 루트에 남아 있으면 먼저 같은 백업 정책으로 이동해 두 식별자가 동시에 활성화되지 않게 한다. `workflow-engine` 제거는 새 이름과 레거시 이름을 모두 검사하고 발견한 디렉터리를 각각 복구 가능한 백업으로 이동한다.
+Workflow Engine 배포 스킬 식별자는 `github-agentic-loop`다. 설치 시 레거시 `github-workflow-engine` 디렉터리가 사용자 스킬 루트에 남아 있으면 먼저 같은 백업 정책으로 이동해 두 식별자가 동시에 활성화되지 않게 한다. PR 요청 스킬은 `pr-request`를 배포하며, 기존 `pr-creation` 디렉터리도 설치 시 백업으로 이동한다. `workflow-engine` 제거는 PR 요청 스킬의 새 이름과 레거시 이름도 모두 확인하고 발견한 디렉터리를 각각 복구 가능한 백업으로 이동한다.
 
 ```text
 target-repo/

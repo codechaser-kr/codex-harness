@@ -42,7 +42,7 @@
     "FI-5": "workflow-code-editor",
     "FI-6": "commit",
     "FI-10": "pr-proposal",
-    "FI-12": "pr-creation",
+    "FI-12": "pr-request",
     "FI-15": "claude/code-review",
     "FI-16": "claude/awesome-code-review",
     "FI-17": "codex/awesome-code-review",

@@ -195,7 +195,7 @@ Definition이 `completed`를 반환한 뒤에만 별도 `workflow_handoff`를 �
 | 세부 구현 계획 | `commit-plan` |
 | 커밋 메시지 후보 | 전역 `commit` |
 | PR 제목과 본문 초안 | `pr-proposal` |
-| PR 생성 요청값 | `pr-creation` |
+| PR 생성 요청값 | `pr-request` |
 | 리뷰 코멘트 게시 초안 | `review-comment` |
 
 전용 스킬은 후보, 초안 또는 분석 결과만 반환한다. 결과는

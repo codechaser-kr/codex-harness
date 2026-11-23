@@ -611,7 +611,7 @@
         "operator": "equals",
         "value": true
       },
-      "executor_reference": "pr-creation",
+      "executor_reference": "pr-request",
       "next_transition_rules": [
         {
           "condition": null,

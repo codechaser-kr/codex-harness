@@ -27,7 +27,7 @@
 - `.codex-dist/skills/harness/SKILL.md`: Codex에 설치되는 전역 `harness` 스킬 진입점
 - `.codex-dist/skills/harness/references/*`: 하네스 Phase 선택 기준, 역할 설계, 에이전트 생성, QA, 로그, 재진입, 자기진화 기준
 - `.codex-dist/skills/github-agentic-loop/SKILL.md`: GitHub Run State를 읽고 다음 Workflow 액션을 제안하는 전역 스킬
-- `.codex-dist/skills/{workflow-code-editor,github-state-summary,github-simple-executor,target-harness-code-editor,issue-creation,feature-proposal-triage,policy-plan,policy-review-next-triage,feature-plan,fix-analysis,fix-plan,branch-proposal,commit-plan,pr-proposal,pr-creation,review-comment}/SKILL.md`: GitHub Workflow Engine에서 사용하는 Codex 전용 전역 스킬 기본형
+- `.codex-dist/skills/{workflow-code-editor,github-state-summary,github-simple-executor,target-harness-code-editor,issue-creation,feature-proposal-triage,policy-plan,policy-review-next-triage,feature-plan,fix-analysis,fix-plan,branch-proposal,commit-plan,pr-proposal,pr-request,review-comment}/SKILL.md`: GitHub Workflow Engine에서 사용하는 Codex 전용 전역 스킬 기본형
   - `target-harness-code-editor`는 이전 배포와의 호환을 위해 포함된 자산이며, 현재 파일 변경 executor는 `workflow-code-editor`입니다.
 - `install.sh`, `uninstall.sh`: Harness와 Workflow Engine 배포본을 각각 또는 함께 전역 Codex 스킬 경로에 설치하거나 제거하는 스크립트
 - `.harness/development-quality-evaluation.md`: 하네스 생성기 품질 평가 기준
@@ -96,7 +96,7 @@ $HOME/.agents/skills/fix-plan
 $HOME/.agents/skills/branch-proposal
 $HOME/.agents/skills/commit-plan
 $HOME/.agents/skills/pr-proposal
-$HOME/.agents/skills/pr-creation
+$HOME/.agents/skills/pr-request
 $HOME/.agents/skills/review-comment
 ```
 
@@ -110,6 +110,8 @@ $HOME/.agents/skills/review-comment
 재설치할 때 기존 스킬은 active 스킬 루트 밖의 `${XDG_STATE_HOME:-$HOME/.local/state}/codex-harness/backups`로 이동합니다. 백업 루트는 `CODEX_HARNESS_BACKUP_ROOT`로 바꿀 수 있습니다. `$CODEX_HOME/skills`에 있는 기존 디렉터리는 설치·감지·이전 대상이 아닙니다.
 
 Workflow Engine 스킬 묶음을 설치할 때 기존 `$HOME/.agents/skills/github-workflow-engine`이 있으면 같은 백업 루트로 먼저 이동한 뒤 `github-agentic-loop`만 설치합니다. `workflow-engine` 제거는 새 이름과 레거시 이름을 모두 확인해 각각 복구 가능한 백업으로 이동합니다.
+
+Workflow Engine 스킬을 설치할 때 기존 `$HOME/.agents/skills/pr-creation`도 같은 백업 루트로 이동한 뒤 `pr-request`를 설치합니다. 제거할 때는 새 디렉터리와 이전 디렉터리를 모두 백업으로 옮깁니다.
 
 ## 전역 하네스 스킬의 구성
 
@@ -138,7 +140,7 @@ GitHub Workflow Engine은 GitHub Issue와 PR을 작업 상태의 기준 저장�
 - `branch-proposal`: 기준 이슈와 구현 계획을 읽어 작업 시작 전 브랜치 이름 후보를 제안합니다.
 - `commit-plan`: 현재 브랜치/PR 단위를 의미적 커밋 단위로 나누고 작업 범위와 검증 기준을 제안합니다.
 - `pr-proposal`: PR 제목과 템플릿 본문 초안을 제안합니다.
-- `pr-creation`: PR 생성 입력을 검증하고 생성 요청 초안을 제안합니다.
+- `pr-request`: PR 생성 입력을 검증하고 요청값을 반환합니다.
 - `review-comment`: PR Review Template 출력 결과를 review thread 게시 초안으로 정리하고 위치 매핑 보류 대상을 점검합니다.
 
 외부 의존 스킬은 이 저장소가 설치하거나 관리하지 않습니다. Workflow Engine은 타겟 레포에서 해당 의존성을 최초로 필요로 할 때 사용 가능 상태를 관측하고 `.github-agentic-loop/settings.json`의 필요한 필드만 생성하거나 보완합니다. `commit` 스킬은 `dependencies.commit.available`에 기록합니다. 설정 파일이나 필요한 필드가 없는 상태는 정상적인 지연 초기화 대상으로 처리하고 기존 유효 값은 보존합니다.

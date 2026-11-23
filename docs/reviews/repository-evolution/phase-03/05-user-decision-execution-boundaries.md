@@ -183,10 +183,10 @@ Day 5 조사에서는 Harness 재진입, Workflow 시작·재개, GitHub 읽기/
 
 ## Day 5 완료 조건 체크리스트
 
-### Day 6 종료 후 이어갈 작업
+### Day 6 종료 후 이어갈 작업 (완료)
 
-- [ ] Day 6 보고서를 마친 뒤 별도 변경 작업으로 `pr-creation` Skill을 `pr-request`로 이름 변경하고, 설명에서 “초안을 제안한다”는 표현을 제거한다.
-- [ ] 변경 시 GitHub Agentic Loop의 연결 지점, 다른 참조, 관련 검사와 배포 산출물을 함께 찾아 정렬한다. PR 생성 부수 효과의 소유권을 Codex 오케스트레이션에 둔다는 합의는 유지한다.
+- [x] Day 6 보고서를 마친 뒤 별도 변경 작업으로 `pr-creation` Skill을 `pr-request`로 이름 변경하고, 설명에서 초안 제안 표현을 제거했다.
+- [x] GitHub Agentic Loop의 연결 지점, 다른 참조, 관련 검사, 설치·제거 동작과 배포 문서를 정렬했다. PR 생성 부수 효과의 소유권을 Codex 오케스트레이션에 두는 합의는 유지한다.
 
 - [x] 시작 branch, HEAD, 작업 트리, local `main`, cached `origin/main`, upstream을 기록했다. fetch하지 않았고 원격 최신 여부를 미확인으로 표시했다.
 - [x] 사용자 결정, artifact 제안, 실행, 결과 검증의 계약상 책임과 checkout source 연결을 분리했다.
